@@ -782,6 +782,15 @@ body:not(.split) #pips:not([hidden]) ~ #statstrip{top:calc(var(--st) + 78px)}
 .profbtn{display:inline-grid;place-items:center;width:38px;height:38px;border-radius:50%;background:var(--pad);border:1px solid var(--rule);color:var(--chalk);cursor:pointer;padding:0}
 .profbtn svg{width:20px;height:20px;fill:none;stroke:currentColor;stroke-width:2;stroke-linecap:round}
 .profbtn:hover,.profbtn:focus-visible{border-color:var(--chalk)}
+/* BuhurtOS sign-in */
+.bosbox{margin:2px 0 8px}
+.bosbtn{width:100%}
+.bosme{display:flex;align-items:center;gap:10px;background:var(--pad-2);padding:8px 10px;margin-bottom:6px}
+.bosme div{display:grid;flex:1}.bosme small{color:var(--dim)}
+.bostick{display:inline-grid;place-items:center;width:22px;height:22px;border-radius:50%;background:var(--card-green);color:#06140d;font-weight:900;font-size:.85rem;flex:none}
+.bosrec{display:grid;gap:2px;background:var(--pad-2);border-left:4px solid var(--card-green);padding:8px 10px;margin-bottom:10px}
+.bosrec span:not(.bostick){color:var(--dim)}
+.bosalt{display:flex;flex-wrap:wrap;gap:6px;margin:8px 0}
 
 </style>
 <div id="app">
@@ -972,6 +981,7 @@ body:not(.split) #pips:not([hidden]) ~ #statstrip{top:calc(var(--st) + 78px)}
           <div class="setrow"><span>Text size</span><div class="seg small" id="textSeg"><button data-ts="1">Normal</button><button data-ts="1.15">Large</button><button data-ts="1.3">Larger</button></div></div>
           <button class="btn tape" id="btnFull">Go fullscreen</button>
           <button class="btn tape" id="btnPadSetup">Set up controller</button>
+          <div class="setrow"><span>BuhurtOS account<small id="bosStatus">Not signed in</small></span><button class="btn tape small" id="btnBos">Sign in / out</button></div>
           <div class="setrow"><span>Button letters<small>Xbox-style pads in Switch mode: pick Xbox</small></span><div class="seg small" id="lettersSeg"><button data-l="auto">Auto</button><button data-l="xbox">Xbox</button><button data-l="nin">Nintendo</button></div></div>
         </section>
         <section class="setgroup">
@@ -11591,6 +11601,8 @@ function initMenus() {
   segSet('#teleSeg', 'tele', 'tele'); segSet('#textSeg', 'ts', 'ts', applyTextSize); applyTextSize();
   $('#btnFull').onclick = () => goFullscreen(true);
   $('#btnPadSetup').onclick = () => { AU.click(); openPadSetup(); };
+  $('#btnBos').onclick = () => { AU.click(); const back = () => showScreen('settings'); if (BOS.info) msg('buhurtos', 'BuhurtOS account', '<div id="bosBox" class="bosbox"></div>', [['Back', back, true]]), renderBosBox(); else openBosSignIn(back); };
+  setTimeout(bosBoot, 0);
   { const segL = () => $$('#lettersSeg button').forEach(b => b.setAttribute('aria-pressed', String(b.dataset.l === (G.settings.padLetters || 'auto')))); segL(); $$('#lettersSeg button').forEach(b => b.onclick = () => { G.settings.padLetters = b.dataset.l; saveSettings(); segL(); NIN.on = null; checkNintendo(); AU.click(); }); }
   $('#btnPausePad').onclick = () => { AU.click(); openPadSetup(() => showScreen('pause')); };
   { const sl = $('#optSens'); sl.value = String(G.settings.sens || 1); sl.oninput = () => { G.settings.sens = +sl.value; saveSettings(); }; }
@@ -12395,7 +12407,7 @@ async function boot(hot) {
   toTitle();
   requestAnimationFrame(frame);
   if (location.hash === '#autotest') setTimeout(autotest, 300);
-  window.__ST = { G, AU, buildShield, buildWeapon, W3, startTourney, quickFight, toTitle, openRepair, kitCheck, setupMatch, toTactics, beginFight, endRound, matchEnd, CLUBS, WEAPONS, setView, toast, renderKitPicker, applyLoadout, IN, FP, showScreen, weaponIcon, startCine, startTraining, startLadder, openCareer, openModes, openLadder, CAREER, setLesson, TR, unlock, togglePause, afterRound, renderHow, selectPiece, selectTape, msg, renderSheet, setHud, endTraining, setMode, PAD, navMove, focusFirst, sparks, CUTE, THREE, BREATH, setCuteDeco, flipFx, PHOTO, UAL, raiseFlags, startVersus, startFFA, startBracket, startKid, KID, openSeason, startSeasonMatch, setVenue, VS, SPLIT, NET, buildOnlineMatch, hostLobby, joinLobby, ONL, vinControl, openRun, openDaily, openBracket, showBracket, bracketResult, ffaMatchEnd, ffaLeader, ffaWinner, endKid, openPhoto, closePhoto, startReplay, stopReplay, RP, store, startRunFight, newRun, runEnd, WX, setWeather, padVin, readVersus, applyLo, myLoadout, netDropped, netLeave, showIntro, installForged, dailyPlan, openKids, openVersus, openPicks, LESSONS, rivalClub, startGrudge, startDaily, seasonState, newSeason, refreshDaily, VENUES, COMM, hitMapHtml, resetFighterForRound, DIFF, PIN, PADS, NIN, padsUpdate, seatPads, LOBBY, MM, openOnlineHub, benchDown, benchMove, REP, squirePatch, coverage };
+  window.__ST = { G, AU, buildShield, buildWeapon, W3, startTourney, quickFight, toTitle, openRepair, kitCheck, setupMatch, toTactics, beginFight, endRound, matchEnd, CLUBS, WEAPONS, setView, toast, renderKitPicker, applyLoadout, IN, FP, showScreen, weaponIcon, startCine, startTraining, startLadder, openCareer, openModes, openLadder, CAREER, setLesson, TR, unlock, togglePause, afterRound, renderHow, selectPiece, selectTape, msg, renderSheet, setHud, endTraining, setMode, PAD, navMove, focusFirst, sparks, CUTE, THREE, BREATH, setCuteDeco, flipFx, PHOTO, UAL, raiseFlags, startVersus, startFFA, startBracket, startKid, KID, openSeason, startSeasonMatch, setVenue, VS, SPLIT, NET, buildOnlineMatch, hostLobby, joinLobby, ONL, vinControl, openRun, openDaily, openBracket, showBracket, bracketResult, ffaMatchEnd, ffaLeader, ffaWinner, endKid, openPhoto, closePhoto, startReplay, stopReplay, RP, store, startRunFight, newRun, runEnd, WX, setWeather, padVin, readVersus, applyLo, myLoadout, netDropped, netLeave, showIntro, installForged, dailyPlan, openKids, openVersus, openPicks, LESSONS, rivalClub, startGrudge, startDaily, seasonState, newSeason, refreshDaily, VENUES, COMM, hitMapHtml, resetFighterForRound, DIFF, PIN, PADS, NIN, padsUpdate, seatPads, LOBBY, MM, openOnlineHub, benchDown, benchMove, REP, squirePatch, coverage, openProfile, myProfile, BOS };
 }
 
 function autotest() {
@@ -12707,7 +12719,7 @@ function lobbyStatus() { return NET.on ? 'in an online fight' : NET.room ? (NET.
 // play time: counted while the game is on screen, saved with the career
 setInterval(() => { if (document.visibilityState === 'visible') { CAREER.playSec = (CAREER.playSec || 0) + 1; if (CAREER.playSec % 30 === 0) saveCareer(); } }, 1000);
 function fmtDur(sec) { sec = Math.max(0, Math.round(sec || 0)); const hh = Math.floor(sec / 3600), mm = Math.floor(sec % 3600 / 60); return hh ? `${hh} h ${mm} min` : mm ? `${mm} min` : `${sec} s`; }
-function myProfile() { const s = CAREER.stats || {}; return { m: s.matches || 0, w: s.wins || 0, td: s.takedowns || 0, hits: s.hits || 0, rw: s.rumbleWins || 0, t: Math.round(CAREER.playSec || 0), on: SESSION_START, wpn: (WEAPONS[G.loadout.weapon] || WEAPONS.mace).name, club: CAREER.club && CAREER.club.name || '', ach: Object.keys(CAREER.ach || {}).length }; }
+function myProfile() { const s = CAREER.stats || {}; return { m: s.matches || 0, w: s.wins || 0, td: s.takedowns || 0, hits: s.hits || 0, rw: s.rumbleWins || 0, t: Math.round(CAREER.playSec || 0), on: SESSION_START, wpn: (WEAPONS[G.loadout.weapon] || WEAPONS.mace).name, club: CAREER.club && CAREER.club.name || '', ach: Object.keys(CAREER.ach || {}).length, bos: bosRecord() }; }
 async function claudeRoom() { try { return window.claude && window.claude.use ? await window.claude.use('room') : null; } catch (e) { return null; } }
 function lobbySet(patch) { try { LOBBY.room && LOBBY.room.presence(patch); } catch (e) { } }
 async function initLobby() {
@@ -12766,12 +12778,14 @@ function openProfile(p, back) {
   const name = String(P.name || 'A fighter').slice(0, 20);
   const rate = R.m ? Math.round(100 * (R.w || 0) / R.m) + '%' : '–';
   const rows = [['Online now for', R.on ? fmtDur((Date.now() - R.on) / 1000) : '–'], ['Total time played', R.t != null ? fmtDur(R.t) : '–'], ['Matches', R.m ?? '–'], ['Wins', R.w ?? '–'], ['Win rate', rate], ['Takedowns', R.td ?? '–'], ['Clean hits', R.hits ?? '–'], ['Rumbles won', R.rw ?? '–'], ['Achievements', R.ach ?? '–'], ['Favourite weapon', R.wpn || '–'], ['Club', R.club || '–'], ['Right now', P.st || '–']];
+  const B = R.bos; // their BuhurtOS account and real record, if they signed in with it
+  const bosHtml = B ? `<div class="bosrec"><b><span class="bostick">✓</span> BuhurtOS: ${escTxt(B.name)}</b><span>${B.linked ? `${B.team ? escTxt(B.team) + ' · ' : ''}${B.m} real matches, ${B.w} wins${B.l ? ', ' + B.l + ' losses' : ''}${B.g ? ' · ' + B.g + ' gold' : ''}${B.p ? ' · ' + B.p + ' podiums' : ''}${B.tv ? ' · ' + B.tv + ' tournaments won' : ''}` : 'Signed in, no fighter record linked yet'}</span></div>` : '';
   const canJoin = /^[A-Z]{4}$/.test(String(P.look || ''));
   const btns = [];
   if (canJoin) btns.push(['Join their lobby', () => joinLobby(P.look), true]);
   else if (p && p.peer && LOBBY.peers.includes(p)) btns.push(['Invite to a fight', () => sendInvite(p), true]);
   btns.push(['Back', back || (() => (NET.room && !ONL.inMatch ? renderLobby() : openOnlineHub()))]);
-  msg('player', name, `<div class="profgrid">${rows.map(([k, v]) => `<span>${k}</span><b>${escTxt(v)}</b>`).join('')}</div>${p && p.guest ? '<p class="muted small">Guest player</p>' : ''}`, btns);
+  msg('player', (B ? '✓ ' : '') + name, `${bosHtml}<div class="profgrid">${rows.map(([k, v]) => `<span>${k}</span><b>${escTxt(v)}</b>`).join('')}</div>${p && p.guest ? '<p class="muted small">Guest player</p>' : ''}`, btns);
 }
 // a profile for someone in a lobby: use their global-list entry if we can find it, else what the lobby knows
 function openProfileByUid(uid, x) {
@@ -12801,6 +12815,7 @@ async function openOnlineHub() {
   AU.init(); initLobby();
   if (NET.room && !ONL.inMatch) { renderLobby(); return; } // already in a lobby: go back to it
   msg('play online', 'Play online', `
+    <div id="bosBox" class="bosbox"></div>
     <div class="hubbtns"><button class="btn primary flagtape big" id="mmFind">Find a match</button><button class="btn tape big" id="mkLobby">Make a lobby</button></div>
     <p class="muted small">Find a match puts you in an open lobby with whoever's looking. Make a lobby to invite friends, pick teams and add bots.</p>
     <h4 class="invh">Playing now <span class="muted small">(tap a name for their stats)</span></h4>
@@ -12815,7 +12830,7 @@ async function openOnlineHub() {
   $('#mkLobby').onclick = () => { AU.click(); hostLobby(false); };
   $('#invJoin').onclick = () => { const c = ($('#netCode2').value || '').trim().toUpperCase(); if (!/^[A-Z]{4}$/.test(c)) { toastMenu('Codes are four letters.'); return; } joinLobby(c); };
   const nm = $('#lobbyName'); if (nm) nm.onchange = () => { store.set('lobbyName', nm.value.trim().slice(0, 20)); lobbySet({ name: myName() }); };
-  renderInviteList();
+  renderInviteList(); renderBosBox();
 }
 function renderInviteList() {
   const box = $('#inviteList'); if (!box) return;
@@ -12829,7 +12844,7 @@ function renderInviteList() {
       : open ? h('button', { class: 'btn primary flagtape small', onclick: () => { AU.click(); joinLobby(P.look); } }, 'Join')
         : h('button', { class: 'btn ' + (LOBBY.invited === p.peer ? 'tape' : 'primary flagtape') + ' small', onclick: () => sendInvite(p) }, LOBBY.invited === p.peer ? 'Invited ✓' : 'Invite');
     const sub = `${String(P.st || '').slice(0, 30)}${R.on ? ' · on ' + fmtDur((Date.now() - R.on) / 1000) : ''}${R.m != null ? ' · ' + R.w + ' wins' : ''}`;
-    box.append(h('div', { class: 'invrow' + (open ? ' looking' : '') }, h('button', { class: 'invwho linkish', onclick: () => { AU.click(); openProfile(p); } }, h('b', null, String(P.name).slice(0, 20)), h('small', null, sub)), h('span', { class: 'invacts' }, profileBtn(p), btn)));
+    box.append(h('div', { class: 'invrow' + (open ? ' looking' : '') }, h('button', { class: 'invwho linkish', onclick: () => { AU.click(); openProfile(p); } }, h('b', null, (R.bos ? '✓ ' : '') + String(P.name).slice(0, 20)), h('small', null, sub)), h('span', { class: 'invacts' }, profileBtn(p), btn)));
   }
 }
 // inviting someone opens your lobby (if you haven't one) and sends them its code
@@ -13027,7 +13042,7 @@ function lobbyHumans() {
   const out = []; const seen = new Set();
   for (const p of ONL.peers) {
     const P = p.presence || {}; if (!P.uid || (P.role !== 'host' && P.role !== 'guest') || seen.has(P.uid)) continue; seen.add(P.uid);
-    out.push({ uid: P.uid, name: String(P.name || 'A fighter').slice(0, 20), team: P.team === 1 ? 1 : 0, lo: P.lo, ready: !!P.ready, host: P.role === 'host', me: P.uid === ONL.me, peer: p.peer });
+    out.push({ uid: P.uid, bos: !!P.bos, name: String(P.name || 'A fighter').slice(0, 20), team: P.team === 1 ? 1 : 0, lo: P.lo, ready: !!P.ready, host: P.role === 'host', me: P.uid === ONL.me, peer: p.peer });
   }
   return out.sort((a, b) => (b.host ? 1 : 0) - (a.host ? 1 : 0)).slice(0, MAX_HUMANS);
 }
@@ -13036,7 +13051,7 @@ function teamCounts(L, hum) {
   const bots = [0, 1].map(t => { const free = n - h[t]; const b = L.bots[t]; return b == null ? free : clamp(b, 0, free); });
   return { h, n, bots, total: [h[0] + bots[0], h[1] + bots[1]] };
 }
-function myPresence(extra) { return Object.assign({ role: NET.role, uid: ONL.me, name: myName(), lo: myLo(), team: ONL.team, ready: NET.role === 'host' ? true : ONL.ready }, extra || {}); }
+function myPresence(extra) { return Object.assign({ role: NET.role, uid: ONL.me, name: myName(), bos: !!BOS.info, lo: myLo(), team: ONL.team, ready: NET.role === 'host' ? true : ONL.ready }, extra || {}); }
 function newCode() { return Array.from({ length: 4 }, () => 'ABCDEFGHJKLMNPQRSTUVWXYZ'[(Math.random() * 24) | 0]).join(''); }
 
 // ---- host: open a lobby (open = anyone tapping Find a match may join)
@@ -13118,7 +13133,7 @@ function renderLobbyParts() {
     const col = h('div', { class: 'lobteam t' + t }, h('h5', null, `${tn} · ${C.total[t]}`));
     for (const x of hum.filter(y => y.team === t)) {
       const W = ONL_WEAPONS.find(w => x.lo && w[0] === x.lo.weapon && (w[1] || null) === (x.lo.shield || null));
-      col.append(h('button', { class: 'lobp' + (x.me ? ' me' : ''), onclick: () => openProfileByUid(x.uid, x) }, h('b', null, x.name + (x.me ? ' (you)' : '')), h('small', null, `${x.host ? 'host · ' : ''}${W ? W[2] : (x.lo && WEAPONS[x.lo.weapon] ? WEAPONS[x.lo.weapon].name : '')}${x.host || x.ready ? ' · ready ✓' : ' · not ready'}`)));
+      col.append(h('button', { class: 'lobp' + (x.me ? ' me' : ''), onclick: () => openProfileByUid(x.uid, x) }, h('b', null, (x.bos ? '✓ ' : '') + x.name + (x.me ? ' (you)' : '')), h('small', null, `${x.host ? 'host · ' : ''}${W ? W[2] : (x.lo && WEAPONS[x.lo.weapon] ? WEAPONS[x.lo.weapon].name : '')}${x.host || x.ready ? ' · ready ✓' : ' · not ready'}`)));
     }
     if (C.bots[t]) col.append(h('div', { class: 'lobbots' }, `+ ${C.bots[t]} bot${C.bots[t] === 1 ? '' : 's'}`));
     const mine = hum.find(y => y.me);
@@ -13241,6 +13256,108 @@ function netDropped() {
   toastMenu('The host left the lobby.'); toTitle();
 }
 function netLeave() { try { NET.unsub && NET.unsub(); NET.room && NET.room.leave(); } catch (e) { } Object.assign(NET, { on: false, room: null, role: null, unsub: null, code: '' }); ONL.inMatch = false; ONL.peers = []; }
+
+// ---------- sign in with BuhurtOS: your BuhurtOS account names you in the game and shows your real buhurt record ----------
+// Uses BuhurtOS's own Supabase project with its public (publishable) key: row-level security there decides what a
+// signed-in person may read (their own fighter link; public fighter records and career stats). Nothing is written.
+const BOS_URL = 'https://mvbxlebznlgroptwwdsm.supabase.co';
+const BOS_KEY = 'sb_publishable_u76M-dggKSsdsyhUQKveJg_5fPJ5Nan';
+const BOS = { sb: null, p: null, user: null, info: null, otpEmail: '' };
+function loadSupabaseLib() {
+  if (window.supabase && window.supabase.createClient) return Promise.resolve(window.supabase);
+  if (BOS.p) return BOS.p;
+  const urls = ['https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2.45.4/dist/umd/supabase.min.js', 'https://unpkg.com/@supabase/supabase-js@2.45.4/dist/umd/supabase.min.js'];
+  BOS.p = new Promise((res, rej) => {
+    const next = i => { if (i >= urls.length) { BOS.p = null; rej(new Error('Could not load the BuhurtOS sign-in')); return; } const s = document.createElement('script'); s.src = urls[i]; s.async = true; s.onload = () => window.supabase ? res(window.supabase) : next(i + 1); s.onerror = () => next(i + 1); document.head.append(s); };
+    next(0);
+  });
+  return BOS.p;
+}
+async function bosClient() {
+  if (BOS.sb) return BOS.sb;
+  const lib = await loadSupabaseLib();
+  BOS.sb = lib.createClient(BOS_URL, BOS_KEY, { auth: { persistSession: true, autoRefreshToken: true, detectSessionInUrl: true, storageKey: 'buhurt-game-buhurtos' } });
+  BOS.sb.auth.onAuthStateChange((evt, session) => { BOS.user = session ? session.user : null; if (BOS.user) bosLoadInfo(); else { BOS.info = null; bosApply(); } });
+  return BOS.sb;
+}
+// on start: pick up a saved sign-in (or one coming back from Google / Discord) without loading anything otherwise
+function bosBoot() {
+  let saved = false; try { saved = !!localStorage.getItem('buhurt-game-buhurtos'); } catch (e) { }
+  const back = /access_token=|[?&]code=/.test(location.hash + location.search);
+  if (!saved && !back) return;
+  bosClient().then(sb => sb.auth.getSession()).then(r => { const s = r && r.data && r.data.session; if (s) { BOS.user = s.user; bosLoadInfo(); } }).catch(() => { });
+}
+async function bosLoadInfo() {
+  const sb = BOS.sb, u = BOS.user; if (!sb || !u) return;
+  const info = { name: '', team: '', fighter: null, m: 0, w: 0, l: 0, golds: 0, podiums: 0, wins_t: 0 };
+  try { const { data } = await sb.from('profiles').select('display_name').eq('id', u.id).maybeSingle(); if (data && data.display_name) info.name = data.display_name; } catch (e) { }
+  try {
+    const { data: link } = await sb.from('fighter_accounts').select('fighter_id').eq('user_id', u.id).limit(1).maybeSingle();
+    if (link && link.fighter_id) {
+      info.fighter = link.fighter_id;
+      const { data: dir } = await sb.from('fighter_directory').select('display_name, team_name').eq('id', link.fighter_id).maybeSingle();
+      if (dir) { info.name = dir.display_name || info.name; info.team = dir.team_name || ''; }
+      const { data: st } = await sb.from('fighter_career_stats').select('matches, wins, losses, golds, podiums, tournament_victories').eq('fighter_id', link.fighter_id).maybeSingle();
+      if (st) Object.assign(info, { m: st.matches || 0, w: st.wins || 0, l: st.losses || 0, golds: st.golds || 0, podiums: st.podiums || 0, wins_t: st.tournament_victories || 0 });
+    }
+  } catch (e) { }
+  if (!info.name) info.name = (u.user_metadata && (u.user_metadata.full_name || u.user_metadata.name)) || (u.email || '').split('@')[0];
+  BOS.info = info; bosApply();
+}
+// your BuhurtOS name becomes your fighter's name; everyone online sees the BuhurtOS tick and your real record
+function bosApply() {
+  const I = BOS.info;
+  if (I && I.name) { CAREER.name = String(I.name).slice(0, 20); saveCareer(); }
+  try { lobbySet({ name: myName(), pr: myProfile() }); } catch (e) { }
+  try { if (NET.room && !ONL.inMatch) NET.room.presence({ name: myName(), bos: !!I }); } catch (e) { }
+  const t = $('#bosStatus'); if (t) t.textContent = I ? `Signed in with BuhurtOS as ${I.name}` : 'Not signed in';
+  if (G.screen === 'msgScr' && $('#bosBox')) renderBosBox();
+}
+function bosRecord() { const I = BOS.info; return I ? { name: I.name, team: I.team, m: I.m, w: I.w, l: I.l, g: I.golds, p: I.podiums, tv: I.wins_t, linked: !!I.fighter } : null; }
+// the sign-in box (shown in Play online and Settings)
+function renderBosBox() {
+  const box = $('#bosBox'); if (!box) return; box.innerHTML = '';
+  const I = BOS.info;
+  if (I) {
+    box.append(h('div', { class: 'bosme' }, h('span', { class: 'bostick' }, '✓'), h('div', null, h('b', null, I.name), h('small', null, I.fighter ? `${I.team ? I.team + ' · ' : ''}${I.m} matches, ${I.w} wins${I.golds ? ', ' + I.golds + ' gold' : ''} on BuhurtOS` : 'BuhurtOS account (no fighter linked yet)'))),
+      h('button', { class: 'btn tape small', onclick: async () => { AU.click(); try { await (await bosClient()).auth.signOut(); } catch (e) { } BOS.user = null; BOS.info = null; bosApply(); } }, 'Sign out'));
+    return;
+  }
+  box.append(h('button', { class: 'btn primary flagtape bosbtn', onclick: () => { AU.click(); openBosSignIn(); } }, 'Sign in with BuhurtOS'));
+}
+function openBosSignIn(back) {
+  const ret = back || (() => openOnlineHub());
+  msg('buhurtos', 'Sign in with BuhurtOS', `<p>Use your BuhurtOS account. Your fighter name and real record show to other players.</p>
+    <label class="runcode"><span>Email</span><input id="bosEmail" type="email" autocomplete="email" placeholder="you@example.com"></label>
+    <label class="runcode"><span>Password</span><input id="bosPass" type="password" autocomplete="current-password"></label>
+    <div class="bosalt"><button class="btn tape small" id="bosCode">Email me a sign-in code instead</button><button class="btn tape small" id="bosGoogle">Google</button><button class="btn tape small" id="bosDiscord">Discord</button></div>
+    <p class="muted small" id="bosMsg"></p>`,
+    [['Sign in', () => bosPassword(ret), true], ['Back', ret]]);
+  const say = t => { const m = $('#bosMsg'); if (m) m.textContent = t; };
+  $('#bosCode').onclick = async () => {
+    const email = ($('#bosEmail').value || '').trim(); if (!email) { say('Type your email first.'); return; }
+    say('Sending…');
+    try { const { error } = await (await bosClient()).auth.signInWithOtp({ email, options: { shouldCreateUser: false } }); if (error) throw error; BOS.otpEmail = email; openBosCode(ret); } catch (e) { say('Couldn’t send a code: ' + (e.message || e)); }
+  };
+  const oauth = provider => async () => { say('Opening ' + provider + '…'); try { await (await bosClient()).auth.signInWithOAuth({ provider, options: { redirectTo: location.origin + location.pathname } }); } catch (e) { say('Couldn’t open ' + provider + ': ' + (e.message || e)); } };
+  $('#bosGoogle').onclick = oauth('google'); $('#bosDiscord').onclick = oauth('discord');
+}
+async function bosPassword(ret) {
+  const email = ($('#bosEmail').value || '').trim(), password = $('#bosPass').value || '', say = t => { const m = $('#bosMsg'); if (m) m.textContent = t; };
+  if (!email || !password) { say('Type your email and password.'); return; }
+  say('Signing in…');
+  try { const { data, error } = await (await bosClient()).auth.signInWithPassword({ email, password }); if (error) throw error; BOS.user = data.user; await bosLoadInfo(); toastMenu(`Signed in as ${myName()}`); ret(); }
+  catch (e) { say(/invalid/i.test(e.message || '') ? 'Wrong email or password. (Signed up with Google or Discord? Use those buttons.)' : 'Couldn’t sign in: ' + (e.message || e)); }
+}
+function openBosCode(ret) {
+  msg('buhurtos', 'Check your email', `<p>We sent a sign-in email to <b>${escTxt(BOS.otpEmail)}</b>. Type the code from it here.</p>
+    <label class="runcode"><span>Code</span><input id="bosOtp" inputmode="numeric" maxlength="10" autocomplete="one-time-code" placeholder="123456"></label>
+    <p class="muted small" id="bosMsg">If the email only has a link, open it on this device instead.</p>`,
+    [['Sign in', async () => {
+      const token = ($('#bosOtp').value || '').trim(), say = t => { $('#bosMsg').textContent = t; };
+      try { const { data, error } = await (await bosClient()).auth.verifyOtp({ email: BOS.otpEmail, token, type: 'email' }); if (error) throw error; BOS.user = data.user; await bosLoadInfo(); toastMenu(`Signed in as ${myName()}`); ret(); } catch (e) { say('That code didn’t work: ' + (e.message || e)); }
+    }, true], ['Back', () => openBosSignIn(ret)]]);
+}
 
 })();
 </script>
