@@ -712,6 +712,14 @@ body:not(.split) #pips:not([hidden]) ~ #statstrip{top:calc(var(--st) + 78px)}
 .invrow{display:flex;align-items:center;justify-content:space-between;gap:10px;background:var(--pad-2);padding:8px 10px}
 .invwho{display:grid}.invwho small{color:var(--dim)}
 .invname{margin-top:8px}
+.mmfind{width:100%;margin:6px 0 4px}
+.mmwait{display:grid;gap:4px;background:var(--pad-2);border-left:4px solid var(--flag);padding:10px 12px;margin:4px 0 8px}
+.mmwait b{font:800 1.3rem/1.1 var(--display);animation:windpulse .9s ease-in-out infinite alternate}
+.mmwait span{color:var(--dim)}.mmwait span b{font:inherit;color:var(--chalk);animation:none;letter-spacing:.12em}
+.invh{margin:12px 0 4px;font:800 1rem var(--display);letter-spacing:.06em;text-transform:uppercase;color:var(--dim)}
+.invrow.looking{box-shadow:inset 3px 0 0 var(--flag)}
+.invrow2{display:flex;flex-wrap:wrap;gap:8px;align-items:flex-end;margin-top:10px}
+.invrow2 .runcode{flex:1;min-width:120px;margin:0}
 
 </style>
 <div id="app">
@@ -818,7 +826,7 @@ body:not(.split) #pips:not([hidden]) ~ #statstrip{top:calc(var(--st) + 78px)}
           <button class="btn tape" id="btnDaily">Rumble of the Day<span class="newbadge daybadge" id="dailyBadge" hidden>new</span></button>
           <button class="btn tape" id="btnRun">Gauntlet run</button>
           <button class="btn tape" id="btnSeason">Summer season</button>
-          <button class="btn tape" id="btnInvite">Invite a friend<span class="newbadge" id="onlineBadge" hidden></span></button>
+          <button class="btn tape" id="btnInvite">Play online<span class="newbadge" id="onlineBadge" hidden></span></button>
         </div>
         <div class="links">
           <button id="btnHow">How to play</button>
@@ -12236,7 +12244,7 @@ async function boot(hot) {
   toTitle();
   requestAnimationFrame(frame);
   if (location.hash === '#autotest') setTimeout(autotest, 300);
-  window.__ST = { G, AU, buildShield, buildWeapon, W3, startTourney, quickFight, toTitle, openRepair, kitCheck, setupMatch, toTactics, beginFight, endRound, matchEnd, CLUBS, WEAPONS, setView, toast, renderKitPicker, applyLoadout, IN, FP, showScreen, weaponIcon, startCine, startTraining, startLadder, openCareer, openModes, openLadder, CAREER, setLesson, TR, unlock, togglePause, afterRound, renderHow, selectPiece, selectTape, msg, renderSheet, setHud, endTraining, setMode, PAD, navMove, focusFirst, sparks, CUTE, THREE, BREATH, setCuteDeco, flipFx, PHOTO, UAL, raiseFlags, startVersus, startFFA, startBracket, startKid, KID, openSeason, startSeasonMatch, setVenue, VS, SPLIT, NET, netStartHost, netStartGuest, vinControl, openRun, openDaily, openBracket, showBracket, bracketResult, ffaMatchEnd, ffaLeader, ffaWinner, endKid, openPhoto, closePhoto, startReplay, stopReplay, RP, store, startRunFight, newRun, runEnd, WX, setWeather, padVin, readVersus, applyLo, myLoadout, netDropped, netLeave, showIntro, installForged, dailyPlan, openKids, openVersus, openPicks, LESSONS, rivalClub, startGrudge, startDaily, seasonState, newSeason, refreshDaily, VENUES, COMM, hitMapHtml, resetFighterForRound, DIFF, PIN, PADS, NIN, padsUpdate, seatPads };
+  window.__ST = { G, AU, buildShield, buildWeapon, W3, startTourney, quickFight, toTitle, openRepair, kitCheck, setupMatch, toTactics, beginFight, endRound, matchEnd, CLUBS, WEAPONS, setView, toast, renderKitPicker, applyLoadout, IN, FP, showScreen, weaponIcon, startCine, startTraining, startLadder, openCareer, openModes, openLadder, CAREER, setLesson, TR, unlock, togglePause, afterRound, renderHow, selectPiece, selectTape, msg, renderSheet, setHud, endTraining, setMode, PAD, navMove, focusFirst, sparks, CUTE, THREE, BREATH, setCuteDeco, flipFx, PHOTO, UAL, raiseFlags, startVersus, startFFA, startBracket, startKid, KID, openSeason, startSeasonMatch, setVenue, VS, SPLIT, NET, netStartHost, netStartGuest, vinControl, openRun, openDaily, openBracket, showBracket, bracketResult, ffaMatchEnd, ffaLeader, ffaWinner, endKid, openPhoto, closePhoto, startReplay, stopReplay, RP, store, startRunFight, newRun, runEnd, WX, setWeather, padVin, readVersus, applyLo, myLoadout, netDropped, netLeave, showIntro, installForged, dailyPlan, openKids, openVersus, openPicks, LESSONS, rivalClub, startGrudge, startDaily, seasonState, newSeason, refreshDaily, VENUES, COMM, hitMapHtml, resetFighterForRound, DIFF, PIN, PADS, NIN, padsUpdate, seatPads, LOBBY, MM };
 }
 
 function autotest() {
@@ -12424,14 +12432,7 @@ function applyLo(f, lo, cat) {
   if (!lo) return; const wk = WEAPONS[lo.weapon] && lo.weapon !== 'custom' ? lo.weapon : (WEAPONS[lo.base] ? lo.base : 'sword'); f.spec = { ...f.spec, helm: lo.helm, weapon: wk, shield: lo.shield }; f.weapon = WEAPONS[wk]; f.shield = lo.shield ? SHIELDS[lo.shield] : null;
   f.body = makeBody(cat, f.spec.arch, 'net' + lo.name, { height: lo.height, build: lo.build }); f.name = String(lo.name || 'Rival').slice(0, 20); resetFighterForRound(f);
 }
-async function openOnline() {
-  AU.init(); const room = await getRoom();
-  if (!room) { msg('online duel', 'Not available here', '<p>Online duels run through Claude: both players need to be signed in, and your friend must be invited to this game from its Share menu (a public link alone can’t join).</p><p class="muted">Open the game from claude.ai while signed in to try again.</p>', [['Back', openModes, true]]); return; }
-  msg('online duel', 'Fight a friend', `<p>One player hosts and gets a four-letter code; the other joins with it. Host runs the fight, so the host should have the steadier connection.</p>
-    <label class="runcode"><span>Join with a code</span><input id="netCode" maxlength="4" placeholder="ABCD" autocomplete="off"></label>
-    <p class="muted">Both players need to be signed in, and invited to this game from its Share menu.</p>`,
-    [['Host', () => netHost(room), true], ['Join', () => { const c = ($('#netCode').value || '').trim().toUpperCase(); if (/^[A-Z]{4}$/.test(c)) netJoin(room, c); else toastMenu('Codes are four letters.'); }], ['Back', openModes]]);
-}
+async function openOnline() { return openOnlineHub(); }
 async function netHost(room, quiet) {
   const code = Array.from({ length: 4 }, () => 'ABCDEFGHJKLMNPQRSTUVWXYZ'[(Math.random() * 24) | 0]).join('');
   let r; try { r = await room.join('duel-' + code.toLowerCase()); } catch (e) { toastMenu('Could not reach the online service. Check the internet connection and try again.'); return; }
@@ -12440,7 +12441,7 @@ async function netHost(room, quiet) {
   if (quiet) { /* the invite screen shows the code */ } else msg('online duel', `Code ${code}`, `<p>Tell your friend the code <b class="num" style="font-size:1.6em;letter-spacing:.15em">${code}</b>. The fight starts as soon as they join.</p>`, [['Cancel', () => { netLeave(); openModes(); }]]);
   NET.unsub = r.onPeers(ch => {
     const guest = ch.peers.find(p => !p.isMe && p.presence && p.presence.role === 'guest');
-    if (guest && !NET.on) { NET.peer = guest.peer; try { LOBBY.room && LOBBY.room.presence({ invite: null }); } catch (e) { } LOBBY.invited = null; netStartHost(guest.presence.lo); }
+    if (guest && !NET.on) { NET.peer = guest.peer; MM.searching = false; lobbySet({ invite: null, look: null }); LOBBY.invited = null; netStartHost(guest.presence.lo); }
     if (NET.on && guest) NET.remote = guest.presence.vin || NET.remote;
     if (NET.on && ch.left.some(p => p.peer === NET.peer)) netDropped();
   });
@@ -12620,34 +12621,43 @@ function checkNintendo() {
   if (on && pref === 'auto' && typeof toastMenu === 'function') toastMenu('Switch controller: right button confirms. Xbox letters on yours? Settings, Button letters.');
 }
 
-// ---------- invite a friend: see who else has the game open, send them an invite, or send a link with a code ----------
-// The page's room is the lobby. Everyone sets a small presence (fighter name, what they're doing). An invite is a
-// presence field addressed to one peer; their game pops up "NAME wants to fight", and Accept joins the host's duel room.
+// ---------- play online: see who's playing, find a match in one tap, invite someone, or send a link ----------
+// The lobby is Claude's room when the game runs on claude.ai for someone allowed to use it, and otherwise the
+// peer-to-peer lobby (13g). Everyone sets a small presence: name, what they're doing, `look` (the code of a fight
+// they're waiting in, when they tapped Find a match) and `invite` (a code addressed to one player).
 const GAME_URL = 'https://claude.ai/artifact/2hhQkB83SkLC5ta9nNEnkN';
-const LOBBY = { room: null, me: null, peers: [], pending: null, seen: {}, ready: false };
+const LOBBY = { room: null, me: null, peers: [], pending: null, seen: {}, ready: false, invited: null, starting: null };
+const MM = { searching: false };
 const escTxt = s => String(s == null ? '' : s).replace(/[&<>"']/g, c => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' })[c]);
 function myName() { const n = (CAREER.name && CAREER.name !== 'You') ? CAREER.name : (store.get('lobbyName', '') || ''); return String(n || 'A fighter').slice(0, 20); }
-function lobbyStatus() { return NET.on ? 'fighting online' : G.attract || G.screen === 'title' ? 'on the title screen' : G.phase === 'fight' ? 'in a fight' : 'in the menus'; }
+function lobbyStatus() { return NET.on ? 'in an online fight' : MM.searching ? 'looking for a match' : G.attract || G.screen === 'title' ? 'on the title screen' : G.phase === 'fight' ? 'in a fight' : 'in the menus'; }
+async function claudeRoom() { try { return window.claude && window.claude.use ? await window.claude.use('room') : null; } catch (e) { return null; } }
+function lobbySet(patch) { try { LOBBY.room && LOBBY.room.presence(patch); } catch (e) { } }
 async function initLobby() {
-  const room = await getRoom(); if (!room || room.p2p || LOBBY.room) return; // the lobby list needs Claude's room
-  LOBBY.room = room;
-  try { room.presence({ name: myName(), st: lobbyStatus(), invite: null }); } catch (e) { }
-  setInterval(() => { try { room.presence({ name: myName(), st: lobbyStatus() }); } catch (e) { } }, 5000);
-  room.onPeers(ch => {
-    const me = ch.peers.find(p => p.isMe && p.sameTab); if (me) LOBBY.me = me.peer;
-    LOBBY.peers = ch.peers.filter(p => !p.isMe && p.kind === 'viewer' && p.presence && p.presence.name);
-    LOBBY.ready = true;
-    updateLobbyBadge();
-    // an invite addressed to this tab
-    for (const p of LOBBY.peers) {
-      const inv = p.presence.invite;
-      if (!inv || inv.to !== LOBBY.me || !/^[A-Z]{4}$/.test(String(inv.code || ''))) continue;
-      const key = p.peer + inv.code; if (LOBBY.seen[key]) continue; LOBBY.seen[key] = 1;
-      LOBBY.pending = { from: String(p.presence.name || 'A friend').slice(0, 20), code: inv.code, peer: p.peer };
-      showInvite();
-    }
-    if (G.screen === 'msgScr' && $('#inviteList')) renderInviteList();
-  }, () => { });
+  if (LOBBY.room || LOBBY.starting) return LOBBY.starting;
+  LOBBY.starting = (async () => {
+    const room = (await claudeRoom()) || p2pLobby();
+    LOBBY.room = room;
+    lobbySet({ name: myName(), st: lobbyStatus(), invite: null, look: null });
+    setInterval(() => lobbySet({ name: myName(), st: lobbyStatus() }), 4000);
+    room.onPeers(ch => {
+      const me = ch.peers.find(p => p.isMe && p.sameTab); if (me) LOBBY.me = me.peer;
+      LOBBY.peers = ch.peers.filter(p => !p.isMe && p.kind === 'viewer' && p.presence && p.presence.name);
+      LOBBY.ready = true;
+      updateLobbyBadge();
+      for (const p of LOBBY.peers) { // an invite addressed to this player
+        const inv = p.presence.invite;
+        if (!inv || inv.to !== LOBBY.me || !/^[A-Z]{4}$/.test(String(inv.code || ''))) continue;
+        const key = p.peer + inv.code; if (LOBBY.seen[key]) continue; LOBBY.seen[key] = 1;
+        LOBBY.pending = { from: String(p.presence.name || 'A friend').slice(0, 20), code: inv.code, peer: p.peer };
+        showInvite();
+      }
+      matchTick();
+      if (G.screen === 'msgScr' && $('#inviteList')) renderInviteList();
+    }, () => { });
+    return room;
+  })();
+  return LOBBY.starting;
 }
 function updateLobbyBadge() {
   const b = $('#onlineBadge'); if (!b) return;
@@ -12656,59 +12666,81 @@ function updateLobbyBadge() {
 // someone invited you: answer now if you're in the menus, or as soon as the fight in progress is over
 function showInvite() {
   const P = LOBBY.pending; if (!P) return;
-  if (G.phase === 'fight' && !G.attract && !G.paused) { toast(`${P.from} wants to fight you online`, 'big', 'Answer after this fight'); return; }
+  if ((G.phase === 'fight' && !G.attract && !G.paused) || NET.on) { toast(`${P.from} wants to fight you online`, 'big', 'Answer after this fight'); return; }
   LOBBY.pending = null; AU.cheer && AU.cheer(0.5);
   msg('invite', `${escTxt(P.from)} wants to fight!`, `<p><b>${escTxt(P.from)}</b> invited you to an online duel.</p>`,
-    [['Fight!', () => netJoin(LOBBY.room, P.code), true], ['No thanks', toTitle]]);
+    [['Fight!', () => { stopSearch(); netJoin(LOBBY.room, P.code); }, true], ['No thanks', openOnlineHub]]);
 }
-// host: open a room, then show the people online with an Invite button each, plus "send a link"
-async function openInvite() {
-  AU.init(); const room = LOBBY.room || await getRoom();
-  if (!room) {
-    msg('invite a friend', 'Can’t go online from here', `<p>Online play only connects people the game is <b>shared with by email</b>. Opening the link isn’t enough, even when signed in.</p>
-      <p><b>To fix it, the person who made the game:</b><br>1. Opens the game on claude.ai.<br>2. Taps the <b>Share</b> button at the top.<br>3. Adds the friend’s email address (the one they use for Claude).</p>
-      <p>Then both of you open the game while signed in to those accounts and tap Invite a friend again.</p>
-      <p class="muted small">If you are the owner, make sure you’re signed in to the account that made the game.</p>`, [['Try again', openInvite, true], ['Back', toTitle]]);
-    return;
-  }
-  if (!LOBBY.room && !room.p2p) initLobby();
-  await netHost(room, true);
-  if (!NET.code) return;
-  renderInviteScreen();
+// ---- one-tap matchmaking: join someone who's already waiting, or wait for the next person who taps Find a match
+const lookers = () => LOBBY.peers.filter(p => /^[A-Z]{4}$/.test(String(p.presence.look || '')) && p.presence.st !== 'in an online fight');
+async function findMatch() {
+  AU.click(); await initLobby();
+  if (NET.on) return;
+  const other = lookers()[0];
+  if (other) { MM.searching = false; lobbySet({ look: null }); netJoin(LOBBY.room, other.presence.look); return; }
+  if (!NET.code || NET.role !== 'host') { await netHost(LOBBY.room, true); if (!NET.code) return; }
+  MM.searching = true; lobbySet({ look: NET.code, st: lobbyStatus() });
+  renderOnlineHub();
 }
-function renderInviteScreen() {
-  const code = NET.code;
-  msg('invite a friend', 'Invite a friend', `<p>Your fight is ready. Tap a friend to invite them, or send them the link and code.</p>
-    <div class="invcode"><span>Your code</span><b class="num">${code}</b></div>
+function stopSearch() { if (!MM.searching) return; MM.searching = false; lobbySet({ look: null, st: lobbyStatus() }); }
+// two people tapped Find at the same moment: the one with the lower id keeps hosting, the other joins them
+function matchTick() {
+  if (!MM.searching || NET.on || !NET.code) return;
+  const other = lookers().find(p => String(p.peer) < String(LOBBY.me));
+  if (other) { const code = other.presence.look; MM.searching = false; lobbySet({ look: null }); netLeave(); netJoin(LOBBY.room, code); }
+}
+// ---- the Play online screen
+async function openInvite() { return openOnlineHub(); }
+async function openOnlineHub() {
+  AU.init(); initLobby();
+  renderOnlineHub();
+}
+function renderOnlineHub() {
+  const hosting = NET.code && NET.role === 'host' && !NET.on;
+  const head = MM.searching
+    ? `<div class="mmwait"><b>Looking for an opponent…</b><span>Anyone who taps Find a match joins you. Your code: <b class="num">${NET.code}</b></span></div>`
+    : hosting ? `<div class="invcode"><span>Your fight is open. Code</span><b class="num">${NET.code}</b></div>` : '';
+  msg('play online', 'Play online', `${head}
+    ${MM.searching ? '' : '<button class="btn primary flagtape big mmfind" id="mmFind">Find a match</button>'}
+    <h4 class="invh">Playing now</h4>
     <div id="inviteList" class="invlist"></div>
-    <label class="runcode invname"><span>Your name</span><input id="lobbyName" maxlength="20" autocomplete="off" value="${escTxt(myName() === 'A fighter' ? '' : myName())}" placeholder="What friends see"></label>`,
-    [['Send link', shareInvite, true], ['Cancel', () => { try { LOBBY.room && LOBBY.room.presence({ invite: null }); } catch (e) { } netLeave(); toTitle(); }]]);
-  const nm = $('#lobbyName'); if (nm) nm.onchange = () => { store.set('lobbyName', nm.value.trim().slice(0, 20)); try { LOBBY.room.presence({ name: myName() }); } catch (e) { } };
+    <div class="invrow2">
+      <button class="btn tape" id="invLink">Invite by link</button>
+      <label class="runcode"><span>Have a code?</span><input id="netCode2" maxlength="4" placeholder="ABCD" autocomplete="off"></label>
+      <button class="btn tape" id="invJoin">Join</button>
+    </div>
+    <label class="runcode invname"><span>Your name</span><input id="lobbyName" maxlength="20" autocomplete="off" value="${escTxt(myName() === 'A fighter' ? '' : myName())}" placeholder="What other players see"></label>`,
+    [[MM.searching || hosting ? 'Stop' : 'Back', () => { const was = MM.searching || hosting; stopSearch(); lobbySet({ invite: null }); LOBBY.invited = null; if (NET.role === 'host' && !NET.on) netLeave(); was ? renderOnlineHub() : toTitle(); }, !MM.searching]]);
+  const f = $('#mmFind'); if (f) f.onclick = findMatch;
+  $('#invLink').onclick = async () => { AU.click(); await initLobby(); if (!NET.code || NET.role !== 'host') { await netHost(LOBBY.room, true); if (!NET.code) return; } renderOnlineHub(); shareInvite(); };
+  $('#invJoin').onclick = async () => { const c = ($('#netCode2').value || '').trim().toUpperCase(); if (!/^[A-Z]{4}$/.test(c)) { toastMenu('Codes are four letters.'); return; } await initLobby(); stopSearch(); if (NET.role === 'host') netLeave(); netJoin(LOBBY.room, c); };
+  const nm = $('#lobbyName'); if (nm) nm.onchange = () => { store.set('lobbyName', nm.value.trim().slice(0, 20)); lobbySet({ name: myName() }); };
   renderInviteList();
 }
 function renderInviteList() {
   const box = $('#inviteList'); if (!box) return;
-  const list = LOBBY.peers;
   box.innerHTML = '';
-  if (!LOBBY.room) { box.append(h('p', { class: 'muted' }, 'Tap Send link: your friend opens it and joins your fight straight away. Or they tap Quick fight, Online duel, Join and type your code.')); return; }
-  if (!LOBBY.ready) { box.append(h('p', { class: 'muted' }, 'Looking for friends…')); return; }
-  if (!list.length) { box.append(h('p', { class: 'muted' }, 'Nobody else has the game open right now. Tap Send link and your friend can join with your code.')); return; }
+  if (!LOBBY.ready) { box.append(h('p', { class: 'muted' }, 'Looking for players…')); return; }
+  const list = LOBBY.peers.slice().sort((a, b) => (b.presence.look ? 1 : 0) - (a.presence.look ? 1 : 0));
+  if (!list.length) { box.append(h('p', { class: 'muted' }, 'Nobody else is online right now. Tap Find a match and wait, or Invite by link to text a friend.')); return; }
   for (const p of list) {
-    const sent = LOBBY.invited === p.peer;
-    const row = h('div', { class: 'invrow' }, h('span', { class: 'invwho' }, h('b', null, String(p.presence.name).slice(0, 20)), h('small', null, (p.guest ? 'guest · ' : '') + String(p.presence.st || '').slice(0, 30))),
-      h('button', { class: 'btn ' + (sent ? 'tape' : 'primary flagtape') + ' small', onclick: () => sendInvite(p) }, sent ? 'Invited ✓' : 'Invite'));
-    box.append(row);
+    const looking = !!p.presence.look, busy = p.presence.st === 'in an online fight', sent = LOBBY.invited === p.peer;
+    const btn = busy ? h('span', { class: 'muted small' }, 'busy')
+      : looking ? h('button', { class: 'btn primary flagtape small', onclick: () => { AU.click(); stopSearch(); if (NET.role === 'host') netLeave(); netJoin(LOBBY.room, p.presence.look); } }, 'Fight')
+      : h('button', { class: 'btn ' + (sent ? 'tape' : 'primary flagtape') + ' small', onclick: () => sendInvite(p) }, sent ? 'Invited ✓' : 'Invite');
+    box.append(h('div', { class: 'invrow' + (looking ? ' looking' : '') }, h('span', { class: 'invwho' }, h('b', null, String(p.presence.name).slice(0, 20)), h('small', null, (p.guest ? 'guest · ' : '') + String(p.presence.st || '').slice(0, 30))), btn));
   }
 }
-function sendInvite(p) {
-  if (!LOBBY.room || !NET.code) return;
+async function sendInvite(p) {
+  AU.click(); await initLobby();
+  if (!NET.code || NET.role !== 'host') { await netHost(LOBBY.room, true); if (!NET.code) return; }
   LOBBY.invited = p.peer;
-  try { LOBBY.room.presence({ name: myName(), invite: { to: p.peer, code: NET.code, t: Date.now() } }); } catch (e) { }
-  AU.click(); toastMenu(`Invite sent to ${String(p.presence.name).slice(0, 20)}`); renderInviteList();
+  lobbySet({ name: myName(), invite: { to: p.peer, code: NET.code, t: Date.now() } });
+  toastMenu(`Invite sent to ${String(p.presence.name).slice(0, 20)}`); renderOnlineHub();
 }
 async function shareInvite() {
   const link = inviteUrl(NET.code);
-  const text = link ? `Come fight me in BUHURT: Steel & Tape! Tap to join: ${link}` : `Come fight me in BUHURT: Steel & Tape! Open ${GAME_URL} , tap Quick fight, then Online duel, then Join with code ${NET.code}`;
+  const text = link ? `Come fight me in BUHURT: Steel & Tape! Tap to join: ${link}` : `Come fight me in BUHURT: Steel & Tape! Open ${GAME_URL} , tap Play online and join with code ${NET.code}`;
   try { if (navigator.share) { await navigator.share({ title: 'BUHURT duel', text }); return; } } catch (e) { if (e && e.name === 'AbortError') return; }
   try { await navigator.clipboard.writeText(text); toastMenu('Invite copied. Paste it in a message to your friend.'); } catch (e) { toastMenu(`Tell your friend the code ${NET.code}`); }
 }
@@ -12777,11 +12809,74 @@ function checkJoinLink() {
   if (!m) return;
   const code = m[1].toUpperCase();
   try { history.replaceState(null, '', location.pathname + location.search.replace(/[?&]join=[A-Za-z]{4}/, '')); } catch (e) { }
-  setTimeout(async () => { AU.init(); netJoin(await getRoom(), code); }, 800);
+  setTimeout(async () => { AU.init(); netJoin(await initLobby(), code); }, 800);
 }
 function inviteUrl(code) {
   const onClaude = /claude\.ai|claudeusercontent|anthropic/.test(location.hostname) || location.protocol === 'file:' || location.protocol === 'about:';
   return onClaude ? null : location.origin + location.pathname + '#join=' + code;
+}
+
+// ---- a lobby without a server: the first player online becomes the "hub" (a well-known peer name) and keeps the
+// list of who's online; everyone else connects to it, sends their presence and gets the list back. If the hub's
+// player leaves, the others notice the dropped connection and one of them takes over. Same API as the room.
+const HUB_ID = 'buhurt-steel-tape-lobby-v1';
+function p2pLobby() {
+  let mine = {}, list = {}, myId = null, member = null, conn = null, hub = null, dead = false, fails = 0, schedT = 0;
+  const hubConns = {}, hubMembers = {}, subs = [];
+  const view = () => Object.entries(list).map(([pid, p]) => ({ peer: pid, isMe: pid === myId, sameTab: pid === myId, kind: 'viewer', guest: false, by: null, presence: p || {}, updatedAt: Date.now() }));
+  const notify = () => { const peers = view(); subs.slice().forEach(f => { try { f({ peers, joined: [], left: [], updated: [] }); } catch (e) { } }); };
+  const sched = () => { if (schedT) return; schedT = setTimeout(() => { schedT = 0; for (const id in hubConns) { const c = hubConns[id]; if (c.open) try { c.send({ t: 'list', m: hubMembers }); } catch (e) { } } }, 250); };
+  const becomeHub = Peer => new Promise(res => {
+    const h = new Peer(HUB_ID, { debug: 0 }); let done = false; const fin = v => { if (!done) { done = true; res(v); } };
+    h.on('open', () => {
+      hub = h;
+      h.on('connection', c => {
+        c.on('data', m => { if (m && m.t === 'p') { hubMembers[c.peer] = m.p || {}; hubConns[c.peer] = c; sched(); } });
+        const gone = () => { delete hubMembers[c.peer]; delete hubConns[c.peer]; sched(); };
+        c.on('close', gone); c.on('error', gone);
+      });
+      fin(true);
+    });
+    h.on('error', e => { if (e && e.type === 'unavailable-id') { try { h.destroy(); } catch (er) { } fin(false); } else fin(!!hub); });
+    h.on('disconnected', () => { try { if (!h.destroyed) h.reconnect(); } catch (er) { } });
+    setTimeout(() => fin(false), 8000);
+  });
+  const retry = () => {
+    if (dead) return; conn = null; fails++;
+    list = myId ? { [myId]: mine } : {}; notify();
+    setTimeout(start, 500 + Math.random() * 1500 * Math.min(fails, 4));
+  };
+  const connectToHub = () => {
+    const c = member.connect(HUB_ID, { reliable: true }); conn = c; let opened = false;
+    const to = setTimeout(() => { if (!opened && conn === c) { try { c.close(); } catch (e) { } retry(); } }, 7000);
+    c.on('open', () => { opened = true; clearTimeout(to); fails = 0; try { c.send({ t: 'p', p: mine }); } catch (e) { } });
+    c.on('data', m => { if (m && m.t === 'list' && m.m && typeof m.m === 'object') { list = m.m; notify(); } });
+    c.on('close', () => { if (conn === c) retry(); });
+    c.on('error', () => { if (conn === c) { clearTimeout(to); retry(); } });
+  };
+  const start = async () => {
+    if (dead) return;
+    const Peer = await loadPeerLib();
+    if (!hub) await becomeHub(Peer);
+    if (!dead) connectToHub();
+  };
+  (async () => {
+    try {
+      const Peer = await loadPeerLib();
+      member = new Peer({ debug: 0 });
+      member.on('open', id => { myId = id; list = { [id]: mine }; notify(); start(); });
+      member.on('disconnected', () => { try { if (!member.destroyed) member.reconnect(); } catch (e) { } });
+      member.on('error', () => { });
+    } catch (e) { }
+  })();
+  return {
+    p2p: true, lobby: true,
+    presence(patch) { mine = { ...mine }; for (const k in patch) { if (patch[k] === null) delete mine[k]; else mine[k] = patch[k]; } if (myId) list = { ...list, [myId]: mine }; if (conn && conn.open) { try { conn.send({ t: 'p', p: mine }); } catch (e) { } } return Promise.resolve(); },
+    onPeers(f) { subs.push(f); setTimeout(() => f({ peers: view(), joined: view(), left: [], updated: [] }), 0); return () => { const i = subs.indexOf(f); if (i >= 0) subs.splice(i, 1); }; },
+    peers: view, emit: () => Promise.resolve(), on: () => () => { },
+    join: name => p2pJoin(name),
+    leave() { dead = true; try { conn && conn.close(); member && member.destroy(); hub && hub.destroy(); } catch (e) { } },
+  };
 }
 
 })();
