@@ -720,6 +720,14 @@ body:not(.split) #pips:not([hidden]) ~ #statstrip{top:calc(var(--st) + 78px)}
 .invrow.looking{box-shadow:inset 3px 0 0 var(--flag)}
 .invrow2{display:flex;flex-wrap:wrap;gap:8px;align-items:flex-end;margin-top:10px}
 .invrow2 .runcode{flex:1;min-width:120px;margin:0}
+/* title: everyone playing right now */
+.nowplaying{display:flex;flex-wrap:wrap;align-items:center;gap:6px 8px;width:100%;margin-top:8px;padding:8px 10px;background:rgba(10,13,15,.72);border:1px solid var(--rule);color:var(--chalk);font:600 .9rem var(--body);text-align:left;cursor:pointer;max-height:92px;overflow-y:auto}
+.nowplaying b{font:800 .95rem var(--display);letter-spacing:.06em;text-transform:uppercase;color:var(--card-green);margin-right:4px}
+.nowplaying b::before{content:"";display:inline-block;width:8px;height:8px;border-radius:50%;background:var(--card-green);margin-right:6px;animation:windpulse .9s ease-in-out infinite alternate}
+.nowplaying span{display:contents}
+.nowplaying i{font-style:normal;background:var(--pad-2);padding:2px 8px;border-radius:999px;white-space:nowrap}
+.nowplaying i.look{background:var(--flag);color:var(--flag-ink)}
+.nowplaying i.busy{opacity:.6}
 
 </style>
 <div id="app">
@@ -828,6 +836,7 @@ body:not(.split) #pips:not([hidden]) ~ #statstrip{top:calc(var(--st) + 78px)}
           <button class="btn tape" id="btnSeason">Summer season</button>
           <button class="btn tape" id="btnInvite">Play online<span class="newbadge" id="onlineBadge" hidden></span></button>
         </div>
+        <button class="nowplaying" id="nowPlaying" hidden><b id="npCount"></b><span id="npNames"></span></button>
         <div class="links">
           <button id="btnHow">How to play</button>
           <button id="btnSettings">Settings</button>
@@ -11402,7 +11411,7 @@ function initMenus() {
   $('#btnContinue').onclick = () => { AU.init(); continueTourney(); };
   $('#btnQuick').onclick = () => { AU.init(); openModes(); };
   $('#btnLadder').onclick = () => { AU.init(); openLadder(); };
-  $('#btnDaily').onclick = () => openDaily(); $('#btnRun').onclick = () => openRun(); $('#btnSeason').onclick = () => { AU.init(); openSeason(); }; $('#btnInvite').onclick = () => { AU.click(); openInvite(); }; setTimeout(initLobby, 1500); setTimeout(checkJoinLink, 0);
+  $('#btnDaily').onclick = () => openDaily(); $('#btnRun').onclick = () => openRun(); $('#btnSeason').onclick = () => { AU.init(); openSeason(); }; $('#btnInvite').onclick = () => { AU.click(); openInvite(); }; $('#nowPlaying').onclick = () => { AU.click(); openInvite(); }; setTimeout(initLobby, 1500); setTimeout(checkJoinLink, 0);
   refreshDaily();
   $('#btnTrain').onclick = () => { AU.init(); startTraining(); };
   $('#btnCareer').onclick = () => { AU.init(); openCareer(); };
@@ -12636,7 +12645,11 @@ function lobbySet(patch) { try { LOBBY.room && LOBBY.room.presence(patch); } cat
 async function initLobby() {
   if (LOBBY.room || LOBBY.starting) return LOBBY.starting;
   LOBBY.starting = (async () => {
-    const room = (await claudeRoom()) || p2pLobby();
+    // everyone in one list: the peer-to-peer lobby works on the website and (where allowed) on claude.ai, so both see
+    // each other. If this page can't load it, fall back to Claude's own room.
+    let room = null;
+    try { await loadPeerLib(); room = p2pLobby(); await room.ready; } catch (e) { try { room && room.leave(); } catch (er) { } room = await claudeRoom(); }
+    if (!room) { LOBBY.starting = null; return null; }
     LOBBY.room = room;
     lobbySet({ name: myName(), st: lobbyStatus(), invite: null, look: null });
     setInterval(() => lobbySet({ name: myName(), st: lobbyStatus() }), 4000);
@@ -12660,8 +12673,17 @@ async function initLobby() {
   return LOBBY.starting;
 }
 function updateLobbyBadge() {
-  const b = $('#onlineBadge'); if (!b) return;
-  const n = LOBBY.peers.length; b.hidden = !n; b.textContent = n + ' online';
+  const n = LOBBY.peers.length;
+  const b = $('#onlineBadge'); if (b) { b.hidden = !n; b.textContent = n + ' online'; }
+  // the title screen lists everyone playing right now; tap it to open Play online
+  const np = $('#nowPlaying'); if (!np) return;
+  np.hidden = !n;
+  if (!n) return;
+  const busy = p => /fight/.test(String(p.presence.st || ''));
+  const list = LOBBY.peers.slice().sort((a, b) => (b.presence.look ? 2 : 0) - (a.presence.look ? 2 : 0) || (busy(a) ? 1 : 0) - (busy(b) ? 1 : 0));
+  $('#npCount').textContent = `${n} playing now`;
+  const box = $('#npNames'); box.innerHTML = '';
+  list.forEach(p => box.append(h('i', { class: p.presence.look ? 'look' : busy(p) ? 'busy' : '' }, String(p.presence.name || 'A fighter').slice(0, 20))));
 }
 // someone invited you: answer now if you're in the menus, or as soon as the fight in progress is over
 function showInvite() {
@@ -12823,6 +12845,7 @@ const HUB_ID = 'buhurt-steel-tape-lobby-v1';
 function p2pLobby() {
   let mine = {}, list = {}, myId = null, member = null, conn = null, hub = null, dead = false, fails = 0, schedT = 0;
   const hubConns = {}, hubMembers = {}, subs = [];
+  let okRes, okRej; const ready = new Promise((a, b) => { okRes = a; okRej = b; }); setTimeout(() => okRej(new Error('timeout')), 10000);
   const view = () => Object.entries(list).map(([pid, p]) => ({ peer: pid, isMe: pid === myId, sameTab: pid === myId, kind: 'viewer', guest: false, by: null, presence: p || {}, updatedAt: Date.now() }));
   const notify = () => { const peers = view(); subs.slice().forEach(f => { try { f({ peers, joined: [], left: [], updated: [] }); } catch (e) { } }); };
   const sched = () => { if (schedT) return; schedT = setTimeout(() => { schedT = 0; for (const id in hubConns) { const c = hubConns[id]; if (c.open) try { c.send({ t: 'list', m: hubMembers }); } catch (e) { } } }, 250); };
@@ -12864,13 +12887,13 @@ function p2pLobby() {
     try {
       const Peer = await loadPeerLib();
       member = new Peer({ debug: 0 });
-      member.on('open', id => { myId = id; list = { [id]: mine }; notify(); start(); });
+      member.on('open', id => { myId = id; okRes(true); list = { [id]: mine }; notify(); start(); });
       member.on('disconnected', () => { try { if (!member.destroyed) member.reconnect(); } catch (e) { } });
-      member.on('error', () => { });
-    } catch (e) { }
+      member.on('error', e => { if (!myId) okRej(e); });
+    } catch (e) { okRej(e); }
   })();
   return {
-    p2p: true, lobby: true,
+    p2p: true, lobby: true, ready,
     presence(patch) { mine = { ...mine }; for (const k in patch) { if (patch[k] === null) delete mine[k]; else mine[k] = patch[k]; } if (myId) list = { ...list, [myId]: mine }; if (conn && conn.open) { try { conn.send({ t: 'p', p: mine }); } catch (e) { } } return Promise.resolve(); },
     onPeers(f) { subs.push(f); setTimeout(() => f({ peers: view(), joined: view(), left: [], updated: [] }), 0); return () => { const i = subs.indexOf(f); if (i >= 0) subs.splice(i, 1); }; },
     peers: view, emit: () => Promise.resolve(), on: () => () => { },
