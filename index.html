@@ -942,6 +942,7 @@ body:not(.split) #pips:not([hidden]) ~ #statstrip{top:calc(var(--st) + 78px)}
   <section class="screen dimmed" id="tactics" hidden>
     <div class="panel wide">
       <header class="phead">
+        <button class="back" data-leave data-gp="B" aria-label="Leave"><svg viewBox="0 0 24 24"><path d="M15 5l-7 7 7 7"/></svg><span>Leave</span></button>
         <div class="tacid"><div class="ttape tape mk sm" id="tacStage">semi-final</div><h2 class="vs" id="tacTitle">Reavers vs Bow River Wardens</h2></div>
         <div class="seg tabs" id="tacTabs" role="tablist"><button data-tab="helm" aria-pressed="true">Helm</button><button data-tab="weapon" aria-pressed="false">Weapon</button><button data-tab="body" aria-pressed="false">Body</button><button data-tab="squad" aria-pressed="false">Squad</button></div>
       </header>
@@ -975,6 +976,7 @@ body:not(.split) #pips:not([hidden]) ~ #statstrip{top:calc(var(--st) + 78px)}
   <!-- SCORESHEET -->
   <section class="screen dimmed" id="sheetScr" hidden>
     <div class="panel wide">
+      <header class="phead"><button class="back" data-leave data-gp="B" aria-label="Leave"><svg viewBox="0 0 24 24"><path d="M15 5l-7 7 7 7"/></svg><span>Leave</span></button><h2 class="ttape tape mk">Score sheet</h2></header>
       <div class="pbody"><div class="sheet" id="sheet"></div></div>
       <footer class="pfoot"><button class="btn primary flagtape" id="btnSheetNext" data-gp="A">To the repair bench</button></footer>
     </div>
@@ -983,7 +985,7 @@ body:not(.split) #pips:not([hidden]) ~ #statstrip{top:calc(var(--st) + 78px)}
   <!-- REPAIR -->
   <section class="screen dimmed" id="repair" hidden>
     <div class="panel wide">
-      <header class="phead"><h2 class="ttape tape mk">Repair window</h2><p class="muted hidesm" id="repSub">The Technical Marshal is watching your bench (BR 2.3).</p><div class="timer num" id="repTimer">0:45</div></header>
+      <header class="phead"><button class="back" data-leave data-gp="B" aria-label="Leave"><svg viewBox="0 0 24 24"><path d="M15 5l-7 7 7 7"/></svg><span>Leave</span></button><h2 class="ttape tape mk">Repair window</h2><p class="muted hidesm" id="repSub">The Technical Marshal is watching your bench (BR 2.3).</p><div class="timer num" id="repTimer">0:45</div></header>
       <div class="pbody">
         <div class="rgrid">
           <div class="stack">
@@ -9356,7 +9358,7 @@ function navMove(dx, dy) {
 function navBack() {
   const root = activeLayer(); if (!root) return;
   if (G.screen === 'pause') { togglePause(false); return; }
-  const b = root.querySelector('[data-back]'); if (b && b.getBoundingClientRect().width) { b.click(); return; }
+  const b = root.querySelector('[data-back], [data-leave]'); if (b && b.getBoundingClientRect().width) { b.click(); return; }
 }
 function navStart() {
   if (G.screen === 'tactics') return $('#btnReady').click();
@@ -11216,10 +11218,31 @@ function renderSheet(extraTitle) {
 }
 
 // every message screen: tape label and a big title up top, scrolling body, actions pinned to the bottom
+// leaving a match from the tactics, score-sheet or repair screen (or a message with no back of its own): ask first
+// when a match is under way, then go back to the menu the match came from
+function leaveTarget() {
+  const m = G.match;
+  if (!m || G.attract) return toTitle;
+  if (m.ladder != null) return () => { toTitle(); openLadder(); };
+  if (G.tourney || m.run || m.season || m.daily || m.rival || m.online || m.kids || m.training) return toTitle;
+  if (m.versus) return () => { toTitle(); openVersus(); };
+  return () => { toTitle(); openModes(); };
+}
+function leaveScreen() {
+  const from = G.screen, m = G.match, live = m && !G.attract && G.phase !== 'over';
+  if (!live) { toTitle(); return; }
+  msg('leave', 'Leave this match?', `<p>${G.tourney ? 'Your Rumble is saved: Continue the Rumble from the title screen picks it up again.' : 'This match ends and doesn’t count.'}</p>`,
+    [['Leave', () => { if (NET.on) netLeave(); leaveTarget()(); }, true], ['Stay', () => showScreen(from === 'msgScr' ? 'title' : from)]]);
+}
 function msg(kicker, title, bodyHtml, buttons) {
   const p = $('#msgPanel'); p.innerHTML = '';
   const same = kicker.toLowerCase() === String(title).toLowerCase();
-  p.append(h('header', { class: 'phead' }, h('div', { class: 'ttape tape mk' }, kicker), same ? null : h('h2', { class: 'msgtitle' }, title)));
+  const BACKISH = /^(back|cancel|title|no thanks|close|stop|quit|leave|other games|couch play|done)/i;
+  const backBtn = buttons.find(([text]) => BACKISH.test(String(text)));
+  const goBack = backBtn ? backBtn[1] : leaveScreen;
+  const hb = h('button', { class: 'back', 'data-back': '', 'data-gp': 'B', 'aria-label': 'Back', onclick: e => { e.stopPropagation(); AU.click(); goBack(); } });
+  hb.innerHTML = '<svg viewBox="0 0 24 24"><path d="M15 5l-7 7 7 7"/></svg><span>Back</span>';
+  p.append(h('header', { class: 'phead' }, hb, h('div', { class: 'ttape tape mk' }, kicker), same ? null : h('h2', { class: 'msgtitle' }, title)));
   const body = h('div', { class: 'pbody' }); body.innerHTML = bodyHtml; p.append(body);
   const row = h('footer', { class: 'pfoot' });
   buttons.forEach(([text, fn, primary]) => row.append(h('button', { class: 'btn ' + (primary ? 'primary flagtape' : 'tape'), 'data-gp': primary ? 'A' : null, onclick: () => { AU.click(); fn(); } }, text)));
@@ -11421,6 +11444,7 @@ function initMenus() {
   $('#btnHow').onclick = () => { G.backTo = 'title'; renderHow(IN.mode); selectTab($('#howTabs'), 'controls'); showScreen('howto'); };
   $('#btnSettings').onclick = () => { G.backTo = 'title'; showScreen('settings'); };
   $$('[data-back]').forEach(b => b.onclick = () => showScreen(G.backTo || 'title'));
+  $$('[data-leave]').forEach(b => b.onclick = () => { AU.click(); leaveScreen(); });
   $$('#howSeg button').forEach(b => b.onclick = () => renderHow(b.dataset.how));
   $$('#diffSeg button').forEach(b => b.onclick = () => { G.settings.difficulty = b.dataset.diff; $$('#diffSeg button').forEach(x => x.setAttribute('aria-pressed', String(x === b))); saveSettings(); });
   { const el = $('#optFP'); el.checked = G.settings.view !== 'tp'; el.onchange = () => setView(el.checked ? 'fp' : 'tp'); }
@@ -12253,7 +12277,7 @@ async function boot(hot) {
   toTitle();
   requestAnimationFrame(frame);
   if (location.hash === '#autotest') setTimeout(autotest, 300);
-  window.__ST = { G, AU, buildShield, buildWeapon, W3, startTourney, quickFight, toTitle, openRepair, kitCheck, setupMatch, toTactics, beginFight, endRound, matchEnd, CLUBS, WEAPONS, setView, toast, renderKitPicker, applyLoadout, IN, FP, showScreen, weaponIcon, startCine, startTraining, startLadder, openCareer, openModes, openLadder, CAREER, setLesson, TR, unlock, togglePause, afterRound, renderHow, selectPiece, selectTape, msg, renderSheet, setHud, endTraining, setMode, PAD, navMove, focusFirst, sparks, CUTE, THREE, BREATH, setCuteDeco, flipFx, PHOTO, UAL, raiseFlags, startVersus, startFFA, startBracket, startKid, KID, openSeason, startSeasonMatch, setVenue, VS, SPLIT, NET, netStartHost, netStartGuest, vinControl, openRun, openDaily, openBracket, showBracket, bracketResult, ffaMatchEnd, ffaLeader, ffaWinner, endKid, openPhoto, closePhoto, startReplay, stopReplay, RP, store, startRunFight, newRun, runEnd, WX, setWeather, padVin, readVersus, applyLo, myLoadout, netDropped, netLeave, showIntro, installForged, dailyPlan, openKids, openVersus, openPicks, LESSONS, rivalClub, startGrudge, startDaily, seasonState, newSeason, refreshDaily, VENUES, COMM, hitMapHtml, resetFighterForRound, DIFF, PIN, PADS, NIN, padsUpdate, seatPads, LOBBY, MM };
+  window.__ST = { G, AU, buildShield, buildWeapon, W3, startTourney, quickFight, toTitle, openRepair, kitCheck, setupMatch, toTactics, beginFight, endRound, matchEnd, CLUBS, WEAPONS, setView, toast, renderKitPicker, applyLoadout, IN, FP, showScreen, weaponIcon, startCine, startTraining, startLadder, openCareer, openModes, openLadder, CAREER, setLesson, TR, unlock, togglePause, afterRound, renderHow, selectPiece, selectTape, msg, renderSheet, setHud, endTraining, setMode, PAD, navMove, focusFirst, sparks, CUTE, THREE, BREATH, setCuteDeco, flipFx, PHOTO, UAL, raiseFlags, startVersus, startFFA, startBracket, startKid, KID, openSeason, startSeasonMatch, setVenue, VS, SPLIT, NET, netStartHost, netStartGuest, vinControl, openRun, openDaily, openBracket, showBracket, bracketResult, ffaMatchEnd, ffaLeader, ffaWinner, endKid, openPhoto, closePhoto, startReplay, stopReplay, RP, store, startRunFight, newRun, runEnd, WX, setWeather, padVin, readVersus, applyLo, myLoadout, netDropped, netLeave, showIntro, installForged, dailyPlan, openKids, openVersus, openPicks, LESSONS, rivalClub, startGrudge, startDaily, seasonState, newSeason, refreshDaily, VENUES, COMM, hitMapHtml, resetFighterForRound, DIFF, PIN, PADS, NIN, padsUpdate, seatPads, LOBBY, MM, openOnlineHub };
 }
 
 function autotest() {
