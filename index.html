@@ -609,7 +609,7 @@ body.pad .tabs::after{content:"RB";border-radius:5px;margin-left:2px}
 #capline{position:absolute;left:50%;bottom:calc(var(--sb) + 56px);transform:translateX(-50%);background:rgba(0,0,0,.85);color:#fff;padding:4px 12px;font-weight:700;font-size:.9rem;white-space:nowrap;pointer-events:none}
 @media (max-aspect-ratio:1/1){#comm{top:calc(var(--st) + 112px);max-width:60vw}}
 .sharerow{margin:8px 0 2px}
-@media (min-aspect-ratio:3/2){.mgrid{grid-template-columns:repeat(4,1fr)}.mgrid .btn{font-size:.9rem;padding:.35em .4em;white-space:nowrap}}
+@media (min-aspect-ratio:3/2){.titlewrap{width:min(600px,58vw)}.mgrid{grid-template-columns:repeat(4,1fr)}.mgrid .btn{font-size:.84rem;padding:.35em .35em;line-height:1.1}.mgrid .newbadge{font-size:.62rem;padding:0 4px}}
 @media (max-height:500px){.mgrid{gap:6px}.mgrid .btn{min-height:38px}}
 /* daily and gauntlet */
 .daily .dmod,.boon{display:flex;gap:12px;align-items:center;background:var(--pad-2);border:1px solid var(--rule);padding:10px 12px;margin:4px 0 10px}
@@ -791,6 +791,14 @@ body:not(.split) #pips:not([hidden]) ~ #statstrip{top:calc(var(--st) + 78px)}
 .bosrec{display:grid;gap:2px;background:var(--pad-2);border-left:4px solid var(--card-green);padding:8px 10px;margin-bottom:10px}
 .bosrec span:not(.bostick){color:var(--dim)}
 .bosalt{display:flex;flex-wrap:wrap;gap:6px;margin:8px 0}
+/* title fighter card: in portrait it sits in the page flow under the menu instead of over the logo */
+#title .chipcard{z-index:2}
+#title .chipcard .spbadge{position:static;transform:none;margin-left:6px;white-space:nowrap}
+@media (max-aspect-ratio:1/1){
+  #title .chipcard{position:static;max-width:none;width:100%;margin-top:10px;order:99}
+  #title .chipcard > span:nth-child(2){flex:1;min-width:0}
+}
+@media (min-aspect-ratio:1/1) and (max-width:900px){#title .chipcard{max-width:min(260px,36vw);font-size:.78rem}}
 
 </style>
 <div id="app">
@@ -12407,7 +12415,7 @@ async function boot(hot) {
   toTitle();
   requestAnimationFrame(frame);
   if (location.hash === '#autotest') setTimeout(autotest, 300);
-  window.__ST = { G, AU, buildShield, buildWeapon, W3, startTourney, quickFight, toTitle, openRepair, kitCheck, setupMatch, toTactics, beginFight, endRound, matchEnd, CLUBS, WEAPONS, setView, toast, renderKitPicker, applyLoadout, IN, FP, showScreen, weaponIcon, startCine, startTraining, startLadder, openCareer, openModes, openLadder, CAREER, setLesson, TR, unlock, togglePause, afterRound, renderHow, selectPiece, selectTape, msg, renderSheet, setHud, endTraining, setMode, PAD, navMove, focusFirst, sparks, CUTE, THREE, BREATH, setCuteDeco, flipFx, PHOTO, UAL, raiseFlags, startVersus, startFFA, startBracket, startKid, KID, openSeason, startSeasonMatch, setVenue, VS, SPLIT, NET, buildOnlineMatch, hostLobby, joinLobby, ONL, vinControl, openRun, openDaily, openBracket, showBracket, bracketResult, ffaMatchEnd, ffaLeader, ffaWinner, endKid, openPhoto, closePhoto, startReplay, stopReplay, RP, store, startRunFight, newRun, runEnd, WX, setWeather, padVin, readVersus, applyLo, myLoadout, netDropped, netLeave, showIntro, installForged, dailyPlan, openKids, openVersus, openPicks, LESSONS, rivalClub, startGrudge, startDaily, seasonState, newSeason, refreshDaily, VENUES, COMM, hitMapHtml, resetFighterForRound, DIFF, PIN, PADS, NIN, padsUpdate, seatPads, LOBBY, MM, openOnlineHub, benchDown, benchMove, REP, squirePatch, coverage, openProfile, myProfile, BOS };
+  window.__ST = { G, AU, buildShield, buildWeapon, W3, startTourney, quickFight, toTitle, openRepair, kitCheck, setupMatch, toTactics, beginFight, endRound, matchEnd, CLUBS, WEAPONS, setView, toast, renderKitPicker, applyLoadout, IN, FP, showScreen, weaponIcon, startCine, startTraining, startLadder, openCareer, openModes, openLadder, CAREER, setLesson, TR, unlock, togglePause, afterRound, renderHow, selectPiece, selectTape, msg, renderSheet, setHud, endTraining, setMode, PAD, navMove, focusFirst, sparks, CUTE, THREE, BREATH, setCuteDeco, flipFx, PHOTO, UAL, raiseFlags, startVersus, startFFA, startBracket, startKid, KID, openSeason, startSeasonMatch, setVenue, VS, SPLIT, NET, buildOnlineMatch, hostLobby, joinLobby, ONL, vinControl, openRun, openDaily, openBracket, showBracket, bracketResult, ffaMatchEnd, ffaLeader, ffaWinner, endKid, openPhoto, closePhoto, startReplay, stopReplay, RP, store, startRunFight, newRun, runEnd, WX, setWeather, padVin, readVersus, applyLo, myLoadout, netDropped, netLeave, showIntro, installForged, dailyPlan, openKids, openVersus, openPicks, LESSONS, rivalClub, startGrudge, startDaily, seasonState, newSeason, refreshDaily, VENUES, COMM, hitMapHtml, resetFighterForRound, DIFF, PIN, PADS, NIN, padsUpdate, seatPads, LOBBY, MM, openOnlineHub, benchDown, benchMove, REP, squirePatch, coverage, openProfile, myProfile, BOS, updateTitlePurse };
 }
 
 function autotest() {
