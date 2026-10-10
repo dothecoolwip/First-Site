@@ -466,8 +466,6 @@ input{-webkit-user-select:text;user-select:text}
 .kitrow .pct{font-family:var(--display);font-weight:800;font-size:1rem}
 .benchbar{display:flex;align-items:center;gap:10px}
 .benchbar .benchmsg{flex:1;min-height:0;font-size:.84rem;line-height:1.25}
-#repair[data-stage="pick"] .benchbar .steps,#repair[data-stage="pick"] #bench{display:none}
-#repair[data-stage="bench"] #drawer{display:none}
 #repair[data-stage="pick"] .benchbar .benchmsg{font-size:.92rem}
 #bench{max-height:max(150px,calc(100dvh - 210px))}
 
@@ -728,6 +726,37 @@ body:not(.split) #pips:not([hidden]) ~ #statstrip{top:calc(var(--st) + 78px)}
 .nowplaying i{font-style:normal;background:var(--pad-2);padding:2px 8px;border-radius:999px;white-space:nowrap}
 .nowplaying i.look{background:var(--flag);color:var(--flag-ink)}
 .nowplaying i.busy{opacity:.6}
+.fmtrow{margin:10px 0 2px}.fmtrow .seg{flex-wrap:wrap}
+.fmtnote{margin:0 0 6px}
+
+/* repair bench: strap cards on top, the bench fills the rest */
+#repair .panel{display:flex;flex-direction:column}
+#repair .pbody{flex:1;min-height:0;display:flex;flex-direction:column;overflow:hidden}
+.repwrap{display:flex;flex-direction:column;gap:8px;flex:1;min-height:0}
+.pieces{display:grid;grid-template-columns:repeat(auto-fit,minmax(104px,1fr));gap:6px}
+.piece{position:relative;display:grid;grid-template-columns:auto 1fr auto;grid-template-rows:auto auto auto;gap:2px 6px;align-items:center;padding:7px 9px;background:var(--pad);border:2px solid transparent;color:var(--chalk);text-align:left;cursor:pointer}
+.piece[aria-pressed="true"]{border-color:var(--chalk);background:var(--pad-2)}
+.piece.worst{border-color:var(--flag)}
+.piece .pic{grid-row:1/3;font-size:1.5rem;line-height:1}
+.piece.flipx .pic{transform:scaleX(-1)}
+.piece .nm{font-weight:700;font-size:.85rem;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.piece .pct{font:800 1rem var(--display)}
+.piece .meter{grid-column:2/4;height:6px;background:#11161a;position:relative}
+.piece .meter i{position:absolute;inset:0 auto 0 0;background:var(--c)}
+.piece .st{grid-column:1/-1;font-size:.72rem;color:var(--dim);min-height:1em}
+.piece.worst .st{color:var(--flag);font-weight:700;text-transform:uppercase;letter-spacing:.05em}
+.reptools{display:flex;flex-wrap:wrap;gap:6px;align-items:center}
+.reptools .drawer{flex:1}
+.tapechip{padding:4px 8px}
+.benchbar{display:flex;gap:10px;align-items:center;flex-wrap:wrap}
+.benchmsg{font-size:1rem;font-weight:600;flex:1;min-width:180px}
+.benchwrap{flex:1;min-height:150px;position:relative}
+#bench{position:absolute;inset:0;width:100%;height:100%;max-width:none;max-height:none;aspect-ratio:auto}
+#repTimer.low{color:var(--card-red);animation:windpulse .5s ease-in-out infinite alternate}
+@media (max-height:500px){.piece{padding:4px 7px}.piece .st{display:none}.piece .pic{font-size:1.2rem}.benchmsg{font-size:.9rem}.repwrap{gap:5px}.benchwrap{min-height:120px}}
+.hdrdone{display:none}
+@media (max-height:500px){#repair .pfoot{display:none}#repair .hdrdone{display:inline-flex;margin-left:8px}#repair .phead{padding-top:6px;padding-bottom:6px}#repair #steps{display:none}.tapechip .lg{display:none}.tapechip{padding:3px 7px}#btnSquire{padding:.3em .6em;font-size:.8rem}#repair .phead h2{font-size:1.2rem}}
+.tapechip.illegal{box-shadow:inset 0 -3px 0 var(--card-red)}
 
 </style>
 <div id="app">
@@ -985,18 +1014,13 @@ body:not(.split) #pips:not([hidden]) ~ #statstrip{top:calc(var(--st) + 78px)}
   <!-- REPAIR -->
   <section class="screen dimmed" id="repair" hidden>
     <div class="panel wide">
-      <header class="phead"><button class="back" data-leave data-gp="B" aria-label="Leave"><svg viewBox="0 0 24 24"><path d="M15 5l-7 7 7 7"/></svg><span>Leave</span></button><h2 class="ttape tape mk">Repair window</h2><p class="muted hidesm" id="repSub">The Technical Marshal is watching your bench (BR 2.3).</p><div class="timer num" id="repTimer">0:45</div></header>
+      <header class="phead"><button class="back" data-leave data-gp="B" aria-label="Leave"><svg viewBox="0 0 24 24"><path d="M15 5l-7 7 7 7"/></svg><span>Leave</span></button><h2 class="ttape tape mk">Repair window</h2><p class="muted hidesm" id="repSub">The Technical Marshal is watching your bench (BR 2.3).</p><div class="timer num" id="repTimer">0:45</div><button class="btn primary flagtape small hdrdone" id="btnRepairDone2">Done</button></header>
       <div class="pbody">
-        <div class="rgrid">
-          <div class="stack">
-            <h3>Your straps</h3>
-            <div class="kitlist" id="kitlist"></div>
-          </div>
-          <div class="stack">
-            <div class="drawer" id="drawer"></div>
-            <div class="benchbar"><div class="steps" id="steps"><span data-s="rip">Rip</span><span data-s="wrap">Wrap</span><span data-s="smooth">Smooth</span></div><div class="benchmsg" id="benchMsg">Pick a strap on the left.</div></div>
-            <canvas id="bench" width="720" height="300"></canvas>
-          </div>
+        <div class="repwrap">
+          <div class="pieces" id="kitlist"></div>
+          <div class="reptools"><div class="drawer" id="drawer"></div><button class="btn tape small" id="btnSquire">Squire, patch it for me</button></div>
+          <div class="benchbar"><div class="steps" id="steps"><span data-s="rip">1 Rip</span><span data-s="wrap">2 Wrap</span><span data-s="smooth">3 Smooth</span></div><div class="benchmsg" id="benchMsg">Tap a strap to fix it.</div></div>
+          <div class="benchwrap"><canvas id="bench" width="720" height="300"></canvas></div>
         </div>
       </div>
       <footer class="pfoot"><button class="btn primary flagtape" id="btnRepairDone" data-gp="Start">Done, back to the list</button></footer>
@@ -10287,18 +10311,29 @@ function updateStatsStrip() {
 }
 
 // ---------- the repair bench: rip, wrap, smooth (BR 2.1.5, BR 2.3, WR 7.2.2) ----------
-const REP = { piece: null, tape: null, step: null, timer: 45, ripT: 0, wraps: [], sloppy: 0, side: 0, wrinkles: [], smoothT: 0, q: {}, ptr: null, active: false, onDone: null, log: [] };
+const REP = { piece: null, tape: null, roll: 'black', step: null, timer: 45, ripT: 0, wraps: [], sloppy: 0, side: 0, wrinkles: [], smoothT: 0, q: {}, ptr: null, active: false, onDone: null, log: [], squire: 1, pop: null, lastSec: 99, trail: [] };
+const PIECE_SHORT = { helmet: ['Helmet', '⛑️'], armL: ['Left arm', '💪'], armR: ['Right arm', '💪'], legs: ['Legs', '🦵'], haft: ['Haft', '🪓'] };
 const ZONE = { a: 0.36, b: 0.64 }; // the tear, as a fraction of the bench width
 const BAND = { top: 0.42, bot: 0.6 };
 
 function openRepair(seconds, onDone) {
   if (CAREER.skills && CAREER.skills['show.tape']) seconds += 15; // Tape artist
-  Object.assign(REP, { piece: null, tape: null, step: null, timer: seconds, active: true, onDone, wraps: [], wrinkles: [] });
+  Object.assign(REP, { piece: null, tape: null, step: null, timer: seconds, active: true, onDone, wraps: [], wrinkles: [], squire: 1 + (G.boon && G.boon.squire ? 1 : 0), pop: null, lastSec: 99, trail: [] });
+  REP.roll = REP.roll && TAPES[REP.roll] && TAPES[REP.roll].legal ? REP.roll : 'black';
   renderKitList(); renderDrawer(); setSteps(null);
-  $('#benchMsg').textContent = 'Pick a strap on the left.';
-  showScreen('repair');
+  const worst = worstPiece();
+  $('#benchMsg').textContent = worst ? `Tap a strap to fix it. ${PIECE_SHORT[worst][0]} is the worst.` : 'Everything is in good shape. Tap Done, or top anything up.';
+  showScreen('repair'); sizeBench();
 }
-
+function worstPiece() { const kit = G.player.kit; let w = null; for (const k of pieceKeys()) { const pc = kit[k]; const v = pc.failed ? -1 : pc.cond; if (v < 0.75 && (w === null || v < (kit[w].failed ? -1 : kit[w].cond))) w = k; } return w; }
+// the bench canvas matches its box on screen (sharp on phones, no clipping)
+function sizeBench() {
+  const cv = $('#bench'); if (!cv) return; const r = cv.getBoundingClientRect(); if (r.width < 10) return;
+  const d = Math.min(2, window.devicePixelRatio || 1); const w = Math.round(r.width * d), hh = Math.round(r.height * d);
+  if (cv.width !== w || cv.height !== hh) { cv.width = w; cv.height = hh; }
+}
+window.addEventListener('resize', () => { if (G.screen === 'repair') sizeBench(); });
+function repPop(text, col) { REP.pop = { text, col: col || '#ece8de', t: 1.4 }; }
 function pieceKeys() {
   const p = G.player; const keys = ['helmet', 'armL', 'armR', 'legs'];
   if (WEAPONS[p.spec.weapon].haft) keys.push('haft');
@@ -10314,48 +10349,60 @@ function pieceStatus(k, pc) {
 }
 function renderKitList() {
   const box = $('#kitlist'); box.innerHTML = '';
-  const kit = G.player.kit;
+  const kit = G.player.kit, worst = worstPiece();
   for (const k of pieceKeys()) {
-    const pc = kit[k]; const col = pc.cond < 0.3 ? 'var(--card-red)' : pc.cond < 0.55 ? 'var(--marshal)' : '#9fb0b4';
-    const name = k === 'haft' ? `${WEAPONS[G.player.spec.weapon].name} haft wrap` : PIECE_NAMES[k];
-    const b = h('button', { class: 'kitrow', 'aria-pressed': String(REP.piece === k), onclick: () => selectPiece(k) },
-      h('span', { class: 'nm' }, name), h('span', { class: 'pct num', style: `color:${col}` }, Math.round(pc.cond * 100) + '%'),
-      h('span', { class: 'st', style: 'grid-column:1/-1' }, pieceStatus(k, pc).replace(/^\d+%( · )?/, '') || 'Fine'),
-      h('span', { class: 'meter', html: `<i style="width:${Math.round(pc.cond * 100)}%;--c:${col}"></i><b></b>` }));
+    const pc = kit[k]; const col = pc.failed || pc.cond < 0.3 ? 'var(--card-red)' : pc.cond < 0.55 ? 'var(--marshal)' : pc.cond < 0.8 ? '#9fb0b4' : 'var(--card-green)';
+    const [nm, ic] = PIECE_SHORT[k];
+    const st = k === 'haft' && pc.failed ? 'torn!' : pc.failed ? 'broken' : pc.cond < 0.3 ? 'about to go' : pc.cond >= 0.9 ? 'solid' : pc.tape ? TAPES[pc.tape].name.split(' ')[0].toLowerCase() + ' tape' : '';
+    const b = h('button', { class: 'piece' + (k === worst ? ' worst' : '') + (k === 'armL' ? ' flipx' : ''), 'aria-pressed': String(REP.piece === k), title: PIECE_NAMES[k], onclick: () => selectPiece(k) },
+      h('span', { class: 'pic' }, ic), h('span', { class: 'nm' }, nm), h('span', { class: 'pct num', style: `color:${col}` }, Math.round(pc.cond * 100) + '%'),
+      h('span', { class: 'meter', html: `<i style="width:${Math.round(pc.cond * 100)}%;--c:${col}"></i>` }), h('span', { class: 'st' }, k === worst ? 'fix first' : st));
     box.append(b);
   }
-}
-function renderDrawer() {
+  const sq = $('#btnSquire'); if (sq) { sq.hidden = REP.squire <= 0; sq.textContent = `Squire, patch it for me (${REP.squire})`; }
+}function renderDrawer() {
   const box = $('#drawer'); box.innerHTML = '';
   for (const k of ['black', 'white', 'grey', 'duct', 'zip']) {
     const t = TAPES[k]; const onHaft = REP.piece === 'haft';
     let lg = t.legal ? 'legal' : 'not legal', cls = t.legal ? 'ok' : 'no';
-    if (onHaft && t.haft === 'warn') { lg = 'looks off on a haft'; cls = 'warn'; }
-    const b = h('button', { class: 'tapechip', 'aria-pressed': String(REP.tape === k), title: t.note, onclick: () => selectTape(k) },
-      h('span', { class: 'roll', style: `--c:${t.color}` }), h('span', null, h('div', null, t.name), h('div', { class: 'lg ' + cls }, lg)));
+    if (onHaft && t.haft === 'warn') { lg = 'odd on a haft'; cls = 'warn'; }
+    const b = h('button', { class: 'tapechip' + (t.legal ? '' : ' illegal'), 'aria-pressed': String(REP.roll === k), title: t.note, onclick: () => selectTape(k) },
+      h('span', { class: 'roll', style: `--c:${t.color}` }), h('span', null, h('div', null, t.name.replace(' hockey tape', '').replace(' cloth tape', ' cloth')), h('div', { class: 'lg ' + cls }, lg)));
     box.append(b);
   }
 }
 function setSteps(s) { $('#repair').dataset.stage = s ? 'bench' : 'pick'; $$('#steps span').forEach(e => { const order = ['rip', 'wrap', 'smooth']; e.classList.toggle('on', e.dataset.s === s); e.classList.toggle('done', s && order.indexOf(e.dataset.s) < order.indexOf(s)); }); }
 
 function selectPiece(k) {
-  if (REP.step) return; AU.click();
-  REP.piece = k; REP.tape = null; renderKitList(); renderDrawer();
-  const pc = G.player.kit[k];
-  $('#benchMsg').textContent = pc.cond > 0.9 && !pc.failed ? 'That one is solid. Save your tape.' : 'Pick a roll from the tape drawer.';
+  if (REP.step) { $('#benchMsg').textContent = 'Finish this strap first.'; return; }
+  AU.click(); REP.piece = k; renderKitList(); renderDrawer();
+  startTaping(REP.roll);
 }
 function selectTape(k) {
-  if (REP.step || !REP.piece) { if (!REP.piece) $('#benchMsg').textContent = 'Pick a strap first.'; return; }
-  AU.click(); REP.tape = k; renderDrawer();
-  const t = TAPES[k]; const pc = G.player.kit[REP.piece];
+  if (REP.step) return;
+  AU.click(); REP.roll = k; renderDrawer();
+  if (REP.piece) startTaping(k); else $('#benchMsg').textContent = `${TAPES[k].name} ready. Now tap a strap.`;
+}
+function startTaping(k) {
+  REP.tape = k; const t = TAPES[k]; const pc = G.player.kit[REP.piece];
   if (t.instant) { // duct tape and zip ties: fast, strong, and they fail the kit check
     AU.rip(1); pc.cond = Math.min(0.92, pc.cond + (k === 'duct' ? 0.55 : 0.42)); pc.tape = k; pc.failed = false; pc.covered = false;
-    logTape(REP.piece, k, null);
-    $('#benchMsg').textContent = `${t.name} slapped on. It holds, but ${t.note.split('. ')[0].toLowerCase()} (BR 2.1.5). The Technical Marshal noticed.`;
+    logTape(REP.piece, k, null); repPop(k === 'duct' ? 'SLAPPED ON' : 'ZIPPED', '#f08a3c');
+    $('#benchMsg').textContent = `${t.name}: it holds, but ${t.note.split('. ')[0].toLowerCase()} (BR 2.1.5). The Technical Marshal noticed.`;
     finishPiece(); return;
   }
-  REP.step = 'rip'; REP.ripT = 0; REP.wraps = []; REP.sloppy = 0; REP.side = 0; REP.q = {}; setSteps('rip');
-  $('#benchMsg').textContent = IN.mode === 'pad' ? 'Rip: press A when the needle is in the white zone for a clean tear.' : 'Rip: tap the bench when the needle is in the white zone for a clean tear.';
+  REP.step = 'rip'; REP.ripT = 0; REP.wraps = []; REP.sloppy = 0; REP.side = 0; REP.q = {}; REP.trail = []; setSteps('rip'); sizeBench();
+  $('#benchMsg').textContent = IN.mode === 'pad' ? 'Rip: press A when the needle is in the gold.' : 'Rip: tap when the needle is in the gold.';
+}
+// your squire tapes a strap for you: decent, not as good as doing it well yourself
+function squirePatch() {
+  if (REP.squire <= 0 || REP.step) return;
+  const k = REP.piece && G.player.kit[REP.piece].cond < 0.92 ? REP.piece : worstPiece(); if (!k) { $('#benchMsg').textContent = 'Nothing needs patching.'; return; }
+  REP.squire--; REP.piece = k; REP.tape = 'black';
+  const pc = G.player.kit[k], q = 0.62; pc.cond = Math.min(0.92, pc.cond + 0.12 + 0.62 * q); pc.tape = 'black'; pc.failed = false; pc.covered = false;
+  logTape(k, 'black', q); AU.wrap(); AU.rip(0.6); repPop('SQUIRE DID IT', '#62c462');
+  $('#benchMsg').textContent = `Your squire taped the ${PIECE_SHORT[k][0].toLowerCase()} strap: ${Math.round(pc.cond * 100)}%.`;
+  finishPiece();
 }
 function finishPiece() {
   REP.step = null; setSteps(null); renderKitList(); applyTapeVisuals(G.player);
@@ -10371,7 +10418,7 @@ function benchPos(e) { const r = $('#bench').getBoundingClientRect(); return { x
 // one set of bench handlers for finger, mouse and the controller cursor
 function benchDown(p) {
   REP.ptr = p;
-  if (REP.step === 'rip') { const n = ripNeedle(); const q = clamp(1 - Math.abs(n - 0.5) / 0.5, 0, 1); REP.q.rip = q; AU.rip(0.5 + q * 0.6); REP.step = 'wrap'; setSteps('wrap'); REP.side = p.y < BAND.top ? -1 : p.y > BAND.bot ? 1 : 0; $('#benchMsg').textContent = `${q > 0.75 ? 'Clean tear.' : q > 0.4 ? 'A bit ragged.' : 'Frayed end.'} ${IN.mode === 'pad' ? 'Now wrap: sweep the left stick up and down across the strap to cover the tear.' : 'Now wrap: drag up and down across the strap to cover the tear.'}`; rumble(0.2, 0.5, 90); }
+  if (REP.step === 'rip') { const n = ripNeedle(), d = Math.abs(n - 0.5); const q = d < 0.05 ? 1 : clamp(1 - (d - 0.05) / 0.4, 0, 1); REP.q.rip = q; AU.rip(0.5 + q * 0.6); REP.step = 'wrap'; setSteps('wrap'); REP.side = p.y < BAND.top ? -1 : p.y > BAND.bot ? 1 : 0; repPop(q >= 1 ? 'PERFECT RIP!' : q > 0.7 ? 'CLEAN' : q > 0.4 ? 'RAGGED' : 'FRAYED', q >= 1 ? '#f2c40f' : q > 0.4 ? '#ece8de' : '#ff5a4a'); $('#benchMsg').textContent = IN.mode === 'pad' ? 'Wrap: sweep the left stick up and down across the strap. Fill the red gaps.' : 'Wrap: swipe up and down across the strap. Fill the red gaps.'; rumble(0.2, 0.5, 90); }
 }
 function benchMove(p) {
   if (REP.step === 'wrap') {
@@ -10379,9 +10426,10 @@ function benchMove(p) {
     if (s !== 0 && REP.side !== 0 && s !== REP.side) { REP.wraps.push({ x: p.x, skew: rand(-0.025, 0.025) }); AU.wrap(); rumble(0.05, 0.25, 40); if (p.x < ZONE.a - 0.04 || p.x > ZONE.b + 0.04) REP.sloppy++; checkWrap(); }
     if (s !== 0) REP.side = s;
   } else if (REP.step === 'smooth') {
-    if (p.y > BAND.top - 0.06 && p.y < BAND.bot + 0.06) for (const w of REP.wrinkles) if (!w.gone && Math.abs(w.x - p.x) < 0.035) { w.gone = true; AU.wrap(); }
+    if (p.y > BAND.top - 0.1 && p.y < BAND.bot + 0.1) for (const w of REP.wrinkles) if (!w.gone && Math.abs(w.x - p.x) < 0.045) { w.gone = true; AU.wrap(); rumble(0.03, 0.2, 30); }
     if (REP.wrinkles.every(w => w.gone)) finishSmooth();
   }
+  if (REP.step) { REP.trail.push({ x: p.x, y: p.y, t: 0.35 }); if (REP.trail.length > 24) REP.trail.shift(); }
   REP.ptr = p;
 }
 function initBench() {
@@ -10405,7 +10453,7 @@ function checkWrap() {
     REP.q.wrap = clamp(c * (1 - 0.09 * REP.sloppy), 0, 1);
     REP.step = 'smooth'; setSteps('smooth'); REP.smoothT = 6;
     REP.wrinkles = Array.from({ length: 6 }, () => ({ x: rand(ZONE.a + 0.02, ZONE.b - 0.02), y: rand(BAND.top + 0.03, BAND.bot - 0.03), gone: false }));
-    $('#benchMsg').textContent = IN.mode === 'pad' ? 'Smooth: run the cursor along the strap with the left stick to press out the wrinkles.' : 'Smooth: run your finger along the strap to press out the wrinkles.';
+    repPop(REP.q.wrap > 0.9 ? 'NICE WRAP' : 'WRAPPED', '#ece8de'); $('#benchMsg').textContent = IN.mode === 'pad' ? 'Smooth: run the cursor along the strap to pop the bubbles.' : 'Smooth: rub along the strap to pop the bubbles.';
   }
 }
 function finishSmooth() {
@@ -10417,7 +10465,9 @@ function finishSmooth() {
   pc.cond = Math.min(0.92, pc.cond + 0.12 + 0.62 * q); pc.tape = REP.tape; pc.failed = false; pc.covered = false;
   logTape(REP.piece, REP.tape, q);
   const haftNote = REP.piece === 'haft' && REP.tape === 'white' ? ' White on a haft may draw a look from the authenticity officer.' : '';
-  $('#benchMsg').textContent = `Wrap quality ${Math.round(q * 100)}%. Strap back to ${Math.round(pc.cond * 100)}%. Tape is quick, but it wears faster than a smithed repair.${haftNote}`;
+  const stars = q > 0.85 ? 3 : q > 0.6 ? 2 : 1; repPop('★'.repeat(stars) + '☆'.repeat(3 - stars), '#f2c40f'); AU.cheer && stars === 3 && AU.cheer(0.25);
+  const next = worstPiece();
+  $('#benchMsg').textContent = `${PIECE_SHORT[REP.piece][0]} back to ${Math.round(pc.cond * 100)}%.${haftNote} ${next ? 'Next: ' + PIECE_SHORT[next][0].toLowerCase() + '.' : 'All good. Tap Done.'}`;
   finishPiece();
 }
 function ripNeedle() { return 0.5 + 0.5 * Math.sin(REP.ripT * 3.4); }
@@ -10425,9 +10475,13 @@ function ripNeedle() { return 0.5 + 0.5 * Math.sin(REP.ripT * 3.4); }
 function updateRepair(dt) {
   if (!REP.active) return;
   REP.timer -= dt; $('#repTimer').textContent = fmtClock(REP.timer);
+  const sec = Math.ceil(REP.timer); $('#repTimer').classList.toggle('low', REP.timer <= 10);
+  if (sec !== REP.lastSec) { REP.lastSec = sec; if (sec <= 10 && sec > 0) AU.tone(sec <= 3 ? 1320 : 880, 0.06, 0.06, 'square'); }
+  if (REP.pop) { REP.pop.t -= dt; if (REP.pop.t <= 0) REP.pop = null; }
+  REP.trail.forEach(t => t.t -= dt); REP.trail = REP.trail.filter(t => t.t > 0);
   if (REP.step === 'rip') REP.ripT += dt;
   if (REP.step === 'smooth') { REP.smoothT -= dt; if (REP.smoothT <= 0) finishSmooth(); }
-  drawBench();
+  sizeBench(); drawBench();
   if (REP.timer <= 0) { $('#benchMsg').textContent = 'Time. The Technical Marshal calls it.'; closeRepair(); }
 }
 function closeRepair() {
@@ -10440,42 +10494,77 @@ function closeRepair() {
 }
 
 function drawBench() {
-  const cv = $('#bench'); const x = cv.getContext('2d'); const W = cv.width, H = cv.height;
-  // workbench
+  const cv = $('#bench'); const x = cv.getContext('2d'); const W = cv.width, H = cv.height; const k = H / 300, t = G.realTime;
+  const font = (px, f) => `${Math.round(px * k)}px ${f || '"Permanent Marker", cursive'}`;
   x.fillStyle = '#3b2c1f'; x.fillRect(0, 0, W, H);
-  x.strokeStyle = 'rgba(0,0,0,.25)'; x.lineWidth = 1; for (let i = 0; i < 18; i++) { x.beginPath(); x.moveTo(0, i * 21 + 6); x.bezierCurveTo(W * 0.3, i * 21 + 2, W * 0.6, i * 21 + 12, W, i * 21 + 5); x.stroke(); }
-  if (!REP.piece) { x.fillStyle = 'rgba(236,232,222,.5)'; x.font = '28px "Permanent Marker", cursive'; x.textAlign = 'center'; x.fillText('pick a strap', W / 2, H / 2); return; }
+  x.strokeStyle = 'rgba(0,0,0,.25)'; x.lineWidth = k; for (let i = 0; i < 18; i++) { const yy = i * H / 14; x.beginPath(); x.moveTo(0, yy + 6 * k); x.bezierCurveTo(W * 0.3, yy + 2 * k, W * 0.6, yy + 12 * k, W, yy + 5 * k); x.stroke(); }
+  if (!REP.step) {
+    x.fillStyle = 'rgba(236,232,222,.6)'; x.font = font(30); x.textAlign = 'center'; x.textBaseline = 'middle';
+    x.fillText(REP.piece && !REP.pop ? 'tap another strap' : REP.pop ? '' : 'tap a strap above', W / 2, H / 2);
+    drawPop(x, W, H, k); return;
+  }
   const top = BAND.top * H, bot = BAND.bot * H;
   if (REP.piece === 'haft') {
-    const g = x.createLinearGradient(0, top - 8, 0, bot + 8); g.addColorStop(0, '#5a3d24'); g.addColorStop(0.45, '#9a7048'); g.addColorStop(1, '#3d2816');
-    x.fillStyle = g; x.fillRect(0, top - 8, W, bot - top + 16);
+    const g = x.createLinearGradient(0, top - 8 * k, 0, bot + 8 * k); g.addColorStop(0, '#5a3d24'); g.addColorStop(0.45, '#9a7048'); g.addColorStop(1, '#3d2816');
+    x.fillStyle = g; x.fillRect(0, top - 8 * k, W, bot - top + 16 * k);
   } else {
     const g = x.createLinearGradient(0, 0, 0, H); g.addColorStop(0, '#5c6468'); g.addColorStop(0.3, '#c9d0d3'); g.addColorStop(0.5, '#8d969a'); g.addColorStop(0.75, '#d2d8da'); g.addColorStop(1, '#5c6468');
-    x.fillStyle = g; x.beginPath(); x.ellipse(W / 2, H / 2, W * 0.46, H * 0.44, 0, 0, TAU); x.fill(); // the plate under the strap
+    x.fillStyle = g; x.beginPath(); x.ellipse(W / 2, H / 2, W * 0.46, H * 0.44, 0, 0, TAU); x.fill();
     x.fillStyle = '#5e3a21'; x.fillRect(0, top, W, bot - top);
-    x.strokeStyle = 'rgba(230,210,180,.45)'; x.setLineDash([8, 7]); x.lineWidth = 2; x.beginPath(); x.moveTo(0, top + 6); x.lineTo(W, top + 6); x.moveTo(0, bot - 6); x.lineTo(W, bot - 6); x.stroke(); x.setLineDash([]);
-    x.strokeStyle = '#b8913f'; x.lineWidth = 6; x.strokeRect(W * 0.84, top - 12, W * 0.07, bot - top + 24);
+    x.strokeStyle = 'rgba(230,210,180,.45)'; x.setLineDash([8 * k, 7 * k]); x.lineWidth = 2 * k; x.beginPath(); x.moveTo(0, top + 6 * k); x.lineTo(W, top + 6 * k); x.moveTo(0, bot - 6 * k); x.lineTo(W, bot - 6 * k); x.stroke(); x.setLineDash([]);
+    x.strokeStyle = '#b8913f'; x.lineWidth = 6 * k; x.strokeRect(W * 0.84, top - 12 * k, W * 0.07, bot - top + 24 * k);
   }
   // the tear
-  x.strokeStyle = 'rgba(15,10,6,.9)'; x.lineWidth = 3; x.beginPath(); x.moveTo(W * 0.5, top); for (let i = 1; i <= 6; i++) x.lineTo(W * (0.5 + (i % 2 ? 0.015 : -0.012)), top + (bot - top) * i / 6); x.stroke();
-  x.strokeStyle = 'rgba(242,196,15,.7)'; x.setLineDash([6, 6]); x.lineWidth = 2; x.strokeRect(W * ZONE.a, top - 16, W * (ZONE.b - ZONE.a), bot - top + 32); x.setLineDash([]);
+  x.strokeStyle = 'rgba(15,10,6,.9)'; x.lineWidth = 3 * k; x.beginPath(); x.moveTo(W * 0.5, top); for (let i = 1; i <= 6; i++) x.lineTo(W * (0.5 + (i % 2 ? 0.015 : -0.012)), top + (bot - top) * i / 6); x.stroke();
+  // wrap: the gaps still to cover glow red
+  if (REP.step === 'wrap') {
+    const w = 0.07, segs = REP.wraps.map(r => [r.x - w / 2, r.x + w / 2]).sort((a, b) => a[0] - b[0]); let cur = ZONE.a; const gaps = [];
+    for (const [a, b] of segs) { if (a > cur) gaps.push([cur, Math.min(a, ZONE.b)]); cur = Math.max(cur, b); if (cur >= ZONE.b) break; } if (cur < ZONE.b) gaps.push([cur, ZONE.b]);
+    x.fillStyle = `rgba(255,70,60,${0.28 + 0.14 * Math.sin(t * 6)})`; for (const [a, b] of gaps) if (b > a) x.fillRect(a * W, top - 14 * k, (b - a) * W, bot - top + 28 * k);
+    if (gaps.length) { // a bouncing up-down arrow over the first gap shows the swipe
+      const gx = ((gaps[0][0] + gaps[0][1]) / 2) * W, bob = Math.sin(t * 5) * 22 * k, cy = (top + bot) / 2 + bob;
+      x.strokeStyle = 'rgba(255,255,255,.9)'; x.lineWidth = 4 * k; x.lineCap = 'round'; x.beginPath(); x.moveTo(gx, cy - 34 * k); x.lineTo(gx, cy + 34 * k);
+      x.moveTo(gx - 10 * k, cy - 24 * k); x.lineTo(gx, cy - 34 * k); x.lineTo(gx + 10 * k, cy - 24 * k); x.moveTo(gx - 10 * k, cy + 24 * k); x.lineTo(gx, cy + 34 * k); x.lineTo(gx + 10 * k, cy + 24 * k); x.stroke(); x.lineCap = 'butt';
+    }
+  } else { x.strokeStyle = 'rgba(242,196,15,.7)'; x.setLineDash([6 * k, 6 * k]); x.lineWidth = 2 * k; x.strokeRect(W * ZONE.a, top - 16 * k, W * (ZONE.b - ZONE.a), bot - top + 32 * k); x.setLineDash([]); }
   // wraps laid so far
   const col = REP.tape ? TAPES[REP.tape].color : '#18191a';
   for (const w of REP.wraps) {
     const cx = w.x * W, hw = W * 0.035;
-    x.fillStyle = col; x.beginPath(); x.moveTo(cx - hw + w.skew * W, top - 10); x.lineTo(cx + hw + w.skew * W, top - 10); x.lineTo(cx + hw - w.skew * W, bot + 10); x.lineTo(cx - hw - w.skew * W, bot + 10); x.closePath(); x.fill();
-    x.strokeStyle = 'rgba(255,255,255,.08)'; x.lineWidth = 1; for (let k = 0; k < 5; k++) { x.beginPath(); x.moveTo(cx - hw + k * hw / 2.5, top - 10); x.lineTo(cx - hw + k * hw / 2.5, bot + 10); x.stroke(); }
+    x.fillStyle = col; x.beginPath(); x.moveTo(cx - hw + w.skew * W, top - 10 * k); x.lineTo(cx + hw + w.skew * W, top - 10 * k); x.lineTo(cx + hw - w.skew * W, bot + 10 * k); x.lineTo(cx - hw - w.skew * W, bot + 10 * k); x.closePath(); x.fill();
+    x.strokeStyle = 'rgba(255,255,255,.1)'; x.lineWidth = k; for (let j = 0; j < 5; j++) { x.beginPath(); x.moveTo(cx - hw + j * hw / 2.5, top - 10 * k); x.lineTo(cx - hw + j * hw / 2.5, bot + 10 * k); x.stroke(); }
   }
-  if (REP.step === 'smooth') for (const w of REP.wrinkles) { if (w.gone) continue; x.fillStyle = 'rgba(255,255,255,.35)'; x.beginPath(); x.ellipse(w.x * W, w.y * H, 9, 4, 0.4, 0, TAU); x.fill(); x.strokeStyle = 'rgba(0,0,0,.5)'; x.stroke(); }
+  if (REP.step === 'smooth') for (const w of REP.wrinkles) {
+    if (w.gone) continue; const r = (10 + 2 * Math.sin(t * 7 + w.x * 20)) * k;
+    x.fillStyle = 'rgba(255,255,255,.45)'; x.beginPath(); x.ellipse(w.x * W, w.y * H, r * 1.6, r, 0.3, 0, TAU); x.fill(); x.strokeStyle = 'rgba(0,0,0,.55)'; x.lineWidth = 1.5 * k; x.stroke();
+    x.fillStyle = 'rgba(255,255,255,.9)'; x.beginPath(); x.arc(w.x * W - r * 0.5, w.y * H - r * 0.3, r * 0.25, 0, TAU); x.fill();
+  }
   if (REP.step === 'rip') {
-    const gx = W * 0.15, gw = W * 0.7, gy = H * 0.12;
-    x.fillStyle = 'rgba(10,13,15,.85)'; x.fillRect(gx - 10, gy - 10, gw + 20, 50);
-    x.fillStyle = '#2a3136'; x.fillRect(gx, gy, gw, 28); x.fillStyle = '#ece8de'; x.fillRect(gx + gw * 0.38, gy, gw * 0.24, 28);
-    const n = ripNeedle(); x.fillStyle = '#ff3d8b'; x.fillRect(gx + gw * n - 3, gy - 6, 6, 40);
-    x.fillStyle = col; x.fillRect(W * 0.08, H * 0.7, W * 0.84, 34); x.fillStyle = 'rgba(236,232,222,.85)'; x.font = '22px "Permanent Marker", cursive'; x.textAlign = 'center'; x.fillText(IN.mode === 'pad' ? 'press A to rip' : 'tap to rip', W / 2, H * 0.92);
+    const gx = W * 0.12, gw = W * 0.76, gy = H * 0.07, gh = 34 * k;
+    x.fillStyle = 'rgba(10,13,15,.88)'; x.fillRect(gx - 10 * k, gy - 10 * k, gw + 20 * k, gh + 20 * k);
+    x.fillStyle = '#2a3136'; x.fillRect(gx, gy, gw, gh);
+    x.fillStyle = 'rgba(236,232,222,.85)'; x.fillRect(gx + gw * 0.3, gy, gw * 0.4, gh);
+    x.fillStyle = '#f2c40f'; x.fillRect(gx + gw * 0.45, gy, gw * 0.1, gh);
+    const n = ripNeedle(); x.fillStyle = '#ff3d8b'; x.fillRect(gx + gw * n - 4 * k, gy - 8 * k, 8 * k, gh + 16 * k);
+    x.fillStyle = col; x.fillRect(W * 0.08, H * 0.7, W * 0.84, 34 * k);
+    x.fillStyle = 'rgba(236,232,222,.92)'; x.font = font(26); x.textAlign = 'center'; x.textBaseline = 'alphabetic'; x.fillText(IN.mode === 'pad' ? 'press A in the gold' : 'tap in the gold', W / 2, H * 0.94);
   }
-  if (IN.mode === 'pad' && REP.step) { const cx = PAD.cursor.x * W, cy = PAD.cursor.y * H; x.strokeStyle = '#f2c40f'; x.lineWidth = 3; x.beginPath(); x.arc(cx, cy, 13, 0, TAU); x.moveTo(cx - 20, cy); x.lineTo(cx - 6, cy); x.moveTo(cx + 6, cy); x.lineTo(cx + 20, cy); x.moveTo(cx, cy - 20); x.lineTo(cx, cy - 6); x.moveTo(cx, cy + 6); x.lineTo(cx, cy + 20); x.stroke(); }
-  if (REP.step === 'wrap') { x.fillStyle = 'rgba(236,232,222,.85)'; x.font = '20px "Permanent Marker", cursive'; x.textAlign = 'center'; x.fillText(`cover the tear · ${Math.round(coverage() * 100)}%`, W / 2, H * 0.12); }
+  // finger trail
+  for (const p of REP.trail) { x.fillStyle = `rgba(255,255,255,${p.t * 0.9})`; x.beginPath(); x.arc(p.x * W, p.y * H, 6 * k * (p.t / 0.35), 0, TAU); x.fill(); }
+  if (IN.mode === 'pad' && REP.step) { const cx = PAD.cursor.x * W, cy = PAD.cursor.y * H; x.strokeStyle = '#f2c40f'; x.lineWidth = 3 * k; x.beginPath(); x.arc(cx, cy, 13 * k, 0, TAU); x.moveTo(cx - 20 * k, cy); x.lineTo(cx - 6 * k, cy); x.moveTo(cx + 6 * k, cy); x.lineTo(cx + 20 * k, cy); x.moveTo(cx, cy - 20 * k); x.lineTo(cx, cy - 6 * k); x.moveTo(cx, cy + 6 * k); x.lineTo(cx, cy + 20 * k); x.stroke(); }
+  if (REP.step === 'wrap') { // progress bar along the top
+    const c = coverage(); x.fillStyle = 'rgba(10,13,15,.8)'; x.fillRect(W * 0.25, H * 0.06, W * 0.5, 22 * k); x.fillStyle = c > 0.96 ? '#62c462' : '#ece8de'; x.fillRect(W * 0.25 + 3 * k, H * 0.06 + 3 * k, (W * 0.5 - 6 * k) * c, 16 * k);
+    x.fillStyle = '#ece8de'; x.font = font(18); x.textAlign = 'center'; x.textBaseline = 'alphabetic'; x.fillText(`covered ${Math.round(c * 100)}%`, W / 2, H * 0.06 + 44 * k);
+  }
+  if (REP.step === 'smooth') { const left = REP.wrinkles.filter(w => !w.gone).length; x.fillStyle = '#ece8de'; x.font = font(20); x.textAlign = 'center'; x.textBaseline = 'alphabetic'; x.fillText(`${left} bubble${left === 1 ? '' : 's'} left · ${Math.ceil(REP.smoothT)}s`, W / 2, H * 0.14); }
+  drawPop(x, W, H, k);
+}
+function drawPop(x, W, H, k) {
+  const P = REP.pop; if (!P) return;
+  const a = Math.min(1, P.t / 0.4), s = 1 + (1.4 - P.t) * 0.15;
+  x.save(); x.globalAlpha = a; x.translate(W / 2, H * 0.5); x.scale(s, s); x.rotate(-0.05);
+  x.font = `${Math.round(54 * k)}px "Big Shoulders Display", Impact, sans-serif`; x.textAlign = 'center'; x.textBaseline = 'middle';
+  x.lineWidth = 8 * k; x.strokeStyle = 'rgba(10,13,15,.9)'; x.strokeText(P.text, 0, 0); x.fillStyle = P.col; x.fillText(P.text, 0, 0); x.restore();
 }
 
 // ---------- your fighter & career: profile, purse, kit upgrades, achievements, lifetime stats ----------
@@ -11260,7 +11349,7 @@ function matchEnd() {
   const won = m.wins[0] > m.wins[1], drawn = m.wins[0] === m.wins[1]; AU.music(true);
   if (m.versus && G.bracket) { VS.on = false; document.body.classList.remove('split', 'split4'); $('#splitLabels').innerHTML = ''; bracketResult(m.wins[0] > m.wins[1] ? 0 : m.wins[1] > m.wins[0] ? 1 : (m.pts && m.pts[1] > m.pts[0] ? 1 : 0)); return; }
   if (m.versus) { VS.on = false; document.body.classList.remove('split', 'split4'); $('#splitLabels').innerHTML = ''; const k = VS.kind; const t = drawn ? 'Draw' : k === 'duel' ? (won ? 'Player 1 wins' : 'Player 2 wins') : k === 'tag' ? (won ? 'Players 1 and 3 win' : 'Players 2 and 4 win') : (won ? 'You two win' : 'The bots win'); msg('local play', t, `<p>${m.wins[0]}–${m.wins[1]} in rounds.</p>`, [['Rematch', () => startVersus(k), true], ['Couch play', openVersus], ['Title', toTitle]]); return; }
-  if (m.online) { msg('online duel', drawn ? 'Draw' : won ? 'You win' : 'You lose', `<p>${m.wins[0]}–${m.wins[1]} in rounds.</p>`, [['Title', () => { setTimeout(netLeave, 1500); toTitle(); }, true]]); return; }
+  if (m.online) { msg('online', drawn ? 'Draw' : won ? (m.coop ? 'You two win' : 'You win') : (m.coop ? 'The bots win' : 'You lose'), `<p>${m.wins[0]}–${m.wins[1]} in rounds.</p>`, [['Title', () => { setTimeout(netLeave, 1500); toTitle(); }, true]]); return; }
   renderSheet();
   const p = G.player;
   if (G.tourney) { G.tourney.playerCards = (G.tourney.playerCards || 0) + m.cards.filter(c => c.who === 'You').length; }
@@ -11456,6 +11545,8 @@ function initMenus() {
   $$('#diffSeg button').forEach(x => x.setAttribute('aria-pressed', String(x.dataset.diff === G.settings.difficulty)));
   $('#btnReady').onclick = () => { AU.init(); AU.click(); beginFight(); };
   $('#btnRepairDone').onclick = () => { AU.click(); closeRepair(); };
+  $('#btnSquire').onclick = () => { AU.click(); squirePatch(); };
+  $('#btnRepairDone2').onclick = () => { AU.click(); closeRepair(); };
   $('#btnResume').onclick = () => togglePause(false);
   $('#btnYield').onclick = () => { togglePause(false); playerYield(); };
   $('#btnPauseHow').onclick = () => { G.backTo = 'pause'; renderHow(IN.mode); selectTab($('#howTabs'), 'controls'); showScreen('howto'); };
@@ -12277,7 +12368,7 @@ async function boot(hot) {
   toTitle();
   requestAnimationFrame(frame);
   if (location.hash === '#autotest') setTimeout(autotest, 300);
-  window.__ST = { G, AU, buildShield, buildWeapon, W3, startTourney, quickFight, toTitle, openRepair, kitCheck, setupMatch, toTactics, beginFight, endRound, matchEnd, CLUBS, WEAPONS, setView, toast, renderKitPicker, applyLoadout, IN, FP, showScreen, weaponIcon, startCine, startTraining, startLadder, openCareer, openModes, openLadder, CAREER, setLesson, TR, unlock, togglePause, afterRound, renderHow, selectPiece, selectTape, msg, renderSheet, setHud, endTraining, setMode, PAD, navMove, focusFirst, sparks, CUTE, THREE, BREATH, setCuteDeco, flipFx, PHOTO, UAL, raiseFlags, startVersus, startFFA, startBracket, startKid, KID, openSeason, startSeasonMatch, setVenue, VS, SPLIT, NET, netStartHost, netStartGuest, vinControl, openRun, openDaily, openBracket, showBracket, bracketResult, ffaMatchEnd, ffaLeader, ffaWinner, endKid, openPhoto, closePhoto, startReplay, stopReplay, RP, store, startRunFight, newRun, runEnd, WX, setWeather, padVin, readVersus, applyLo, myLoadout, netDropped, netLeave, showIntro, installForged, dailyPlan, openKids, openVersus, openPicks, LESSONS, rivalClub, startGrudge, startDaily, seasonState, newSeason, refreshDaily, VENUES, COMM, hitMapHtml, resetFighterForRound, DIFF, PIN, PADS, NIN, padsUpdate, seatPads, LOBBY, MM, openOnlineHub };
+  window.__ST = { G, AU, buildShield, buildWeapon, W3, startTourney, quickFight, toTitle, openRepair, kitCheck, setupMatch, toTactics, beginFight, endRound, matchEnd, CLUBS, WEAPONS, setView, toast, renderKitPicker, applyLoadout, IN, FP, showScreen, weaponIcon, startCine, startTraining, startLadder, openCareer, openModes, openLadder, CAREER, setLesson, TR, unlock, togglePause, afterRound, renderHow, selectPiece, selectTape, msg, renderSheet, setHud, endTraining, setMode, PAD, navMove, focusFirst, sparks, CUTE, THREE, BREATH, setCuteDeco, flipFx, PHOTO, UAL, raiseFlags, startVersus, startFFA, startBracket, startKid, KID, openSeason, startSeasonMatch, setVenue, VS, SPLIT, NET, netStartHost, netStartGuest, vinControl, openRun, openDaily, openBracket, showBracket, bracketResult, ffaMatchEnd, ffaLeader, ffaWinner, endKid, openPhoto, closePhoto, startReplay, stopReplay, RP, store, startRunFight, newRun, runEnd, WX, setWeather, padVin, readVersus, applyLo, myLoadout, netDropped, netLeave, showIntro, installForged, dailyPlan, openKids, openVersus, openPicks, LESSONS, rivalClub, startGrudge, startDaily, seasonState, newSeason, refreshDaily, VENUES, COMM, hitMapHtml, resetFighterForRound, DIFF, PIN, PADS, NIN, padsUpdate, seatPads, LOBBY, MM, openOnlineHub, benchDown, benchMove, REP, squirePatch, coverage };
 }
 
 function autotest() {
@@ -12470,7 +12561,7 @@ async function netHost(room, quiet) {
   const code = Array.from({ length: 4 }, () => 'ABCDEFGHJKLMNPQRSTUVWXYZ'[(Math.random() * 24) | 0]).join('');
   let r; try { r = await room.join('duel-' + code.toLowerCase()); } catch (e) { toastMenu('Could not reach the online service. Check the internet connection and try again.'); return; }
   Object.assign(NET, { room: r, role: 'host', code, on: false, seq: 0, ev: [], remote: null });
-  r.presence({ role: 'host', lo: myLoadout(), cat: G.category, venue: G.quickVenue || W3.venue || 'arena' });
+  r.presence({ role: 'host', lo: myLoadout(), cat: G.category, venue: G.quickVenue || W3.venue || 'arena', fmt: onlineFmt() });
   if (quiet) { /* the invite screen shows the code */ } else msg('online duel', `Code ${code}`, `<p>Tell your friend the code <b class="num" style="font-size:1.6em;letter-spacing:.15em">${code}</b>. The fight starts as soon as they join.</p>`, [['Cancel', () => { netLeave(); openModes(); }]]);
   NET.unsub = r.onPeers(ch => {
     const guest = ch.peers.find(p => !p.isMe && p.presence && p.presence.role === 'guest');
@@ -12479,11 +12570,18 @@ async function netHost(room, quiet) {
     if (NET.on && ch.left.some(p => p.peer === NET.peer)) netDropped();
   });
 }
-function netStartHost(lo) {
+// online formats: a duel, or 3v3 / 5v5 with bots filling the other places, the two of you on opposite sides or together
+const ONLINE_FMTS = { duel: { mode: 1, coop: false, name: 'Duel' }, v3: { mode: 3, coop: false, name: '3v3, you against each other' }, c3: { mode: 3, coop: true, name: '3v3, together against bots' }, v5: { mode: 5, coop: false, name: '5v5, you against each other' }, c5: { mode: 5, coop: true, name: '5v5, together against bots' } };
+function onlineFmt() { const k = store.get('onlineFmt', 'duel'); return ONLINE_FMTS[k] ? k : 'duel'; }
+function fmtStage(F) { return F.mode === 1 ? 'Online duel' : `Online ${F.mode}v${F.mode}${F.coop ? ' co-op' : ''}`; }
+// which fighter the guest plays: the other team's captain, or your teammate
+function guestFighter(F) { return F.coop ? G.fighters.filter(f => f.team === 0)[1] : G.fighters.find(f => f.team === 1); }
+function netStartHost(lo, fk) {
+  const F = ONLINE_FMTS[fk || onlineFmt()] || ONLINE_FMTS.duel; NET.fmt = fk || onlineFmt();
   G.attract = false; G.tourney = null; REP.log = []; endTraining();
-  setupMatch({ mode: 1, opp: 'wardens', stage: 'Online duel', venue: G.quickVenue || W3.venue || 'arena', online: true, pro: true });
-  const b = G.fighters.find(f => f.team === 1); applyLo(b, lo, G.match.category); b.vin = NET.vin = newVin(); NET.on = true;
-  $('#sbB').textContent = (lo && lo.name || 'P2').slice(0, 3).toUpperCase();
+  setupMatch({ mode: F.mode, opp: 'wardens', stage: fmtStage(F), venue: G.quickVenue || W3.venue || 'arena', online: true, pro: F.mode === 1, coop: F.coop });
+  const b = guestFighter(F); applyLo(b, lo, G.match.category); b.vin = NET.vin = newVin(); NET.on = true; NET.gi = G.fighters.indexOf(b);
+  if (!F.coop) $('#sbB').textContent = (lo && lo.name || 'P2').slice(0, 3).toUpperCase();
   startRound(); beginFight();
 }
 async function netJoin(room, code) {
@@ -12499,13 +12597,14 @@ async function netJoin(room, code) {
   });
 }
 function netStartGuest(P) {
+  const F = ONLINE_FMTS[P.fmt] || ONLINE_FMTS.duel;
   G.attract = false; G.tourney = null; REP.log = []; endTraining();
   const catWas = G.category; G.category = P.cat || G.category;
-  setupMatch({ mode: 1, opp: 'wardens', stage: 'Online duel', venue: P.venue, online: true, pro: true }); G.category = catWas;
-  const a = G.fighters.find(f => f.team === 0), b = G.fighters.find(f => f.team === 1);
+  setupMatch({ mode: F.mode, opp: 'wardens', stage: fmtStage(F), venue: P.venue, online: true, pro: F.mode === 1, coop: F.coop }); G.category = catWas;
+  const a = G.fighters.find(f => f.team === 0), b = guestFighter(F);
   applyLo(b, myLoadout(), G.match.category); applyLo(a, P.lo, G.match.category);
-  a.isPlayer = false; b.isPlayer = true; G.player = b; NET.on = true;
-  $('#sbA').textContent = (P.lo && P.lo.name || 'P1').slice(0, 3).toUpperCase();
+  G.fighters.forEach(f => f.isPlayer = false); b.isPlayer = true; G.player = b; NET.on = true;
+  if (!F.coop) $('#sbA').textContent = (P.lo && P.lo.name || 'P1').slice(0, 3).toUpperCase();
   startRound(); hideAll(); setHud(true); G.phase = 'prefight'; refreshTouchUI();
   FP.yaw = b.facing;
 }
@@ -12514,7 +12613,7 @@ function netDropped() { if (!NET.on) return; if (G.phase === 'over') { netLeave(
 function netLeave() { try { NET.unsub && NET.unsub(); NET.room && NET.room.leave(); } catch (e) { } Object.assign(NET, { on: false, room: null, role: null, unsub: null }); }
 const ST_CODE = ['standing', 'posting', 'falling', 'grounded', 'rising', 'kneeling'], AK = [null, 'swing', 'shove', 'trip', 'grab', 'knee', 'throw', 'disarm', 'tackle'], PH = ['windup', 'strike', 'recover', 'lunge'], ARC = ['R2L', 'L2R', 'O'];
 const q = v => Math.round(v * 1000) / 1000;
-function packF(f) { const a = f.action; return [q(f.pos.x), q(f.pos.z), q(f.facing), ST_CODE.indexOf(f.state), q(f.lean.x), q(f.lean.z), a ? AK.indexOf(a.kind) : 0, a ? PH.indexOf(a.phase) : 0, a ? ARC.indexOf(a.arc) : 0, a ? q(a.charge || 0) : 0, q(f.gas), q(f.fatigue || 0), q(f.groundPos.x), q(f.groundPos.z), q(f.fallDir.x), q(f.fallDir.z), q(f.fallT), q(f.gt || 0), (f.guard ? 1 : 0) | (f.brace ? 2 : 0) | (f.sprint ? 4 : 0) | (f.touched ? 8 : 0) | (f.weapon ? 16 : 0), q(f.vel.x), q(f.vel.z), q(f.bell), f.groundStyle === 'fall' ? 0 : f.groundStyle === 'kneel' ? 1 : 2, q(f.riseT || 0)]; }
+function packF(f) { const a = f.action; return [q(f.pos.x), q(f.pos.z), q(f.facing), ST_CODE.indexOf(f.state), q(f.lean.x), q(f.lean.z), a ? AK.indexOf(a.kind) : 0, a ? PH.indexOf(a.phase) : 0, a ? ARC.indexOf(a.arc) : 0, a ? q(a.charge || 0) : 0, q(f.gas), q(f.fatigue || 0), q(f.groundPos.x), q(f.groundPos.z), q(f.fallDir.x), q(f.fallDir.z), q(f.fallT), q(f.gt || 0), (f.guard ? 1 : 0) | (f.brace ? 2 : 0) | (f.sprint ? 4 : 0) | (f.touched ? 8 : 0) | (f.weapon ? 16 : 0) | (f.out ? 32 : 0), q(f.vel.x), q(f.vel.z), q(f.bell), f.groundStyle === 'fall' ? 0 : f.groundStyle === 'kneel' ? 1 : 2, q(f.riseT || 0)]; }
 function unpackF(f, s, dt) {
   f.pos.x = damp(f.pos.x, s[0], 18, dt); f.pos.z = damp(f.pos.z, s[1], 18, dt); if (Math.hypot(f.pos.x - s[0], f.pos.z - s[1]) > 1.5) { f.pos.x = s[0]; f.pos.z = s[1]; }
   if (!f.isPlayer || !isCtl()) f.facing = s[2]; else f.facing = s[2];
@@ -12523,7 +12622,7 @@ function unpackF(f, s, dt) {
   const kind = AK[s[6]];
   if (kind) { if (!f.action || f.action.kind !== kind) f.action = { kind, t: 0, phase: PH[s[7]] || 'windup', arc: ARC[s[8]] || 'R2L', charge: s[9] }; else { f.action.phase = PH[s[7]] || f.action.phase; f.action.arc = ARC[s[8]] || f.action.arc; f.action.charge = s[9]; f.action.t += dt; } } else f.action = null;
   f.gas = s[10]; f.fatigue = s[11]; f.groundPos.x = s[12]; f.groundPos.z = s[13]; f.fallDir.x = s[14]; f.fallDir.z = s[15]; f.fallT = s[16]; f.gt = s[17];
-  f.guard = !!(s[18] & 1); f.brace = !!(s[18] & 2); f.sprint = !!(s[18] & 4); f.touched = !!(s[18] & 8);
+  f.guard = !!(s[18] & 1); f.brace = !!(s[18] & 2); f.sprint = !!(s[18] & 4); f.touched = !!(s[18] & 8); f.out = !!(s[18] & 32);
   f.vel.x = s[19]; f.vel.z = s[20]; f.bell = s[21]; f.groundStyle = ['fall', 'kneel', 'sit'][s[22]] || 'fall'; f.riseT = s[23];
 }
 function netTick(dt) {
@@ -12533,8 +12632,8 @@ function netTick(dt) {
     if (NET.remote) Object.assign(NET.vin, NET.remote, { e: { ...NET.remote.e } });
     if (NET.sendT <= 0) {
       NET.sendT = 0.05; const m = G.match; if (!m) return;
-      const F = [0, 1].map(t => G.fighters.find(f => f.team === t));
-      NET.room.presence({ role: 'host', go: 1, s: F.map(packF), m: [q(m.clock), m.pts[0], m.pts[1], m.wins[0], m.wins[1], m.round, ['prefight', 'fight', 'stopping', 'between', 'over', 'tactics'].indexOf(G.phase), m.overtime ? 1 : 0], mk: G.marshals.map(k => [q(k.pos.x), q(k.pos.z), q(k.facing), q(k.flagUp)]), ev: NET.ev });
+      const F = m.mode === 1 ? [0, 1].map(t => G.fighters.find(f => f.team === t)) : G.fighters;
+      NET.room.presence({ role: 'host', go: 1, fmt: NET.fmt || 'duel', s: F.map(packF), m: [q(m.clock), m.pts[0], m.pts[1], m.wins[0], m.wins[1], m.round, ['prefight', 'fight', 'stopping', 'between', 'over', 'tactics'].indexOf(G.phase), m.overtime ? 1 : 0], mk: G.marshals.map(k => [q(k.pos.x), q(k.pos.z), q(k.facing), q(k.flagUp)]), ev: NET.ev });
     }
   } else {
     // guest: send what you're pressing, show what the host's fight says
@@ -12545,7 +12644,7 @@ function netTick(dt) {
     for (const k of ['trip', 'shove', 'grab', 'tackle']) if (IN.edges.has(k)) { IN.edges.delete(k); V.e[k]++; }
     if (NET.sendT <= 0) { NET.sendT = 0.05; NET.room.presence({ role: 'guest', vin: V }); }
     const P = NET.snap; if (!P || !P.s) return;
-    const F = [0, 1].map(t => G.fighters.find(f => f.team === t));
+    const F = G.match.mode === 1 ? [0, 1].map(t => G.fighters.find(f => f.team === t)) : G.fighters;
     F.forEach((f, i) => f && P.s[i] && unpackF(f, P.s[i], dt));
     const m = G.match, M = P.m; m.clock = M[0]; m.pts = [M[1], M[2]]; const won = [M[3], M[4]]; m.round = M[5]; m.overtime = !!M[7];
     const ph = ['prefight', 'fight', 'stopping', 'between', 'over', 'tactics'][M[6]] || 'fight';
@@ -12564,8 +12663,8 @@ function netPlay(e) {
   else if (k === 't') toast(a, b, c);
 }
 function netGuestEnd() {
-  const m = G.match, won = m.wins[1] > m.wins[0];
-  setHud(false); msg('online duel', won ? 'You win' : m.wins[0] === m.wins[1] ? 'Draw' : 'You lose', `<p>${m.wins[1]}–${m.wins[0]} in rounds.</p>`, [['Title', () => { netLeave(); toTitle(); }, true]]);
+  const m = G.match, t = G.player ? G.player.team : 1, won = m.wins[t] > m.wins[1 - t];
+  setHud(false); msg('online', won ? (m.coop ? 'You two win' : 'You win') : m.wins[0] === m.wins[1] ? 'Draw' : (m.coop ? 'The bots win' : 'You lose'), `<p>${m.wins[t]}–${m.wins[1 - t]} in rounds.</p>`, [['Title', () => { netLeave(); toTitle(); }, true]]);
 }
 
 // ---------- instant replay: the last ten seconds of every fighter, played back slowly from any angle ----------
@@ -12661,9 +12760,11 @@ function checkNintendo() {
 const GAME_URL = 'https://claude.ai/artifact/2hhQkB83SkLC5ta9nNEnkN';
 const LOBBY = { room: null, me: null, peers: [], pending: null, seen: {}, ready: false, invited: null, starting: null };
 const MM = { searching: false };
+const FMT_SHORT = { duel: 'duel', v3: '3v3', c3: '3v3 co-op', v5: '5v5', c5: '5v5 co-op' };
+function fmtShort(k) { return FMT_SHORT[k] || 'duel'; }
 const escTxt = s => String(s == null ? '' : s).replace(/[&<>"']/g, c => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' })[c]);
 function myName() { const n = (CAREER.name && CAREER.name !== 'You') ? CAREER.name : (store.get('lobbyName', '') || ''); return String(n || 'A fighter').slice(0, 20); }
-function lobbyStatus() { return NET.on ? 'in an online fight' : MM.searching ? 'looking for a match' : G.attract || G.screen === 'title' ? 'on the title screen' : G.phase === 'fight' ? 'in a fight' : 'in the menus'; }
+function lobbyStatus() { return NET.on ? 'in an online fight' : MM.searching ? 'looking for a match · ' + fmtShort(onlineFmt()) : G.attract || G.screen === 'title' ? 'on the title screen' : G.phase === 'fight' ? 'in a fight' : 'in the menus'; }
 async function claudeRoom() { try { return window.claude && window.claude.use ? await window.claude.use('room') : null; } catch (e) { return null; } }
 function lobbySet(patch) { try { LOBBY.room && LOBBY.room.presence(patch); } catch (e) { } }
 async function initLobby() {
@@ -12748,6 +12849,8 @@ function renderOnlineHub() {
     : hosting ? `<div class="invcode"><span>Your fight is open. Code</span><b class="num">${NET.code}</b></div>` : '';
   msg('play online', 'Play online', `${head}
     ${MM.searching ? '' : '<button class="btn primary flagtape big mmfind" id="mmFind">Find a match</button>'}
+    <div class="setrow fmtrow"><span>Fight</span><div class="seg small" id="fmtSeg">${Object.entries(FMT_SHORT).map(([k, n]) => `<button data-f="${k}" aria-pressed="${onlineFmt() === k}">${n}</button>`).join('')}</div></div>
+    <p class="muted small fmtnote">${escTxt(ONLINE_FMTS[onlineFmt()].name)}${onlineFmt() === 'duel' ? '' : '. Bots fill the other places.'}</p>
     <h4 class="invh">Playing now</h4>
     <div id="inviteList" class="invlist"></div>
     <div class="invrow2">
@@ -12758,6 +12861,8 @@ function renderOnlineHub() {
     <label class="runcode invname"><span>Your name</span><input id="lobbyName" maxlength="20" autocomplete="off" value="${escTxt(myName() === 'A fighter' ? '' : myName())}" placeholder="What other players see"></label>`,
     [[MM.searching || hosting ? 'Stop' : 'Back', () => { const was = MM.searching || hosting; stopSearch(); lobbySet({ invite: null }); LOBBY.invited = null; if (NET.role === 'host' && !NET.on) netLeave(); was ? renderOnlineHub() : toTitle(); }, !MM.searching]]);
   const f = $('#mmFind'); if (f) f.onclick = findMatch;
+  // the format is the host's: changing it while your fight is open just changes what the next person joins
+  $$('#fmtSeg button').forEach(b => b.onclick = () => { store.set('onlineFmt', b.dataset.f); AU.click(); if (NET.room && NET.role === 'host' && !NET.on) { try { NET.room.presence({ fmt: b.dataset.f }); } catch (e) { } } lobbySet({ st: lobbyStatus() }); renderOnlineHub(); });
   $('#invLink').onclick = async () => { AU.click(); await initLobby(); if (!NET.code || NET.role !== 'host') { await netHost(LOBBY.room, true); if (!NET.code) return; } renderOnlineHub(); shareInvite(); };
   $('#invJoin').onclick = async () => { const c = ($('#netCode2').value || '').trim().toUpperCase(); if (!/^[A-Z]{4}$/.test(c)) { toastMenu('Codes are four letters.'); return; } await initLobby(); stopSearch(); if (NET.role === 'host') netLeave(); netJoin(LOBBY.room, c); };
   const nm = $('#lobbyName'); if (nm) nm.onchange = () => { store.set('lobbyName', nm.value.trim().slice(0, 20)); lobbySet({ name: myName() }); };
