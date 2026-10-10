@@ -757,6 +757,27 @@ body:not(.split) #pips:not([hidden]) ~ #statstrip{top:calc(var(--st) + 78px)}
 .hdrdone{display:none}
 @media (max-height:500px){#repair .pfoot{display:none}#repair .hdrdone{display:inline-flex;margin-left:8px}#repair .phead{padding-top:6px;padding-bottom:6px}#repair #steps{display:none}.tapechip .lg{display:none}.tapechip{padding:3px 7px}#btnSquire{padding:.3em .6em;font-size:.8rem}#repair .phead h2{font-size:1.2rem}}
 .tapechip.illegal{box-shadow:inset 0 -3px 0 var(--card-red)}
+/* online lobby + profiles */
+.hubbtns{display:grid;grid-template-columns:1fr 1fr;gap:8px;margin:4px 0}
+.linkish{background:none;border:0;color:inherit;text-align:left;padding:0;cursor:pointer;font:inherit}
+.linkish b{text-decoration:underline;text-decoration-color:var(--rule);text-underline-offset:3px}
+.profgrid{display:grid;grid-template-columns:auto 1fr;gap:6px 16px;font-size:1rem}
+.profgrid span{color:var(--dim)}.profgrid b{font-weight:700}
+.lobtop{display:flex;justify-content:space-between;align-items:baseline;gap:8px;flex-wrap:wrap}
+.lobcode{font:900 1.6rem var(--display);letter-spacing:.16em;color:var(--chalk)}
+.lobteams{display:grid;grid-template-columns:1fr 1fr;gap:8px;margin:8px 0}
+.lobteam{background:var(--pad-2);padding:8px;display:grid;gap:6px;align-content:start;border-top:4px solid var(--flag)}
+.lobteam.t1{border-top-color:var(--rival)}
+.lobteam h5{margin:0;font:800 1rem var(--display);letter-spacing:.06em;text-transform:uppercase}
+.lobp{display:grid;text-align:left;background:var(--pad);border:1px solid transparent;color:var(--chalk);padding:6px 8px;cursor:pointer}
+.lobp.me{border-color:var(--chalk)}.lobp small{color:var(--dim)}
+.lobbots{color:var(--dim);font-weight:600;padding:2px 4px}
+.lobset{display:grid;gap:6px;margin:6px 0}
+.stepper{display:flex;align-items:center;gap:8px}.stepper span{flex:1;font-weight:600}.stepper b{min-width:2ch;text-align:center;font-size:1.2rem}
+.lobkit .chips{display:flex;flex-wrap:wrap;gap:5px;margin:4px 0 8px}
+.lobkit .chip{padding:5px 9px}
+#npNames i{cursor:pointer}
+@media (max-width:480px){.lobteams{grid-template-columns:1fr}.hubbtns{grid-template-columns:1fr}}
 
 </style>
 <div id="app">
@@ -11046,6 +11067,7 @@ function rosterFor(club, mode, isA) {
   const r = club.roster;
   if (mode === 'train') return isA ? [r[0]] : r.slice(0, 2);
   if (mode === 12 || mode === 21) return bigRoster(club, mode);
+  if (typeof mode === 'number' && (mode === 4 || mode > 5)) return bigRoster(club, mode).slice(0, mode); // online sides of any size
   if (mode === 5) return r;
   if (mode === 3) return isA ? [r[0], r[1], r[3]] : [r[0], r[1], r[2]];
   if (mode === 2) return isA ? [r[0], r[2]] : [r[0], r[3]];
@@ -11058,6 +11080,7 @@ function slotsFor(n) {
   if (n === 5) return [-2.6, 0, 2.6, -5.2, 5.2].map(x => ({ x, z: 0 }));
   if (n === 3) return [-2.2, 0, 2.2].map(x => ({ x, z: 0 }));
   if (n === 2) return [-1.6, 1.6].map(x => ({ x, z: 0 }));
+  if (n > 1) { const out = [], per = n > 7 ? Math.ceil(n / 2) : n; for (let i = 0; i < n; i++) { const row = Math.floor(i / per), c = i % per, w = Math.min(per, n - row * per); out.push({ x: (c - (w - 1) / 2) * 2.3, z: row * 1.8 }); } return out; }
   return [{ x: 0, z: 0 }];
 }
 
@@ -11349,7 +11372,7 @@ function matchEnd() {
   const won = m.wins[0] > m.wins[1], drawn = m.wins[0] === m.wins[1]; AU.music(true);
   if (m.versus && G.bracket) { VS.on = false; document.body.classList.remove('split', 'split4'); $('#splitLabels').innerHTML = ''; bracketResult(m.wins[0] > m.wins[1] ? 0 : m.wins[1] > m.wins[0] ? 1 : (m.pts && m.pts[1] > m.pts[0] ? 1 : 0)); return; }
   if (m.versus) { VS.on = false; document.body.classList.remove('split', 'split4'); $('#splitLabels').innerHTML = ''; const k = VS.kind; const t = drawn ? 'Draw' : k === 'duel' ? (won ? 'Player 1 wins' : 'Player 2 wins') : k === 'tag' ? (won ? 'Players 1 and 3 win' : 'Players 2 and 4 win') : (won ? 'You two win' : 'The bots win'); msg('local play', t, `<p>${m.wins[0]}–${m.wins[1]} in rounds.</p>`, [['Rematch', () => startVersus(k), true], ['Couch play', openVersus], ['Title', toTitle]]); return; }
-  if (m.online) { msg('online', drawn ? 'Draw' : won ? (m.coop ? 'You two win' : 'You win') : (m.coop ? 'The bots win' : 'You lose'), `<p>${m.wins[0]}–${m.wins[1]} in rounds.</p>`, [['Title', () => { setTimeout(netLeave, 1500); toTitle(); }, true]]); return; }
+  if (m.online) { onlineMatchEnd(); return; }
   renderSheet();
   const p = G.player;
   if (G.tourney) { G.tourney.playerCards = (G.tourney.playerCards || 0) + m.cards.filter(c => c.who === 'You').length; }
@@ -12368,7 +12391,7 @@ async function boot(hot) {
   toTitle();
   requestAnimationFrame(frame);
   if (location.hash === '#autotest') setTimeout(autotest, 300);
-  window.__ST = { G, AU, buildShield, buildWeapon, W3, startTourney, quickFight, toTitle, openRepair, kitCheck, setupMatch, toTactics, beginFight, endRound, matchEnd, CLUBS, WEAPONS, setView, toast, renderKitPicker, applyLoadout, IN, FP, showScreen, weaponIcon, startCine, startTraining, startLadder, openCareer, openModes, openLadder, CAREER, setLesson, TR, unlock, togglePause, afterRound, renderHow, selectPiece, selectTape, msg, renderSheet, setHud, endTraining, setMode, PAD, navMove, focusFirst, sparks, CUTE, THREE, BREATH, setCuteDeco, flipFx, PHOTO, UAL, raiseFlags, startVersus, startFFA, startBracket, startKid, KID, openSeason, startSeasonMatch, setVenue, VS, SPLIT, NET, netStartHost, netStartGuest, vinControl, openRun, openDaily, openBracket, showBracket, bracketResult, ffaMatchEnd, ffaLeader, ffaWinner, endKid, openPhoto, closePhoto, startReplay, stopReplay, RP, store, startRunFight, newRun, runEnd, WX, setWeather, padVin, readVersus, applyLo, myLoadout, netDropped, netLeave, showIntro, installForged, dailyPlan, openKids, openVersus, openPicks, LESSONS, rivalClub, startGrudge, startDaily, seasonState, newSeason, refreshDaily, VENUES, COMM, hitMapHtml, resetFighterForRound, DIFF, PIN, PADS, NIN, padsUpdate, seatPads, LOBBY, MM, openOnlineHub, benchDown, benchMove, REP, squirePatch, coverage };
+  window.__ST = { G, AU, buildShield, buildWeapon, W3, startTourney, quickFight, toTitle, openRepair, kitCheck, setupMatch, toTactics, beginFight, endRound, matchEnd, CLUBS, WEAPONS, setView, toast, renderKitPicker, applyLoadout, IN, FP, showScreen, weaponIcon, startCine, startTraining, startLadder, openCareer, openModes, openLadder, CAREER, setLesson, TR, unlock, togglePause, afterRound, renderHow, selectPiece, selectTape, msg, renderSheet, setHud, endTraining, setMode, PAD, navMove, focusFirst, sparks, CUTE, THREE, BREATH, setCuteDeco, flipFx, PHOTO, UAL, raiseFlags, startVersus, startFFA, startBracket, startKid, KID, openSeason, startSeasonMatch, setVenue, VS, SPLIT, NET, buildOnlineMatch, hostLobby, joinLobby, ONL, vinControl, openRun, openDaily, openBracket, showBracket, bracketResult, ffaMatchEnd, ffaLeader, ffaWinner, endKid, openPhoto, closePhoto, startReplay, stopReplay, RP, store, startRunFight, newRun, runEnd, WX, setWeather, padVin, readVersus, applyLo, myLoadout, netDropped, netLeave, showIntro, installForged, dailyPlan, openKids, openVersus, openPicks, LESSONS, rivalClub, startGrudge, startDaily, seasonState, newSeason, refreshDaily, VENUES, COMM, hitMapHtml, resetFighterForRound, DIFF, PIN, PADS, NIN, padsUpdate, seatPads, LOBBY, MM, openOnlineHub, benchDown, benchMove, REP, squirePatch, coverage };
 }
 
 function autotest() {
@@ -12557,60 +12580,6 @@ function applyLo(f, lo, cat) {
   f.body = makeBody(cat, f.spec.arch, 'net' + lo.name, { height: lo.height, build: lo.build }); f.name = String(lo.name || 'Rival').slice(0, 20); resetFighterForRound(f);
 }
 async function openOnline() { return openOnlineHub(); }
-async function netHost(room, quiet) {
-  const code = Array.from({ length: 4 }, () => 'ABCDEFGHJKLMNPQRSTUVWXYZ'[(Math.random() * 24) | 0]).join('');
-  let r; try { r = await room.join('duel-' + code.toLowerCase()); } catch (e) { toastMenu('Could not reach the online service. Check the internet connection and try again.'); return; }
-  Object.assign(NET, { room: r, role: 'host', code, on: false, seq: 0, ev: [], remote: null });
-  r.presence({ role: 'host', lo: myLoadout(), cat: G.category, venue: G.quickVenue || W3.venue || 'arena', fmt: onlineFmt() });
-  if (quiet) { /* the invite screen shows the code */ } else msg('online duel', `Code ${code}`, `<p>Tell your friend the code <b class="num" style="font-size:1.6em;letter-spacing:.15em">${code}</b>. The fight starts as soon as they join.</p>`, [['Cancel', () => { netLeave(); openModes(); }]]);
-  NET.unsub = r.onPeers(ch => {
-    const guest = ch.peers.find(p => !p.isMe && p.presence && p.presence.role === 'guest');
-    if (guest && !NET.on) { NET.peer = guest.peer; MM.searching = false; lobbySet({ invite: null, look: null }); LOBBY.invited = null; netStartHost(guest.presence.lo); }
-    if (NET.on && guest) NET.remote = guest.presence.vin || NET.remote;
-    if (NET.on && ch.left.some(p => p.peer === NET.peer)) netDropped();
-  });
-}
-// online formats: a duel, or 3v3 / 5v5 with bots filling the other places, the two of you on opposite sides or together
-const ONLINE_FMTS = { duel: { mode: 1, coop: false, name: 'Duel' }, v3: { mode: 3, coop: false, name: '3v3, you against each other' }, c3: { mode: 3, coop: true, name: '3v3, together against bots' }, v5: { mode: 5, coop: false, name: '5v5, you against each other' }, c5: { mode: 5, coop: true, name: '5v5, together against bots' } };
-function onlineFmt() { const k = store.get('onlineFmt', 'duel'); return ONLINE_FMTS[k] ? k : 'duel'; }
-function fmtStage(F) { return F.mode === 1 ? 'Online duel' : `Online ${F.mode}v${F.mode}${F.coop ? ' co-op' : ''}`; }
-// which fighter the guest plays: the other team's captain, or your teammate
-function guestFighter(F) { return F.coop ? G.fighters.filter(f => f.team === 0)[1] : G.fighters.find(f => f.team === 1); }
-function netStartHost(lo, fk) {
-  const F = ONLINE_FMTS[fk || onlineFmt()] || ONLINE_FMTS.duel; NET.fmt = fk || onlineFmt();
-  G.attract = false; G.tourney = null; REP.log = []; endTraining();
-  setupMatch({ mode: F.mode, opp: 'wardens', stage: fmtStage(F), venue: G.quickVenue || W3.venue || 'arena', online: true, pro: F.mode === 1, coop: F.coop });
-  const b = guestFighter(F); applyLo(b, lo, G.match.category); b.vin = NET.vin = newVin(); NET.on = true; NET.gi = G.fighters.indexOf(b);
-  if (!F.coop) $('#sbB').textContent = (lo && lo.name || 'P2').slice(0, 3).toUpperCase();
-  startRound(); beginFight();
-}
-async function netJoin(room, code) {
-  let r; try { r = await room.join('duel-' + code.toLowerCase()); } catch (e) { toastMenu('Could not reach that fight. Check the code and that your friend is still on the invite screen.'); return; }
-  Object.assign(NET, { room: r, role: 'guest', code, on: false, lastEv: 0, vin: newVin() });
-  r.presence({ role: 'guest', lo: myLoadout() });
-  msg('online duel', `Joining ${code}`, '<p>Waiting for the host…</p>', [['Cancel', () => { netLeave(); openModes(); }]]);
-  NET.unsub = r.onPeers(ch => {
-    const host = ch.peers.find(p => !p.isMe && p.presence && p.presence.role === 'host');
-    if (host && !NET.on && host.presence.go) { NET.peer = host.peer; netStartGuest(host.presence); }
-    if (NET.on && host && host.presence.s) NET.snap = host.presence;
-    if (NET.on && ch.left.some(p => p.peer === NET.peer)) netDropped();
-  });
-}
-function netStartGuest(P) {
-  const F = ONLINE_FMTS[P.fmt] || ONLINE_FMTS.duel;
-  G.attract = false; G.tourney = null; REP.log = []; endTraining();
-  const catWas = G.category; G.category = P.cat || G.category;
-  setupMatch({ mode: F.mode, opp: 'wardens', stage: fmtStage(F), venue: P.venue, online: true, pro: F.mode === 1, coop: F.coop }); G.category = catWas;
-  const a = G.fighters.find(f => f.team === 0), b = guestFighter(F);
-  applyLo(b, myLoadout(), G.match.category); applyLo(a, P.lo, G.match.category);
-  G.fighters.forEach(f => f.isPlayer = false); b.isPlayer = true; G.player = b; NET.on = true;
-  if (!F.coop) $('#sbA').textContent = (P.lo && P.lo.name || 'P1').slice(0, 3).toUpperCase();
-  startRound(); hideAll(); setHud(true); G.phase = 'prefight'; refreshTouchUI();
-  FP.yaw = b.facing;
-}
-function netDropped() { if (!NET.on) return; if (G.phase === 'over') { netLeave(); return; } // the match is already decided: leave the result screen alone
-  NET.on = false; toastMenu('Your opponent left.'); netLeave(); toTitle(); }
-function netLeave() { try { NET.unsub && NET.unsub(); NET.room && NET.room.leave(); } catch (e) { } Object.assign(NET, { on: false, room: null, role: null, unsub: null }); }
 const ST_CODE = ['standing', 'posting', 'falling', 'grounded', 'rising', 'kneeling'], AK = [null, 'swing', 'shove', 'trip', 'grab', 'knee', 'throw', 'disarm', 'tackle'], PH = ['windup', 'strike', 'recover', 'lunge'], ARC = ['R2L', 'L2R', 'O'];
 const q = v => Math.round(v * 1000) / 1000;
 function packF(f) { const a = f.action; return [q(f.pos.x), q(f.pos.z), q(f.facing), ST_CODE.indexOf(f.state), q(f.lean.x), q(f.lean.z), a ? AK.indexOf(a.kind) : 0, a ? PH.indexOf(a.phase) : 0, a ? ARC.indexOf(a.arc) : 0, a ? q(a.charge || 0) : 0, q(f.gas), q(f.fatigue || 0), q(f.groundPos.x), q(f.groundPos.z), q(f.fallDir.x), q(f.fallDir.z), q(f.fallT), q(f.gt || 0), (f.guard ? 1 : 0) | (f.brace ? 2 : 0) | (f.sprint ? 4 : 0) | (f.touched ? 8 : 0) | (f.weapon ? 16 : 0) | (f.out ? 32 : 0), q(f.vel.x), q(f.vel.z), q(f.bell), f.groundStyle === 'fall' ? 0 : f.groundStyle === 'kneel' ? 1 : 2, q(f.riseT || 0)]; }
@@ -12625,35 +12594,6 @@ function unpackF(f, s, dt) {
   f.guard = !!(s[18] & 1); f.brace = !!(s[18] & 2); f.sprint = !!(s[18] & 4); f.touched = !!(s[18] & 8); f.out = !!(s[18] & 32);
   f.vel.x = s[19]; f.vel.z = s[20]; f.bell = s[21]; f.groundStyle = ['fall', 'kneel', 'sit'][s[22]] || 'fall'; f.riseT = s[23];
 }
-function netTick(dt) {
-  if (!NET.on || !NET.room) return;
-  NET.sendT -= dt;
-  if (NET.role === 'host') {
-    if (NET.remote) Object.assign(NET.vin, NET.remote, { e: { ...NET.remote.e } });
-    if (NET.sendT <= 0) {
-      NET.sendT = 0.05; const m = G.match; if (!m) return;
-      const F = m.mode === 1 ? [0, 1].map(t => G.fighters.find(f => f.team === t)) : G.fighters;
-      NET.room.presence({ role: 'host', go: 1, fmt: NET.fmt || 'duel', s: F.map(packF), m: [q(m.clock), m.pts[0], m.pts[1], m.wins[0], m.wins[1], m.round, ['prefight', 'fight', 'stopping', 'between', 'over', 'tactics'].indexOf(G.phase), m.overtime ? 1 : 0], mk: G.marshals.map(k => [q(k.pos.x), q(k.pos.z), q(k.facing), q(k.flagUp)]), ev: NET.ev });
-    }
-  } else {
-    // guest: send what you're pressing, show what the host's fight says
-    const V = NET.vin; V.mx = PIN.move.x; V.mz = PIN.move.z; V.yaw = isCtl() ? FP.yaw : null; V.sp = PIN.sprint ? 1 : 0; V.gd = PIN.guard ? 1 : 0; V.br = PIN.brace ? 1 : 0;
-    if (IN.swingStart) { IN.swingStart = false; V.sw++; V.sh = 1; V.arc = 'auto'; }
-    if (V.sh) { let pv = null; if (IN.pad.id !== null) pv = arcFromDrag(IN.pad.dx, IN.pad.dy, 16); else if (IN.mouse.down) pv = arcFromDrag(IN.mouse.adx, IN.mouse.ady, 22); else if (IN.gp.rtDown) pv = PIN.rx > 0.45 ? 'R2L' : PIN.rx < -0.45 ? 'L2R' : PIN.ry < -0.5 ? 'O' : null; if (pv && pv !== 'auto') V.arc = pv; }
-    if (IN.swingRelease) { if (IN.swingRelease !== 'auto') V.arc = IN.swingRelease; V.sh = 0; IN.swingRelease = null; }
-    for (const k of ['trip', 'shove', 'grab', 'tackle']) if (IN.edges.has(k)) { IN.edges.delete(k); V.e[k]++; }
-    if (NET.sendT <= 0) { NET.sendT = 0.05; NET.room.presence({ role: 'guest', vin: V }); }
-    const P = NET.snap; if (!P || !P.s) return;
-    const F = G.match.mode === 1 ? [0, 1].map(t => G.fighters.find(f => f.team === t)) : G.fighters;
-    F.forEach((f, i) => f && P.s[i] && unpackF(f, P.s[i], dt));
-    const m = G.match, M = P.m; m.clock = M[0]; m.pts = [M[1], M[2]]; const won = [M[3], M[4]]; m.round = M[5]; m.overtime = !!M[7];
-    const ph = ['prefight', 'fight', 'stopping', 'between', 'over', 'tactics'][M[6]] || 'fight';
-    if (ph !== G.phase) { if (ph === 'over' && G.phase !== 'over') { m.wins = won; G.phase = 'over'; netGuestEnd(); return; } G.phase = ph; refreshTouchUI(); }
-    m.wins = won;
-    (P.mk || []).forEach((k, i) => { const mm = G.marshals[i]; if (mm) { mm.pos.x = k[0]; mm.pos.z = k[1]; mm.facing = k[2]; mm.flagUp = k[3]; } });
-    for (const e of P.ev || []) { if (e[0] <= NET.lastEv) continue; NET.lastEv = e[0]; netPlay(e); }
-  }
-}
 function netPlay(e) {
   const [, k, a, b, c, d] = e;
   if (k === 'h') { const p = new THREE.Vector3(a, b, c); AU.armourHit(1, 0.9); sparks(p, 10, 1); if (d > 1) flipFx('impact', p, 0.9, 0.22, '#fff6d8', true); if (G.player && dist2(G.player.pos, p) < 0.9) { flashHit(); impactFeel('taken', null, 1); } }
@@ -12661,10 +12601,6 @@ function netPlay(e) {
   else if (k === 'd') { AU.crash(0.9); AU.cheer(1); dustPuff(a, b); flipFx(CUTE.on ? 'stars' : 'cloud', new THREE.Vector3(a, 0.5, b), 2.4, 1); }
   else if (k === 'c') showCall(a, b);
   else if (k === 't') toast(a, b, c);
-}
-function netGuestEnd() {
-  const m = G.match, t = G.player ? G.player.team : 1, won = m.wins[t] > m.wins[1 - t];
-  setHud(false); msg('online', won ? (m.coop ? 'You two win' : 'You win') : m.wins[0] === m.wins[1] ? 'Draw' : (m.coop ? 'The bots win' : 'You lose'), `<p>${m.wins[t]}–${m.wins[1 - t]} in rounds.</p>`, [['Title', () => { netLeave(); toTitle(); }, true]]);
 }
 
 // ---------- instant replay: the last ten seconds of every fighter, played back slowly from any angle ----------
@@ -12753,22 +12689,26 @@ function checkNintendo() {
   if (on && pref === 'auto' && typeof toastMenu === 'function') toastMenu('Switch controller: right button confirms. Xbox letters on yours? Settings, Button letters.');
 }
 
-// ---------- play online: see who's playing, find a match in one tap, invite someone, or send a link ----------
-// The lobby is Claude's room when the game runs on claude.ai for someone allowed to use it, and otherwise the
-// peer-to-peer lobby (13g). Everyone sets a small presence: name, what they're doing, `look` (the code of a fight
-// they're waiting in, when they tapped Find a match) and `invite` (a code addressed to one player).
+// ---------- play online: see who's playing (and their stats), find a match, invite someone, or send a link ----------
+// The global list is the peer-to-peer lobby (13g) where it can run, otherwise Claude's room. Everyone sets a small
+// presence: name, what they're doing, profile stats (pr), `look` (the code of an open lobby, for Find a match) and
+// `invite` (a lobby code addressed to one player). Fights themselves happen in a lobby room (13h).
 const GAME_URL = 'https://claude.ai/artifact/2hhQkB83SkLC5ta9nNEnkN';
 const LOBBY = { room: null, me: null, peers: [], pending: null, seen: {}, ready: false, invited: null, starting: null };
 const MM = { searching: false };
-const FMT_SHORT = { duel: 'duel', v3: '3v3', c3: '3v3 co-op', v5: '5v5', c5: '5v5 co-op' };
-function fmtShort(k) { return FMT_SHORT[k] || 'duel'; }
+const SESSION_START = Date.now();
 const escTxt = s => String(s == null ? '' : s).replace(/[&<>"']/g, c => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' })[c]);
 function myName() { const n = (CAREER.name && CAREER.name !== 'You') ? CAREER.name : (store.get('lobbyName', '') || ''); return String(n || 'A fighter').slice(0, 20); }
-function lobbyStatus() { return NET.on ? 'in an online fight' : MM.searching ? 'looking for a match · ' + fmtShort(onlineFmt()) : G.attract || G.screen === 'title' ? 'on the title screen' : G.phase === 'fight' ? 'in a fight' : 'in the menus'; }
+function lobbyStatus() { return NET.on ? 'in an online fight' : NET.room ? (NET.role === 'host' && ONL.L && ONL.L.open ? 'in an open lobby' : 'in a lobby') : G.attract || G.screen === 'title' ? 'on the title screen' : G.phase === 'fight' ? 'in a fight' : 'in the menus'; }
+// play time: counted while the game is on screen, saved with the career
+setInterval(() => { if (document.visibilityState === 'visible') { CAREER.playSec = (CAREER.playSec || 0) + 1; if (CAREER.playSec % 30 === 0) saveCareer(); } }, 1000);
+function fmtDur(sec) { sec = Math.max(0, Math.round(sec || 0)); const hh = Math.floor(sec / 3600), mm = Math.floor(sec % 3600 / 60); return hh ? `${hh} h ${mm} min` : mm ? `${mm} min` : `${sec} s`; }
+function myProfile() { const s = CAREER.stats || {}; return { m: s.matches || 0, w: s.wins || 0, td: s.takedowns || 0, hits: s.hits || 0, rw: s.rumbleWins || 0, t: Math.round(CAREER.playSec || 0), on: SESSION_START, wpn: (WEAPONS[G.loadout.weapon] || WEAPONS.mace).name, club: CAREER.club && CAREER.club.name || '', ach: Object.keys(CAREER.ach || {}).length }; }
 async function claudeRoom() { try { return window.claude && window.claude.use ? await window.claude.use('room') : null; } catch (e) { return null; } }
 function lobbySet(patch) { try { LOBBY.room && LOBBY.room.presence(patch); } catch (e) { } }
 async function initLobby() {
-  if (LOBBY.room || LOBBY.starting) return LOBBY.starting;
+  if (LOBBY.room) return LOBBY.room;
+  if (LOBBY.starting) return LOBBY.starting;
   LOBBY.starting = (async () => {
     // everyone in one list: the peer-to-peer lobby works on the website and (where allowed) on claude.ai, so both see
     // each other. If this page can't load it, fall back to Claude's own room.
@@ -12776,8 +12716,8 @@ async function initLobby() {
     try { await loadPeerLib(); room = p2pLobby(); await room.ready; } catch (e) { try { room && room.leave(); } catch (er) { } room = await claudeRoom(); }
     if (!room) { LOBBY.starting = null; return null; }
     LOBBY.room = room;
-    lobbySet({ name: myName(), st: lobbyStatus(), invite: null, look: null });
-    setInterval(() => lobbySet({ name: myName(), st: lobbyStatus() }), 4000);
+    lobbySet({ name: myName(), st: lobbyStatus(), pr: myProfile(), invite: null, look: null });
+    setInterval(() => lobbySet({ name: myName(), st: lobbyStatus(), pr: myProfile() }), 5000);
     room.onPeers(ch => {
       const me = ch.peers.find(p => p.isMe && p.sameTab); if (me) LOBBY.me = me.peer;
       LOBBY.peers = ch.peers.filter(p => !p.isMe && p.kind === 'viewer' && p.presence && p.presence.name);
@@ -12790,8 +12730,8 @@ async function initLobby() {
         LOBBY.pending = { from: String(p.presence.name || 'A friend').slice(0, 20), code: inv.code, peer: p.peer };
         showInvite();
       }
-      matchTick();
       if (G.screen === 'msgScr' && $('#inviteList')) renderInviteList();
+      if (G.screen === 'msgScr' && $('#lobInvite') && !ONL.inMatch) renderLobbyInvite();
     }, () => { });
     return room;
   })();
@@ -12800,7 +12740,7 @@ async function initLobby() {
 function updateLobbyBadge() {
   const n = LOBBY.peers.length;
   const b = $('#onlineBadge'); if (b) { b.hidden = !n; b.textContent = n + ' online'; }
-  // the title screen lists everyone playing right now; tap it to open Play online
+  // the title screen lists everyone playing right now; tap a name for their stats, or the strip for Play online
   const np = $('#nowPlaying'); if (!np) return;
   np.hidden = !n;
   if (!n) return;
@@ -12808,63 +12748,62 @@ function updateLobbyBadge() {
   const list = LOBBY.peers.slice().sort((a, b) => (b.presence.look ? 2 : 0) - (a.presence.look ? 2 : 0) || (busy(a) ? 1 : 0) - (busy(b) ? 1 : 0));
   $('#npCount').textContent = `${n} playing now`;
   const box = $('#npNames'); box.innerHTML = '';
-  list.forEach(p => box.append(h('i', { class: p.presence.look ? 'look' : busy(p) ? 'busy' : '' }, String(p.presence.name || 'A fighter').slice(0, 20))));
+  list.forEach(p => box.append(h('i', { class: p.presence.look ? 'look' : busy(p) ? 'busy' : '', onclick: e => { e.stopPropagation(); AU.click(); openProfile(p); } }, String(p.presence.name || 'A fighter').slice(0, 20))));
+}
+// someone's stats: how long they've been on today and in total, matches, wins, takedowns
+function openProfile(p, back) {
+  const P = (p && p.presence) || {}, R = P.pr || {};
+  const name = String(P.name || 'A fighter').slice(0, 20);
+  const rate = R.m ? Math.round(100 * (R.w || 0) / R.m) + '%' : '–';
+  const rows = [['Online now for', R.on ? fmtDur((Date.now() - R.on) / 1000) : '–'], ['Total time played', R.t != null ? fmtDur(R.t) : '–'], ['Matches', R.m ?? '–'], ['Wins', R.w ?? '–'], ['Win rate', rate], ['Takedowns', R.td ?? '–'], ['Clean hits', R.hits ?? '–'], ['Rumbles won', R.rw ?? '–'], ['Achievements', R.ach ?? '–'], ['Favourite weapon', R.wpn || '–'], ['Club', R.club || '–'], ['Right now', P.st || '–']];
+  const canJoin = /^[A-Z]{4}$/.test(String(P.look || ''));
+  const btns = [];
+  if (canJoin) btns.push(['Join their lobby', () => joinLobby(P.look), true]);
+  else if (p && p.peer && LOBBY.peers.includes(p)) btns.push(['Invite to a fight', () => sendInvite(p), true]);
+  btns.push(['Back', back || (() => (NET.room && !ONL.inMatch ? renderLobby() : openOnlineHub()))]);
+  msg('player', name, `<div class="profgrid">${rows.map(([k, v]) => `<span>${k}</span><b>${escTxt(v)}</b>`).join('')}</div>${p && p.guest ? '<p class="muted small">Guest player</p>' : ''}`, btns);
+}
+// a profile for someone in a lobby: use their global-list entry if we can find it, else what the lobby knows
+function openProfileByUid(uid, x) {
+  if (x && x.me) { openProfile({ presence: { name: myName(), st: lobbyStatus(), pr: myProfile() } }); return; }
+  const p = LOBBY.peers.find(q => q.presence && q.presence.name === x.name);
+  openProfile(p || { presence: { name: x.name, st: 'in your lobby', pr: null } });
 }
 // someone invited you: answer now if you're in the menus, or as soon as the fight in progress is over
 function showInvite() {
   const P = LOBBY.pending; if (!P) return;
   if ((G.phase === 'fight' && !G.attract && !G.paused) || NET.on) { toast(`${P.from} wants to fight you online`, 'big', 'Answer after this fight'); return; }
   LOBBY.pending = null; AU.cheer && AU.cheer(0.5);
-  msg('invite', `${escTxt(P.from)} wants to fight!`, `<p><b>${escTxt(P.from)}</b> invited you to an online duel.</p>`,
-    [['Fight!', () => { stopSearch(); netJoin(LOBBY.room, P.code); }, true], ['No thanks', openOnlineHub]]);
+  msg('invite', `${escTxt(P.from)} invited you!`, `<p><b>${escTxt(P.from)}</b> invited you to their lobby. Pick your side and kit there.</p>`,
+    [['Join', () => joinLobby(P.code), true], ['No thanks', openOnlineHub]]);
 }
-// ---- one-tap matchmaking: join someone who's already waiting, or wait for the next person who taps Find a match
-const lookers = () => LOBBY.peers.filter(p => /^[A-Z]{4}$/.test(String(p.presence.look || '')) && p.presence.st !== 'in an online fight');
+// ---- Find a match: join an open lobby, or open one and wait for others
 async function findMatch() {
   AU.click(); await initLobby();
-  if (NET.on) return;
-  const other = lookers()[0];
-  if (other) { MM.searching = false; lobbySet({ look: null }); netJoin(LOBBY.room, other.presence.look); return; }
-  if (!NET.code || NET.role !== 'host') { await netHost(LOBBY.room, true); if (!NET.code) return; }
-  MM.searching = true; lobbySet({ look: NET.code, st: lobbyStatus() });
-  renderOnlineHub();
+  const open = LOBBY.peers.filter(p => /^[A-Z]{4}$/.test(String(p.presence.look || '')) && !/online fight/.test(String(p.presence.st || '')));
+  if (open.length) { joinLobby(open[0].presence.look); return; }
+  await hostLobby(true);
 }
-function stopSearch() { if (!MM.searching) return; MM.searching = false; lobbySet({ look: null, st: lobbyStatus() }); }
-// two people tapped Find at the same moment: the one with the lower id keeps hosting, the other joins them
-function matchTick() {
-  if (!MM.searching || NET.on || !NET.code) return;
-  const other = lookers().find(p => String(p.peer) < String(LOBBY.me));
-  if (other) { const code = other.presence.look; MM.searching = false; lobbySet({ look: null }); netLeave(); netJoin(LOBBY.room, code); }
-}
+function stopSearch() { MM.searching = false; }
 // ---- the Play online screen
 async function openInvite() { return openOnlineHub(); }
 async function openOnlineHub() {
   AU.init(); initLobby();
-  renderOnlineHub();
-}
-function renderOnlineHub() {
-  const hosting = NET.code && NET.role === 'host' && !NET.on;
-  const head = MM.searching
-    ? `<div class="mmwait"><b>Looking for an opponent…</b><span>Anyone who taps Find a match joins you. Your code: <b class="num">${NET.code}</b></span></div>`
-    : hosting ? `<div class="invcode"><span>Your fight is open. Code</span><b class="num">${NET.code}</b></div>` : '';
-  msg('play online', 'Play online', `${head}
-    ${MM.searching ? '' : '<button class="btn primary flagtape big mmfind" id="mmFind">Find a match</button>'}
-    <div class="setrow fmtrow"><span>Fight</span><div class="seg small" id="fmtSeg">${Object.entries(FMT_SHORT).map(([k, n]) => `<button data-f="${k}" aria-pressed="${onlineFmt() === k}">${n}</button>`).join('')}</div></div>
-    <p class="muted small fmtnote">${escTxt(ONLINE_FMTS[onlineFmt()].name)}${onlineFmt() === 'duel' ? '' : '. Bots fill the other places.'}</p>
-    <h4 class="invh">Playing now</h4>
+  if (NET.room && !ONL.inMatch) { renderLobby(); return; } // already in a lobby: go back to it
+  msg('play online', 'Play online', `
+    <div class="hubbtns"><button class="btn primary flagtape big" id="mmFind">Find a match</button><button class="btn tape big" id="mkLobby">Make a lobby</button></div>
+    <p class="muted small">Find a match puts you in an open lobby with whoever's looking. Make a lobby to invite friends, pick teams and add bots.</p>
+    <h4 class="invh">Playing now <span class="muted small">(tap a name for their stats)</span></h4>
     <div id="inviteList" class="invlist"></div>
     <div class="invrow2">
-      <button class="btn tape" id="invLink">Invite by link</button>
       <label class="runcode"><span>Have a code?</span><input id="netCode2" maxlength="4" placeholder="ABCD" autocomplete="off"></label>
       <button class="btn tape" id="invJoin">Join</button>
     </div>
     <label class="runcode invname"><span>Your name</span><input id="lobbyName" maxlength="20" autocomplete="off" value="${escTxt(myName() === 'A fighter' ? '' : myName())}" placeholder="What other players see"></label>`,
-    [[MM.searching || hosting ? 'Stop' : 'Back', () => { const was = MM.searching || hosting; stopSearch(); lobbySet({ invite: null }); LOBBY.invited = null; if (NET.role === 'host' && !NET.on) netLeave(); was ? renderOnlineHub() : toTitle(); }, !MM.searching]]);
-  const f = $('#mmFind'); if (f) f.onclick = findMatch;
-  // the format is the host's: changing it while your fight is open just changes what the next person joins
-  $$('#fmtSeg button').forEach(b => b.onclick = () => { store.set('onlineFmt', b.dataset.f); AU.click(); if (NET.room && NET.role === 'host' && !NET.on) { try { NET.room.presence({ fmt: b.dataset.f }); } catch (e) { } } lobbySet({ st: lobbyStatus() }); renderOnlineHub(); });
-  $('#invLink').onclick = async () => { AU.click(); await initLobby(); if (!NET.code || NET.role !== 'host') { await netHost(LOBBY.room, true); if (!NET.code) return; } renderOnlineHub(); shareInvite(); };
-  $('#invJoin').onclick = async () => { const c = ($('#netCode2').value || '').trim().toUpperCase(); if (!/^[A-Z]{4}$/.test(c)) { toastMenu('Codes are four letters.'); return; } await initLobby(); stopSearch(); if (NET.role === 'host') netLeave(); netJoin(LOBBY.room, c); };
+    [['Back', toTitle]]);
+  $('#mmFind').onclick = findMatch;
+  $('#mkLobby').onclick = () => { AU.click(); hostLobby(false); };
+  $('#invJoin').onclick = () => { const c = ($('#netCode2').value || '').trim().toUpperCase(); if (!/^[A-Z]{4}$/.test(c)) { toastMenu('Codes are four letters.'); return; } joinLobby(c); };
   const nm = $('#lobbyName'); if (nm) nm.onchange = () => { store.set('lobbyName', nm.value.trim().slice(0, 20)); lobbySet({ name: myName() }); };
   renderInviteList();
 }
@@ -12873,26 +12812,30 @@ function renderInviteList() {
   box.innerHTML = '';
   if (!LOBBY.ready) { box.append(h('p', { class: 'muted' }, 'Looking for players…')); return; }
   const list = LOBBY.peers.slice().sort((a, b) => (b.presence.look ? 1 : 0) - (a.presence.look ? 1 : 0));
-  if (!list.length) { box.append(h('p', { class: 'muted' }, 'Nobody else is online right now. Tap Find a match and wait, or Invite by link to text a friend.')); return; }
+  if (!list.length) { box.append(h('p', { class: 'muted' }, 'Nobody else is online right now. Make a lobby and send a friend the link.')); return; }
   for (const p of list) {
-    const looking = !!p.presence.look, busy = p.presence.st === 'in an online fight', sent = LOBBY.invited === p.peer;
+    const P = p.presence, R = P.pr || {}, open = /^[A-Z]{4}$/.test(String(P.look || '')), busy = /online fight/.test(String(P.st || ''));
     const btn = busy ? h('span', { class: 'muted small' }, 'busy')
-      : looking ? h('button', { class: 'btn primary flagtape small', onclick: () => { AU.click(); stopSearch(); if (NET.role === 'host') netLeave(); netJoin(LOBBY.room, p.presence.look); } }, 'Fight')
-      : h('button', { class: 'btn ' + (sent ? 'tape' : 'primary flagtape') + ' small', onclick: () => sendInvite(p) }, sent ? 'Invited ✓' : 'Invite');
-    box.append(h('div', { class: 'invrow' + (looking ? ' looking' : '') }, h('span', { class: 'invwho' }, h('b', null, String(p.presence.name).slice(0, 20)), h('small', null, (p.guest ? 'guest · ' : '') + String(p.presence.st || '').slice(0, 30))), btn));
+      : open ? h('button', { class: 'btn primary flagtape small', onclick: () => { AU.click(); joinLobby(P.look); } }, 'Join')
+        : h('button', { class: 'btn ' + (LOBBY.invited === p.peer ? 'tape' : 'primary flagtape') + ' small', onclick: () => sendInvite(p) }, LOBBY.invited === p.peer ? 'Invited ✓' : 'Invite');
+    const sub = `${String(P.st || '').slice(0, 30)}${R.on ? ' · on ' + fmtDur((Date.now() - R.on) / 1000) : ''}${R.m != null ? ' · ' + R.w + ' wins' : ''}`;
+    box.append(h('div', { class: 'invrow' + (open ? ' looking' : '') }, h('button', { class: 'invwho linkish', onclick: () => { AU.click(); openProfile(p); } }, h('b', null, String(P.name).slice(0, 20)), h('small', null, sub)), btn));
   }
 }
+// inviting someone opens your lobby (if you haven't one) and sends them its code
 async function sendInvite(p) {
   AU.click(); await initLobby();
-  if (!NET.code || NET.role !== 'host') { await netHost(LOBBY.room, true); if (!NET.code) return; }
+  if (!(NET.room && NET.role === 'host')) { const ok = await hostLobby(false); if (!ok) return; }
   LOBBY.invited = p.peer;
   lobbySet({ name: myName(), invite: { to: p.peer, code: NET.code, t: Date.now() } });
-  toastMenu(`Invite sent to ${String(p.presence.name).slice(0, 20)}`); renderOnlineHub();
+  toastMenu(`Invite sent to ${String(p.presence.name).slice(0, 20)}`);
+  if (G.screen === 'msgScr' && $('#lobTeams')) renderLobbyInvite(); else renderLobby();
 }
 async function shareInvite() {
+  if (!NET.code) return;
   const link = inviteUrl(NET.code);
-  const text = link ? `Come fight me in BUHURT: Steel & Tape! Tap to join: ${link}` : `Come fight me in BUHURT: Steel & Tape! Open ${GAME_URL} , tap Play online and join with code ${NET.code}`;
-  try { if (navigator.share) { await navigator.share({ title: 'BUHURT duel', text }); return; } } catch (e) { if (e && e.name === 'AbortError') return; }
+  const text = link ? `Come fight in BUHURT: Steel & Tape! Tap to join my lobby: ${link}` : `Come fight in BUHURT: Steel & Tape! Open ${GAME_URL} , tap Play online and join with code ${NET.code}`;
+  try { if (navigator.share) { await navigator.share({ title: 'BUHURT lobby', text }); return; } } catch (e) { if (e && e.name === 'AbortError') return; }
   try { await navigator.clipboard.writeText(text); toastMenu('Invite copied. Paste it in a message to your friend.'); } catch (e) { toastMenu(`Tell your friend the code ${NET.code}`); }
 }
 
@@ -12918,40 +12861,66 @@ function loadPeerLib() {
 function p2pRoom() {
   return { p2p: true, presence: () => Promise.resolve(), onPeers: () => () => { }, peers: () => [], emit: () => Promise.resolve(), on: () => () => { }, join: name => p2pJoin(name), leave() { } };
 }
+// A room for up to 20: the first one in claims the code's peer name and becomes the hub of a star; everyone else
+// connects to it. The hub forwards its own presence to all, and a slimmed copy of everyone's presence (no inputs,
+// no snapshots) so every page can show the whole lobby.
 async function p2pJoin(name) {
   const Peer = await loadPeerLib();
   const id = 'buhurt-steel-tape-' + String(name).toLowerCase().replace(/[^a-z0-9-]/g, '');
-  let mine = {}, other = null, otherP = {}, conn = null, peer = null; const subs = [];
-  const view = (pid, me, p) => ({ peer: pid, isMe: me, sameTab: me, kind: 'viewer', guest: false, by: null, presence: p, updatedAt: Date.now() });
-  const snap = () => [view('me', true, mine)].concat(other ? [view(other, false, otherP)] : []);
-  const notify = (left = []) => { const peers = snap(); subs.slice().forEach(f => { try { f({ peers, joined: [], left, updated: [] }); } catch (e) { } }); };
-  const wire = c => {
-    if (conn && conn.open) { try { c.close(); } catch (e) { } return; } // a duel is two people
-    conn = c;
-    c.on('open', () => { other = c.peer; try { c.send({ t: 'p', p: mine }); } catch (e) { } notify(); });
-    c.on('data', m => { if (m && m.t === 'p') { other = c.peer; otherP = m.p || {}; notify(); } });
-    c.on('close', () => { const o = other; other = null; otherP = {}; conn = null; if (o) notify([view(o, false, {})]); });
-    c.on('error', () => { });
+  let mine = {}, peer = null, isHub = false, hubConn = null, hubP = {}, others = {}, myId = null, relayT = 0;
+  const conns = {}, pres = {}, subs = [];
+  const view = (pid, me, p) => ({ peer: pid, isMe: me, sameTab: me, kind: 'viewer', guest: false, by: null, presence: p || {}, updatedAt: Date.now() });
+  const slim = p => { if (!p) return {}; const o = {}; for (const k in p) if (k !== 'vin' && k !== 's' && k !== 'mk' && k !== 'ev' && k !== 'm') o[k] = p[k]; return o; };
+  const snap = () => {
+    const out = [view(myId || 'me', true, mine)];
+    if (isHub) for (const pid in pres) out.push(view(pid, false, pres[pid]));
+    else { if (hubConn && hubConn.open) out.push(view(hubConn.peer, false, hubP)); for (const pid in others) if (pid !== myId && (!hubConn || pid !== hubConn.peer)) out.push(view(pid, false, others[pid])); }
+    return out;
   };
+  const notify = (left = []) => { const peers = snap(); subs.slice().forEach(f => { try { f({ peers, joined: [], left, updated: [] }); } catch (e) { } }); };
+  const relay = () => { if (relayT) return; relayT = setTimeout(() => { relayT = 0; const m = {}; for (const pid in pres) m[pid] = slim(pres[pid]); m[myId] = slim(mine); for (const pid in conns) { const c = conns[pid]; if (c.open) try { c.send({ t: 'r', m }); } catch (e) { } } }, 200); };
   peer = await new Promise((res, rej) => {
     const t = setTimeout(() => rej(new Error('timeout')), 15000);
     const host = new Peer(id, { debug: 0 });
-    host.on('open', () => { clearTimeout(t); host.on('connection', wire); res(host); });
+    host.on('open', () => {
+      clearTimeout(t); isHub = true; myId = id;
+      host.on('connection', c => {
+        if (Object.keys(conns).length >= 19) { c.on('open', () => { try { c.send({ t: 'full' }); c.close(); } catch (e) { } }); return; } // 20 people at most
+        conns[c.peer] = c;
+        c.on('open', () => { try { c.send({ t: 'p', p: mine }); } catch (e) { } relay(); });
+        c.on('data', m => { if (m && m.t === 'p') { const first = !pres[c.peer]; pres[c.peer] = m.p || {}; notify(); if (first || !m.p.vin) relay(); } });
+        const gone = () => { if (!conns[c.peer]) return; delete conns[c.peer]; const had = pres[c.peer]; delete pres[c.peer]; notify([view(c.peer, false, had || {})]); relay(); };
+        c.on('close', gone); c.on('error', gone);
+      });
+      res(host);
+    });
     host.on('error', e => {
-      if (e && e.type === 'unavailable-id') { // someone already holds this code: connect to them
+      if (e && e.type === 'unavailable-id') { // someone holds this code already: join them
         try { host.destroy(); } catch (er) { }
         const g = new Peer({ debug: 0 });
-        g.on('open', () => { clearTimeout(t); wire(g.connect(id, { reliable: true })); res(g); });
+        g.on('open', gid => {
+          clearTimeout(t); myId = gid; const c = g.connect(id, { reliable: true }); hubConn = c;
+          c.on('open', () => { try { c.send({ t: 'p', p: mine }); } catch (er) { } notify(); });
+          c.on('data', m => { if (!m) return; if (m.t === 'p') { hubP = m.p || {}; notify(); } else if (m.t === 'r') { others = m.m || {}; notify(); } else if (m.t === 'full') { toastMenu('That lobby is full (20 people).'); } });
+          c.on('close', () => { const hp = hubP; hubConn = null; notify([view(id, false, hp)]); });
+          c.on('error', () => { });
+          res(g);
+        });
         g.on('error', er => { clearTimeout(t); rej(er); });
-      } else if (!conn) { clearTimeout(t); rej(e); }
+      } else if (!isHub && !hubConn) { clearTimeout(t); rej(e); }
     });
   });
   return {
     p2p: true,
-    presence(patch) { mine = { ...mine }; for (const k in patch) { if (patch[k] === null) delete mine[k]; else mine[k] = patch[k]; } if (conn && conn.open) { try { conn.send({ t: 'p', p: mine }); } catch (e) { } } return Promise.resolve(); },
+    presence(patch) {
+      mine = { ...mine }; for (const k in patch) { if (patch[k] === null) delete mine[k]; else mine[k] = patch[k]; }
+      if (isHub) { for (const pid in conns) { const c = conns[pid]; if (c.open) try { c.send({ t: 'p', p: mine }); } catch (e) { } } if (!patch.s) relay(); }
+      else if (hubConn && hubConn.open) { try { hubConn.send({ t: 'p', p: mine }); } catch (e) { } }
+      return Promise.resolve();
+    },
     onPeers(f) { subs.push(f); setTimeout(() => f({ peers: snap(), joined: snap(), left: [], updated: [] }), 0); return () => { const i = subs.indexOf(f); if (i >= 0) subs.splice(i, 1); }; },
     peers: snap, emit: () => Promise.resolve(), on: () => () => { },
-    leave() { try { conn && conn.close(); } catch (e) { } try { peer && peer.destroy(); } catch (e) { } },
+    leave() { try { hubConn && hubConn.close(); } catch (e) { } for (const pid in conns) try { conns[pid].close(); } catch (e) { } try { peer && peer.destroy(); } catch (e) { } },
   };
 }
 // a link with #join=ABCD drops the friend straight into the host's fight
@@ -12960,7 +12929,7 @@ function checkJoinLink() {
   if (!m) return;
   const code = m[1].toUpperCase();
   try { history.replaceState(null, '', location.pathname + location.search.replace(/[?&]join=[A-Za-z]{4}/, '')); } catch (e) { }
-  setTimeout(async () => { AU.init(); netJoin(await initLobby(), code); }, 800);
+  setTimeout(() => { AU.init(); joinLobby(code); }, 800);
 }
 function inviteUrl(code) {
   const onClaude = /claude\.ai|claudeusercontent|anthropic/.test(location.hostname) || location.protocol === 'file:' || location.protocol === 'about:';
@@ -13030,6 +12999,238 @@ function p2pLobby() {
     leave() { dead = true; try { conn && conn.close(); member && member.destroy(); hub && hub.destroy(); } catch (e) { } },
   };
 }
+
+// ---------- online fights for 1 to 20 people: a lobby first (teams, bots, kit), then the host runs the fight ----------
+// Everyone in a lobby room sets a presence: role (host/guest), uid, name, lo (kit), team, ready. The host's presence also
+// carries the lobby settings (L). When the host starts, its presence carries the match spec (S) for a few seconds; every
+// page builds the identical match from S, then guests send inputs (vin) and the host sends snapshots (s) of everyone.
+const ONL = { me: Math.random().toString(36).slice(2, 10), L: null, peers: [], inMatch: false, ready: false, team: 0, vins: {}, remote: {}, go: 0, S: null, lastGo: 0, renderT: 0, hostSeen: false };
+const MAX_HUMANS = 20;
+const ONL_WEAPONS = [['sword', 'heater', 'Sword & shield'], ['sword', 'buckler', 'Sword & buckler'], ['longsword', null, 'Longsword'], ['polearm', null, 'Polearm'], ['axe', 'heater', 'Axe & shield'], ['mace', 'heater', 'Mace & shield'], ['longaxe', null, 'Long axe']];
+const ONL_HELMS = ['greathelm', 'pigface', 'sallet', 'barbute', 'kettle'];
+function onlineKit() { return Object.assign({ w: 0, helm: G.loadout.helm || 'pigface' }, store.get('onlineKit', {})); }
+function myLo() { const lo = myLoadout(), k = onlineKit(), W = ONL_WEAPONS[k.w] || ONL_WEAPONS[0]; return { ...lo, weapon: W[0], shield: W[1], helm: HELMS[k.helm] ? k.helm : 'pigface', base: null, name: myName() }; }
+function lobbyL() { return Object.assign({ n: 3, bots: [null, null], venue: G.quickVenue || W3.venue || 'arena', cat: G.category, open: false }, ONL.L || {}); }
+function hostPeer() { return ONL.peers.find(p => p.presence && p.presence.role === 'host'); }
+// the people in the lobby, host first, then in the order they joined
+function lobbyHumans() {
+  const out = []; const seen = new Set();
+  for (const p of ONL.peers) {
+    const P = p.presence || {}; if (!P.uid || (P.role !== 'host' && P.role !== 'guest') || seen.has(P.uid)) continue; seen.add(P.uid);
+    out.push({ uid: P.uid, name: String(P.name || 'A fighter').slice(0, 20), team: P.team === 1 ? 1 : 0, lo: P.lo, ready: !!P.ready, host: P.role === 'host', me: P.uid === ONL.me, peer: p.peer });
+  }
+  return out.sort((a, b) => (b.host ? 1 : 0) - (a.host ? 1 : 0)).slice(0, MAX_HUMANS);
+}
+function teamCounts(L, hum) {
+  const h = [0, 1].map(t => hum.filter(x => x.team === t).length), n = Math.max(L.n, h[0], h[1], 1);
+  const bots = [0, 1].map(t => { const free = n - h[t]; const b = L.bots[t]; return b == null ? free : clamp(b, 0, free); });
+  return { h, n, bots, total: [h[0] + bots[0], h[1] + bots[1]] };
+}
+function myPresence(extra) { return Object.assign({ role: NET.role, uid: ONL.me, name: myName(), lo: myLo(), team: ONL.team, ready: NET.role === 'host' ? true : ONL.ready }, extra || {}); }
+function newCode() { return Array.from({ length: 4 }, () => 'ABCDEFGHJKLMNPQRSTUVWXYZ'[(Math.random() * 24) | 0]).join(''); }
+
+// ---- host: open a lobby (open = anyone tapping Find a match may join)
+async function hostLobby(open) {
+  const lob = await initLobby(); if (!lob) { toastMenu('Could not reach the online service.'); return false; }
+  if (NET.room && NET.role === 'host' && !ONL.inMatch) { if (open) setLobbyOpen(true); renderLobby(); return true; }
+  if (NET.room) netLeave();
+  const code = newCode();
+  let r; try { r = await lob.join('lobby-' + code.toLowerCase()); } catch (e) { toastMenu('Could not reach the online service. Check the internet connection and try again.'); return false; }
+  Object.assign(NET, { room: r, role: 'host', code, on: false, seq: 0, ev: [], lastEv: 0 });
+  ONL.L = Object.assign(lobbyL(), store.get('onlineL', {}), { open: !!open }); ONL.team = 0; ONL.inMatch = false; ONL.vins = {}; ONL.remote = {}; ONL.go = 0; ONL.S = null;
+  r.presence(myPresence({ L: ONL.L, go: 0 }));
+  NET.unsub = r.onPeers(ch => { ONL.peers = ch.peers; hostPeers(ch); });
+  setLobbyOpen(!!open);
+  renderLobby(); return true;
+}
+function setLobbyOpen(open) { ONL.L = Object.assign(lobbyL(), { open }); hostSync(); lobbySet({ look: open ? NET.code : null, st: lobbyStatus() }); }
+function hostSync() { if (NET.role === 'host' && NET.room && !ONL.inMatch) { store.set('onlineL', { n: ONL.L.n, bots: ONL.L.bots, venue: ONL.L.venue }); try { NET.room.presence(myPresence({ L: ONL.L, go: 0, S: null, s: null })); } catch (e) { } } }
+function hostPeers(ch) {
+  for (const p of ch.peers) { const P = p.presence || {}; if (P.role === 'guest' && P.uid && P.vin) ONL.remote[P.uid] = P.vin; }
+  for (const p of ch.left || []) { // someone left: in a fight, a bot takes over their fighter
+    const f = ONL.inMatch && G.fighters.find(x => x.netPeer === p.peer); if (f) { f.vin = null; f.netUid = null; toast(`${f.name} left: a bot takes over`, 'bad'); }
+  }
+  if (!ONL.inMatch) lobbyRefresh();
+}
+// ---- guest: join a lobby by code
+async function joinLobby(code) {
+  code = String(code || '').toUpperCase(); if (!/^[A-Z]{4}$/.test(code)) return;
+  const lob = await initLobby(); if (!lob) { toastMenu('Could not reach the online service.'); return; }
+  if (NET.room) netLeave(); stopSearch();
+  msg('lobby', `Joining ${code}…`, '<p>Finding the lobby…</p>', [['Cancel', () => { netLeave(); openOnlineHub(); }]]);
+  let r; try { r = await lob.join('lobby-' + code.toLowerCase()); } catch (e) { toastMenu('Could not reach that lobby. Check the code.'); openOnlineHub(); return; }
+  Object.assign(NET, { room: r, role: 'guest', code, on: false, lastEv: 0, vin: newVin(), snap: null });
+  ONL.inMatch = false; ONL.ready = false; ONL.team = 1; ONL.lastGo = 0; ONL.hostSeen = false;
+  r.presence(myPresence());
+  NET.unsub = r.onPeers(ch => { ONL.peers = ch.peers; guestPeers(ch); });
+  setTimeout(() => { if (NET.code === code && NET.role === 'guest' && !ONL.hostSeen) { toastMenu('That lobby isn’t open any more.'); netLeave(); openOnlineHub(); } }, 15000);
+}
+function netJoin(room, code) { return joinLobby(code); } // older callers (links, invites)
+function guestPeers(ch) {
+  const host = hostPeer();
+  if (host && !ONL.hostSeen) { // first look at the lobby: take the emptier side, unless it's full
+    ONL.hostSeen = true; NET.peer = host.peer;
+    const hum = lobbyHumans(); if (hum.length > MAX_HUMANS || (hum.length === MAX_HUMANS && !hum.some(x => x.me))) { toastMenu('That lobby is full (20 people).'); netLeave(); openOnlineHub(); return; }
+    const c = [0, 1].map(t => hum.filter(x => x.team === t && !x.me).length); ONL.team = c[1] <= c[0] ? 1 : 0;
+    try { NET.room.presence(myPresence()); } catch (e) { }
+    if (!(P0 => P0.go && P0.S)(host.presence)) renderLobby();
+  }
+  if (host && (ch.left || []).some(p => p.peer === host.peer)) { netDropped(); return; }
+  if (!host && ONL.hostSeen && (ch.left || []).length) { netDropped(); return; }
+  if (!host) return;
+  const P = host.presence;
+  if (P.go && P.S && P.go !== ONL.lastGo) { ONL.lastGo = P.go; buildOnlineMatch(P.S); return; }
+  if (ONL.inMatch && NET.on && P.s) NET.snap = P;
+  if (ONL.inMatch && !P.go) { backToLobbyLocal(); return; }
+  if (!ONL.inMatch) lobbyRefresh();
+}
+
+// ---- the lobby screen
+function lobbyRefresh() { if (G.screen === 'msgScr' && $('#lobTeams')) { const now = performance.now(); if (now - ONL.renderT < 150) { clearTimeout(ONL.rt); ONL.rt = setTimeout(lobbyRefresh, 160); return; } ONL.renderT = now; renderLobbyParts(); } }
+function renderLobby() {
+  const host = NET.role === 'host';
+  msg('lobby', `Lobby ${NET.code}`, `<div class="lobtop"><span class="muted">Code <b class="num lobcode">${NET.code}</b></span><span id="lobCount" class="muted"></span></div>
+    <div class="lobteams" id="lobTeams"></div>
+    <div id="lobSettings" class="lobset"></div>
+    <h4 class="invh">Your kit</h4>
+    <div class="lobkit" id="lobKit"></div>
+    <h4 class="invh">Invite</h4>
+    <div id="lobInvite" class="invlist"></div>`,
+    host ? [['Start fight', hostStart, true], ['Leave', leaveLobby]] : [[ONL.ready ? 'Not ready' : 'Ready', toggleReady, true], ['Leave', leaveLobby]]);
+  renderLobbyParts(); renderKit();
+}
+function renderLobbyParts() {
+  const host = NET.role === 'host', L = host ? lobbyL() : Object.assign(lobbyL(), (hostPeer() || { presence: {} }).presence.L || {});
+  const hum = lobbyHumans(), C = teamCounts(L, hum);
+  const cnt = $('#lobCount'); if (cnt) cnt.textContent = `${hum.length} of ${MAX_HUMANS} people · ${C.total[0]} v ${C.total[1]}`;
+  const box = $('#lobTeams'); if (!box) return; box.innerHTML = '';
+  ['Reavers', 'Wardens'].forEach((tn, t) => {
+    const col = h('div', { class: 'lobteam t' + t }, h('h5', null, `${tn} · ${C.total[t]}`));
+    for (const x of hum.filter(y => y.team === t)) {
+      const W = ONL_WEAPONS.find(w => x.lo && w[0] === x.lo.weapon && (w[1] || null) === (x.lo.shield || null));
+      col.append(h('button', { class: 'lobp' + (x.me ? ' me' : ''), onclick: () => openProfileByUid(x.uid, x) }, h('b', null, x.name + (x.me ? ' (you)' : '')), h('small', null, `${x.host ? 'host · ' : ''}${W ? W[2] : (x.lo && WEAPONS[x.lo.weapon] ? WEAPONS[x.lo.weapon].name : '')}${x.host || x.ready ? ' · ready ✓' : ' · not ready'}`)));
+    }
+    if (C.bots[t]) col.append(h('div', { class: 'lobbots' }, `+ ${C.bots[t]} bot${C.bots[t] === 1 ? '' : 's'}`));
+    const mine = hum.find(y => y.me);
+    if (mine && mine.team !== t && C.h[t] < C.n) col.append(h('button', { class: 'btn tape small', onclick: () => { ONL.team = t; AU.click(); try { NET.room.presence(myPresence(host ? { L: ONL.L } : {})); } catch (e) { } lobbyRefresh(); } }, 'Join this side'));
+    box.append(col);
+  });
+  const set = $('#lobSettings'); if (!set) return; set.innerHTML = '';
+  if (!host) { set.append(h('p', { class: 'muted small' }, `${C.n} a side · ${VENUES[L.venue] ? VENUES[L.venue].name : ''} · ${L.cat}. The host sets these and starts the fight.`)); return; }
+  const step = (label, val, min, max, fn) => h('div', { class: 'stepper' }, h('span', null, label), h('button', { class: 'btn tape small', disabled: val <= min ? true : null, onclick: () => { AU.click(); fn(val - 1); } }, '−'), h('b', { class: 'num' }, String(val)), h('button', { class: 'btn tape small', disabled: val >= max ? true : null, onclick: () => { AU.click(); fn(val + 1); } }, '+'));
+  set.append(step('People a side', C.n, Math.max(1, C.h[0], C.h[1]), 10, v => { ONL.L.n = v; ONL.L.bots = [null, null]; hostSync(); lobbyRefresh(); }));
+  for (const t of [0, 1]) set.append(step(`Bots, ${t ? 'Wardens' : 'Reavers'}`, C.bots[t], 0, C.n - C.h[t], v => { const b = ONL.L.bots.slice(); b[t] = v; ONL.L.bots = b; hostSync(); lobbyRefresh(); }));
+  const seg = (label, opts, cur, fn) => { const s = h('div', { class: 'seg small' }); for (const [v, n] of opts) s.append(h('button', { 'aria-pressed': String(cur === v), onclick: () => { AU.click(); fn(v); } }, n)); return h('div', { class: 'setrow' }, h('span', null, label), s); };
+  set.append(seg('Arena', Object.values(VENUES).map(V => [V.key, V.name]), L.venue, v => { ONL.L.venue = v; hostSync(); lobbyRefresh(); }));
+  set.append(seg('Division', [['men', 'Men'], ['women', 'Women'], ['youth', 'Youth']], L.cat, v => { ONL.L.cat = v; hostSync(); lobbyRefresh(); }));
+  set.append(seg('Find a match', [['1', 'Open to anyone'], ['0', 'Friends only']], L.open ? '1' : '0', v => { setLobbyOpen(v === '1'); lobbyRefresh(); }));
+  renderLobbyInvite();
+}
+function renderKit() {
+  const box = $('#lobKit'); if (!box) return; box.innerHTML = ''; const k = onlineKit();
+  const ws = h('div', { class: 'chips' }); ONL_WEAPONS.forEach((W, i) => ws.append(h('button', { class: 'chip', 'aria-pressed': String(k.w === i), onclick: () => { store.set('onlineKit', { ...onlineKit(), w: i }); AU.click(); kitChanged(); } }, W[2])));
+  const hs = h('div', { class: 'chips' }); ONL_HELMS.forEach(hk => hs.append(h('button', { class: 'chip', 'aria-pressed': String(k.helm === hk), onclick: () => { store.set('onlineKit', { ...onlineKit(), helm: hk }); AU.click(); kitChanged(); } }, HELMS[hk] ? HELMS[hk].name : hk)));
+  box.append(h('div', { class: 'muted small' }, 'Weapon'), ws, h('div', { class: 'muted small' }, 'Helm'), hs);
+}
+function kitChanged() { renderKit(); try { NET.room.presence(myPresence(NET.role === 'host' ? { L: ONL.L } : {})); } catch (e) { } lobbyRefresh(); }
+function renderLobbyInvite() {
+  const box = $('#lobInvite'); if (!box) return; box.innerHTML = '';
+  const inLobby = new Set(lobbyHumans().map(x => x.name));
+  const list = LOBBY.peers.filter(p => !/online fight|in a lobby/.test(String(p.presence.st || '')) || !inLobby.has(p.presence.name));
+  for (const p of list.slice(0, 12)) {
+    const sent = LOBBY.invited === p.peer;
+    box.append(h('div', { class: 'invrow' }, h('button', { class: 'invwho linkish', onclick: () => openProfile(p) }, h('b', null, String(p.presence.name).slice(0, 20)), h('small', null, String(p.presence.st || '').slice(0, 30))),
+      h('button', { class: 'btn ' + (sent ? 'tape' : 'primary flagtape') + ' small', onclick: () => sendInvite(p) }, sent ? 'Invited ✓' : 'Invite')));
+  }
+  box.append(h('button', { class: 'btn tape small', onclick: () => { AU.click(); shareInvite(); } }, 'Send a link'));
+}
+function toggleReady() { ONL.ready = !ONL.ready; try { NET.room.presence(myPresence()); } catch (e) { } renderLobby(); }
+function leaveLobby() { lobbySet({ look: null, invite: null }); LOBBY.invited = null; netLeave(); openOnlineHub(); }
+
+// ---- start: the host turns the lobby into a match spec everyone builds the same way
+function hostStart() {
+  const L = lobbyL(), hum = lobbyHumans(), C = teamCounts(L, hum);
+  if (C.total[0] < 1 || C.total[1] < 1) { toastMenu('Each side needs at least one fighter: add a bot.'); return; }
+  const H = []; for (const t of [0, 1]) hum.filter(x => x.team === t).forEach((x, i) => H.push({ uid: x.uid, t, i, lo: x.lo, peer: x.peer }));
+  const S = { counts: C.total, venue: L.venue, cat: L.cat, H };
+  ONL.go = Date.now(); ONL.S = S; lobbySet({ look: null, st: 'in an online fight' }); LOBBY.invited = null;
+  buildOnlineMatch(S);
+}
+function buildOnlineMatch(S) {
+  G.attract = false; G.tourney = null; REP.log = []; endTraining();
+  const catWas = G.category; G.category = S.cat || G.category;
+  const N = Math.max(S.counts[0], S.counts[1], 1);
+  setupMatch({ mode: N, opp: 'wardens', stage: `Online ${S.counts[0]} v ${S.counts[1]}`, venue: S.venue, online: true, pro: N === 1 });
+  G.category = catWas;
+  for (const t of [0, 1]) { const team = G.fighters.filter(f => f.team === t); for (const f of team.slice(S.counts[t])) { W3.matchRoot.remove(f.model.root); G.fighters.splice(G.fighters.indexOf(f), 1); } }
+  G.fighters.forEach(f => { f.isPlayer = false; f.vin = null; f.netUid = null; f.netPeer = null; }); G.player = null;
+  for (const hm of S.H) {
+    const f = G.fighters.filter(x => x.team === hm.t)[hm.i]; if (!f) continue;
+    applyLo(f, hm.lo, G.match.category); f.netUid = hm.uid; f.netPeer = hm.peer;
+    W3.matchRoot.remove(f.model.root); buildFighterModel(f); W3.matchRoot.add(f.model.root);
+    if (hm.uid === ONL.me) { f.isPlayer = true; G.player = f; }
+    else if (NET.role === 'host') f.vin = ONL.vins[hm.uid] = ONL.vins[hm.uid] || newVin();
+  }
+  G.match.netSpec = S; G.match.duel = N === 1 && S.counts[0] === 1 && S.counts[1] === 1; buildPips();
+  $('#sbA').textContent = 'RVR'; $('#sbB').textContent = 'WDN';
+  ONL.inMatch = true; NET.on = true; NET.ev = []; NET.lastEv = 0; NET.snap = null;
+  startRound();
+  if (NET.role === 'host') beginFight();
+  else { hideAll(); setHud(true); G.phase = 'prefight'; refreshTouchUI(); if (G.player) FP.yaw = G.player.facing; }
+}
+// ---- during the fight
+function netTick(dt) {
+  if (!NET.on || !NET.room) return;
+  NET.sendT -= dt;
+  if (NET.role === 'host') {
+    for (const uid in ONL.remote) { const V = ONL.vins[uid], R = ONL.remote[uid]; if (V && R) Object.assign(V, R, { e: { ...(R.e || {}) } }); }
+    const big = G.fighters.length > 8;
+    if (NET.sendT <= 0) {
+      NET.sendT = big ? 0.08 : 0.05; const m = G.match; if (!m) return;
+      const s = G.fighters.map(f => { const a = packF(f); return big ? a.map(v => Math.round(v * 100) / 100) : a; });
+      NET.room.presence({ role: 'host', go: ONL.go, S: Date.now() - ONL.go < 5000 ? ONL.S : null, L: null, s, m: [q(m.clock), m.pts[0], m.pts[1], m.wins[0], m.wins[1], m.round, ['prefight', 'fight', 'stopping', 'between', 'over', 'tactics'].indexOf(G.phase), m.overtime ? 1 : 0], mk: G.marshals.map(k => [q(k.pos.x), q(k.pos.z), q(k.facing), q(k.flagUp)]), ev: NET.ev });
+    }
+  } else {
+    const V = NET.vin; V.mx = PIN.move.x; V.mz = PIN.move.z; V.yaw = isCtl() ? FP.yaw : null; V.sp = PIN.sprint ? 1 : 0; V.gd = PIN.guard ? 1 : 0; V.br = PIN.brace ? 1 : 0;
+    if (IN.swingStart) { IN.swingStart = false; V.sw++; V.sh = 1; V.arc = 'auto'; }
+    if (V.sh) { let pv = null; if (IN.pad.id !== null) pv = arcFromDrag(IN.pad.dx, IN.pad.dy, 16); else if (IN.mouse.down) pv = arcFromDrag(IN.mouse.adx, IN.mouse.ady, 22); else if (IN.gp.rtDown) pv = PIN.rx > 0.45 ? 'R2L' : PIN.rx < -0.45 ? 'L2R' : PIN.ry < -0.5 ? 'O' : null; if (pv && pv !== 'auto') V.arc = pv; }
+    if (IN.swingRelease) { if (IN.swingRelease !== 'auto') V.arc = IN.swingRelease; V.sh = 0; IN.swingRelease = null; }
+    for (const k of ['trip', 'shove', 'grab', 'tackle']) if (IN.edges.has(k)) { IN.edges.delete(k); V.e[k]++; }
+    if (NET.sendT <= 0) { NET.sendT = 0.05; NET.room.presence({ role: 'guest', uid: ONL.me, name: myName(), team: ONL.team, vin: V }); }
+    const P = NET.snap; if (!P || !P.s) return;
+    G.fighters.forEach((f, i) => P.s[i] && unpackF(f, P.s[i], dt));
+    const m = G.match, M = P.m; if (!M) return; m.clock = M[0]; m.pts = [M[1], M[2]]; const won = [M[3], M[4]]; m.round = M[5]; m.overtime = !!M[7];
+    const ph = ['prefight', 'fight', 'stopping', 'between', 'over', 'tactics'][M[6]] || 'fight';
+    if (ph !== G.phase) { if (ph === 'over' && G.phase !== 'over') { m.wins = won; G.phase = 'over'; netGuestEnd(); return; } G.phase = ph; refreshTouchUI(); }
+    m.wins = won;
+    (P.mk || []).forEach((k, i) => { const mm = G.marshals[i]; if (mm) { mm.pos.x = k[0]; mm.pos.z = k[1]; mm.facing = k[2]; mm.flagUp = k[3]; } });
+    for (const e of P.ev || []) { if (e[0] <= NET.lastEv) continue; NET.lastEv = e[0]; netPlay(e); }
+  }
+}
+function resultTitle(m) {
+  const t = G.player ? G.player.team : 0, won = m.wins[t] > m.wins[1 - t], drawn = m.wins[0] === m.wins[1];
+  return [drawn ? 'Draw' : won ? 'Your side wins' : 'Your side loses', `<p>${m.wins[t]}–${m.wins[1 - t]} in rounds.</p>`];
+}
+function onlineMatchEnd() { // host
+  const [title, body] = resultTitle(G.match);
+  msg('online', title, body + '<p class="muted">Back to the lobby to go again, change sides or add bots.</p>', [['Back to lobby', hostBackToLobby, true], ['Leave', () => { netLeave(); toTitle(); }]]);
+}
+function netGuestEnd() {
+  const [title, body] = resultTitle(G.match);
+  setHud(false); msg('online', title, body + '<p class="muted">The lobby opens again when the host is ready.</p>', [['Leave', () => { netLeave(); toTitle(); }, true]]);
+}
+function hostBackToLobby() {
+  ONL.inMatch = false; NET.on = false; ONL.go = 0; ONL.S = null;
+  startAttract(); hostSync(); if (ONL.L.open) setLobbyOpen(true); lobbySet({ st: 'in a lobby' }); renderLobby();
+}
+function backToLobbyLocal() { ONL.inMatch = false; NET.on = false; ONL.ready = false; startAttract(); try { NET.room.presence(myPresence()); } catch (e) { } renderLobby(); }
+function netDropped() {
+  if (!NET.room) return;
+  const wasOver = G.phase === 'over' && ONL.inMatch;
+  netLeave(); if (wasOver) return;
+  toastMenu('The host left the lobby.'); toTitle();
+}
+function netLeave() { try { NET.unsub && NET.unsub(); NET.room && NET.room.leave(); } catch (e) { } Object.assign(NET, { on: false, room: null, role: null, unsub: null, code: '' }); ONL.inMatch = false; ONL.peers = []; }
 
 })();
 </script>
