@@ -1,5 +1,5 @@
 // Offline cache for Buhurt: Steel & Tape. Bump VERSION when you upload a new build.
-const VERSION = 'steel-tape-8e81c2690c';
+const VERSION = 'steel-tape-7539539753';
 const CORE = ['./', './index.html', './manifest.webmanifest', './icon-192.png', './icon-512.png'];
 self.addEventListener('install', e => { e.waitUntil(caches.open(VERSION).then(c => c.addAll(CORE)).then(() => self.skipWaiting())); });
 self.addEventListener('activate', e => { e.waitUntil(caches.keys().then(ks => Promise.all(ks.filter(k => k !== VERSION).map(k => caches.delete(k)))).then(() => self.clients.claim())); });

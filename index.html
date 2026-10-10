@@ -778,6 +778,10 @@ body:not(.split) #pips:not([hidden]) ~ #statstrip{top:calc(var(--st) + 78px)}
 .lobkit .chip{padding:5px 9px}
 #npNames i{cursor:pointer}
 @media (max-width:480px){.lobteams{grid-template-columns:1fr}.hubbtns{grid-template-columns:1fr}}
+.invacts{display:flex;align-items:center;gap:6px;flex:none}
+.profbtn{display:inline-grid;place-items:center;width:38px;height:38px;border-radius:50%;background:var(--pad);border:1px solid var(--rule);color:var(--chalk);cursor:pointer;padding:0}
+.profbtn svg{width:20px;height:20px;fill:none;stroke:currentColor;stroke-width:2;stroke-linecap:round}
+.profbtn:hover,.profbtn:focus-visible{border-color:var(--chalk)}
 
 </style>
 <div id="app">
@@ -12751,6 +12755,12 @@ function updateLobbyBadge() {
   list.forEach(p => box.append(h('i', { class: p.presence.look ? 'look' : busy(p) ? 'busy' : '', onclick: e => { e.stopPropagation(); AU.click(); openProfile(p); } }, String(p.presence.name || 'A fighter').slice(0, 20))));
 }
 // someone's stats: how long they've been on today and in total, matches, wins, takedowns
+// a small person icon that opens someone's profile, shown beside Invite / Join
+function profileBtn(p) {
+  const b = h('button', { class: 'profbtn', title: 'View profile', 'aria-label': `View ${String(p.presence && p.presence.name || 'player')}'s profile`, onclick: e => { e.stopPropagation(); AU.click(); openProfile(p); } });
+  b.innerHTML = '<svg viewBox="0 0 24 24"><circle cx="12" cy="8" r="4"/><path d="M4 21c0-4.4 3.6-7 8-7s8 2.6 8 7"/></svg>';
+  return b;
+}
 function openProfile(p, back) {
   const P = (p && p.presence) || {}, R = P.pr || {};
   const name = String(P.name || 'A fighter').slice(0, 20);
@@ -12819,7 +12829,7 @@ function renderInviteList() {
       : open ? h('button', { class: 'btn primary flagtape small', onclick: () => { AU.click(); joinLobby(P.look); } }, 'Join')
         : h('button', { class: 'btn ' + (LOBBY.invited === p.peer ? 'tape' : 'primary flagtape') + ' small', onclick: () => sendInvite(p) }, LOBBY.invited === p.peer ? 'Invited ✓' : 'Invite');
     const sub = `${String(P.st || '').slice(0, 30)}${R.on ? ' · on ' + fmtDur((Date.now() - R.on) / 1000) : ''}${R.m != null ? ' · ' + R.w + ' wins' : ''}`;
-    box.append(h('div', { class: 'invrow' + (open ? ' looking' : '') }, h('button', { class: 'invwho linkish', onclick: () => { AU.click(); openProfile(p); } }, h('b', null, String(P.name).slice(0, 20)), h('small', null, sub)), btn));
+    box.append(h('div', { class: 'invrow' + (open ? ' looking' : '') }, h('button', { class: 'invwho linkish', onclick: () => { AU.click(); openProfile(p); } }, h('b', null, String(P.name).slice(0, 20)), h('small', null, sub)), h('span', { class: 'invacts' }, profileBtn(p), btn)));
   }
 }
 // inviting someone opens your lobby (if you haven't one) and sends them its code
@@ -13140,7 +13150,7 @@ function renderLobbyInvite() {
   for (const p of list.slice(0, 12)) {
     const sent = LOBBY.invited === p.peer;
     box.append(h('div', { class: 'invrow' }, h('button', { class: 'invwho linkish', onclick: () => openProfile(p) }, h('b', null, String(p.presence.name).slice(0, 20)), h('small', null, String(p.presence.st || '').slice(0, 30))),
-      h('button', { class: 'btn ' + (sent ? 'tape' : 'primary flagtape') + ' small', onclick: () => sendInvite(p) }, sent ? 'Invited ✓' : 'Invite')));
+      h('span', { class: 'invacts' }, profileBtn(p), h('button', { class: 'btn ' + (sent ? 'tape' : 'primary flagtape') + ' small', onclick: () => sendInvite(p) }, sent ? 'Invited ✓' : 'Invite'))));
   }
   box.append(h('button', { class: 'btn tape small', onclick: () => { AU.click(); shareInvite(); } }, 'Send a link'));
 }
