@@ -1,4 +1,7 @@
 # BUHURT: Steel & Tape — "The Realm" plan
+> **Status, 11 Oct 2026: all eight steps shipped** (Patch 3.0 to 3.5, live at buhurt-steel-and-tape.vercel.app, notes posted to Discord).
+> Differences from the plan: no thrust direction (it would break online play's move encoding), so directions are left / right / overhead; the driftwood club is a hand item, not a weapon skin; the smugglers' tunnel is a grate you peek through rather than a walkable tunnel; win rates of about 60 / 45 / 35% are what the AI tiers aim for, but they haven't been measured with real players; the three Drive packs (HighLands buildings, Modular Weapons and Dungeon, Fantasy Ambient) still need trimmed re-uploads.
+
 
 Written 11 Oct 2026. Covers: inventory, reagents spread out, no teleporting, a map 10× bigger with planned districts, tiered vendors and tiered access (fairground → outer bailey → king's court), hidden areas with free cosmetics, much better fighting, BuhurtOS teams and fighters with glows, arenas on the map that show real fights, six arenas you can watch as a spectator, and the new packs.
 
