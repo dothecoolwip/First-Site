@@ -854,10 +854,10 @@ body:not(.split) #pips:not([hidden]) ~ #statstrip{top:calc(var(--st) + 78px)}
 #title #btnRumble,#title #btnContinue,#title .mgrid,#title #nowPlaying,#title #btnHow{display:none!important}
 #btnFight{font-size:clamp(1.6rem,5vw,2.6rem);padding:.6em 1.4em;margin:12px 0 6px}
 
-#townHud .townbout{position:absolute;top:calc(58px + env(safe-area-inset-top));left:50%;transform:translateX(-50%);background:rgba(12,14,16,.78);padding:6px 14px;display:flex;flex-direction:column;align-items:center;line-height:1.2;text-align:center;pointer-events:none;max-width:80vw}
-#townHud .townbout small{color:var(--marshal);font-size:.68rem;text-transform:uppercase;letter-spacing:.08em}
-#townHud .townbout b{color:#f2ede2;font-size:.95rem}
-#townHud .townbout span{color:#c9c2b2;font-size:.75rem}
+#townHud .townbout{position:absolute;top:calc(198px + env(safe-area-inset-top));left:12px;background:rgba(12,14,16,.7);padding:4px 10px;display:flex;flex-direction:column;align-items:flex-start;line-height:1.15;text-align:left;pointer-events:none;max-width:min(44vw,260px);border-left:3px solid var(--marshal)}
+#townHud .townbout small{color:var(--marshal);font-size:.6rem;text-transform:uppercase;letter-spacing:.08em}
+#townHud .townbout b{color:#f2ede2;font-size:.8rem;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;max-width:100%}
+#townHud .townbout span{color:#c9c2b2;font-size:.68rem}
 #townHud .townmini{position:absolute;top:calc(64px + env(safe-area-inset-top));left:12px;width:124px;height:124px;border-radius:50%;pointer-events:auto;cursor:pointer;box-shadow:0 2px 10px rgba(0,0,0,.45)}
 @media (max-width:700px),(max-height:500px){#townHud .townmini{width:92px;height:92px;top:calc(56px + env(safe-area-inset-top))}}
 .tmapwrap{display:flex;flex-direction:column;align-items:center;gap:6px;margin:4px 0 10px}
@@ -951,7 +951,7 @@ body:not(.split) #pips:not([hidden]) ~ #statstrip{top:calc(var(--st) + 78px)}
 #townHud .wptxt b{color:#f2ede2;font-size:.85rem;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;max-width:40vw}
 #townHud .wptxt small{color:#c9c2b2;font-size:.7rem}
 #townHud .wpauto.on{background:#f2c40f;color:#14110c}
-#townHud .townwp:not([hidden]) ~ .townbout{top:calc(108px + env(safe-area-inset-top))}
+@media (max-width:700px),(max-height:500px){#townHud .townbout{top:calc(156px + env(safe-area-inset-top))}}
 #townHud .townarea{position:absolute;top:24%;left:50%;transform:translateX(-50%);text-align:center;pointer-events:none;opacity:0;display:flex;flex-direction:column;align-items:center;text-shadow:0 2px 8px rgba(0,0,0,.8)}
 #townHud .townarea small{color:var(--marshal);font-size:.75rem;text-transform:uppercase;letter-spacing:.14em}
 #townHud .townarea b{color:#f2ede2;font-family:var(--display,inherit);font-size:clamp(1.4rem,4vw,2.3rem);letter-spacing:.04em}
@@ -1003,6 +1003,9 @@ body:not(.split) #pips:not([hidden]) ~ #statstrip{top:calc(var(--st) + 78px)}
 .tourcap small{color:var(--marshal,#e3b341);font-size:.68rem;text-transform:uppercase;letter-spacing:.1em}
 .tourcap b{display:block;font-family:var(--display,inherit);font-size:1.3rem;color:#f2ede2}
 .tourcap p{margin:4px 0 0;color:#d8d2c2;font-size:.88rem;line-height:1.3}
+#wind .gdir{position:absolute;left:50%;transform:translateX(-50%);top:-22px;white-space:nowrap;font-size:.72rem;letter-spacing:.08em;color:#f2c40f;background:rgba(10,13,15,.75);padding:2px 8px}
+#wind .gdir.mid{color:#c9c2b2}
+#wind .gdir[hidden]{display:none}
 
 </style>
 <div id="app">
@@ -1039,7 +1042,7 @@ body:not(.split) #pips:not([hidden]) ~ #statstrip{top:calc(var(--st) + 78px)}
     <div id="hitmark"></div>
     <div id="prompt" hidden></div>
     <div id="legend" hidden></div>
-    <div id="wind" hidden aria-label="Breath and fatigue"><svg viewBox="0 0 24 24" class="wi"><path d="M12 3v7M12 10c-2 0-3-2-5-2-2 0-3 3-3 7 0 3 1 5 3 5 3 0 4-2 5-5M12 10c2 0 3-2 5-2 2 0 3 3 3 7 0 3-1 5-3 5-3 0-4-2-5-5"/></svg><div class="wb"><i class="wf"></i><i class="wc"></i></div><span id="windTxt">Fresh</span><div class="bal" aria-label="Balance"><i></i></div></div>
+    <div id="wind" hidden aria-label="Breath and fatigue"><svg viewBox="0 0 24 24" class="wi"><path d="M12 3v7M12 10c-2 0-3-2-5-2-2 0-3 3-3 7 0 3 1 5 3 5 3 0 4-2 5-5M12 10c2 0 3-2 5-2 2 0 3 3 3 7 0 3-1 5-3 5-3 0-4-2-5-5"/></svg><div class="wb"><i class="wf"></i><i class="wc"></i></div><span id="windTxt">Fresh</span><div class="bal" aria-label="Balance"><i></i></div><span class="gdir" id="guardDir" hidden></span></div>
     <div class="topbtns">
       <button class="viewbtn" id="viewBtn" aria-label="Switch between first and third person"><span data-v="fp">1P</span><span data-v="tp">3P</span></button>
       <button class="iconbtn" id="muteBtn" aria-label="Sound on or off"><svg viewBox="0 0 24 24"><path d="M4 9v6h4l5 4V5L8 9H4z"/><path id="muteWave" d="M16.5 8.5a5 5 0 0 1 0 7"/></svg></button>
@@ -1212,6 +1215,7 @@ body:not(.split) #pips:not([hidden]) ~ #statstrip{top:calc(var(--st) + 78px)}
           <label class="toggle" for="optSpokenComm"><span>Spoken commentary<small>The announcer and colour man read their lines aloud (uses your device’s voices)</small></span><input type="checkbox" id="optSpokenComm"></label>
           <label class="toggle" for="optCap"><span>Sound captions<small>Arrows and words for sounds you might miss: footsteps behind, marshal calls</small></span><input type="checkbox" id="optCap"></label>
           <label class="toggle" for="optVoice"><span>Spoken marshal calls<small>Text-to-speech for warnings and cards</small></span><input type="checkbox" id="optVoice"></label>
+          <div class="setrow col"><span>Announcer voice<small>The best voice on this device is picked for you; choose another if you like</small></span><div class="sndrow"><select id="voiceSel" class="chip"></select><button class="chip" id="voiceTest">Test</button></div></div>
           <div class="setrow col"><span id="sndStat" class="muted">Play a sound to start audio.</span>
             <div class="sndrow">
               <button class="chip" data-snd="steel">Steel on steel</button>
@@ -6830,22 +6834,56 @@ const AU = {
   setBell(b, muffle = 0) { if (!this.lp) return; const f = Math.min(b > 0.05 ? lerp(18000, 900, b) : 18000, lerp(18000, 2400, muffle)); if (Math.abs(f - (this._lpF || 0)) > 50) { this._lpF = f; this.lp.frequency.setTargetAtTime(f, this.ctx.currentTime, 0.05); } }
 };
 
-// Marshal voice through the browser's speech engine (text banner is always shown)
+// The announcer and the marshal speak through the device's speech engine. The best voice the device has is picked
+// (the natural / premium / Google ones first, deep male ones for the ring), the music ducks while they talk, and the
+// lines are delivered with a ring announcer's cadence. Settings lets you pick any English voice instead.
 const VOICE = {
-  q: [], busy: false, voice: null, enabled: true,
+  q: [], busy: false, voice: null, co: null, enabled: true,
+  score(v) {
+    const n = v.name || '', l = v.lang || ''; let s = 0;
+    if (!/^en/i.test(l)) return -1;
+    if (/natural|premium|enhanced|neural/i.test(n)) s += 40;
+    if (/google/i.test(n)) s += 18;
+    if (/\b(daniel|oliver|arthur|george|ryan|guy|christopher|eric|roger|brian|james|aaron|alex|fred|david|mark|rishi|thomas|liam|andrew)\b/i.test(n)) s += 14;
+    if (/male/i.test(n) && !/female/i.test(n)) s += 10;
+    if (/female|zira|susan|hazel|aria|jenny|michelle|libby|sonia|emma|ana|samantha|karen|moira|tessa|fiona|victoria|zoe|catherine|hayley|clara|siri/i.test(n)) s -= 12;
+    if (/en-(GB|CA|AU|IE)/i.test(l)) s += 6; else if (/en-US/i.test(l)) s += 4;
+    if (/compact|eloquence|novelty|whisper|bad news|bells|boing|bubbles|cellos|zarvox|trinoids|organ|jester|wobble|superstar|grandma|grandpa|rocko|shelley|junior|kathy|ralph|albert|flo/i.test(n)) s -= 40;
+    if (v.localService) s += 2;
+    return s;
+  },
+  list() { if (!window.speechSynthesis) return []; return speechSynthesis.getVoices().filter(v => /^en/i.test(v.lang || '')).sort((a, b) => this.score(b) - this.score(a)); },
   pickVoice() {
-    if (!window.speechSynthesis) return; const vs = speechSynthesis.getVoices(); if (!vs.length) return;
-    this.voice = vs.find(v => /en-CA/i.test(v.lang)) || vs.find(v => /en-GB/i.test(v.lang) && /male|daniel|george|arthur/i.test(v.name)) || vs.find(v => /^en/i.test(v.lang)) || null;
+    const vs = this.list(); if (!vs.length) return;
+    const want = (typeof G !== 'undefined' && G.settings && G.settings.voiceName) || '';
+    this.voice = (want && vs.find(v => v.name === want)) || vs[0];
+    this.co = vs.find(v => v !== this.voice && /female|zira|susan|hazel|aria|jenny|libby|sonia|emma|samantha|karen|moira|fiona|victoria|zoe|catherine|clara|natural|google/i.test(v.name)) || vs.find(v => v !== this.voice) || this.voice;
+  },
+  // a ring announcer's cadence: the big word first, a beat, then the rest
+  shape(text) { return String(text).replace(/\s+/g, ' ').replace(/^([A-Z][A-Z ]{2,}!?)\s/, '$1. ').replace(/\.\s/g, '. ').trim(); },
+  duck(on) { try { if (AU.musicGain && AU.ctx) { AU.musicGain.gain.cancelScheduledValues(AU.ctx.currentTime); AU.musicGain.gain.setTargetAtTime(on ? 0.08 : (AU.wantMusic ? 0.32 : 0), AU.ctx.currentTime, on ? 0.08 : 0.6); } } catch (e) { } },
+  speak(text, who, priority) {
+    if (!window.speechSynthesis) return;
+    if (priority >= 3) speechSynthesis.cancel(); else if (speechSynthesis.speaking && priority < 2) return;
+    if (!this.voice) this.pickVoice();
+    const u = new SpeechSynthesisUtterance(this.shape(text));
+    const v = who === 'co' ? this.co : this.voice; if (v) u.voice = v;
+    if (who === 'co') { u.rate = 1.06; u.pitch = 1.0; u.volume = 0.85; } else if (who === 'marshal') { u.rate = 1.04; u.pitch = 0.9; u.volume = 1; } else { u.rate = 0.96; u.pitch = 0.78; u.volume = 1; }
+    u.onstart = () => this.duck(true); u.onend = u.onerror = () => { if (!speechSynthesis.speaking) this.duck(false); };
+    speechSynthesis.speak(u);
   },
   say(text, priority = 1) {
-    if (!this.enabled || AU.muted || !window.speechSynthesis) return;
-    if (priority >= 3) { speechSynthesis.cancel(); this.q.length = 0; }
-    else if (this.q.length > 1) this.q.splice(0, this.q.length - 1);
-    try {
-      const u = new SpeechSynthesisUtterance(text); if (!this.voice) this.pickVoice(); if (this.voice) u.voice = this.voice;
-      u.rate = 1.08; u.pitch = 0.82; u.volume = 1; speechSynthesis.speak(u);
-    } catch (e) { /* no speech engine */ }
-  }
+    if (!this.enabled || AU.muted) return;
+    try { this.speak(text, 'marshal', priority); } catch (e) { /* no speech engine */ }
+  },
+  // Settings: a dropdown of the device's English voices, best first, with a Test button
+  fillPicker(sel) {
+    if (!sel) return; const vs = this.list(); sel.innerHTML = '';
+    sel.append(h('option', { value: '' }, vs.length ? `Best available (${vs[0].name})` : 'No voices on this device'));
+    for (const v of vs) sel.append(h('option', { value: v.name, selected: G.settings.voiceName === v.name ? '' : null }, `${v.name} (${v.lang})`));
+    sel.onchange = () => { G.settings.voiceName = sel.value; store.set('settings3', G.settings); this.voice = null; this.pickVoice(); this.test(); };
+  },
+  test() { try { AU.init(); const was = this.enabled; this.enabled = true; this.speak('Ladies and gentlemen. The Reavers take the list. Fighters, to your marks!', 'pa', 3); this.enabled = was; } catch (e) { } }
 };
 if (window.speechSynthesis) { try { speechSynthesis.onvoiceschanged = () => VOICE.pickVoice(); } catch (e) { } }
 
@@ -8752,7 +8790,7 @@ function resolveSwing(f, a) {
   if (t.guard && t.state === 'standing' && facingAtt) {
     blocked = true; let bf = t.shield ? t.shield.block : t.weapon && t.weapon.special === 'sign' ? 0.38 : 0.62; go = guardOutcome(f, t, a, bf); bf = go.bf; imp *= bf * (1 - 0.12 * perk(t, 'iron.wall')); zone = 'shield'; G.stats.blocks++;
     // perfect block: guard raised just before the blow lands. No breath spent, and the attacker is thrown off balance
-    const perfect = !go.wrong && (G.simTime - (t.guardAt || -9) < (t.isPlayer ? 0.2 : 0.12) || go.parry);
+    const perfect = !go.wrong && !go.mid && (G.simTime - (t.guardAt || -9) < (t.isPlayer ? 0.2 : 0.12) || go.parry);
     if (perfect) { imp *= 0.35; t.riposteT = G.simTime + 0.8; applyImpulse(f, { x: -dir.x, z: -dir.z }, 0.55); f.cd = Math.max(f.cd, 0.45); sparks(new THREE.Vector3(t.pos.x + dir.x * -0.4, 1.3 * t.body.h / 1.8, t.pos.z + dir.z * -0.4), 16, 1.3, '#fff3b0');
       if (t.isPlayer) { toast('Perfect block!', 'big', 'They’re off balance. Hit back!'); comm('perfect', {}, 2); ev('perfect'); MT.perfect = (MT.perfect || 0) + 1; if (MT.perfect >= 5) unlock('perfect5'); impactFeel('heavy', null, 0.6); } }
     else {
@@ -8800,7 +8838,7 @@ function resolveSwing(f, a) {
   if (f.isPlayer) ev('hit', { big: !blocked && imp > 1.15, blocked, zone, arc: a.arc, weapon: w.key });
   if (t.isPlayer && blocked) { ev('block'); rumble(0.35, 0.35, 90); }
   if (f.isPlayer) { hitMark(blocked ? '#8d979a' : imp > 1.15 ? '#f2c40f' : '#ffffff'); toast(blocked ? (go && go.wrong ? 'Half through!' : 'Blocked') : imp > 1.15 ? 'Big hit!' : 'Hit', blocked ? (go && go.wrong ? 'good' : 'bad') : imp > 1.15 ? 'big' : 'good', blocked ? (go && go.wrong ? 'They guarded the wrong side. Keep mixing it up.' : 'They had their guard up. Mix your sides, feint, or shield-bash.') : zone === 'helmet' ? 'Helmet. Ringing their bell.' : ''); }
-  else if (t.isPlayer && blocked) toast('Blocked', 'info');
+  else if (t.isPlayer && blocked) toast(go && go.wrong ? 'Wrong side!' : go && go.mid ? 'Half blocked' : 'Blocked', go && (go.wrong || go.mid) ? 'bad' : 'info', go && go.wrong ? `It came in ${{ L: 'on your left', R: 'on your right', H: 'overhead' }[ARC_SIDE[a.arc]]}.` : go && go.mid ? 'Flick toward the blow for a full block.' : '');
   if (t.isPlayer || f.isPlayer) {
     impactFeel(blocked ? 'block' : t.isPlayer ? 'taken' : imp > 1.15 ? 'heavy' : 'light', a.arc === 'O' ? null : dir, clamp(imp, 0.5, 1.6));
     if (t.isPlayer && !blocked) flashHit();
@@ -9092,9 +9130,16 @@ function aiReadArc(f, e) {
 }
 function noteArc(t, arc) { if (!t.ai) return; const s = t.ai.seen || (t.ai.seen = []); s.push(arc); if (s.length > 5) s.shift(); }
 // called from resolveSwing at the guard check: how much of a guarded blow gets through, and is it a parry?
+// the side a blow lands on, seen by the defender: the attacker's right-to-left arrives on your left
+const ARC_SIDE = { R2L: 'L', L2R: 'R', O: 'H' };
 function guardOutcome(f, t, a, bf) {
   noteArc(t, a.arc);
-  if (t.isPlayer || !t.ai) return { bf, parry: false };
+  if (t.isPlayer || t.netUid || t.vin || t.gdir) {
+    const want = ARC_SIDE[a.arc] || 'H', g = t.gdir || 'mid';
+    if (g === want) return { bf, parry: false };
+    return { bf: (bf + 1) / 2, parry: false, wrong: g !== 'mid', mid: g === 'mid' };
+  }
+  if (!t.ai) return { bf, parry: false };
   const T = AI_TIER[aiTier(t)];
   if (t.ai.gdir && t.ai.gdir !== a.arc) return { bf: (bf + 1) / 2, parry: false, wrong: true }; // guarded the wrong side
   return { bf, parry: chance(T.parry) };
@@ -9507,6 +9552,7 @@ function initInput() {
     if (!isCtl() || IN.mode !== 'kb' || G.paused) return;
     const mx = e.movementX || 0, my = e.movementY || 0; if (Math.abs(mx) + Math.abs(my) > 1) IN.mouseIdle = 0;
     if (IN.mouse.down) { IN.mouse.adx += mx; IN.mouse.ady += my; }
+    if (IN.mouse.guard) { IN.mouse.gdx += mx; IN.mouse.gdy += my; }
     const k = (IN.mouse.down ? 0.3 : 1) * 0.0026 * (G.settings.sens || 1);
     FP.yaw -= mx * k; FP.pitch = clamp(FP.pitch - my * k * (G.settings.invert ? -1 : 1), -0.75, 0.55); FP.looking = 0.25;
   });
@@ -9516,7 +9562,7 @@ function initInput() {
     setMode('kb'); IN.mouse.x = e.clientX; IN.mouse.y = e.clientY; IN.mouse.has = true;
     if (isCtl() && document.pointerLockElement !== cv) { try { const r = cv.requestPointerLock(); if (r && r.catch) r.catch(() => { }); } catch (er) { } }
     if (e.button === 0) { IN.mouse.down = true; IN.mouse.sx = e.clientX; IN.mouse.sy = e.clientY; IN.mouse.adx = IN.mouse.ady = 0; IN.swingStart = true; try { cv.setPointerCapture(e.pointerId); } catch (er) { } }
-    if (e.button === 2) IN.mouse.guard = true;
+    if (e.button === 2) { IN.mouse.guard = true; IN.mouse.gdx = IN.mouse.gdy = 0; IN.mouse.gsx = e.clientX; IN.mouse.gsy = e.clientY; }
   });
   cv.addEventListener('pointerup', e => {
     if (e.pointerType !== 'mouse') return;
@@ -9566,10 +9612,20 @@ function initInput() {
   const rb = $('#bRun'); rb.addEventListener('pointerdown', e => { AU.init(); setMode('touch'); IN.runToggle = !IN.runToggle; rb.classList.toggle('on', IN.runToggle); e.preventDefault(); });
   const hold = (id, key) => { const b = $(id); const on = e => { AU.init(); setMode('touch'); IN.held[key] = true; b.classList.add('on'); try { b.setPointerCapture(e.pointerId); } catch (er) { } e.preventDefault(); }; const off = () => { IN.held[key] = false; b.classList.remove('on'); }; b.addEventListener('pointerdown', on); b.addEventListener('pointerup', off); b.addEventListener('pointercancel', off); };
   hold('#bGuard', 'guard'); hold('#bBrace', 'brace');
+  { const gb = $('#bGuard'); gb.addEventListener('pointerdown', e => { IN.held.gsx = e.clientX; IN.held.gsy = e.clientY; IN.held.gdx = IN.held.gdy = 0; }); gb.addEventListener('pointermove', e => { if (IN.held.guard) { IN.held.gdx = e.clientX - IN.held.gsx; IN.held.gdy = e.clientY - IN.held.gsy; } }); }
   $$('#tcmd button').forEach(b => b.addEventListener('click', () => edge('cmd:' + (G.orders[0] === b.dataset.cmd ? 'free' : b.dataset.cmd))));
   window.addEventListener('gamepadconnected', () => { setMode('pad'); });
 }
 
+// which side you're guarding: a flick of the mouse, the right stick, or a drag on the guard button. Left and right are
+// your own left and right; up is a high guard. No flick is a middle guard, which takes a bit off every blow but stops none cleanly.
+function sideFromDrag(dx, dy, dead) { if (Math.hypot(dx, dy) < dead) return 'mid'; if (dy < -Math.abs(dx) * 0.7) return 'H'; return dx > 0 ? 'R' : 'L'; }
+function guardDirInput() {
+  if (PIN.gdirPad) return PIN.gdirPad;
+  if (IN.mouse.guard) return isCtl() ? sideFromDrag(IN.mouse.gdx || 0, IN.mouse.gdy || 0, 18) : sideFromDrag(IN.mouse.x - IN.mouse.gsx, IN.mouse.y - IN.mouse.gsy, 12);
+  if (IN.held.guard) return sideFromDrag(IN.held.gdx || 0, IN.held.gdy || 0, 12);
+  return 'mid';
+}
 function arcFromDrag(dx, dy, dead) {
   if (Math.hypot(dx, dy) < dead) return 'auto';
   if (dy < -Math.abs(dx) * 0.7) return 'O';
@@ -9604,10 +9660,11 @@ function readInput(dt) {
     const rt = Math.max(gp.buttons[7] ? gp.buttons[7].value : 0, noTrig && gp.buttons[5] && gp.buttons[5].pressed ? 1 : 0);
     if (rt > 0.5 && !IN.gp.rtDown) { IN.gp.rtDown = true; IN.swingStart = true; }
     const sn = G.settings.sens || 1;
-    if (isCtl() && !IN.gp.rtDown && (rx || ry)) { if (Math.abs(ry) > 0.2) IN.pitchHold = 2.5; FP.yaw -= rx * 3.6 * sn * dt; FP.pitch = clamp(FP.pitch - ry * 1.9 * sn * (G.settings.invert ? -1 : 1) * dt, -0.75, 0.55); FP.looking = 0.2; }
+    const ltDown = !!(b[6] || (noTrig && b[4]));
+    if (isCtl() && !IN.gp.rtDown && !ltDown && (rx || ry)) { if (Math.abs(ry) > 0.2) IN.pitchHold = 2.5; FP.yaw -= rx * 3.6 * sn * dt; FP.pitch = clamp(FP.pitch - ry * 1.9 * sn * (G.settings.invert ? -1 : 1) * dt, -0.75, 0.55); FP.looking = 0.2; }
     if (pressed(3)) edge('tackle');
     if (rt < 0.25 && IN.gp.rtDown) { IN.gp.rtDown = false; IN.swingRelease = rx > 0.45 ? 'R2L' : rx < -0.45 ? 'L2R' : ry < -0.5 ? 'O' : 'auto'; }
-    if (b[6] || (noTrig && b[4])) guard = true; if (b[0]) brace = true;
+    if (ltDown) { guard = true; PIN.gdirPad = rx > 0.45 ? 'R' : rx < -0.45 ? 'L' : ry < -0.5 ? 'H' : PIN.gdirPad; } else PIN.gdirPad = null; if (b[0]) brace = true;
     if (pressed(1)) edge('trip'); if (pressed(2)) edge('shove');
     if (!noTrig && (pressed(4) || pressed(5))) edge(G.simTime < (G.saluteUntil || 0) ? 'salute' : 'grab');
     // controllers whose stick clicks or right stick never reach the browser get those jobs on the d-pad instead
@@ -9632,6 +9689,7 @@ function readInput(dt) {
   if (isCtl()) { const fw = fwd(FP.yaw); PIN.move.x = fw.x * my - fw.z * mx; PIN.move.z = fw.z * my + fw.x * mx; }
   else { PIN.move.x = mx; PIN.move.z = -my; }
   FP.looking = Math.max(0, FP.looking - dt); PIN.sprint = sprint; PIN.guard = guard; PIN.brace = brace;
+  PIN.gdir = guard ? guardDirInput() : null;
   // mouse aim on the floor
   if (IN.mode === 'kb' && IN.mouse.has && !isCtl()) {
     const ndc = new THREE.Vector2(IN.mouse.x / window.innerWidth * 2 - 1, -(IN.mouse.y / window.innerHeight) * 2 + 1);
@@ -9712,7 +9770,7 @@ function playerControl(f, dt) {
   f.move.x = PIN.move.x; f.move.z = PIN.move.z;
   if (G.phase !== 'fight') { f.move.x = f.move.z = 0; E.clear(); IN.swingStart = false; IN.swingRelease = null; return; }
   if (f.state !== 'standing') return;
-  f.sprint = PIN.sprint; f.brace = PIN.brace && !PIN.guard; f.guard = PIN.guard;
+  f.sprint = PIN.sprint; f.brace = PIN.brace && !PIN.guard; f.guard = PIN.guard; f.gdir = PIN.guard ? PIN.gdir || 'mid' : null;
   if (E.has('retarget')) { E.delete('retarget'); cycleLock(f); }
   if (E.has('salute')) { E.delete('salute'); if (G.simTime < (G.saluteUntil || 0) && !f.action) { G.saluteUntil = 0; f.saluteT = 1.3; AU.cheer(1.5); hype(0.3); W3.crowdBase.forEach(c => { if (Math.random() < 0.7) c.ex = 1; }); toast('The crowd loves it!', 'big', 'Hype up'); comm('takedown', { how: 'salute', who: 'our fighter' }, 1); ev('salute'); } }
   updateLock(f, dt);
@@ -10195,6 +10253,7 @@ function updateWind(dt) {
   const fat = p.fatigue || 0, cap = 1 - 0.5 * fat;
   el.style.setProperty('--g', (clamp(p.gas, 0, 1) * 100).toFixed(1) + '%'); el.style.setProperty('--cap', (cap * 100).toFixed(1) + '%');
   el.classList.toggle('low', p.gas < 0.35); el.classList.toggle('empty', p.gas < 0.15);
+  { const gd = $('#guardDir'); if (gd) { const on = p.guard && isUp(p); gd.hidden = !on; if (on) { const t = { L: '◀ GUARD LEFT', R: 'GUARD RIGHT ▶', H: '▲ HIGH GUARD', mid: 'GUARD (flick for a side)' }[p.gdir || 'mid']; if (gd.textContent !== t) gd.textContent = t; gd.classList.toggle('mid', !p.gdir || p.gdir === 'mid'); } } }
   { const b = isUp(p) ? 1 - leanRatio(p) : 0; el.style.setProperty('--b', (b * 100).toFixed(1) + '%'); el.classList.toggle('wobbly', b < 0.4); }
   const word = fat > 0.75 ? 'Spent' : fat > 0.5 ? 'Heavy legs' : fat > 0.25 ? 'Tiring' : 'Fresh';
   const wt = $('#windTxt'); if (wt.textContent !== word) wt.textContent = word;
@@ -10481,13 +10540,15 @@ function updateViewmodel(dt) {
   t[1] += Math.sin(p.walkPh * 2) * 0.012 * wkk; t[0] += Math.sin(p.walkPh) * 0.012 * wkk;
   // tired arms: the weapon sags, rises and falls with your breathing, and shakes when you're spent
   const fatv = p.fatigue || 0;
+  if (key === 'guardW') { t[0] += { L: -0.18, R: 0.16 }[p.gdir] || 0; t[1] += p.gdir === 'H' ? 0.16 : 0; t[5] += { L: 0.5, R: -0.5 }[p.gdir] || 0; }
   if (key === 'idle1' || key === 'idle2' || key === 'guardW') { t[1] -= 0.09 * fatv + 0.03 * (1 - p.gas); t[3] -= 0.35 * fatv; t[1] += Math.sin(BREATH.ph) * 0.014 * BREATH.e; }
   if (fatv > 0.45) { const tr = (fatv - 0.45) * 0.008; t[0] += Math.sin(G.realTime * 31) * tr; t[1] += Math.sin(G.realTime * 27 + 1) * tr; }
   // left hand: shield or haft
   let L;
   if (twoH) L = null;
-  else if (p.shield && p.shield.key === 'heater') L = p.guard ? [-0.1, -0.16, -0.4, 0, 0.02, 0] : a && a.kind === 'shove' && a.phase === 'recover' && a.t < 0.14 ? [-0.06, -0.2, -0.7, 0, 0, 0] : [-0.4, -0.42, -0.55, 0.1, 0.55, 0.05];
-  else if (p.shield) L = p.guard ? [-0.06, -0.1, -0.42, 0, 0, 0] : a && a.kind === 'shove' && a.phase === 'recover' && a.t < 0.14 ? [-0.04, -0.16, -0.68, 0, 0, 0] : [-0.32, -0.32, -0.52, 0, 0.3, 0];
+  const gsx = p.guard ? ({ L: -0.16, R: 0.14, H: 0 }[p.gdir] || 0) : 0, gsy = p.guard && p.gdir === 'H' ? 0.14 : 0;
+  if (p.shield && p.shield.key === 'heater') L = p.guard ? [-0.1 + gsx, -0.16 + gsy, -0.4, 0, 0.02 + gsx * 1.5, 0] : a && a.kind === 'shove' && a.phase === 'recover' && a.t < 0.14 ? [-0.06, -0.2, -0.7, 0, 0, 0] : [-0.4, -0.42, -0.55, 0.1, 0.55, 0.05];
+  else if (p.shield) L = p.guard ? [-0.06 + gsx, -0.1 + gsy, -0.42, 0, gsx * 1.5, 0] : a && a.kind === 'shove' && a.phase === 'recover' && a.t < 0.14 ? [-0.04, -0.16, -0.68, 0, 0, 0] : [-0.32, -0.32, -0.52, 0, 0.3, 0];
   else L = key === 'grab' ? [-0.16, -0.26, -0.45, -0.3, 0, 0.1] : [-0.3, -0.38, -0.5, 0, 0, 0];
   if (a && a.kind === 'tackle' && a.phase !== 'recover') { t[2] -= 0.1; t[1] -= 0.08; if (L) { L[2] -= 0.18; L[0] += 0.1; } }
   if (!on) { if (L) { L[1] = -0.9; } }
@@ -10733,11 +10794,7 @@ function hitMapHtml() {
 function speakComm(c) {
   if (!window.speechSynthesis || AU.muted) return;
   try {
-    const vs = speechSynthesis.getVoices().filter(v => /^en/i.test(v.lang)); if (!vs.length) return;
-    const pa = vs.find(v => /male|daniel|george|alex|fred|david/i.test(v.name)) || vs[0], co = vs.find(v => v !== pa && /en-(GB|AU|CA)/i.test(v.lang)) || vs[1] || vs[0];
-    if (speechSynthesis.speaking && c.pri < 3) return;
-    const u = new SpeechSynthesisUtterance(c.txt); u.voice = c.who === 'pa' ? pa : co; u.rate = c.who === 'pa' ? 1.02 : 1.1; u.pitch = c.who === 'pa' ? 0.75 : 1.0; u.volume = 0.9;
-    if (c.pri >= 3) speechSynthesis.cancel(); speechSynthesis.speak(u);
+    VOICE.speak(c.txt, c.who === 'pa' ? 'pa' : 'co', c.pri);
   } catch (e) { }
 }
 // ---- broadcast touches: fighter cards before round one, a live stats strip ----
@@ -12848,9 +12905,9 @@ function togglePause(force) {
 function renderHow(kind) {
   $$('#howSeg button').forEach(b => b.setAttribute('aria-pressed', String(b.dataset.how === kind)));
   const rows = {
-    touch: [['Left thumb', 'Drag anywhere on the left to move. Push forward past the ring to run. With nobody locked on, pushing sideways turns you.'], ['Target lock', 'Your view follows the nearest opponent (yellow marker), so your right thumb is free for the buttons. Tap the right side of the screen to switch target; drag there to look around.'], ['1P / 3P', 'Top right: switch first and third person any time, even mid-fight.'], ['Swing pad', 'Hold to wind up, swipe to pick the arc (left, right, or up for overhead), let go to strike. Hold longer for a heavier blow.'], ['Trip', 'Back-heel. Works best on someone already stumbling, or from the side.'], ['Shove', 'Shield bash or haft push. Drives fighters into the rail.'], ['Grab', 'Clinch. In a clinch: swing pad = knee, trip = throw, grab = disarm.'], ['Guard / Brace', 'Hold. Guard raises the shield; brace widens your base.'], ['Pair · Hold · Hunt · Peel', 'Squad calls for your teammates.']],
-    kb: [['W A S D', 'Move. Shift to sprint.'], ['Mouse', 'Look and aim. Target lock picks up whoever you look at.'], ['Tab', 'Switch target'], ['V', 'First / third person'], ['C', 'Tackle'], ['Left button', 'Hold to wind up, drag to pick the arc, release to strike.'], ['Right button', 'Guard'], ['Space', 'Brace'], ['E', 'Trip (in a clinch: throw)'], ['Q', 'Shove'], ['F', 'Grab (in a clinch: disarm)'], ['1 to 5', 'Pair on, Hold the line, Hunt, Peel, Free fight'], ['Hold Y', 'Yield by kneeling'], ['Esc', 'Pause'], ['Menus', 'Arrow keys to move, Enter to pick, Esc to go back']],
-    pad: [['Left stick', 'Move. Push it all the way forward to run.'], ['Right stick', 'Look around and aim: up for the head, down for the legs. While RT is held it sets the swing arc.'], ['RT', 'Hold to wind up, release to strike. Hold longer for a heavier blow.'], ['LT', 'Guard'], ['A', 'Brace'], ['B', 'Trip (in a clinch: throw)'], ['X', 'Shove'], ['Y', 'Tackle'], ['RB', 'Grab (in a clinch: disarm). LB works too.'], ['R3', 'Switch target (L3 too)'], ['D-pad', 'Squad calls: up Pair, down Hold, left Hunt, right Peel'], ['View', 'Tap: first or third person. Hold: yield by kneeling'], ['Menu', 'Pause'], ['Menus', 'D-pad or stick to move, A to pick, B to go back, LB and RB to switch tabs, Menu to start']]
+    touch: [['Left thumb', 'Drag anywhere on the left to move. Push forward past the ring to run. With nobody locked on, pushing sideways turns you.'], ['Target lock', 'Your view follows the nearest opponent (yellow marker), so your right thumb is free for the buttons. Tap the right side of the screen to switch target; drag there to look around.'], ['1P / 3P', 'Top right: switch first and third person any time, even mid-fight.'], ['Swing pad', 'Hold to wind up, swipe to pick the arc (left, right, or up for overhead), let go to strike. Hold longer for a heavier blow.'], ['Trip', 'Back-heel. Works best on someone already stumbling, or from the side.'], ['Shove', 'Shield bash or haft push. Drives fighters into the rail.'], ['Grab', 'Clinch. In a clinch: swing pad = knee, trip = throw, grab = disarm.'], ['Guard / Brace', 'Hold. Drag on the guard button left, right or up to guard that side (a blow from the other side gets half through). Brace widens your base.'], ['Pair · Hold · Hunt · Peel', 'Squad calls for your teammates.']],
+    kb: [['W A S D', 'Move. Shift to sprint.'], ['Mouse', 'Look and aim. Target lock picks up whoever you look at.'], ['Tab', 'Switch target'], ['V', 'First / third person'], ['C', 'Tackle'], ['Left button', 'Hold to wind up, drag to pick the arc, release to strike.'], ['Right button', 'Guard. Flick the mouse left, right or up while holding it to guard that side; a blow from the other side gets half through.'], ['Space', 'Brace'], ['E', 'Trip (in a clinch: throw)'], ['Q', 'Shove'], ['F', 'Grab (in a clinch: disarm)'], ['1 to 5', 'Pair on, Hold the line, Hunt, Peel, Free fight'], ['Hold Y', 'Yield by kneeling'], ['Esc', 'Pause'], ['Menus', 'Arrow keys to move, Enter to pick, Esc to go back']],
+    pad: [['Left stick', 'Move. Push it all the way forward to run.'], ['Right stick', 'Look around and aim: up for the head, down for the legs. While RT is held it sets the swing arc.'], ['RT', 'Hold to wind up, release to strike. Hold longer for a heavier blow.'], ['LT', 'Guard. Push the right stick left, right or up while holding it to guard that side.'], ['A', 'Brace'], ['B', 'Trip (in a clinch: throw)'], ['X', 'Shove'], ['Y', 'Tackle'], ['RB', 'Grab (in a clinch: disarm). LB works too.'], ['R3', 'Switch target (L3 too)'], ['D-pad', 'Squad calls: up Pair, down Hold, left Hunt, right Peel'], ['View', 'Tap: first or third person. Hold: yield by kneeling'], ['Menu', 'Pause'], ['Menus', 'D-pad or stick to move, A to pick, B to go back, LB and RB to switch tabs, Menu to start']]
   }[kind];
   const GL = ['A', 'B', 'X', 'Y', 'LB', 'RB', 'LT', 'RT', 'R3', 'L3', 'View'];
   $('#howGrid').innerHTML = rows.map(r => `${kind === 'pad' && GL.includes(r[0]) ? `<span><i class="gp" data-k="${r[0]}">${gpName(r[0])}</i></span>` : `<kbd>${r[0]}</kbd>`}<span>${r[1]}</span>`).join('') + '<span></span><span class="muted">There is no thrust button. Thrusting is prohibited (BR 4.2).</span>';
@@ -12892,6 +12949,7 @@ function initMenus() {
   $('#btnYield').onclick = () => { togglePause(false); playerYield(); };
   $('#btnPauseHow').onclick = () => { G.backTo = 'pause'; renderHow(IN.mode); selectTab($('#howTabs'), 'controls'); showScreen('howto'); };
   $('#btnPauseLog').onclick = () => msg('gear bag', 'Tape Log', tapeLogHtml(G.tourney ? G.tourney.tapeLog : REP.log), [['Back', () => showScreen('pause'), true]]);
+  { const fill = () => VOICE.fillPicker($('#voiceSel')); fill(); if (window.speechSynthesis) { try { speechSynthesis.addEventListener('voiceschanged', fill); } catch (e) { } } $('#voiceTest').onclick = () => { AU.click(); VOICE.test(); }; }
   $('#btnQuit').onclick = () => { if (window.speechSynthesis) speechSynthesis.cancel(); toTitle(); };
   $('#pauseBtn').onclick = () => togglePause();
   $('#btnPauseSettings').onclick = () => { G.backTo = 'pause'; showScreen('settings'); };
@@ -13727,7 +13785,7 @@ async function boot(hot) {
   toTitle();
   requestAnimationFrame(frame);
   if (location.hash === '#autotest') setTimeout(autotest, 300);
-  window.__ST = { G, AU, buildShield, buildWeapon, W3, startTourney, quickFight, toTitle, openRepair, kitCheck, setupMatch, toTactics, beginFight, endRound, matchEnd, CLUBS, WEAPONS, setView, toast, renderKitPicker, applyLoadout, IN, FP, showScreen, weaponIcon, startCine, startTraining, startLadder, openCareer, openModes, openLadder, CAREER, setLesson, TR, unlock, togglePause, afterRound, renderHow, selectPiece, selectTape, msg, renderSheet, setHud, endTraining, setMode, PAD, navMove, focusFirst, sparks, CUTE, THREE, BREATH, setCuteDeco, flipFx, PHOTO, UAL, raiseFlags, startVersus, startFFA, startBracket, startKid, KID, openSeason, startSeasonMatch, setVenue, VS, SPLIT, NET, buildOnlineMatch, hostLobby, joinLobby, ONL, vinControl, openRun, openDaily, openBracket, showBracket, bracketResult, ffaMatchEnd, ffaLeader, ffaWinner, endKid, openPhoto, closePhoto, startReplay, stopReplay, RP, store, startRunFight, newRun, runEnd, WX, setWeather, padVin, readVersus, applyLo, myLoadout, netDropped, netLeave, showIntro, installForged, dailyPlan, openKids, openVersus, openPicks, LESSONS, rivalClub, startGrudge, startDaily, seasonState, newSeason, refreshDaily, VENUES, COMM, hitMapHtml, resetFighterForRound, DIFF, PIN, PADS, NIN, padsUpdate, seatPads, LOBBY, MM, openOnlineHub, benchDown, benchMove, REP, squirePatch, coverage, openProfile, myProfile, BOS, updateTitlePurse, ACH, progressCheck, challenges, masteryOf, S2, rankOf, counterValue, renderCareer, progressMatch, saveCareer, shopState, shopUp, tapeLeft, shopMatchEnd, shopPrizeMult, shopXpMult, swingTimes, pieceWearMult, TABARDS, refillTape, renderShop, UPGRADES, freshKit, TAPE_STOCK, enterTown, leaveTown, TOWN, openVendor, closeVendor, openTownMap, shopFx, renderVendor, VENDORS, ITEMS, itemCost, spCost, skillRoom, sponsorIncome, BOOSTS, STALL_AT, HOMES, FURNISH, pfx, squadFx, boostKit, townCollide, townRefresh, townWalkTo, townTalk, townTeardown, lookState, WORLD, guildCheck, STATIONS, townDressMe, FOLK, updateFolk, navBlocked, buildFolk, BOUT, boutStart, boutStop, boutTick, drawTownMap, updateMiniMap, costumePerson, OUTFIT, buildSkinWeapon, skinIcon, wskinList, skinFor, buildMyWeapon, wskinFamOf, GATHER, startGather, gatherSwing, stopGather, tradeState, tradeLevel, tradeGain, give, have, craft, NODES, MATS, renderTrades, TRADE_SKILLS, ARENAS, DISTRICTS, TRAVEL, setWaypoint, clearWaypoint, realmPath, callHorse, mount, dismount, ANIMAL, districtAt, realmCull, REALM_TIERS, gateOpen, townJump, stableRows, horseAvailable, peopleCull, boutArenaFor, arenaLive, bagSlots, bagState, bagRoom, secretFound, lookOwned, SECRETS, stopSpectating, startTrial, TRIALS, tierCap, ROSTER, rosterClubs, rosterLive, rosterName, liveBoutPick, aiTier, AI_TIER, guardOutcome, fighterGlow, ONB, onbStage, onbSet, openCreator, tourStart, tourEnd, TOUR_STOPS, THRONE, throneHolder, throneFight, throneBow, openThrone };
+  window.__ST = { G, AU, buildShield, buildWeapon, W3, startTourney, quickFight, toTitle, openRepair, kitCheck, setupMatch, toTactics, beginFight, endRound, matchEnd, CLUBS, WEAPONS, setView, toast, renderKitPicker, applyLoadout, IN, FP, showScreen, weaponIcon, startCine, startTraining, startLadder, openCareer, openModes, openLadder, CAREER, setLesson, TR, unlock, togglePause, afterRound, renderHow, selectPiece, selectTape, msg, renderSheet, setHud, endTraining, setMode, PAD, navMove, focusFirst, sparks, CUTE, THREE, BREATH, setCuteDeco, flipFx, PHOTO, UAL, raiseFlags, startVersus, startFFA, startBracket, startKid, KID, openSeason, startSeasonMatch, setVenue, VS, SPLIT, NET, buildOnlineMatch, hostLobby, joinLobby, ONL, vinControl, openRun, openDaily, openBracket, showBracket, bracketResult, ffaMatchEnd, ffaLeader, ffaWinner, endKid, openPhoto, closePhoto, startReplay, stopReplay, RP, store, startRunFight, newRun, runEnd, WX, setWeather, padVin, readVersus, applyLo, myLoadout, netDropped, netLeave, showIntro, installForged, dailyPlan, openKids, openVersus, openPicks, LESSONS, rivalClub, startGrudge, startDaily, seasonState, newSeason, refreshDaily, VENUES, COMM, hitMapHtml, resetFighterForRound, DIFF, PIN, PADS, NIN, padsUpdate, seatPads, LOBBY, MM, openOnlineHub, benchDown, benchMove, REP, squirePatch, coverage, openProfile, myProfile, BOS, updateTitlePurse, ACH, progressCheck, challenges, masteryOf, S2, rankOf, counterValue, renderCareer, progressMatch, saveCareer, shopState, shopUp, tapeLeft, shopMatchEnd, shopPrizeMult, shopXpMult, swingTimes, pieceWearMult, TABARDS, refillTape, renderShop, UPGRADES, freshKit, TAPE_STOCK, enterTown, leaveTown, TOWN, openVendor, closeVendor, openTownMap, shopFx, renderVendor, VENDORS, ITEMS, itemCost, spCost, skillRoom, sponsorIncome, BOOSTS, STALL_AT, HOMES, FURNISH, pfx, squadFx, boostKit, townCollide, townRefresh, townWalkTo, townTalk, townTeardown, lookState, WORLD, guildCheck, STATIONS, townDressMe, FOLK, updateFolk, navBlocked, buildFolk, BOUT, boutStart, boutStop, boutTick, drawTownMap, updateMiniMap, costumePerson, OUTFIT, buildSkinWeapon, skinIcon, wskinList, skinFor, buildMyWeapon, wskinFamOf, GATHER, startGather, gatherSwing, stopGather, tradeState, tradeLevel, tradeGain, give, have, craft, NODES, MATS, renderTrades, TRADE_SKILLS, ARENAS, DISTRICTS, TRAVEL, setWaypoint, clearWaypoint, realmPath, callHorse, mount, dismount, ANIMAL, districtAt, realmCull, REALM_TIERS, gateOpen, townJump, stableRows, horseAvailable, peopleCull, boutArenaFor, arenaLive, bagSlots, bagState, bagRoom, secretFound, lookOwned, SECRETS, stopSpectating, startTrial, TRIALS, tierCap, ROSTER, rosterClubs, rosterLive, rosterName, liveBoutPick, aiTier, AI_TIER, guardOutcome, fighterGlow, ONB, onbStage, onbSet, openCreator, tourStart, tourEnd, TOUR_STOPS, THRONE, throneHolder, throneFight, throneBow, openThrone, sideFromDrag, VOICE };
 }
 
 function autotest() {
@@ -13819,7 +13877,7 @@ function vinAct(f, k, opp) {
 function vinControl(f, V, dt) {
   const S = f.vinSeen || (f.vinSeen = { sw: V.sw, held: false, e: { ...V.e } });
   if (f.state !== 'standing' || G.phase !== 'fight') { f.move = { x: 0, z: 0 }; S.sw = V.sw; S.e = { ...V.e }; S.held = false; return; }
-  f.move = { x: V.mx || 0, z: V.mz || 0 }; f.sprint = !!V.sp; f.guard = !!V.gd; f.brace = !!V.br && !V.gd;
+  f.move = { x: V.mx || 0, z: V.mz || 0 }; f.sprint = !!V.sp; f.guard = !!V.gd; f.gdir = V.gd ? ({ 2: 'L', 3: 'R', 4: 'H' }[V.gd] || 'mid') : null; f.brace = !!V.br && !V.gd;
   let opp = null, bd = 1e9; for (const o of G.fighters) if (o.team !== f.team && isUp(o)) { const d = dist2(o.pos, f.pos); if (d < bd) { bd = d; opp = o; } }
   f.softTarget = opp;
   f.wantFace = V.yaw != null ? V.yaw : opp ? angTo(f.pos, opp.pos) : vlen(f.move) > 0.2 ? Math.atan2(f.move.x, f.move.z) : f.wantFace;
@@ -13842,7 +13900,7 @@ function padVin(gp, V, slot) {
   const dz = (x, y) => { const m = Math.hypot(x, y); return m < 0.18 ? [0, 0] : [x, y]; };
   const [lx, ly] = dz(gp.axes[0] || 0, gp.axes[1] || 0), [rx, ry] = dz(gp.axes[2] || 0, gp.axes[3] || 0);
   const mv = camRel(lx, -ly, vsCam(slot)); V.mx = mv.x; V.mz = mv.z; V.sp = ly < -0.85 ? 1 : 0; const miss = gp.missing || [], noTrig = miss.includes(6) || miss.includes(7);
-  V.gd = b[6] || (noTrig && b[4]) ? 1 : 0; V.br = b[0] ? 1 : 0;
+  V.gd = b[6] || (noTrig && b[4]) ? (rx > 0.45 ? 3 : rx < -0.45 ? 2 : ry < -0.5 ? 4 : (V.gd || 1)) : 0; V.br = b[0] ? 1 : 0;
   const rt = Math.max(gp.buttons[7] ? gp.buttons[7].value : 0, noTrig && b[5] ? 1 : 0);
   if (rt > 0.5 && !V.sh) { V.sw++; V.sh = 1; }
   if (V.sh) V.arc = rx > 0.45 ? 'R2L' : rx < -0.45 ? 'L2R' : ry < -0.5 ? 'O' : V.arc;
@@ -13855,7 +13913,7 @@ function keyVin(V) {
   const k = IN.keys; let x = 0, y = 0;
   if (k.KeyW) y += 1; if (k.KeyS) y -= 1; if (k.KeyA) x -= 1; if (k.KeyD) x += 1;
   const mv = camRel(x, y, vsCam(0)), l = Math.hypot(mv.x, mv.z) || 1; V.mx = mv.x / Math.max(1, l); V.mz = mv.z / Math.max(1, l);
-  V.sp = k.ShiftLeft ? 1 : 0; V.gd = k.KeyK ? 1 : 0; V.br = k.Space ? 1 : 0;
+  V.sp = k.ShiftLeft ? 1 : 0; V.gd = k.KeyK ? (k.KeyA ? 2 : k.KeyD ? 3 : k.KeyW ? 4 : (V.gd || 1)) : 0; V.br = k.Space ? 1 : 0;
   if (k.KeyJ && !V.sh) { V.sw++; V.sh = 1; V.arc = 'auto'; } if (V.sh && k.KeyJ) V.arc = k.KeyA ? 'L2R' : k.KeyD ? 'R2L' : k.KeyW ? 'O' : V.arc;
   if (!k.KeyJ && V.sh) V.sh = 0;
   const once = (code, key) => { if (k[code] && !VS['k' + code]) V.e[key]++; VS['k' + code] = !!k[code]; };
@@ -14538,7 +14596,7 @@ function netTick(dt) {
       NET.room.presence({ role: 'host', go: ONL.go, S: Date.now() - ONL.go < 5000 ? ONL.S : null, L: null, s, m: [q(m.clock), m.pts[0], m.pts[1], m.wins[0], m.wins[1], m.round, ['prefight', 'fight', 'stopping', 'between', 'over', 'tactics'].indexOf(G.phase), m.overtime ? 1 : 0], mk: G.marshals.map(k => [q(k.pos.x), q(k.pos.z), q(k.facing), q(k.flagUp)]), ev: NET.ev });
     }
   } else {
-    const V = NET.vin; V.mx = PIN.move.x; V.mz = PIN.move.z; V.yaw = isCtl() ? FP.yaw : null; V.sp = PIN.sprint ? 1 : 0; V.gd = PIN.guard ? 1 : 0; V.br = PIN.brace ? 1 : 0;
+    const V = NET.vin; V.mx = PIN.move.x; V.mz = PIN.move.z; V.yaw = isCtl() ? FP.yaw : null; V.sp = PIN.sprint ? 1 : 0; V.gd = PIN.guard ? ({ L: 2, R: 3, H: 4 }[PIN.gdir] || 1) : 0; V.br = PIN.brace ? 1 : 0;
     if (IN.swingStart) { IN.swingStart = false; V.sw++; V.sh = 1; V.arc = 'auto'; }
     if (V.sh) { let pv = null; if (IN.pad.id !== null) pv = arcFromDrag(IN.pad.dx, IN.pad.dy, 16); else if (IN.mouse.down) pv = arcFromDrag(IN.mouse.adx, IN.mouse.ady, 22); else if (IN.gp.rtDown) pv = PIN.rx > 0.45 ? 'R2L' : PIN.rx < -0.45 ? 'L2R' : PIN.ry < -0.5 ? 'O' : null; if (pv && pv !== 'auto') V.arc = pv; }
     if (IN.swingRelease) { if (IN.swingRelease !== 'auto') V.arc = IN.swingRelease; V.sh = 0; IN.swingRelease = null; }
@@ -15138,7 +15196,7 @@ function townCollide() {
   }
 }
 function updateTownCamera(dt) {
-  const cam = W3.camera; if (cam.near !== 0.15 || Math.abs(cam.fov - 55) > 0.1) { cam.near = 0.15; cam.fov = 55; cam.updateProjectionMatrix(); }
+  const cam = W3.camera, wantFov = TOWN.spec ? 42 : 55; if (cam.near !== 0.15 || Math.abs(cam.fov - wantFov) > 0.1) { cam.near = 0.15; cam.fov = wantFov; cam.updateProjectionMatrix(); }
   if (ONB.tour && tourTick(dt)) return;
   if (TOWN.spec) { specCamera(dt); return; }
   if (TOWN.peek > 0) { TOWN.peek -= dt; cam.position.set(BAILEY.x0 + 2, 2.4, -196); cam.lookAt(-80, 2, -205); if (TOWN.peek <= 0) TOWN.cam = null; return; }
@@ -17270,7 +17328,7 @@ function trialEnd(m, won, withPurse) {
 // Arenas you aren't at still have results on their boards: they tick cheaply in the background.
 // ===================================================================
 const SPEC = { results: {}, t: 0, follow: 0 };
-const SPEC_MODES = ['Orbit', 'Follow', 'Broadcast'];
+const SPEC_MODES = ['Rail', 'Follow', 'Orbit', 'Broadcast'];
 // the stands of every arena are somewhere to talk to (no NPC: the prompt just says Watch)
 function buildArenaSeats() {
   for (const A of ARENAS) {
@@ -17314,10 +17372,13 @@ function specCamera(dt) {
   const S = TOWN.spec, A = S.A, cam = W3.camera; S.t += dt;
   const o = W3.matchRoot.position, live = (G.fighters || []).filter(f => !f.out && f.pos);
   let cx = 0, cz = 0; for (const f of live) { cx += f.pos.x; cz += f.pos.z; } if (live.length) { cx /= live.length; cz /= live.length; }
-  const look = new THREE.Vector3(o.x + cx, 1.2, o.z + cz); let want;
-  if (S.mode === 0) { const a = S.t * 0.12; want = new THREE.Vector3(o.x + Math.sin(a) * 17, A.indoor ? 6 : 8, o.z + Math.cos(a) * 21); }
-  else if (S.mode === 1 && live.length) { const f = live[SPEC.follow % live.length], b = (f.facing || 0) + Math.PI; want = new THREE.Vector3(o.x + f.pos.x + Math.sin(b) * 5, 3.2, o.z + f.pos.z + Math.cos(b) * 5); look.set(o.x + f.pos.x, 1.4, o.z + f.pos.z); }
-  else want = new THREE.Vector3(o.x + LIST.W / 2 + 7, A.indoor ? 6.5 : 9, o.z + cz * 0.4);
+  const look = new THREE.Vector3(o.x + cx, 1.1, o.z + cz); let want;
+  if (S.mode === 0) { // from the rope where you stand, head high, leaning in toward the action
+    const px = TOWN.pos.x, pz = TOWN.pos.z, dx = look.x - px, dz = look.z - pz, d = Math.hypot(dx, dz) || 1, inn = Math.max(0, d - 9);
+    want = new THREE.Vector3(px + dx / d * inn, 2.4, pz + dz / d * inn);
+  } else if (S.mode === 1 && live.length) { const f = live[SPEC.follow % live.length], b = (f.facing || 0) + Math.PI; want = new THREE.Vector3(o.x + f.pos.x + Math.sin(b) * 3.6, 2.4, o.z + f.pos.z + Math.cos(b) * 3.6); look.set(o.x + f.pos.x, 1.3, o.z + f.pos.z); }
+  else if (S.mode === 2) { const a = S.t * 0.12; want = new THREE.Vector3(look.x + Math.sin(a) * 9, A.indoor ? 3.6 : 4.2, look.z + Math.cos(a) * 9); }
+  else want = new THREE.Vector3(o.x + LIST.W / 2 + 4, A.indoor ? 4 : 5.5, o.z + cz * 0.5);
   if (!TOWN.cam) { TOWN.cam = want.clone(); TOWN.look = look.clone(); }
   const k = 1 - Math.exp(-3 * dt); TOWN.cam.lerp(want, k); TOWN.look.lerp(look, k);
   cam.position.copy(TOWN.cam); cam.lookAt(TOWN.look);
