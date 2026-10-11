@@ -812,6 +812,22 @@ body:not(.split) #pips:not([hidden]) ~ #statstrip{top:calc(var(--st) + 78px)}
 .medals i.on.bronze{background:#b87333}.medals i.on.silver{background:#c0c0c0}.medals i.on.gold{background:#d4af37}.medals i.on.platinum{background:#9fe3e3}.medals i.on.legend{background:var(--flag)}
 .achs.tiered .ach{opacity:.8}.achs.tiered .ach.on{opacity:1}
 .achs .xpbar{margin-top:3px}
+/* shop */
+.shopseg{margin:8px 0 10px;flex-wrap:wrap}
+.ups.shop{display:grid;gap:6px}
+.ups.shop h4{margin:12px 0 2px;font-size:.9rem;letter-spacing:.04em;text-transform:uppercase;color:var(--marshal)}
+.ups.shop > p{margin:2px 0 4px}
+.up .uph{display:flex;align-items:center;flex-wrap:wrap;gap:6px}
+.up .tier{font-size:.74rem;font-weight:700;padding:1px 6px;border:1px solid var(--rule);color:var(--marshal)}
+.up.cur{box-shadow:inset 3px 0 0 var(--flag)}
+.up.empty .tier{color:#ff8a80;border-color:#ff8a80}
+.pipsN{display:inline-flex;gap:2px;vertical-align:middle}
+.pipsN i{width:9px;height:6px;background:#0c0f11;border:1px solid #39444a}
+.pipsN i.on{background:var(--marshal);border-color:var(--marshal)}
+.up .roll{display:inline-block;width:16px;height:16px;border-radius:50%;background:var(--c);box-shadow:inset 0 0 0 4px rgba(0,0,0,.35)}
+.sw.mini{width:16px;height:16px;min-height:0;padding:0;border:1px solid #39444a;background:var(--c);display:inline-block}
+.tapechip.empty{opacity:.55}
+.up.shoplink{margin-top:10px}
 
 </style>
 <div id="app">
@@ -1113,7 +1129,7 @@ body:not(.split) #pips:not([hidden]) ~ #statstrip{top:calc(var(--st) + 78px)}
   <section class="screen dimmed" id="career" hidden>
     <div class="panel wide">
       <header class="phead"><button class="back" data-back data-gp="B" aria-label="Back"><svg viewBox="0 0 24 24"><path d="M15 5l-7 7 7 7"/></svg><span>Back</span></button><h2 class="ttape tape mk">Your fighter</h2>
-        <div class="seg tabs" id="careerTabs" role="tablist"><button data-tab="skills" aria-pressed="false">Skills</button><button data-tab="profile" aria-pressed="true">Profile</button><button data-tab="forge" aria-pressed="false">Forge</button><button data-tab="progress" aria-pressed="false">Progress</button><button data-tab="ach" aria-pressed="false">Awards</button><button data-tab="record" aria-pressed="false">Record</button></div>
+        <div class="seg tabs" id="careerTabs" role="tablist"><button data-tab="skills" aria-pressed="false">Skills</button><button data-tab="profile" aria-pressed="true">Profile</button><button data-tab="forge" aria-pressed="false">Forge</button><button data-tab="shop" aria-pressed="false">Shop</button><button data-tab="progress" aria-pressed="false">Progress</button><button data-tab="ach" aria-pressed="false">Awards</button><button data-tab="record" aria-pressed="false">Record</button></div>
       </header>
       <div class="pbody" id="careerBody"></div>
     </div>
@@ -8069,7 +8085,7 @@ function recalcBody(f) {
   f.stabF = 1.06 - 0.06 * hs;
   f.reachB = (b.h - 1.8) * 0.5;
   // career kit upgrades (player only)
-  f.up = f.isPlayer && typeof CAREER !== 'undefined' ? CAREER.upgrades : null;
+  f.up = f.isPlayer && typeof CAREER !== 'undefined' ? shopUp() : null;
   if (f.up) { f.spdF *= 1 + 0.03 * (f.up.harness || 0); f.stabF *= 1 + 0.035 * (f.up.boots || 0); }
   f.stabF *= (1 + 0.03 * perk(f, 'iron.rooted')) * mod(f, 'stab') * weatherStab();
 }
@@ -8289,7 +8305,7 @@ function clampToList(f) {
 }
 
 // ---------- actions ----------
-function swingTimes(f) { const w = f.weapon; const m = w ? w.mass * (w.hands === 2 ? 0.82 : 1) : 1; const ft = 1 + 0.35 * (f.fatigue || 0); return { wind: (0.12 + 0.055 * m) * ft, strike: (0.075 + 0.02 * m) * (1 + 0.15 * (f.fatigue || 0)), rec: (0.13 + 0.045 * m) * (1 - 0.05 * perk(f, 'steel.recover')) * ft }; }
+function swingTimes(f) { const w = f.weapon; const m = w ? w.mass * (w.hands === 2 ? 0.82 : 1) : 1; const ft = 1 + 0.35 * (f.fatigue || 0); const wq = 1 - 0.025 * weaponTier(f); return { wind: (0.12 + 0.055 * m) * ft * wq, strike: (0.075 + 0.02 * m) * (1 + 0.15 * (f.fatigue || 0)), rec: (0.13 + 0.045 * m) * (1 - 0.05 * perk(f, 'steel.recover')) * ft * wq }; }
 function startAction(f, kind, o = {}) {
   if (f.state !== 'standing' || f.action || f.cd > 0 || G.phase !== 'fight') return false;
   if ((kind === 'swing' || kind === 'shove') && !f.weapon && !f.clinch) return false;
@@ -8420,7 +8436,8 @@ function resolveSwing(f, a) {
   imp *= 1 - 0.04 * perk(t, 'iron.thick');
   imp *= mod(f, 'imp');
   if (CUTE.on) imp *= 0.86; // rubber swords and foam kit: bonks, not blows
-  if (t.isPlayer && t.up) imp *= 1 - 0.05 * (t.up.padding || 0); // thicker gambeson
+  if (t.isPlayer && t.up) imp *= (1 - 0.05 * (t.up.padding || 0)) * (1 - 0.03 * armourTier(t, 'body')); // thicker gambeson, better breastplate
+  imp *= 1 + 0.03 * weaponTier(f); // better-made weapon
   const tp = isDown(t) ? t.groundPos : t.pos;
   const dlen = Math.hypot(tp.x - f.pos.x, tp.z - f.pos.z) || 1;
   if (dlen < 0.55) imp *= 0.55; // too close to swing properly
@@ -8472,12 +8489,12 @@ function resolveSwing(f, a) {
   if (!blocked) {
     const prot = zone === 'helmet' ? t.helm.prot : 1;
     if (zone !== 'torso') wearPiece(t, zone, p * 0.0055 / prot);
-    if (zone === 'helmet' && imp > 1.05) t.bell = Math.min(1, t.bell + (imp - 0.9) * 0.9 * (perk(f, 'steel.ringer') ? 1.35 : 1) * (perk(t, 'iron.neck') ? 0.6 : 1));
+    if (zone === 'helmet' && imp > 1.05) t.bell = Math.min(1, t.bell + (imp - 0.9) * 0.9 * (perk(f, 'steel.ringer') ? 1.35 : 1) * (perk(t, 'iron.neck') ? 0.6 : 1) * (1 - 0.06 * armourTier(t, 'helmet')));
     if (zone === 'armR' && t.weapon && chance(0.045 * (0.5 + a.charge) * (sp === 'pry' ? 5 : 1) * (1 + 0.6 * perk(f, 'steel.armbreak')) * (t.up ? 1 - 0.25 * (t.up.gauntlets || 0) : 1))) disarm(t, sp === 'pry' ? 'pried loose with a wrench' : 'knocked loose');
     if (sp) specialHit(f, t, sp, zone, hitPos);
   } else if (t.shield) { /* shield soaks it */ } else wearPiece(t, 'haft', 0.02);
   if (f.weapon.haft) wearPiece(f, 'haft', 0.006);
-  if (f.weapon.haft && f.weapon.hands === 2 && blocked && imp > 1.0 && f.kit.haft && chance(0.012 + 0.05 * Math.max(0, 0.5 - f.kit.haft.cond))) { f.kit.haft.failed = true; disarm(f, 'snapped at the haft'); marshalCall('Broken weapon!', `${label(f)}: haft snapped`, 2); if (f.isPlayer) toast('Your haft snapped!', 'bad', 'Tape it between rounds'); }
+  if (f.weapon.haft && f.weapon.hands === 2 && blocked && imp > 1.0 && f.kit.haft && chance((0.012 + 0.05 * Math.max(0, 0.5 - f.kit.haft.cond)) * (1 - 0.15 * weaponTier(f)))) { f.kit.haft.failed = true; disarm(f, 'snapped at the haft'); marshalCall('Broken weapon!', `${label(f)}: haft snapped`, 2); if (f.isPlayer) toast('Your haft snapped!', 'bad', 'Tape it between rounds'); }
   if (G.match && G.match.duel && !blocked && imp >= 0.55 && G.phase === 'fight' && !(G.mod.headhunter && zone !== 'helmet')) duelScore(f, DUEL_PTS[zone] || 1, { helmet: 'Head', torso: 'Body', armL: 'Arm', armR: 'Arm', legs: 'Leg' }[zone] || 'Hit');
   if (f.isPlayer && !blocked && MT.zones) MT.zones.push(zone);
   if (!blocked && G.match) { const ht = G.match.hitsT || (G.match.hitsT = [0, 0]); ht[sideOf(f)]++; }
@@ -8634,7 +8651,7 @@ function updateRearm(f, dt) {
 function wearPiece(f, piece, amount) {
   const p = f.kit[piece]; if (!p) return;
   if (piece === 'haft' && !(f.weapon && f.weapon.haft && f.weapon.key === f.spec.weapon)) return;
-  const mult = (p.tape ? TAPES[p.tape].wear : 1) * (G.mod && G.mod.glass ? 3 : 1);
+  const mult = (p.tape ? TAPES[p.tape].wear : 1) * (G.mod && G.mod.glass ? 3 : 1) * pieceWearMult(f, piece);
   p.cond = Math.max(0, p.cond - amount * mult);
   if (p.cond < 0.3 && chance(0.1 + (0.3 - p.cond) * 2.0)) failPiece(f, piece);
 }
@@ -10374,8 +10391,8 @@ const BAND = { top: 0.42, bot: 0.6 };
 
 function openRepair(seconds, onDone) {
   if (CAREER.skills && CAREER.skills['show.tape']) seconds += 15; // Tape artist
-  Object.assign(REP, { piece: null, tape: null, step: null, timer: seconds, active: true, onDone, wraps: [], wrinkles: [], squire: 1 + (G.boon && G.boon.squire ? 1 : 0), pop: null, lastSec: 99, trail: [] });
-  REP.roll = REP.roll && TAPES[REP.roll] && TAPES[REP.roll].legal ? REP.roll : 'black';
+  Object.assign(REP, { piece: null, tape: null, step: null, timer: seconds, active: true, onDone, wraps: [], wrinkles: [], squire: 1 + (G.boon && G.boon.squire ? 1 : 0) + (typeof shopState === 'function' ? shopState().squires : 0), pop: null, lastSec: 99, trail: [] });
+  REP.roll = REP.roll && TAPES[REP.roll] && TAPES[REP.roll].legal && tapeLeft(REP.roll) > 0 ? REP.roll : (['black', 'grey', 'white', 'pro', 'kevlar'].find(x => tapeLeft(x) > 0) || 'black');
   renderKitList(); renderDrawer(); setSteps(null);
   const worst = worstPiece();
   $('#benchMsg').textContent = worst ? `Tap a strap to fix it. ${PIECE_SHORT[worst][0]} is the worst.` : 'Everything is in good shape. Tap Done, or top anything up.';
@@ -10418,11 +10435,13 @@ function renderKitList() {
   const sq = $('#btnSquire'); if (sq) { sq.hidden = REP.squire <= 0; sq.textContent = `Squire, patch it for me (${REP.squire})`; }
 }function renderDrawer() {
   const box = $('#drawer'); box.innerHTML = '';
-  for (const k of ['black', 'white', 'grey', 'duct', 'zip']) {
-    const t = TAPES[k]; const onHaft = REP.piece === 'haft';
+  for (const k of ['kevlar', 'pro', 'black', 'white', 'grey', 'duct', 'zip']) {
+    const t = TAPES[k]; const onHaft = REP.piece === 'haft', left = tapeLeft(k);
+    if ((k === 'pro' || k === 'kevlar') && left <= 0) continue; // premium rolls only show once you've bought some
     let lg = t.legal ? 'legal' : 'not legal', cls = t.legal ? 'ok' : 'no';
     if (onHaft && t.haft === 'warn') { lg = 'odd on a haft'; cls = 'warn'; }
-    const b = h('button', { class: 'tapechip' + (t.legal ? '' : ' illegal'), 'aria-pressed': String(REP.roll === k), title: t.note, onclick: () => selectTape(k) },
+    if (left !== Infinity) lg += left > 0 ? ` · ${left} left` : ' · empty';
+    const b = h('button', { class: 'tapechip' + (t.legal ? '' : ' illegal') + (left <= 0 ? ' empty' : ''), 'aria-pressed': String(REP.roll === k), title: t.note, onclick: () => selectTape(k) },
       h('span', { class: 'roll', style: `--c:${t.color}` }), h('span', null, h('div', null, t.name.replace(' hockey tape', '').replace(' cloth tape', ' cloth')), h('div', { class: 'lg ' + cls }, lg)));
     box.append(b);
   }
@@ -10436,10 +10455,16 @@ function selectPiece(k) {
 }
 function selectTape(k) {
   if (REP.step) return;
+  if (tapeLeft(k) <= 0) { // an empty roll: refill it right here if the purse allows
+    const T = TAPE_STOCK[k];
+    if (CAREER.purse >= T.refill && refillTape(k)) { REP.roll = k; renderDrawer(); const say = `Bought ${T.pack} more wraps of ${TAPES[k].name.toLowerCase()} for ${fmtMoney(T.refill)}.`; if (REP.piece) startTaping(k); $('#benchMsg').textContent = say + (REP.piece ? ' ' + $('#benchMsg').textContent : ' Now tap a strap.'); return; }
+    else { $('#benchMsg').textContent = `That roll is empty. A refill costs ${fmtMoney(T.refill)}. Use another roll, or let your squire do it.`; AU.click(); return; }
+  }
   AU.click(); REP.roll = k; renderDrawer();
   if (REP.piece) startTaping(k); else $('#benchMsg').textContent = `${TAPES[k].name} ready. Now tap a strap.`;
 }
 function startTaping(k) {
+  if (tapeLeft(k) <= 0) { const alt = ['black', 'grey', 'white', 'pro', 'kevlar'].find(x => tapeLeft(x) > 0); if (!alt) { $('#benchMsg').textContent = 'All your legal tape is used up. Refill in the Shop, or use your squire.'; return; } k = REP.roll = alt; renderDrawer(); }
   REP.tape = k; const t = TAPES[k]; const pc = G.player.kit[REP.piece];
   if (t.instant) { // duct tape and zip ties: fast, strong, and they fail the kit check
     AU.rip(1); pc.cond = Math.min(0.92, pc.cond + (k === 'duct' ? 0.55 : 0.42)); pc.tape = k; pc.failed = false; pc.covered = false;
@@ -10519,7 +10544,7 @@ function finishSmooth() {
   const pc = G.player.kit[REP.piece];
   if (CAREER.skills && CAREER.skills['show.tape']) q = Math.min(1, q * 1.15);
   pc.cond = Math.min(0.92, pc.cond + 0.12 + 0.62 * q); pc.tape = REP.tape; pc.failed = false; pc.covered = false;
-  logTape(REP.piece, REP.tape, q);
+  logTape(REP.piece, REP.tape, q); useTape(REP.tape); renderDrawer();
   const haftNote = REP.piece === 'haft' && REP.tape === 'white' ? ' White on a haft may draw a look from the authenticity officer.' : '';
   const stars = q > 0.85 ? 3 : q > 0.6 ? 2 : 1; repPop('★'.repeat(stars) + '☆'.repeat(3 - stars), '#f2c40f'); AU.cheer && stars === 3 && AU.cheer(0.25);
   const next = worstPiece();
@@ -10641,7 +10666,7 @@ const UPGRADES = [
   { key: 'gauntlets', name: 'Riveted gauntlets', desc: 'Hold on tight: 25% fewer disarms per level, better throws.' },
   { key: 'cardio', name: 'Cardio block', desc: 'Summer training. +10% stamina recovery per level.' },
 ];
-const UP_COST = [120, 240, 400];
+const UP_COST = [120, 240, 400, 650, 1000, 1500, 2200, 3100, 4300, 6000];
 const TABARDS = ['#6d1b28', '#1c3454', '#2a3d26', '#3d2a4f', '#5b4a2a', '#111214', '#1f4a4a', '#7a4a12', '#8a8f92', '#b8241f'];
 const TRIMS = ['#e8e1cf', '#d4b44a', '#d8dde2', '#f0c27a', '#ff3d8b', '#7fb6ff', '#111214'];
 const CHARGES = [['chevron', 'Chevron'], ['pale', 'Pale'], ['bend', 'Bend'], ['cross', 'Cross'], ['saltire', 'Saltire'], ['chief', 'Chief'], ['quarterly', 'Quarterly']];
@@ -10731,7 +10756,7 @@ function updateTitlePurse() {
   const el = $('#titleStats'); if (!el) return;
   const n = Object.keys(CAREER.ach).length;
   skillsState();
-  el.innerHTML = ''; el.append(h('span', { class: 'cnum' }, String(CAREER.num)), h('span', null, h('b', null, `${CAREER.name === 'You' ? 'Your fighter' : CAREER.name}, level ${CAREER.level}`), h('br'), h('span', { class: 'crank' }, rankOf(CAREER.level)), h('br'), `${CAREER.club.name}, `, h('span', { class: 'cpurse' }, fmtMoney(CAREER.purse)), `, ${n} of ${ACH.length} achievements`), CAREER.sp > 0 ? h('span', { class: 'spbadge' }, `${CAREER.sp} skill point${CAREER.sp === 1 ? '' : 's'}`) : null);
+  el.innerHTML = ''; el.append(h('span', { class: 'cnum' }, String(CAREER.num)), h('span', null, h('b', null, `${CAREER.name === 'You' ? 'Your fighter' : CAREER.name}${shopState().title ? ' ' + shopState().title : ''}, level ${CAREER.level}`), h('br'), h('span', { class: 'crank' }, rankOf(CAREER.level)), h('br'), `${CAREER.club.name}, `, h('span', { class: 'cpurse' }, fmtMoney(CAREER.purse)), `, ${n} of ${ACH.length} achievements`), CAREER.sp > 0 ? h('span', { class: 'spbadge' }, `${CAREER.sp} skill point${CAREER.sp === 1 ? '' : 's'}`) : null);
 }
 
 // ---- the Your fighter screen ----
@@ -10770,15 +10795,8 @@ function renderCareer() {
     box.append(h('div', { class: 'forgehead' }, h('span', { class: 'purse num' }, fmtMoney(CAREER.purse)), h('span', { class: 'muted small' }, 'in your purse')));
     box.append(h('p', { class: 'muted small' }, 'Every event pays prize money. Wins pay more, each takedown adds a bonus, and the Rumble and the Duel Ladder pay best. Spend it here.'));
     renderSmith(box);
-    const ug = h('div', { class: 'ups' });
-    for (const U of UPGRADES) {
-      const lv = CAREER.upgrades[U.key] || 0, cost = UP_COST[lv];
-      const pips = h('span', { class: 'pips3', 'aria-label': `level ${lv} of 3` }); for (let i = 0; i < 3; i++) pips.append(h('i', { class: i < lv ? 'on' : '' }));
-      const can = lv < 3 && CAREER.purse >= cost;
-      const btn = h('button', { class: 'btn tape small', disabled: can ? null : true, onclick: () => { if (!can) return; CAREER.purse -= cost; CAREER.upgrades[U.key] = lv + 1; saveCareer(); unlock('shopper'); AU.cheer(0.6); renderCareer(); updateTitlePurse(); } }, lv >= 3 ? 'Maxed' : `Buy ${fmtMoney(cost)}`);
-      ug.append(h('div', { class: 'up' }, h('div', null, h('div', { class: 'uph' }, h('b', null, U.name), pips), h('div', { class: 'muted' }, U.desc)), btn));
-    }
-    box.append(ug);
+    box.append(h('div', { class: 'up shoplink' }, h('div', null, h('b', null, 'Looking for more to buy?'), h('div', { class: 'muted' }, 'Better weapons and armour, kit upgrades to level 10, tape refills, squires, your club hall, boosts, colours and titles are all in the Shop.')), h('button', { class: 'btn primary flagtape small', onclick: () => { AU.click(); G.careerTab = 'shop'; renderCareer(); } }, 'Open the Shop')));
+  } else if (tab === 'shop') { renderShop(box);
   } else if (tab === 'progress') { renderProgress(box);
   } else if (tab === 'ach') { renderAwards(box); } else if (tab === '__oldach') {
     const got = Object.keys(CAREER.ach).length;
@@ -10821,6 +10839,8 @@ function careerMatchEnd(m, won) {
   if (won && w && w.key === 'x_chicken') unlock('chicken');
   if (won && w && w.fantasy && !w.specialSet) unlock('fantasy');
   const pb = (CAREER.skills && CAREER.skills['show.purse']) || 0; if (pb) { const extra = Math.round(money * 0.12 * pb); money += extra; lines.push(`Crowd pleaser ${fmtMoney(extra)}`); }
+  const sm = shopPrizeMult(); if (sm > 1) { const extra = Math.round(money * (sm - 1)); if (extra) { money += extra; lines.push(`Club hall and agent ${fmtMoney(extra)}`); } }
+  shopMatchEnd();
   if (MT.xp) lines.push(`+${MT.xp} XP`);
   if (CAREER.sp > 0) lines.push(`Level ${CAREER.level}, ${CAREER.sp} skill point${CAREER.sp === 1 ? '' : 's'} to spend`);
   pay(money, 'match'); saveCareer(); updateTitlePurse();
@@ -10999,7 +11019,7 @@ function learn(n) { const why = canLearn(n); if (why) return why; const S = skil
 const XP_FOR = { hit: 3, block: 2, trip: 8, throw: 12, disarm: 12, tackle: 6, takedown: 25, knee: 1, shove: 2, repair: 6 };
 function gainXP(amount, why) {
   if (G.autopilot || G.attract || amount <= 0) return; skillsState();
-  amount = Math.round(amount * (1 + 0.15 * ((CAREER.skills['show.scout']) || 0)));
+  amount = Math.round(amount * (1 + 0.15 * ((CAREER.skills['show.scout']) || 0)) * shopXpMult());
   CAREER.xp += amount; MT.xp = (MT.xp || 0) + amount;
   while (CAREER.xp >= xpNeed(CAREER.level)) { CAREER.xp -= xpNeed(CAREER.level); CAREER.level++; CAREER.sp++; levelUp(); }
 }
@@ -11133,6 +11153,7 @@ const T_DEFS = [
   ['tackles', 'Battering ram', 'Land {n} tackles', [3, 30, 150, 600, 2000]],
   ['repairs', 'Tape wizard', 'Repair {n} straps', [10, 50, 200, 800, 3000]],
   ['earned', 'Prize purse', 'Earn {n} in prize money', [500, 5000, 25000, 100000, 500000], true],
+  ['spent', 'Big spender', 'Spend {n} in the shop', [500, 5000, 25000, 100000, 400000], true],
   ['rumbleWins', 'Rumble royalty', 'Win the Red Deer Rumble {n} times', [1, 3, 10, 25, 100]],
   ['perfects', 'Perfect parry', 'Make {n} perfect blocks', [1, 25, 100, 500, 2000]],
   ['helmets', 'Head hunter', 'Land {n} clean helmet hits', [10, 100, 500, 2000, 8000]],
@@ -11294,6 +11315,201 @@ function renderAwards(box) {
   box.append(tg);
 }
 applyCosmeticUnlocks();
+
+// ---------- the shop: lots of ways to spend prize money ----------
+// Weapon quality (per weapon), armour quality (per piece), tape rolls you use up and refill, squires, the club hall and training yard,
+// one-off boosts, an armourer for kit damage that carries over, extra colours and titles. All of it is saved in CAREER.shop.
+const QUAL_NAMES = ['Club issue', 'Rebalanced', 'Smith-made', 'Tempered', 'Master-forged', 'Legendary'];
+const ARM_NAMES = ['Starter', 'Fitted', 'Custom-made', 'Tempered', 'Master-made', 'Legendary'];
+const WQ_COST = [250, 700, 1800, 4500, 12000];
+const AQ_COST = [300, 800, 2000, 5000, 12500];
+const AQ_GROUPS = [
+  { key: 'helmet', name: 'Helmet', desc: 'Strap wear −10% and getting your bell rung −6% per tier.' },
+  { key: 'arms', name: 'Elbow cops', desc: 'Elbow strap wear −10% per tier.' },
+  { key: 'legs', name: 'Knee cops', desc: 'Knee strap wear −10% per tier.' },
+  { key: 'body', name: 'Breastplate', desc: 'Hits on you push 3% less per tier.' }
+];
+const PIECE_GROUP = { helmet: 'helmet', armL: 'arms', armR: 'arms', legs: 'legs' };
+// tape rolls: legal rolls run out and get refilled; duct tape and zip ties never run out (and never pass the kit check)
+const TAPE_STOCK = {
+  black: { full: 20, refill: 40, pack: 20 },
+  white: { full: 20, refill: 40, pack: 20 },
+  grey: { full: 20, refill: 40, pack: 20 },
+  pro: { full: 0, refill: 150, pack: 10 },
+  kevlar: { full: 0, refill: 400, pack: 10 }
+};
+Object.assign(TAPES, {
+  pro: { key: 'pro', name: 'Pro hockey tape', color: '#22355e', legal: true, haft: 'ok', wear: 1.35, note: 'Thick pro-grade cloth tape. Legal, and lasts longer than the club rolls.' },
+  kevlar: { key: 'kevlar', name: 'Kevlar cloth tape', color: '#b8952f', legal: true, haft: 'ok', wear: 1.2, note: 'Aramid-weave cloth tape. Legal, and very hard to wear through.' }
+});
+const SQUIRE_COST = [600, 1500, 4000];
+const HALL_COST = lv => Math.round(1000 * Math.pow(1.6, lv) / 50) * 50;
+const YARD_COST = lv => Math.round(800 * Math.pow(1.6, lv) / 50) * 50;
+const BOOSTS = [
+  { key: 'drink', name: 'Electrolyte drinks', desc: 'Your lungs refill faster for the next 3 matches.', cost: 90, n: 3 },
+  { key: 'coach', name: 'Coaching session', desc: '+50% XP for the next 3 matches.', cost: 300, n: 3 },
+  { key: 'agent', name: 'Fight agent', desc: '+25% prize money for the next 5 matches.', cost: 450, n: 5 }
+];
+const SHOP_TABARDS = [['#5b2a86', 'Royal purple', 400], ['#4f8fbf', 'Ice blue', 400], ['#e0601b', 'Blaze orange', 600], ['#0b1020', 'Midnight', 600], ['#0f7a4a', 'Emerald', 800], ['#b76e79', 'Rose gold', 1200], ['#f2f0e6', 'Bone white', 1500], ['#c9a227', 'Cloth of gold', 5000]];
+const SHOP_TRIMS = [['#e6c35c', 'Gold leaf', 800], ['#7cff4f', 'Neon green', 600], ['#3d6bff', 'Royal blue', 600], ['#c1121f', 'Blood red', 1000], ['#9b5de5', 'Violet', 1000], ['#00e5ff', 'Electric cyan', 2500]];
+const SHOP_TITLES = [['the Taped', 500], ['Strap Fixer', 1000], ['Iron Duke', 2500], ['Steel Baron', 5000], ['Tape Lord', 10000], ['the Unbreakable', 25000], ['Prairie Legend', 50000], ['King of the List', 100000], ['Buhurt Immortal', 250000]];
+const UP_MAX = 10;
+
+function shopState() {
+  const d = { wq: {}, aq: {}, tape: {}, sponsor: false, squires: 0, hall: 0, yard: 0, boost: {}, owned: {}, title: '', spent: 0 };
+  const s = CAREER.shop || (CAREER.shop = {}); for (const k in d) if (s[k] == null) s[k] = d[k]; // fill in place, so references stay live
+  for (const k in TAPE_STOCK) if (s.tape[k] == null) s.tape[k] = TAPE_STOCK[k].full;
+  return s;
+}
+function spend(cost, what) {
+  if (CAREER.purse < cost) { toastMenu(`Not enough in the purse: ${what || 'that'} costs ${fmtMoney(cost)}.`); return false; }
+  CAREER.purse -= cost; const s = shopState(); s.spent += cost; const t2 = S2(); t2.spent = (t2.spent || 0) + cost; unlock('shopper', true); progressSoon();
+  saveCareer(); updateTitlePurse(); try { AU.cheer(0.4); } catch (e) { }
+  return true;
+}
+// ---- effects read by the fight code (player only)
+// kit upgrades past level 3 count half, so level 10 is strong but not silly
+function upEff(lv) { return Math.min(lv, 3) + 0.5 * Math.max(0, lv - 3); }
+function shopUp() {
+  const out = {}; for (const k in CAREER.upgrades) out[k] = upEff(CAREER.upgrades[k] || 0);
+  if ((shopState().boost.drink || 0) > 0) out.cardio = (out.cardio || 0) + 2;
+  return out;
+}
+function weaponTier(f) { if (!f || !f.isPlayer || !f.weapon || f.weapon.key !== f.spec.weapon) return 0; return shopState().wq[f.weapon.key] || 0; }
+function armourTier(f, group) { if (!f || !f.isPlayer || typeof CAREER === 'undefined') return 0; return shopState().aq[group] || 0; }
+function pieceWearMult(f, piece) {
+  if (!f.isPlayer) return 1;
+  if (piece === 'haft') return Math.pow(0.88, weaponTier(f));
+  const g = PIECE_GROUP[piece]; return g ? 1 - 0.1 * armourTier(f, g) : 1;
+}
+function shopPrizeMult() { const s = shopState(); return 1 + 0.03 * s.hall + ((s.boost.agent || 0) > 0 ? 0.25 : 0); }
+function shopXpMult() { const s = shopState(); return 1 + 0.04 * s.yard + ((s.boost.coach || 0) > 0 ? 0.5 : 0); }
+// ---- tape stock, used by the repair bench
+function tapeLeft(k) { if (!TAPE_STOCK[k]) return Infinity; return shopState().tape[k] || 0; }
+function useTape(k) { if (!TAPE_STOCK[k] || (typeof CUTE !== 'undefined' && CUTE.on) || G.autopilot || G.attract) return; const s = shopState(); s.tape[k] = Math.max(0, (s.tape[k] || 0) - 1); saveCareer(); }
+function refillTape(k) {
+  const T = TAPE_STOCK[k]; if (!T) return false;
+  if (!spend(T.refill, TAPES[k].name)) return false;
+  const s = shopState(); s.tape[k] = (s.tape[k] || 0) + T.pack; saveCareer(); return true;
+}
+// after every career match: tick down boosts; a sponsor tops the club rolls back up for free
+function shopMatchEnd() {
+  const s = shopState();
+  for (const b of BOOSTS) if (s.boost[b.key] > 0) s.boost[b.key]--;
+  if (s.sponsor) for (const k of ['black', 'white', 'grey']) s.tape[k] = Math.max(s.tape[k] || 0, TAPE_STOCK[k].full);
+  saveCareer();
+}
+function shopApplyOwned() {
+  const s = shopState();
+  for (const [c] of SHOP_TABARDS) if (s.owned['tab' + c] && !TABARDS.includes(c)) TABARDS.push(c);
+  for (const [c] of SHOP_TRIMS) if (s.owned['trim' + c] && !TRIMS.includes(c)) TRIMS.push(c);
+}
+function carriedKits() {
+  const out = []; const S = store.get('season', null), R = store.get('run', null);
+  if (S && S.kit && S.stop < 6) out.push(['season', S]); if (R && R.kit) out.push(['run', R]);
+  return out;
+}
+function kitDamage(kit) { let d = 0; for (const k in kit) { const p = kit[k]; d += p.failed ? 1 : Math.max(0, 0.92 - p.cond); } return d; }
+function armourerCost() { let d = 0; for (const [, X] of carriedKits()) d += kitDamage(X.kit); return Math.max(0, Math.round(d * 220 / 10) * 10); }
+function armourerFix() {
+  const cost = armourerCost(); if (!cost) { toastMenu('Your kit is already in good shape.'); return; }
+  if (!spend(cost, 'The armourer')) return;
+  for (const [key, X] of carriedKits()) { for (const k in X.kit) { const p = X.kit[k]; p.cond = Math.max(p.cond, 0.92); p.failed = false; p.covered = false; p.tape = p.tape || 'black'; } store.set(key, X); }
+  toastMenu('The armourer fixed everything. Good as new.');
+}
+
+// ---- the Shop tab
+function renderShop(box) {
+  const s = shopState(), sec = G.shopSec || 'weapons';
+  box.append(h('div', { class: 'forgehead' }, h('span', { class: 'purse num' }, fmtMoney(CAREER.purse)), h('span', { class: 'muted small' }, `in your purse · ${fmtMoney(s.spent)} spent so far`)));
+  const seg = h('div', { class: 'seg small shopseg' });
+  for (const [k, t] of [['weapons', 'Weapons'], ['armour', 'Armour'], ['tape', 'Tape'], ['team', 'Team & club'], ['boosts', 'Boosts'], ['style', 'Style']]) seg.append(h('button', { 'aria-pressed': String(sec === k), onclick: () => { G.shopSec = k; AU.click(); renderCareer(); } }, t));
+  box.append(seg);
+  const list = h('div', { class: 'ups shop' }); box.append(list);
+  const row = (name, tierTxt, desc, btnTxt, can, buy, extra) => {
+    const b = h('button', { class: 'btn tape small', disabled: can ? null : true, onclick: () => { if (can && buy()) renderCareer(); } }, btnTxt);
+    list.append(h('div', { class: 'up' + (extra || '') }, h('div', null, h('div', { class: 'uph' }, h('b', null, name), tierTxt ? h('span', { class: 'tier' }, tierTxt) : null), h('div', { class: 'muted' }, desc)), b));
+  };
+  const bar = (lv, max) => { const p = h('span', { class: 'pipsN', 'aria-label': `${lv} of ${max}` }); for (let i = 0; i < max; i++) p.append(h('i', { class: i < lv ? 'on' : '' })); return p; };
+  if (sec === 'weapons') {
+    list.append(h('p', { class: 'muted small' }, 'Better-made weapons hit harder (+3% per tier), swing faster (−2.5%) and their haft wraps wear slower. Only the weapon you carry in gets the bonus.'));
+    const keys = PICK_WEAPONS.filter(k => WEAPONS[k]);
+    for (const k of keys) {
+      const W = WEAPONS[k], lv = s.wq[k] || 0, cost = WQ_COST[lv];
+      const cur = G.loadout && G.loadout.weapon === k;
+      row(`${W.name}${cur ? ' (equipped)' : ''}`, QUAL_NAMES[lv], lv >= 5 ? 'Legendary. As good as steel gets.' : `Next: ${QUAL_NAMES[lv + 1]}.`, lv >= 5 ? 'Maxed' : `Upgrade ${fmtMoney(cost)}`, lv < 5 && CAREER.purse >= cost,
+        () => { if (!spend(cost, W.name)) return false; s.wq[k] = lv + 1; saveCareer(); toastMenu(`${W.name}: now ${QUAL_NAMES[lv + 1]}.`); return true; }, cur ? ' cur' : '');
+      list.lastChild.querySelector('.uph').append(bar(lv, 5));
+    }
+  } else if (sec === 'armour') {
+    list.append(h('p', { class: 'muted small' }, 'Better armour wears slower, so your straps hold longer between repairs.'));
+    for (const G2 of AQ_GROUPS) {
+      const lv = s.aq[G2.key] || 0, cost = AQ_COST[lv];
+      row(G2.name, ARM_NAMES[lv], G2.desc, lv >= 5 ? 'Maxed' : `Upgrade ${fmtMoney(cost)}`, lv < 5 && CAREER.purse >= cost,
+        () => { if (!spend(cost, G2.name)) return false; s.aq[G2.key] = lv + 1; saveCareer(); toastMenu(`${G2.name}: now ${ARM_NAMES[lv + 1]}.`); return true; });
+      list.lastChild.querySelector('.uph').append(bar(lv, 5));
+    }
+    list.append(h('h4', null, 'Kit upgrades (now up to level 10)'));
+    for (const U of UPGRADES) {
+      const lv = CAREER.upgrades[U.key] || 0, cost = UP_COST[lv];
+      row(U.name, `Level ${lv}`, U.desc + (lv >= 3 ? ' Levels past 3 give half as much.' : ''), lv >= UP_MAX ? 'Maxed' : `Buy ${fmtMoney(cost)}`, lv < UP_MAX && CAREER.purse >= cost,
+        () => { if (!spend(cost, U.name)) return false; CAREER.upgrades[U.key] = lv + 1; saveCareer(); return true; });
+      list.lastChild.querySelector('.uph').append(bar(lv, UP_MAX));
+    }
+    const ac = armourerCost();
+    row('The armourer', null, carriedKits().length ? 'Fixes all the damage your kit is carrying in the summer season or a Gauntlet run.' : 'Fixes the damage your kit carries in the summer season or a Gauntlet run. Nothing to fix right now.', ac ? `Fix it all ${fmtMoney(ac)}` : 'Nothing to fix', ac > 0 && CAREER.purse >= ac, () => { armourerFix(); return true; });
+  } else if (sec === 'tape') {
+    list.append(h('p', { class: 'muted small' }, 'Every wrap at the repair bench uses one from the roll. Refill here. Pro and Kevlar tape are legal and last a lot longer on the strap.'));
+    for (const k of Object.keys(TAPE_STOCK)) {
+      const T = TAPE_STOCK[k], left = s.tape[k] || 0;
+      row(TAPES[k].name, `${left} wrap${left === 1 ? '' : 's'} left`, TAPES[k].note, `+${T.pack} wraps ${fmtMoney(T.refill)}`, CAREER.purse >= T.refill, () => refillTape(k), left === 0 ? ' empty' : '');
+      list.lastChild.querySelector('.uph').prepend(h('span', { class: 'roll', style: `--c:${TAPES[k].color}` }));
+    }
+    row('Tape sponsor', s.sponsor ? 'Signed' : null, 'A sponsor tops your black, white and grey rolls back up to full after every match. Forever.', s.sponsor ? 'Signed' : `Sign ${fmtMoney(5000)}`, !s.sponsor && CAREER.purse >= 5000,
+      () => { if (!spend(5000, 'A tape sponsor')) return false; s.sponsor = true; for (const k of ['black', 'white', 'grey']) s.tape[k] = Math.max(s.tape[k] || 0, TAPE_STOCK[k].full); saveCareer(); toastMenu('Sponsor signed. Free club tape for life.'); return true; });
+  } else if (sec === 'team') {
+    const sq = s.squires;
+    row('Hire squires', `${1 + sq} at the bench`, 'Each squire patches one strap for you per repair break.', sq >= 3 ? 'Maxed' : `Hire ${fmtMoney(SQUIRE_COST[sq])}`, sq < 3 && CAREER.purse >= SQUIRE_COST[sq],
+      () => { if (!spend(SQUIRE_COST[sq], 'A squire')) return false; s.squires = sq + 1; saveCareer(); return true; });
+    list.lastChild.querySelector('.uph').append(bar(sq, 3));
+    const hc = HALL_COST(s.hall);
+    row('Club hall', `Level ${s.hall}`, `Bigger hall, bigger crowds: +3% prize money per level (now +${3 * s.hall}%).`, s.hall >= 10 ? 'Maxed' : `Build ${fmtMoney(hc)}`, s.hall < 10 && CAREER.purse >= hc,
+      () => { if (!spend(hc, 'The club hall')) return false; s.hall++; saveCareer(); return true; });
+    list.lastChild.querySelector('.uph').append(bar(s.hall, 10));
+    const yc = YARD_COST(s.yard);
+    row('Training yard', `Level ${s.yard}`, `Pells, sandbags and a ring: +4% XP per level (now +${4 * s.yard}%).`, s.yard >= 10 ? 'Maxed' : `Build ${fmtMoney(yc)}`, s.yard < 10 && CAREER.purse >= yc,
+      () => { if (!spend(yc, 'The training yard')) return false; s.yard++; saveCareer(); return true; });
+    list.lastChild.querySelector('.uph').append(bar(s.yard, 10));
+  } else if (sec === 'boosts') {
+    list.append(h('p', { class: 'muted small' }, 'Short boosts for your next few matches. Buying again adds more matches.'));
+    for (const B of BOOSTS) {
+      const left = s.boost[B.key] || 0;
+      row(B.name, left ? `${left} match${left === 1 ? '' : 'es'} left` : null, B.desc, `Buy ${fmtMoney(B.cost)}`, CAREER.purse >= B.cost,
+        () => { if (!spend(B.cost, B.name)) return false; s.boost[B.key] = left + B.n; saveCareer(); return true; });
+    }
+  } else if (sec === 'style') {
+    list.append(h('p', { class: 'muted small' }, 'Extra tabard and trim colours (pick them in the Profile tab) and titles that show after your name.'));
+    for (const [c, nm, cost] of SHOP_TABARDS) {
+      const have = s.owned['tab' + c];
+      row(`${nm} tabard`, have ? 'Owned' : null, 'A new tabard colour.', have ? 'Owned' : `Buy ${fmtMoney(cost)}`, !have && CAREER.purse >= cost,
+        () => { if (!spend(cost, nm)) return false; s.owned['tab' + c] = 1; shopApplyOwned(); CAREER.club.tabard = c; saveCareer(); applyProfile(); toastMenu(`${nm} tabard on.`); return true; });
+      list.lastChild.querySelector('.uph').prepend(h('span', { class: 'sw mini', style: `--c:${c}` }));
+    }
+    for (const [c, nm, cost] of SHOP_TRIMS) {
+      const have = s.owned['trim' + c];
+      row(`${nm} trim`, have ? 'Owned' : null, 'A new trim colour.', have ? 'Owned' : `Buy ${fmtMoney(cost)}`, !have && CAREER.purse >= cost,
+        () => { if (!spend(cost, nm)) return false; s.owned['trim' + c] = 1; shopApplyOwned(); CAREER.club.trim = c; saveCareer(); applyProfile(); toastMenu(`${nm} trim on.`); return true; });
+      list.lastChild.querySelector('.uph').prepend(h('span', { class: 'sw mini', style: `--c:${c}` }));
+    }
+    list.append(h('h4', null, 'Titles'));
+    for (const [t, cost] of SHOP_TITLES) {
+      const have = s.owned['title:' + t], on = s.title === t;
+      row(`“${t}”`, on ? 'Wearing' : have ? 'Owned' : null, on ? 'Shows after your name.' : 'Shows after your name on your fighter card.', on ? 'Take off' : have ? 'Wear it' : `Buy ${fmtMoney(cost)}`, on || have || CAREER.purse >= cost,
+        () => { if (on) { s.title = ''; } else if (have) { s.title = t; } else { if (!spend(cost, 'That title')) return false; s.owned['title:' + t] = 1; s.title = t; } saveCareer(); updateTitlePurse(); return true; });
+    }
+  }
+}
+shopState(); shopApplyOwned();
 
 // ---------- screens, matches, the Red Deer Rumble ----------
 const SCREENS = ['title', 'howto', 'settings', 'tactics', 'sheetScr', 'repair', 'msgScr', 'pause', 'modes', 'ladder', 'career'];
@@ -12641,7 +12857,7 @@ async function boot(hot) {
   toTitle();
   requestAnimationFrame(frame);
   if (location.hash === '#autotest') setTimeout(autotest, 300);
-  window.__ST = { G, AU, buildShield, buildWeapon, W3, startTourney, quickFight, toTitle, openRepair, kitCheck, setupMatch, toTactics, beginFight, endRound, matchEnd, CLUBS, WEAPONS, setView, toast, renderKitPicker, applyLoadout, IN, FP, showScreen, weaponIcon, startCine, startTraining, startLadder, openCareer, openModes, openLadder, CAREER, setLesson, TR, unlock, togglePause, afterRound, renderHow, selectPiece, selectTape, msg, renderSheet, setHud, endTraining, setMode, PAD, navMove, focusFirst, sparks, CUTE, THREE, BREATH, setCuteDeco, flipFx, PHOTO, UAL, raiseFlags, startVersus, startFFA, startBracket, startKid, KID, openSeason, startSeasonMatch, setVenue, VS, SPLIT, NET, buildOnlineMatch, hostLobby, joinLobby, ONL, vinControl, openRun, openDaily, openBracket, showBracket, bracketResult, ffaMatchEnd, ffaLeader, ffaWinner, endKid, openPhoto, closePhoto, startReplay, stopReplay, RP, store, startRunFight, newRun, runEnd, WX, setWeather, padVin, readVersus, applyLo, myLoadout, netDropped, netLeave, showIntro, installForged, dailyPlan, openKids, openVersus, openPicks, LESSONS, rivalClub, startGrudge, startDaily, seasonState, newSeason, refreshDaily, VENUES, COMM, hitMapHtml, resetFighterForRound, DIFF, PIN, PADS, NIN, padsUpdate, seatPads, LOBBY, MM, openOnlineHub, benchDown, benchMove, REP, squirePatch, coverage, openProfile, myProfile, BOS, updateTitlePurse, ACH, progressCheck, challenges, masteryOf, S2, rankOf, counterValue, renderCareer, progressMatch };
+  window.__ST = { G, AU, buildShield, buildWeapon, W3, startTourney, quickFight, toTitle, openRepair, kitCheck, setupMatch, toTactics, beginFight, endRound, matchEnd, CLUBS, WEAPONS, setView, toast, renderKitPicker, applyLoadout, IN, FP, showScreen, weaponIcon, startCine, startTraining, startLadder, openCareer, openModes, openLadder, CAREER, setLesson, TR, unlock, togglePause, afterRound, renderHow, selectPiece, selectTape, msg, renderSheet, setHud, endTraining, setMode, PAD, navMove, focusFirst, sparks, CUTE, THREE, BREATH, setCuteDeco, flipFx, PHOTO, UAL, raiseFlags, startVersus, startFFA, startBracket, startKid, KID, openSeason, startSeasonMatch, setVenue, VS, SPLIT, NET, buildOnlineMatch, hostLobby, joinLobby, ONL, vinControl, openRun, openDaily, openBracket, showBracket, bracketResult, ffaMatchEnd, ffaLeader, ffaWinner, endKid, openPhoto, closePhoto, startReplay, stopReplay, RP, store, startRunFight, newRun, runEnd, WX, setWeather, padVin, readVersus, applyLo, myLoadout, netDropped, netLeave, showIntro, installForged, dailyPlan, openKids, openVersus, openPicks, LESSONS, rivalClub, startGrudge, startDaily, seasonState, newSeason, refreshDaily, VENUES, COMM, hitMapHtml, resetFighterForRound, DIFF, PIN, PADS, NIN, padsUpdate, seatPads, LOBBY, MM, openOnlineHub, benchDown, benchMove, REP, squirePatch, coverage, openProfile, myProfile, BOS, updateTitlePurse, ACH, progressCheck, challenges, masteryOf, S2, rankOf, counterValue, renderCareer, progressMatch, saveCareer, shopState, shopUp, tapeLeft, shopMatchEnd, shopPrizeMult, shopXpMult, swingTimes, pieceWearMult, TABARDS, refillTape, renderShop, UPGRADES, freshKit, TAPE_STOCK };
 }
 
 function autotest() {
