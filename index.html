@@ -1,5 +1,5 @@
 <!doctype html><html><head><meta charset="utf-8"><link rel="manifest" href="manifest.webmanifest"><meta name="theme-color" content="#0f1316"><link rel="apple-touch-icon" href="icon-192.png"><meta name="apple-mobile-web-app-capable" content="yes"><meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover"></head><body>
-<title>Buhurt: Steel &amp; Tape</title>
+<script>window.BUILD_VER="steel-tape-5189bc70b2";</script><title>Buhurt: Steel &amp; Tape</title>
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Barlow+Semi+Condensed:wght@400;500;600;700&family=Big+Shoulders+Display:wght@700;800;900&family=Permanent+Marker&display=swap">
@@ -1006,6 +1006,8 @@ body:not(.split) #pips:not([hidden]) ~ #statstrip{top:calc(var(--st) + 78px)}
 #wind .gdir{position:absolute;left:50%;transform:translateX(-50%);top:-22px;white-space:nowrap;font-size:.72rem;letter-spacing:.08em;color:#f2c40f;background:rgba(10,13,15,.75);padding:2px 8px}
 #wind .gdir.mid{color:#c9c2b2}
 #wind .gdir[hidden]{display:none}
+.teamrow{display:flex;align-items:center;gap:10px}
+.teamdot{width:36px;height:36px;border-radius:50%;background:var(--a);border:3px solid var(--b);display:flex;align-items:center;justify-content:center;font-weight:900;color:#fff;text-shadow:0 1px 2px #000;flex:none}
 
 </style>
 <div id="app">
@@ -1131,9 +1133,9 @@ body:not(.split) #pips:not([hidden]) ~ #statstrip{top:calc(var(--st) + 78px)}
   <!-- CHARACTER CREATOR: the first thing a new fighter does after the test fight -->
   <section class="screen dimmed" id="creator" hidden>
     <div class="panel wide">
-      <header class="phead"><div class="ttape tape mk">Your fighter</div><h2 class="msgtitle">Make your fighter</h2></header>
+      <header class="phead"><div class="ttape tape mk">Your fighter</div><h2 class="msgtitle" id="creatorTitle">Make your fighter</h2></header>
       <div class="pbody" id="creatorBody"></div>
-      <footer class="pfoot"><button class="btn primary flagtape" id="creatorDone" data-gp="A">Into the festival</button></footer>
+      <footer class="pfoot"><button class="btn tape" id="creatorBack">Change team</button><button class="btn primary flagtape" id="creatorDone" data-gp="A">Into the festival</button></footer>
     </div>
   </section>
   <section class="screen dimmed" id="howto" hidden>
@@ -1364,6 +1366,7 @@ body:not(.split) #pips:not([hidden]) ~ #statstrip{top:calc(var(--st) + 78px)}
           <button class="btn tape" id="btnPhoto">Photo mode</button>
           <button class="btn tape" id="btnReplay">Instant replay</button>
           <button class="btn tape" id="btnPausePad">Controller setup</button>
+          <button class="btn tape" id="btnPauseFeedback">Report a bug / idea</button>
         </div>
         <button class="btn tape quiet" id="btnQuit">Quit to title</button>
         <p class="muted small" id="pauseNote">Yielding counts as grounded (BR 1.3.1).</p>
@@ -11186,7 +11189,7 @@ function fmtMoney(n) { return '$' + Math.round(n).toLocaleString('en-CA'); }
 function applyProfile() {
   const C = CLUBS.reavers, P = CAREER.club;
   C.name = C.full = P.name || 'Reavers'; C.short = (P.short || C.name.slice(0, 3)).toUpperCase().slice(0, 3); C.tabard = P.tabard; C.trim = P.trim; C.charge = P.charge;
-  C.roster[0].dispNum = CAREER.num;
+  C.roster[0].dispNum = CAREER.num; C.bos = P.bos || null;
   delete _tabardCache.reavers; delete _shieldCache.reavers;
   if (FP.vm) { FP.vm.team = null; }
   updateTitlePurse();
@@ -11226,6 +11229,8 @@ function renderCareer() {
     const prev = () => { pv.innerHTML = ''; pv.append(shieldPreview(P, 92), h('b', null, P.name), h('span', { class: 'muted' }, `${P.short} · number ${CAREER.num}`)); };
     const sw = (list, key) => { const row = h('div', { class: 'swatches' }); for (const c of list) row.append(h('button', { class: 'sw', style: `--c:${c}`, 'aria-pressed': String(P[key] === c), 'aria-label': c, onclick: () => { P[key] = c; saveCareer(); applyProfile(); renderCareer(); AU.click(); } })); return row; };
     const chg = h('div', { class: 'seg small' }); for (const [v, t] of CHARGES) chg.append(h('button', { 'aria-pressed': String(P.charge === v), onclick: () => { P.charge = v; saveCareer(); applyProfile(); renderCareer(); AU.click(); } }, t));
+    const teamRow = h('div', { class: 'up vcard vwide' }, h('div', null, h('b', null, P.bos ? `Team: ${P.name}` : 'Not on a team'), h('div', { class: 'muted small' }, P.bos ? 'Your BuhurtOS team. Your real team-mates fill the roster.' : 'Fighting under your own banner.')), h('button', { class: 'btn tape small', onclick: () => { AU.click(); G.creatorReturn = () => { renderCareer(); showScreen('career'); }; CAREER.teamPicked = false; saveCareer(); openCreator(); } }, 'Change team'));
+    box.append(teamRow);
     box.append(h('div', { class: 'profgrid' },
       h('div', { class: 'stack' }, h('div', { class: 'row fields' }, field('Fighter name', nameIn), field('Number', numIn)), h('div', { class: 'row fields' }, field('Club', clubIn), field('Short name', shortIn)),
         h('span', { class: 'label' }, 'Tabard'), sw(TABARDS, 'tabard'), h('span', { class: 'label' }, 'Trim'), sw(TRIMS, 'trim'), h('span', { class: 'label' }, 'Charge'), chg),
@@ -11260,6 +11265,7 @@ function openCareer(tab) { G.backTo = G.screen === 'msgScr' ? 'title' : 'title';
 
 // prize money and match achievements at full time
 function careerMatchEnd(m, won) {
+  if (typeof eventMatch === 'function') eventMatch(m, won);
   if (G.autopilot || G.attract || m.training) return null;
   const S = CAREER.stats; S.matches++; if (won) S.wins++;
   if (m.category === 'youth') { sticker('unicorn'); if (won) sticker('star'); }
@@ -12493,6 +12499,7 @@ function setupMatch(o) {
       if (team === 1 && o.mode === 1 && !o.pro && !o.attract && G.player) { const st = duelStyle(G.player.spec); spec = { ...spec, weapon: st.weapon, shield: st.shield }; }
       if (spec.player && team === 0 && !o.attract) spec = playerSpec(spec);
       else if (club.key === 'rival' || spec.keep) { /* your rival (and named knights) keep their own names */ }
+      else if (spec.ladder != null && typeof ladderWho === 'function' && ladderWho(spec.ladder, cat)) { const W = ladderWho(spec.ladder, cat); spec = { ...spec, name: W.name, bos: { id: W.id, team: W.team } }; }
       else if (spec.ladder != null) { const L = LADDER[spec.ladder]; spec = { ...spec, name: `${L.names[cat === 'men' ? 0 : cat === 'women' ? 1 : 2]} ${L.sur}` }; }
       else if (typeof rosterName === 'function' && (spec.rn = rosterName(club, spec, cat, usedNames, o))) spec = { ...spec, name: spec.rn.name, bos: spec.rn.bos };
       else { const pool = NAMES[cat]; let k = (club.key.length * 7 + spec.num * 3 + (cat === 'men' ? 0 : 5)) % pool.length; let guard = 0; while (usedNames[pool[k]] && guard++ < pool.length) k = (k + 1) % pool.length; usedNames[pool[k]] = 1; spec = { ...spec, name: pool[k] }; }
@@ -12849,7 +12856,7 @@ function openModes() {
     for (const [k, t, d] of PARTY_MODS) ms.append(h('button', { 'aria-pressed': String(G.quickMods.includes(k)), title: d, onclick: () => { G.quickMods = G.quickMods.includes(k) ? G.quickMods.filter(x => x !== k) : G.quickMods.concat(k); store.set('quickMods', G.quickMods); openModes(); AU.click(); } }, t)); }
   const wx = $('#weatherSeg'); if (wx) { wx.innerHTML = ''; for (const [v, t] of [['clear', 'Clear'], ['rain', 'Rain'], ['snow', 'Snow'], ['random', 'Random']]) wx.append(h('button', { 'aria-pressed': String((G.quickWeather || 'clear') === v), onclick: () => { G.quickWeather = v; openModes(); AU.click(); } }, t)); }
   const seg = $('#oppSeg'); seg.innerHTML = '';
-  for (const [v, t] of [['random', 'Random'], ['wardens', 'Bow River Wardens'], ['rabble', 'Ironwood Rabble']]) seg.append(h('button', { 'aria-pressed': String((G.quickOpp || 'random') === v), onclick: () => { G.quickOpp = v; openModes(); } }, t));
+  for (const [v, t] of [['random', 'Random'], ['wardens', CLUBS.wardens.name], ['rabble', CLUBS.rabble.name]]) seg.append(h('button', { 'aria-pressed': String((G.quickOpp || 'random') === v), onclick: () => { G.quickOpp = v; openModes(); } }, t));
   box.append(h('button', { class: 'mode', onclick: () => { AU.click(); openKids(); } }, h('span', { class: 'big' }, '🎈'), h('b', null, 'Little Knights games'), h('span', null, 'Foam dummies, balloon pop and catch the pig, plus a sticker book.')));
   box.append(h('button', { class: 'mode', onclick: () => { AU.click(); openRival(); } }, h('span', { class: 'big num', html: 'VS' }), h('b', null, 'Grudge match'), h('span', null, `Your rival, ${rivalName(G.category)}, remembers how you beat them.`)));
   box.append(h('button', { class: 'mode', onclick: () => { AU.click(); openVersus(); } }, h('span', { class: 'big num', html: 'P1<i>v</i>P2' }), h('b', null, 'Local versus'), h('span', null, 'Two players on one screen: two controllers, or keyboard and a controller.')));
@@ -12861,11 +12868,11 @@ function openLadder() {
   G.backTo = 'title'; setHud(false); if (G.phase === 'over' || G.phase === 'between') { startAttract(); }
   const box = $('#ladderRungs'); box.innerHTML = ''; const cat = G.category; const top = CAREER.ladder.rung;
   LADDER.forEach((L, i) => {
-    const nm = `${L.names[cat === 'men' ? 0 : cat === 'women' ? 1 : 2]} ${L.sur}`; const done = i < top, open = i <= top;
+    const W = typeof ladderWho === 'function' ? ladderWho(i, cat) : null, nm = W ? W.name : `${L.names[cat === 'men' ? 0 : cat === 'women' ? 1 : 2]} ${L.sur}`; const done = i < top, open = i <= top;
     const w = WEAPONS[L.weapon];
     box.append(h('li', null, h('button', { class: 'rung' + (done ? ' done' : '') + (i === top ? ' next' : ''), disabled: open ? null : true, onclick: () => { AU.init(); startLadder(i); } },
       h('span', { class: 'rn num' }, String(i + 1)),
-      h('span', null, h('b', null, nm), h('span', { class: 'kit' }, `${L.champ ? 'Rumble champion, ' : ''}${L.from}. ${ARCH[L.arch].name}, ${w.name.toLowerCase()}${L.shield ? ' and ' + SHIELDS[L.shield].name.toLowerCase() : ''}, ${HELMS[L.helm].name.toLowerCase()}.`)),
+      h('span', null, h('b', null, nm), h('span', { class: 'kit' }, `${L.champ ? 'Rumble champion, ' : ''}${W && CLUBS['ladder' + i].bos ? (ROSTER.teams.find(t => t.slug === CLUBS['ladder' + i].bos) || {}).name || L.from : L.from}. ${ARCH[L.arch].name}, ${w.name.toLowerCase()}${L.shield ? ' and ' + SHIELDS[L.shield].name.toLowerCase() : ''}, ${HELMS[L.helm].name.toLowerCase()}.`)),
       h('span', { class: 'stt' }, done ? 'Beaten' : open ? `Fight · ${fmtMoney(50 * (i + 1))}` : 'Locked'))));
   });
   $('#ladderProg').textContent = `${Math.min(top, LADDER.length)} of ${LADDER.length} beaten`;
@@ -12964,9 +12971,10 @@ function initMenus() {
   $('#btnFull').onclick = () => goFullscreen(true);
   $('#btnPadSetup').onclick = () => { AU.click(); openPadSetup(); };
   $('#btnBos').onclick = () => { AU.click(); const back = () => showScreen('settings'); if (BOS.info) msg('buhurtos', 'BuhurtOS account', '<div id="bosBox" class="bosbox"></div>', [['Back', back, true]]), renderBosBox(); else openBosSignIn(back); };
-  setTimeout(bosBoot, 0); setTimeout(() => { if (typeof rosterLoad === 'function') rosterLoad(); }, 1500);
+  setTimeout(bosBoot, 0); setTimeout(() => { if (typeof rosterLoad === 'function') rosterLoad(); }, 1500); setTimeout(() => { if (typeof eventSession === 'function') eventSession(); }, 4000);
   { const segL = () => $$('#lettersSeg button').forEach(b => b.setAttribute('aria-pressed', String(b.dataset.l === (G.settings.padLetters || 'auto')))); segL(); $$('#lettersSeg button').forEach(b => b.onclick = () => { G.settings.padLetters = b.dataset.l; saveSettings(); segL(); NIN.on = null; checkNintendo(); AU.click(); }); }
   $('#btnPausePad').onclick = () => { AU.click(); openPadSetup(() => showScreen('pause')); };
+  $('#btnPauseFeedback').onclick = () => { AU.click(); openFeedback(() => showScreen('pause')); };
   { const sl = $('#optSens'); sl.value = String(G.settings.sens || 1); sl.oninput = () => { G.settings.sens = +sl.value; saveSettings(); }; }
   $('#muteBtn').onclick = () => { AU.init(); AU.setMuted(!AU.muted); $('#muteWave').style.display = AU.muted ? 'none' : ''; store.set('muted', AU.muted); };
 }
@@ -13196,12 +13204,14 @@ function rivalState() {
   if (!CAREER.rival) { const i = (Math.random() * 4) | 0; CAREER.rival = { pick: i, arch: pick(['striker', 'grappler', 'heavy', 'runner']), helm: pick(['greathelm', 'pigface', 'sallet', 'barbute']), w: 0, l: 0, brace: 0, guard: 0, react: 0, last: null, taunt: 0 }; saveCareer(); }
   return CAREER.rival;
 }
-function rivalName(cat) { const R = rivalState(); return (RIVAL_NAMES[cat] || RIVAL_NAMES.men)[R.pick % 4]; }
+function rivalName(cat) { const R = rivalState(); if (CLUBS.rival && CLUBS.rival.roster[0].keep) return CLUBS.rival.roster[0].name; return (RIVAL_NAMES[cat] || RIVAL_NAMES.men)[R.pick % 4]; }
 function rivalClub() {
   const R = rivalState(), cat = G.category, nm = rivalName(cat);
   const lvl = R.w + R.l, prof = { react: Math.max(0.1, 0.26 - 0.02 * lvl - 0.04 * R.react), aggr: 1.0 + 0.04 * lvl, guard: Math.min(0.85, 0.5 + 0.08 * R.guard + 0.02 * lvl), cancel: 0.9 };
-  CLUBS.rival = { key: 'rival', name: 'Black Hollow', full: `${nm} of Black Hollow`, short: 'BLK', tabard: '#231a2e', trim: '#c9a227', charge: 'saltire', flag: '#3b93ff',
-    roster: [{ num: 13, name: nm, arch: R.arch, weapon: 'sword', shield: 'heater', helm: R.helm, prof, stab: 1.02 + 0.03 * Math.min(6, lvl) + 0.05 * R.brace }] };
+  const RT = typeof ROSTER !== 'undefined' && ROSTER.rebranded ? (() => { const r = seeded('rival' + (CAREER.club.bos || '') + R.pick); const ts = ROSTER.teams.filter(t => t.slug !== CAREER.club.bos && ROSTER.fighters.some(f => f.team === t.slug)); return ts.length ? ts[Math.floor(r() * ts.length)] : null; })() : null;
+  const RB = RT && CLUBS['bos:' + RT.slug], rnm = RT ? (ROSTER.fighters.filter(f => f.team === RT.slug && (cat === 'women' ? f.g !== 'm' : f.g !== 'f'))[R.pick % 4] || ROSTER.fighters.find(f => f.team === RT.slug)) : null;
+  CLUBS.rival = { key: 'rival', name: RB ? RB.name : 'Black Hollow', full: `${rnm ? rnm.name : nm} of ${RB ? RB.full : 'Black Hollow'}`, short: RB ? RB.short : 'BLK', tabard: RB ? RB.tabard : '#231a2e', trim: RB ? RB.trim : '#c9a227', charge: RB ? RB.charge : 'saltire', flag: '#3b93ff', bos: RT ? RT.slug : null,
+    roster: [{ num: 13, name: rnm ? rnm.name : nm, keep: !!rnm, bos: rnm ? { id: rnm.id, team: rnm.team } : null, arch: R.arch, weapon: 'sword', shield: 'heater', helm: R.helm, prof, stab: 1.02 + 0.03 * Math.min(6, lvl) + 0.05 * R.brace }] };
   return CLUBS.rival;
 }
 function startGrudge() {
@@ -14756,7 +14766,7 @@ function poolName(used) {
 }
 // load the roster: cached for a day, refreshed in the background; the live list refreshes every 30 s in town
 function rosterLoad(force) {
-  try { const c = store.get('bosRoster', null); if (c && c.teams && !ROSTER.ok) { Object.assign(ROSTER, c, { live: [], ok: true }); rosterClubs(); } } catch (e) { }
+  try { const c = store.get('bosRoster', null); if (c && c.teams && !ROSTER.ok) { Object.assign(ROSTER, c, { live: [], ok: true }); rosterClubs(); rosterRebrand(); } } catch (e) { }
   const stale = Date.now() - (ROSTER.at || 0) > (force ? 30000 : 86400000);
   if (!stale || ROSTER.loading || typeof fetch !== 'function') return;
   ROSTER.loading = true;
@@ -14764,7 +14774,7 @@ function rosterLoad(force) {
     ROSTER.loading = false; if (!d || !Array.isArray(d.teams)) return;
     ROSTER.teams = d.teams; ROSTER.fighters = d.fighters || []; ROSTER.live = d.live || []; ROSTER.at = Date.now(); ROSTER.ok = true;
     try { store.set('bosRoster', { teams: ROSTER.teams, fighters: ROSTER.fighters, at: ROSTER.at }); } catch (e) { }
-    rosterClubs(); rosterLive();
+    rosterClubs(); rosterRebrand(); rosterLive();
   }).catch(() => { ROSTER.loading = false; });
 }
 // a colour per team: their own if they set one, otherwise one picked from their name
@@ -14784,6 +14794,31 @@ function rosterClubs() {
       roster: tmpl.map(s => ({ ...s, player: false, captain: false })) };
   }
 }
+// the made-up clubs (Bow River Wardens, Ironwood Rabble, the league, the ladder's fighters) become real BuhurtOS teams
+// and fighters as soon as the roster is known, so nobody fights an invented team. Stable per player (seeded by their team).
+function rosterRebrand() {
+  if (!ROSTER.ok || !ROSTER.teams.length) return;
+  const mine = (CAREER.club && CAREER.club.bos) || null, rnd = seeded('rebrand:' + (mine || 'none'));
+  const count = T => ROSTER.fighters.filter(f => f.team === T.slug).length;
+  const pool = ROSTER.teams.filter(T => T.slug !== mine && count(T) >= 1).sort((a, b) => count(b) - count(a) || a.slug.localeCompare(b.slug));
+  if (pool.length < 2) return;
+  const shuffled = pool.slice(); for (let i = shuffled.length - 1; i > 0; i--) { const j = Math.floor(rnd() * (i + 1)); [shuffled[i], shuffled[j]] = [shuffled[j], shuffled[i]]; }
+  const brand = (key, T) => { const C = CLUBS[key]; if (!C || !T) return; rosterClubs(); const B = CLUBS['bos:' + T.slug]; if (!B) return; Object.assign(C, { name: B.name, full: B.full, short: B.short, tabard: B.tabard, trim: B.trim, charge: B.charge, bos: T.slug }); };
+  const pickT = i => shuffled[i % shuffled.length];
+  brand('wardens', pickT(0)); brand('rabble', pickT(1));
+  if (typeof LEAGUE_EXTRA !== 'undefined') { if (typeof ensureLeagueClubs === 'function') ensureLeagueClubs(); LEAGUE_EXTRA.forEach((L, i) => { const T = pickT(2 + i), B = CLUBS['bos:' + T.slug]; if (!B) return; Object.assign(L, { name: B.name, short: B.short, tabard: B.tabard, trim: B.trim, charge: B.charge }); brand(L.key, T); }); }
+  // the ladder: six real fighters, each from a different team where possible, one name per category
+  const used = {};
+  LADDER.forEach((L, i) => {
+    const T = pickT(5 + i), who = {};
+    for (const g of ['m', 'f']) { let list = ROSTER.fighters.filter(f => f.team === T.slug && (f.g === g || f.g == null) && !used[f.name]); if (!list.length) list = ROSTER.fighters.filter(f => (f.g === g || f.g == null) && !used[f.name]); if (!list.length) continue; const F = list[Math.floor(rnd() * list.length)]; used[F.name] = 1; who[g] = F; }
+    const C = CLUBS['ladder' + i]; if (!C || (!who.m && !who.f)) return;
+    brand('ladder' + i, T); C.who = who; C.name = (who.m || who.f).name.split(' ').slice(-1)[0]; C.full = `${(who.m || who.f).name} of ${C.full || T.name}`;
+  });
+  ROSTER.rebranded = true;
+}
+// the ladder rung's real fighter for this category (null if the roster isn't known)
+function ladderWho(i, cat) { const C = CLUBS['ladder' + i]; if (!C || !C.who) return null; return cat === 'women' ? (C.who.f || C.who.m) : (C.who.m || C.who.f); }
 function rosterClubKeys(min) { return Object.keys(CLUBS).filter(k => k.startsWith('bos:') && ROSTER.fighters.filter(f => f.team === CLUBS[k].bos).length >= (min || 1)); }
 // a name for a bot: a real fighter (their own club's first), else the pool. Returns { name, bos }
 function rosterName(club, spec, cat, used, o) {
@@ -14884,34 +14919,87 @@ function onbAfterFight(m, won, withPurse) {
     [['Teach me', () => { onbSet('create'); G.onbTrain = true; startTraining(); }, true], ['I’ve got it', () => { onbSet('create'); openCreator(); }]]);
 }
 function onbHelp() { msg('welcome back', 'Help learning?', '<p>Want some help learning the moves before the festival?</p>', [['Teach me', () => { onbSet('create'); G.onbTrain = true; startTraining(); }, true], ['I’ve got it', () => { onbSet('create'); openCreator(); }]]); }
-// ---- the character creator
+// ---- the character creator: sign in with BuhurtOS, join your real team (or say you're not on one), make your fighter
 function openCreator() {
-  G.backTo = 'title'; skillsState(); const P = CAREER.club, L = lookState(), lo = G.loadout;
-  const box = $('#creatorBody'); box.innerHTML = '';
+  G.backTo = 'title'; skillsState();
+  if (typeof rosterLoad === 'function') rosterLoad();
+  if (!BOS.user) { creatorSignIn(); return; }
+  if (!CAREER.teamPicked) { creatorTeam(); return; }
+  creatorFighter();
+}
+function creatorSignIn() {
+  msg('your fighter', 'Sign in with BuhurtOS', `<p>Everyone in the realm plays as themselves: your BuhurtOS account names your fighter and puts you on your real team. Not on BuhurtOS yet? Use <b>Email me a code</b> or <b>Google</b> / <b>Discord</b> below and an account is made for you.</p>
+    <label class="runcode"><span>Email</span><input id="bosEmail" type="email" autocomplete="email" placeholder="you@example.com"></label>
+    <label class="runcode"><span>Password</span><input id="bosPass" type="password" autocomplete="current-password"></label>
+    <div class="bosalt"><button class="btn tape small" id="bosCode">Email me a code (new or existing)</button><button class="btn tape small" id="bosGoogle">Google</button><button class="btn tape small" id="bosDiscord">Discord</button></div>
+    <p class="muted small" id="bosMsg"></p>`,
+    [['Sign in', () => bosPassword(openCreator), true]]);
+  const say = t => { const m = $('#bosMsg'); if (m) m.textContent = t; };
+  $('#bosCode').onclick = async () => {
+    const email = ($('#bosEmail').value || '').trim(); if (!email) { say('Type your email first.'); return; }
+    say('Sending…');
+    try { const { error } = await (await bosClient()).auth.signInWithOtp({ email, options: { shouldCreateUser: true } }); if (error) throw error; BOS.otpEmail = email; openBosCode(openCreator); } catch (e) { say('Couldn’t send a code: ' + (e.message || e)); }
+  };
+  const oauth = provider => async () => { say('Opening ' + provider + '…'); try { await (await bosClient()).auth.signInWithOAuth({ provider, options: { redirectTo: location.origin + location.pathname } }); } catch (e) { say('Couldn’t open ' + provider + ': ' + (e.message || e)); } };
+  $('#bosGoogle').onclick = oauth('google'); $('#bosDiscord').onclick = oauth('discord');
+}
+// the team: your own if BuhurtOS knows you as a fighter, else pick one, or say you're not on a team
+function creatorTeam() {
+  const I = BOS.info || {}, mine = I.fighter && typeof ROSTER !== 'undefined' && ROSTER.fighters.find(f => f.id === I.fighter);
+  const teams = (typeof ROSTER !== 'undefined' && ROSTER.teams) || [];
+  const box = $('#creatorBody'); box.innerHTML = ''; $('#creatorTitle').textContent = 'Your team';
+  const choose = (slug, name) => { creatorJoin(slug, name); if (G.creatorReturn) { const r = G.creatorReturn; G.creatorReturn = null; r(); } else creatorFighter(); };
+  if (mine && mine.team) {
+    const T = teams.find(t => t.slug === mine.team), tn = T ? T.name : I.team;
+    box.append(h('p', null, 'BuhurtOS knows you: ', h('b', null, I.name), ' of ', h('b', null, tn), '.'),
+      h('div', { class: 'ups shop' }, h('div', { class: 'up' }, h('div', null, h('div', { class: 'uph' }, h('b', null, tn), h('span', { class: 'tier' }, 'Your team')), h('div', { class: 'muted' }, 'You fight in your team’s colours, and your real team-mates fill the roster.')), h('button', { class: 'btn primary flagtape small', onclick: () => { AU.click(); choose(mine.team, tn); } }, 'Join'))));
+  } else {
+    box.append(h('p', { class: 'muted small' }, I.fighter ? 'Your BuhurtOS fighter isn’t on a team yet. Pick the team you fight with, or carry on as a festival-goer.' : 'Pick the team you fight with. Not a fighter on a team? That’s fine: carry on as a festival-goer with your own colours.'));
+    const list = h('div', { class: 'ups shop' }); box.append(list);
+    if (!teams.length) list.append(h('p', { class: 'muted small' }, 'Fetching the teams from BuhurtOS… if nothing appears, check you’re online and try again.'));
+    for (const T of teams.slice().sort((a, b) => a.name.localeCompare(b.name))) {
+      const n = (typeof ROSTER !== 'undefined' ? ROSTER.fighters : []).filter(f => f.team === T.slug).length, [tab, trim] = teamColours(T);
+      list.append(h('div', { class: 'up' }, h('div', { class: 'teamrow' }, h('span', { class: 'teamdot', style: `--a:${tab};--b:${trim}` }, T.initial), h('div', null, h('b', null, T.name), h('div', { class: 'muted small' }, `${n} fighter${n === 1 ? '' : 's'} on BuhurtOS`))), h('button', { class: 'btn tape small', onclick: () => { AU.click(); choose(T.slug, T.name); } }, 'Join')));
+    }
+    list.append(h('div', { class: 'up' }, h('div', null, h('div', { class: 'uph' }, h('b', null, 'Not on a team'), h('span', { class: 'tier' }, 'Festival-goer')), h('div', { class: 'muted' }, 'Fight under your own banner. You can join a team later in Your fighter → Profile.')), h('button', { class: 'btn tape small', onclick: () => { AU.click(); choose(null, null); } }, 'Carry on')));
+  }
+  $('#creatorDone').hidden = true; $('#creatorBack').hidden = true;
+  showScreen('creator');
+}
+function creatorJoin(slug, name) {
+  const P = CAREER.club;
+  if (slug) { const T = (ROSTER.teams || []).find(t => t.slug === slug), [tab, trim] = T ? teamColours(T) : [P.tabard, P.trim]; P.name = (name || slug).replace(/^The /, '').slice(0, 22); P.short = ((T && T.initial) || P.name.slice(0, 1)).toUpperCase() + P.name.replace(/[^A-Za-z]/g, '').slice(1, 3).toUpperCase(); P.tabard = tab; P.trim = trim; P.bos = slug; }
+  else { P.bos = null; if (!P.name || P.name === 'Reavers') P.name = 'Festival Company'; }
+  CAREER.teamPicked = true; saveCareer(); applyProfile();
+}
+function creatorFighter() {
+  const P = CAREER.club, L = lookState(), lo = G.loadout, I = BOS.info || {};
+  if (I.name && (CAREER.name === 'You' || !CAREER.name)) CAREER.name = String(I.name).slice(0, 16);
+  const box = $('#creatorBody'); box.innerHTML = ''; $('#creatorTitle').textContent = 'Make your fighter';
   const field = (label, input) => h('label', { class: 'fld' }, h('span', { class: 'label' }, label), input);
   const nameIn = h('input', { type: 'text', maxlength: '16', value: CAREER.name === 'You' ? '' : CAREER.name, placeholder: 'Your fighter’s name', autocomplete: 'off' });
-  nameIn.oninput = () => { CAREER.name = nameIn.value.trim() || 'You'; saveCareer(); };
+  nameIn.oninput = () => { CAREER.name = nameIn.value.trim() || 'You'; saveCareer(); prev(); };
   const numIn = h('input', { type: 'number', min: '1', max: '99', value: String(CAREER.num), inputmode: 'numeric' });
-  numIn.oninput = () => { const v = clamp(parseInt(numIn.value || '4', 10) || 4, 1, 99); CAREER.num = v; saveCareer(); applyProfile(); };
-  const clubIn = h('input', { type: 'text', maxlength: '22', value: P.name, placeholder: 'Club name', autocomplete: 'off' });
-  clubIn.oninput = () => { P.name = clubIn.value.trim() || 'Reavers'; P.short = P.name.slice(0, 3).toUpperCase(); saveCareer(); applyProfile(); prev(); };
+  numIn.oninput = () => { const v = clamp(parseInt(numIn.value || '4', 10) || 4, 1, 99); CAREER.num = v; saveCareer(); applyProfile(); prev(); };
   const seg = (opts, get, set) => { const s = h('div', { class: 'seg small' }); for (const [v, t] of opts) s.append(h('button', { 'aria-pressed': String(get() === v), onclick: () => { set(v); AU.click(); s.querySelectorAll('button').forEach(b => b.setAttribute('aria-pressed', String(b.textContent === t))); prev(); } }, t)); return s; };
   const sw = (list, get, set) => { const row = h('div', { class: 'swatches' }); for (const c of list) row.append(h('button', { class: 'sw', style: `--c:${c}`, 'aria-pressed': String(get() === c), 'aria-label': c, onclick: () => { set(c); AU.click(); row.querySelectorAll('.sw').forEach(b => b.setAttribute('aria-pressed', String(b.style.getPropertyValue('--c') === c))); prev(); } })); return row; };
   const pv = h('div', { class: 'crpv' }), prev = () => { pv.innerHTML = ''; PORTRAITS.none = null; const c = outfitThumb('none'); c.className = 'crportrait'; pv.append(c, shieldPreview(P, 72), h('b', null, `${CAREER.name === 'You' ? 'Your fighter' : CAREER.name} · #${CAREER.num}`), h('span', { class: 'muted' }, P.name)); };
-  box.append(h('div', { class: 'profgrid' },
-    h('div', { class: 'stack' },
-      h('div', { class: 'row fields' }, field('Name', nameIn), field('Number', numIn)),
-      h('span', { class: 'label' }, 'Fights in'), seg([['men', 'Men’s'], ['women', 'Women’s']], () => G.category, v => { G.category = v; store.set('category', v); }),
-      h('span', { class: 'label' }, 'Height'), seg([['short', 'Short'], ['avg', 'Average'], ['tall', 'Tall']], () => lo.height, v => { lo.height = v; store.set('loadout', lo); }),
-      h('span', { class: 'label' }, 'Build'), seg([['light', 'Light'], ['medium', 'Medium'], ['heavy', 'Heavy']], () => lo.build, v => { lo.build = v; store.set('loadout', lo); }),
-      h('span', { class: 'label' }, 'Skin'), sw(SKIN_TONES, () => L.skin || SKIN_TONES[2], c => { L.skin = c; saveCareer(); }),
-      h('div', { class: 'row fields' }, field('Club', clubIn)),
-      h('span', { class: 'label' }, 'Club colour'), sw(TABARDS, () => P.tabard, c => { P.tabard = c; saveCareer(); applyProfile(); }),
-      h('span', { class: 'label' }, 'Trim'), sw(TRIMS, () => P.trim, c => { P.trim = c; saveCareer(); applyProfile(); }),
-      h('span', { class: 'label' }, 'Charge'), seg(CHARGES, () => P.charge, v => { P.charge = v; saveCareer(); applyProfile(); }),
-      h('p', { class: 'muted small' }, 'Armour, weapons, outfits and everything else are bought or made in the realm. You can change all of this later in Your fighter → Profile.')),
-    pv));
+  const own = !P.bos, clubIn = h('input', { type: 'text', maxlength: '22', value: P.name, placeholder: 'Your banner’s name', autocomplete: 'off' });
+  clubIn.oninput = () => { P.name = clubIn.value.trim() || 'Festival Company'; P.short = P.name.slice(0, 3).toUpperCase(); saveCareer(); applyProfile(); prev(); };
+  const left = h('div', { class: 'stack' },
+    h('div', { class: 'row fields' }, field('Name', nameIn), field('Number', numIn)),
+    h('span', { class: 'label' }, 'Fights in'), seg([['men', 'Men’s'], ['women', 'Women’s']], () => G.category, v => { G.category = v; store.set('category', v); }),
+    h('span', { class: 'label' }, 'Height'), seg([['short', 'Short'], ['avg', 'Average'], ['tall', 'Tall']], () => lo.height, v => { lo.height = v; store.set('loadout', lo); }),
+    h('span', { class: 'label' }, 'Build'), seg([['light', 'Light'], ['medium', 'Medium'], ['heavy', 'Heavy']], () => lo.build, v => { lo.build = v; store.set('loadout', lo); }),
+    h('span', { class: 'label' }, 'Skin'), sw(SKIN_TONES, () => L.skin || SKIN_TONES[2], c => { L.skin = c; saveCareer(); }));
+  if (own) left.append(h('div', { class: 'row fields' }, field('Your banner', clubIn)), h('span', { class: 'label' }, 'Colour'), sw(TABARDS, () => P.tabard, c => { P.tabard = c; saveCareer(); applyProfile(); }), h('span', { class: 'label' }, 'Trim'), sw(TRIMS, () => P.trim, c => { P.trim = c; saveCareer(); applyProfile(); }));
+  else left.append(h('p', { class: 'muted small' }, `You fight in ${P.name}’s colours.`));
+  left.append(h('span', { class: 'label' }, 'Charge'), seg(CHARGES, () => P.charge, v => { P.charge = v; saveCareer(); applyProfile(); }),
+    h('p', { class: 'muted small' }, 'Armour, weapons, outfits and everything else are bought or made in the realm. All of this can be changed later in Your fighter → Profile.'));
+  box.append(h('div', { class: 'profgrid' }, left, pv));
   prev();
+  $('#creatorDone').hidden = false; $('#creatorBack').hidden = false;
+  $('#creatorBack').onclick = () => { AU.click(); CAREER.teamPicked = false; saveCareer(); creatorTeam(); };
   $('#creatorDone').onclick = () => { AU.click(); onbSet('tour'); showScreen(null); G.hub = true; enterTown(); };
   showScreen('creator');
 }
@@ -14944,6 +15032,35 @@ function tourTick(dt) {
 }
 function tourEnd() { const T = ONB.tour; if (!T) return; if (T.el) T.el.remove(); ONB.tour = null; TOWN.busy = false; TOWN.tour = false; TOWN.cam = null; onbSet('done'); $('#townHud').hidden = false;
   if (ONB.view) { const S = W3.scene, cam = W3.camera; if (S.fog && ONB.view.near != null) { S.fog.near = ONB.view.near; S.fog.far = ONB.view.far; } cam.far = ONB.view.cf; cam.updateProjectionMatrix(); ONB.view = null; } toastMenu('Welcome to the festival. Marshal Brenna by the gate starts your fights.'); }
+
+// ===================================================================
+// Report a bug or ask for a feature (pause menu and the realm map menu), and a few small events the game sends home:
+// a session when it starts, a match when it ends. The admin page (admin.html) reads them.
+// ===================================================================
+const EVENT_URL = BOS_URL + '/functions/v1/steeltape-event';
+async function sendEvent(kind, data) {
+  if (typeof fetch !== 'function' || G.autoflow || location.hash === '#autotest' || location.protocol === 'file:') return false;
+  const headers = { 'Content-Type': 'application/json' };
+  try { const s = BOS.sb && (await BOS.sb.auth.getSession()).data.session; if (s && s.access_token) headers.Authorization = 'Bearer ' + s.access_token; } catch (e) { }
+  try { const r = await fetch(EVENT_URL, { method: 'POST', headers, body: JSON.stringify({ kind, name: myName(), data: data || {} }) }); return r.ok; } catch (e) { return false; }
+}
+function eventSession() { sendEvent('session', { level: CAREER.level || 1, matches: (CAREER.stats || {}).matches || 0, team: CAREER.club && CAREER.club.bos || null, touch: IS_TOUCH, w: window.innerWidth, h: window.innerHeight, ver: (window.BUILD_VER || '') }); }
+function eventMatch(m, won) { if (!m || G.attract || m.training) return; sendEvent('match', { stage: m.stage || '', mode: m.mode, won: !!won, opp: m.opp, cat: m.category, online: !!m.online, trial: m.trial || null, throne: m.throne || null }); }
+// the form
+function openFeedback(back) {
+  const ret = back || (() => showScreen(G.phase === 'fight' || G.phase === 'prefight' ? 'pause' : 'title'));
+  msg('feedback', 'Report a bug or ask for a feature', `<div class="seg small" id="fbKind"><button data-k="bug" aria-pressed="true">Bug</button><button data-k="feature" aria-pressed="false">Feature idea</button></div>
+    <label class="runcode col"><span id="fbLabel">What went wrong, and what were you doing?</span><textarea id="fbText" rows="5" maxlength="1500" placeholder="The more detail the better: where in the realm, which fight, which buttons…"></textarea></label>
+    <p class="muted small">Sent with your fighter name${BOS.user ? ' and BuhurtOS account' : ''}, your device type and where you were in the game.</p><p class="muted small" id="fbMsg"></p>`,
+    [['Send', async () => {
+      const kind = $('#fbKind [aria-pressed="true"]').dataset.k, text = ($('#fbText').value || '').trim(), say = t => { const m = $('#fbMsg'); if (m) m.textContent = t; };
+      if (text.length < 4) { say('Write a little more first.'); return; }
+      say('Sending…');
+      const ok = await sendEvent(kind, { text, where: G.phase || '', screen: G.screen || '', town: !!(typeof TOWN !== 'undefined' && TOWN.on), district: (typeof TOWN !== 'undefined' && TOWN.district) || null, stage: G.match && G.match.stage || null, level: CAREER.level || 1, mode: IN.mode });
+      if (ok) { toastMenu(kind === 'bug' ? 'Bug reported. Thank you!' : 'Idea sent. Thank you!'); ret(); } else say('Couldn’t send it. Are you online?');
+    }, true], ['Back', ret]]);
+  $$('#fbKind button').forEach(b => b.onclick = () => { AU.click(); $$('#fbKind button').forEach(x => x.setAttribute('aria-pressed', String(x === b))); $('#fbLabel').textContent = b.dataset.k === 'bug' ? 'What went wrong, and what were you doing?' : 'What would you like added or changed?'; });
+}
 
 // ---------- the town: walk around outside the list and buy from the vendors ----------
 // Uses the field venue (tents, cottages, the crowd at the rope) with ten market stalls around it, your house at the south end and,
@@ -15246,6 +15363,7 @@ function openTownMap() {
     h('button', { class: 'btn tape', onclick: () => { AU.click(); openCareer(); } }, 'Your fighter'),
     h('button', { class: 'btn tape', onclick: () => { AU.click(); G.backTo = 'title'; showScreen('settings'); } }, 'Settings'),
     h('button', { class: 'btn tape', onclick: () => { AU.click(); G.backTo = 'title'; showScreen('howto'); } }, 'How to play'),
+    h('button', { class: 'btn tape', onclick: () => { AU.click(); openFeedback(() => { showScreen(null); openTownMap(); }); } }, 'Report a bug / idea'),
     h('button', { class: 'btn primary flagtape', onclick: () => { AU.click(); leaveTown(); } }, 'Main menu')));
   showScreen('townShop'); $('#townPrompt').hidden = true; refreshTouchUI();
 }

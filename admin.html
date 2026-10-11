@@ -1,0 +1,86 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<meta name="robots" content="noindex">
+<title>Steel &amp; Tape admin</title>
+<link href="https://fonts.googleapis.com/css2?family=Barlow+Semi+Condensed:wght@500;700&family=Big+Shoulders+Display:wght@900&display=swap" rel="stylesheet">
+<style>
+:root{--bg:#0f1316;--panel:#171c20;--ink:#f2ede2;--muted:#9aa3a8;--tape:#f2c40f;--flag:#ff3d8b;--line:#2a3238}
+*{box-sizing:border-box}body{margin:0;background:var(--bg);color:var(--ink);font:16px/1.4 "Barlow Semi Condensed",system-ui,sans-serif;padding:16px}
+h1{font-family:"Big Shoulders Display",sans-serif;font-size:2.2rem;margin:0 0 4px;letter-spacing:.02em}h1 span{color:var(--tape)}
+h2{font-family:"Big Shoulders Display",sans-serif;font-size:1.4rem;margin:22px 0 8px;letter-spacing:.04em;text-transform:uppercase}
+.muted{color:var(--muted)}.small{font-size:.85rem}
+.panel{background:var(--panel);border:1px solid var(--line);padding:14px;max-width:1100px;margin:0 auto}
+input,textarea{background:#0b0e10;color:var(--ink);border:1px solid var(--line);padding:8px 10px;font:inherit;width:100%}
+label{display:block;margin:8px 0 4px}
+button{background:var(--tape);color:#14110c;border:0;padding:9px 16px;font:700 .95rem "Barlow Semi Condensed",sans-serif;text-transform:uppercase;letter-spacing:.06em;cursor:pointer;margin-top:10px}
+button.alt{background:#2a3238;color:var(--ink)}button.tiny{padding:4px 8px;font-size:.75rem;margin:0}
+.kpis{display:grid;grid-template-columns:repeat(auto-fill,minmax(150px,1fr));gap:10px}
+.kpi{background:#0b0e10;border-left:3px solid var(--flag);padding:10px 12px}.kpi b{display:block;font-size:1.8rem;font-family:"Big Shoulders Display",sans-serif}.kpi span{color:var(--muted);font-size:.8rem;text-transform:uppercase;letter-spacing:.08em}
+table{width:100%;border-collapse:collapse;font-size:.9rem}th,td{text-align:left;padding:6px 8px;border-bottom:1px solid var(--line);vertical-align:top}th{color:var(--muted);font-weight:500;text-transform:uppercase;font-size:.72rem;letter-spacing:.08em}
+.bar{display:flex;align-items:flex-end;gap:3px;height:90px;border-bottom:1px solid var(--line);padding-bottom:2px}.bar i{flex:1;background:var(--tape);min-width:4px;position:relative}.bar i.m{background:var(--flag)}.bar i:hover::after{content:attr(data-t);position:absolute;bottom:100%;left:0;background:#000;padding:2px 6px;font-size:.7rem;white-space:nowrap}
+.rep{border:1px solid var(--line);padding:10px;margin:8px 0;background:#0b0e10}.rep.done{opacity:.5}.rep .k{font-size:.7rem;text-transform:uppercase;letter-spacing:.08em;color:var(--tape)}.rep .k.feature{color:#7fb6ff}.rep p{margin:6px 0;white-space:pre-wrap}
+#err{color:#ff7a6a}
+</style>
+</head>
+<body>
+<div class="panel">
+  <h1>BUHURT: <span>Steel &amp; Tape</span> admin</h1>
+  <p class="muted small">Players, matches, bug reports and feature ideas from the last 30 days. Owner only.</p>
+  <div id="login">
+    <label>BuhurtOS email<input id="email" type="email" autocomplete="email"></label>
+    <label>Password<input id="pass" type="password" autocomplete="current-password"></label>
+    <button id="signin">Sign in</button> <button class="alt" id="google">Google</button>
+    <p id="err" class="small"></p>
+  </div>
+  <div id="app" hidden>
+    <p class="small"><span id="who"></span> · <button class="tiny alt" id="refresh">Refresh</button> <button class="tiny alt" id="signout">Sign out</button></p>
+    <div class="kpis" id="kpis"></div>
+    <h2>Last 30 days</h2>
+    <div class="bar" id="days"></div><p class="muted small">Gold: sessions per day. Pink: matches.</p>
+    <h2>Reports and ideas</h2>
+    <div id="reports"></div>
+    <h2>Players</h2>
+    <table id="players"><thead><tr><th>Name</th><th>Sessions</th><th>Matches</th><th>Wins</th><th>Last seen</th><th>Device</th></tr></thead><tbody></tbody></table>
+    <h2>Matches by mode</h2>
+    <table id="modes"><thead><tr><th>Mode</th><th>Played</th><th>Won by players</th></tr></thead><tbody></tbody></table>
+    <h2>The throne</h2>
+    <table id="throne"><thead><tr><th>Seat</th><th>Holder</th><th>Since</th><th>Challenges</th></tr></thead><tbody></tbody></table>
+  </div>
+</div>
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2.45.4/dist/umd/supabase.min.js"></script>
+<script>
+const URL_ = 'https://mvbxlebznlgroptwwdsm.supabase.co', KEY = 'sb_publishable_u76M-dggKSsdsyhUQKveJg_5fPJ5Nan';
+const sb = supabase.createClient(URL_, KEY, { auth: { persistSession: true, autoRefreshToken: true, detectSessionInUrl: true, storageKey: 'steeltape-admin' } });
+const $ = s => document.querySelector(s), esc = s => String(s == null ? '' : s).replace(/[&<>"']/g, c => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' })[c]);
+const ago = t => { const m = (Date.now() - new Date(t)) / 60000; return m < 60 ? Math.round(m) + ' min ago' : m < 1440 ? Math.round(m / 60) + ' h ago' : Math.round(m / 1440) + ' d ago'; };
+const dev = ua => /iPhone|iPad/.test(ua) ? 'iOS' : /Android/.test(ua) ? 'Android' : /Windows/.test(ua) ? 'Windows' : /Mac/.test(ua) ? 'Mac' : ua ? 'other' : '';
+async function load() {
+  const { data: { session } } = await sb.auth.getSession();
+  if (!session) { $('#login').hidden = false; $('#app').hidden = true; return; }
+  const r = await fetch(URL_ + '/functions/v1/steeltape-admin', { headers: { Authorization: 'Bearer ' + session.access_token } });
+  const d = await r.json().catch(() => ({}));
+  if (!r.ok) { $('#err').textContent = d.error === 'not an admin' ? 'This account isn’t the owner.' : 'Couldn’t load: ' + (d.error || r.status); await sb.auth.signOut(); return; }
+  $('#login').hidden = true; $('#app').hidden = false; $('#who').textContent = d.email;
+  const P = d.players || [], matches = P.reduce((a, p) => a + p.matches, 0), wins = P.reduce((a, p) => a + p.wins, 0);
+  $('#kpis').innerHTML = [[P.length, 'players (30 d)'], [P.filter(p => Date.now() - new Date(p.last) < 86400000).length, 'played today'], [d.byKind.session || 0, 'sessions'], [matches, 'matches'], [matches ? Math.round(wins / matches * 100) + '%' : '–', 'player win rate'], [(d.byKind.bug || 0), 'bug reports'], [(d.byKind.feature || 0), 'feature ideas'], [d.total, 'events ever']].map(([v, k]) => `<div class="kpi"><b>${esc(v)}</b><span>${esc(k)}</span></div>`).join('');
+  const days = []; for (let i = 29; i >= 0; i--) { const k = new Date(Date.now() - i * 86400000).toISOString().slice(0, 10); days.push([k, d.days[k] || { sessions: 0, matches: 0 }]); }
+  const mx = Math.max(1, ...days.map(([, v]) => Math.max(v.sessions, v.matches)));
+  $('#days').innerHTML = days.map(([k, v]) => `<i style="height:${v.sessions / mx * 100}%" data-t="${k}: ${v.sessions} sessions"></i><i class="m" style="height:${v.matches / mx * 100}%" data-t="${k}: ${v.matches} matches"></i>`).join('');
+  $('#reports').innerHTML = (d.reports || []).length ? d.reports.map(e => `<div class="rep ${e.data.resolved ? 'done' : ''}"><span class="k ${e.kind}">${e.kind === 'bug' ? 'Bug' : 'Feature idea'}</span> · <span class="muted small">${esc(e.name)} · ${ago(e.at)} · ${esc(dev(e.ua))} · ${esc(e.data.where || '')}${e.data.town ? ' in town' : ''}${e.data.district ? ', ' + esc(e.data.district) : ''}${e.data.stage ? ', ' + esc(e.data.stage) : ''} · level ${esc(e.data.level || '')}</span><p>${esc(e.data.text)}</p><button class="tiny alt" data-id="${e.id}">${e.data.resolved ? 'Reopen' : 'Mark done'}</button></div>`).join('') : '<p class="muted">Nothing yet.</p>';
+  $('#reports').querySelectorAll('button[data-id]').forEach(b => b.onclick = async () => { await fetch(URL_ + '/functions/v1/steeltape-admin', { method: 'POST', headers: { Authorization: 'Bearer ' + session.access_token, 'Content-Type': 'application/json' }, body: JSON.stringify({ action: 'resolve', id: +b.dataset.id }) }); load(); });
+  $('#players tbody').innerHTML = P.map(p => `<tr><td>${esc(p.name)}${p.uid ? ' <span class="muted small">✓ BuhurtOS</span>' : ''}</td><td>${p.sessions}</td><td>${p.matches}</td><td>${p.wins}</td><td>${ago(p.last)}</td><td>${esc(dev(p.ua))}</td></tr>`).join('') || '<tr><td colspan="6" class="muted">Nobody yet.</td></tr>';
+  $('#modes tbody').innerHTML = Object.entries(d.modes || {}).sort((a, b) => b[1].n - a[1].n).map(([k, v]) => `<tr><td>${esc(k)}</td><td>${v.n}</td><td>${v.won} (${Math.round(v.won / v.n * 100)}%)</td></tr>`).join('') || '<tr><td colspan="3" class="muted">No matches yet.</td></tr>';
+  $('#throne tbody').innerHTML = (d.throne || []).map(t => `<tr><td>${esc(t.seat)}</td><td>${esc(t.holder_name)}</td><td>${ago(t.since)}</td><td>${t.challenges}</td></tr>`).join('');
+}
+$('#signin').onclick = async () => { $('#err').textContent = ''; const { error } = await sb.auth.signInWithPassword({ email: $('#email').value.trim(), password: $('#pass').value }); if (error) { $('#err').textContent = error.message; return; } load(); };
+$('#google').onclick = () => sb.auth.signInWithOAuth({ provider: 'google', options: { redirectTo: location.origin + location.pathname } });
+$('#signout').onclick = async () => { await sb.auth.signOut(); load(); };
+$('#refresh').onclick = load;
+sb.auth.onAuthStateChange(() => load());
+load();
+</script>
+</body>
+</html>
