@@ -989,6 +989,20 @@ body:not(.split) #pips:not([hidden]) ~ #statstrip{top:calc(var(--st) + 78px)}
 #wind .bal{position:absolute;left:34px;right:10px;bottom:-7px;height:4px;background:#1b2125;border:1px solid #39444a}
 #wind .bal i{display:block;height:100%;width:var(--b,100%);background:#7fb0ff;transition:width .08s linear}
 #wind.wobbly .bal i{background:#ff7a4a}
+/* first-time flow */
+.onbgrid{margin-top:8px}
+.onbhints{position:fixed;right:12px;top:calc(60px + env(safe-area-inset-top));width:min(380px,92vw);max-height:60vh;overflow:auto;background:rgba(10,13,15,.9);padding:8px 10px;z-index:30;font-size:.8rem;box-shadow:0 2px 12px rgba(0,0,0,.5)}
+.onbhints[hidden]{display:none}
+.onbhints .onbh{display:flex;justify-content:space-between;align-items:center;margin-bottom:6px}
+.onbhints .ctrlgrid{font-size:.74rem}
+.crpv{display:flex;flex-direction:column;align-items:center;gap:6px;min-width:140px}
+.crportrait{width:108px;height:144px;image-rendering:auto;background:rgba(0,0,0,.25);border-radius:8px}
+.tour{position:fixed;left:0;right:0;bottom:calc(24px + env(safe-area-inset-bottom));display:flex;justify-content:center;align-items:flex-end;gap:12px;padding:0 16px;z-index:40;pointer-events:none}
+.tour>*{pointer-events:auto}
+.tourcap{background:rgba(10,13,15,.86);padding:10px 16px;max-width:640px;box-shadow:0 2px 12px rgba(0,0,0,.5)}
+.tourcap small{color:var(--marshal,#e3b341);font-size:.68rem;text-transform:uppercase;letter-spacing:.1em}
+.tourcap b{display:block;font-family:var(--display,inherit);font-size:1.3rem;color:#f2ede2}
+.tourcap p{margin:4px 0 0;color:#d8d2c2;font-size:.88rem;line-height:1.3}
 
 </style>
 <div id="app">
@@ -1111,6 +1125,14 @@ body:not(.split) #pips:not([hidden]) ~ #statstrip{top:calc(var(--st) + 78px)}
   </section>
 
   <!-- HOW TO PLAY -->
+  <!-- CHARACTER CREATOR: the first thing a new fighter does after the test fight -->
+  <section class="screen dimmed" id="creator" hidden>
+    <div class="panel wide">
+      <header class="phead"><div class="ttape tape mk">Your fighter</div><h2 class="msgtitle">Make your fighter</h2></header>
+      <div class="pbody" id="creatorBody"></div>
+      <footer class="pfoot"><button class="btn primary flagtape" id="creatorDone" data-gp="A">Into the festival</button></footer>
+    </div>
+  </section>
   <section class="screen dimmed" id="howto" hidden>
     <div class="panel wide">
       <header class="phead"><button class="back" data-back data-gp="B" aria-label="Back"><svg viewBox="0 0 24 24"><path d="M15 5l-7 7 7 7"/></svg><span>Back</span></button><h2 class="ttape tape mk">How to play</h2>
@@ -11031,6 +11053,7 @@ const ACH = [
   { id: 'explorer', name: 'Explorer', desc: 'Find all six hidden places in the realm.' },
   { id: 'rider', name: 'Saddled up', desc: 'Ride a horse across the realm.' },
   { id: 'spectator', name: 'From the stands', desc: 'Watch a full bout at any arena.' },
+  { id: 'crowned', name: 'Crowned', desc: 'Take the King’s or the Queen’s seat in the Great Hall.' },
   { id: 'season', name: 'Prairie Cup', desc: 'Top the league table at the end of a summer season.' },
   { id: 'streak3', name: 'Regular', desc: 'Win the Rumble of the Day three days running.' },
   { id: 'gauntlet', name: 'Ran the gauntlet', desc: 'Win all five fights of a Gauntlet run.' },
@@ -12336,8 +12359,9 @@ function renderInventory(box) {
 }
 
 // ---------- screens, matches, the Red Deer Rumble ----------
-const SCREENS = ['title', 'howto', 'settings', 'tactics', 'sheetScr', 'repair', 'msgScr', 'pause', 'modes', 'ladder', 'career', 'townShop'];
+const SCREENS = ['title', 'howto', 'settings', 'tactics', 'sheetScr', 'repair', 'msgScr', 'pause', 'modes', 'ladder', 'career', 'townShop', 'creator'];
 function showScreen(id) {
+  if (id) { const oh = document.getElementById('onbHints'); if (oh) oh.hidden = true; }
   if (id === 'title' && G.hub && typeof TOWN !== 'undefined') { if (TOWN.on) { id = null; setTimeout(() => { refreshTouchUI(); townHudUpdate(); townPrompt(); }, 0); } else { enterTown(TOWN.returnTo); return; } } SCREENS.forEach(s => { $('#' + s).hidden = s !== id; }); G.screen = id; if (id && (IN.mode === 'pad' || IN.mode === 'kb')) setTimeout(() => { if (G.screen === id) { if (document.activeElement && document.activeElement !== document.body && !$('#' + id).contains(document.activeElement)) document.activeElement.blur(); if (IN.mode === 'pad') focusFirst(); } }, 30); updateLegend(); }
 function setHud(on) { $('#hud').hidden = !on; refreshTouchUI(); }
 
@@ -12625,7 +12649,7 @@ function leaveTarget() {
   const m = G.match;
   if (!m || G.attract) return toTitle;
   if (m.ladder != null) return () => { toTitle(); openLadder(); };
-  if (G.tourney || m.run || m.season || m.daily || m.rival || m.online || m.kids || m.training || m.trial) return toTitle;
+  if (G.tourney || m.run || m.season || m.daily || m.rival || m.online || m.kids || m.training || m.trial || m.throne) return toTitle;
   if (m.versus) return () => { toTitle(); openVersus(); };
   return () => { toTitle(); openModes(); };
 }
@@ -12678,7 +12702,9 @@ function matchEnd() {
   if (m.season && seasonAfter(m, won, drawn, withPurse)) return;
   if (m.rival) { if (won && pay0) { pay(pay0.money); updateTitlePurse(); } const note = rivalAfter(m, won); msg('grudge match', won ? 'Rival beaten' : 'Rival wins', withPurse(note), [['Rematch', startGrudge], ['Title', toTitle, true]]); return; }
   if (m.run && !m.season && typeof runEnd === 'function') { runEnd(m, won, withPurse); return; }
+  if (m.test && typeof onbAfterFight === 'function') { onbAfterFight(m, won, withPurse); return; }
   if (m.trial && typeof trialEnd === 'function') { trialEnd(m, won, withPurse); return; }
+  if (m.throne && typeof throneEnd === 'function') { throneEnd(m, won, withPurse); return; }
   if (m.ladder != null) {
     if (won) { CAREER.ladder.rung = Math.max(CAREER.ladder.rung, m.ladder + 1); bump('ladderBeat'); saveCareer(); if (m.ladder === LADDER.length - 1) unlock('ladder'); }
     const next = m.ladder + 1 < LADDER.length && won;
@@ -12793,10 +12819,11 @@ function startLadder(i) {
   setupMatch({ mode: 1, opp: 'ladder' + i, stage: `Duel Ladder, rung ${i + 1}`, ladder: i }); toTactics();
 }
 
-function lExitDefault() { AU.click(); toTitle(); }
+function lExitDefault() { AU.click(); if (G.onbTrain) { G.onbTrain = false; endTraining(); openCreator(); return; } toTitle(); }
 function dropPhoto() { if (!G.photo) return; try { stopReplay(); } catch (e) {} if (typeof PHOTO !== 'undefined') PHOTO.on = false; G.photo = false; $('#photo').hidden = true; $('#gl').style.filter = ''; $('#photoFrame').hidden = true; }
 function refreshDaily() { const S = dailyState(), P = dailyPlan(); $('#btnDaily').firstChild.textContent = `Daily #${P.day}`; $('#dailyBadge').hidden = !!S.done[P.key]; }
 function toTitle(opts) {
+  if (typeof onbTitle === 'function' && !(opts && opts.skipOnb) && onbStage() !== 'done' && onbStage() !== 'tour') { G.bracket = null; G.paused = false; setHud(false); G.autopilot = false; G.autoflow = false; endTraining(); if (onbTitle()) return; }
   if (G.hub && !(opts && opts.home) && typeof enterTown === 'function') { enterTown(TOWN.returnTo); return; }
   G.bracket = null; VS.names = null; refreshDaily(); if (LOBBY.pending) setTimeout(showInvite, 400);
   G.paused = false; setHud(false); G.autopilot = false; G.autoflow = false; AU.music(true); endTraining(); updateTitlePurse();
@@ -13700,7 +13727,7 @@ async function boot(hot) {
   toTitle();
   requestAnimationFrame(frame);
   if (location.hash === '#autotest') setTimeout(autotest, 300);
-  window.__ST = { G, AU, buildShield, buildWeapon, W3, startTourney, quickFight, toTitle, openRepair, kitCheck, setupMatch, toTactics, beginFight, endRound, matchEnd, CLUBS, WEAPONS, setView, toast, renderKitPicker, applyLoadout, IN, FP, showScreen, weaponIcon, startCine, startTraining, startLadder, openCareer, openModes, openLadder, CAREER, setLesson, TR, unlock, togglePause, afterRound, renderHow, selectPiece, selectTape, msg, renderSheet, setHud, endTraining, setMode, PAD, navMove, focusFirst, sparks, CUTE, THREE, BREATH, setCuteDeco, flipFx, PHOTO, UAL, raiseFlags, startVersus, startFFA, startBracket, startKid, KID, openSeason, startSeasonMatch, setVenue, VS, SPLIT, NET, buildOnlineMatch, hostLobby, joinLobby, ONL, vinControl, openRun, openDaily, openBracket, showBracket, bracketResult, ffaMatchEnd, ffaLeader, ffaWinner, endKid, openPhoto, closePhoto, startReplay, stopReplay, RP, store, startRunFight, newRun, runEnd, WX, setWeather, padVin, readVersus, applyLo, myLoadout, netDropped, netLeave, showIntro, installForged, dailyPlan, openKids, openVersus, openPicks, LESSONS, rivalClub, startGrudge, startDaily, seasonState, newSeason, refreshDaily, VENUES, COMM, hitMapHtml, resetFighterForRound, DIFF, PIN, PADS, NIN, padsUpdate, seatPads, LOBBY, MM, openOnlineHub, benchDown, benchMove, REP, squirePatch, coverage, openProfile, myProfile, BOS, updateTitlePurse, ACH, progressCheck, challenges, masteryOf, S2, rankOf, counterValue, renderCareer, progressMatch, saveCareer, shopState, shopUp, tapeLeft, shopMatchEnd, shopPrizeMult, shopXpMult, swingTimes, pieceWearMult, TABARDS, refillTape, renderShop, UPGRADES, freshKit, TAPE_STOCK, enterTown, leaveTown, TOWN, openVendor, closeVendor, openTownMap, shopFx, renderVendor, VENDORS, ITEMS, itemCost, spCost, skillRoom, sponsorIncome, BOOSTS, STALL_AT, HOMES, FURNISH, pfx, squadFx, boostKit, townCollide, townRefresh, townWalkTo, townTalk, townTeardown, lookState, WORLD, guildCheck, STATIONS, townDressMe, FOLK, updateFolk, navBlocked, buildFolk, BOUT, boutStart, boutStop, boutTick, drawTownMap, updateMiniMap, costumePerson, OUTFIT, buildSkinWeapon, skinIcon, wskinList, skinFor, buildMyWeapon, wskinFamOf, GATHER, startGather, gatherSwing, stopGather, tradeState, tradeLevel, tradeGain, give, have, craft, NODES, MATS, renderTrades, TRADE_SKILLS, ARENAS, DISTRICTS, TRAVEL, setWaypoint, clearWaypoint, realmPath, callHorse, mount, dismount, ANIMAL, districtAt, realmCull, REALM_TIERS, gateOpen, townJump, stableRows, horseAvailable, peopleCull, boutArenaFor, arenaLive, bagSlots, bagState, bagRoom, secretFound, lookOwned, SECRETS, stopSpectating, startTrial, TRIALS, tierCap, ROSTER, rosterClubs, rosterLive, rosterName, liveBoutPick, aiTier, AI_TIER, guardOutcome, fighterGlow };
+  window.__ST = { G, AU, buildShield, buildWeapon, W3, startTourney, quickFight, toTitle, openRepair, kitCheck, setupMatch, toTactics, beginFight, endRound, matchEnd, CLUBS, WEAPONS, setView, toast, renderKitPicker, applyLoadout, IN, FP, showScreen, weaponIcon, startCine, startTraining, startLadder, openCareer, openModes, openLadder, CAREER, setLesson, TR, unlock, togglePause, afterRound, renderHow, selectPiece, selectTape, msg, renderSheet, setHud, endTraining, setMode, PAD, navMove, focusFirst, sparks, CUTE, THREE, BREATH, setCuteDeco, flipFx, PHOTO, UAL, raiseFlags, startVersus, startFFA, startBracket, startKid, KID, openSeason, startSeasonMatch, setVenue, VS, SPLIT, NET, buildOnlineMatch, hostLobby, joinLobby, ONL, vinControl, openRun, openDaily, openBracket, showBracket, bracketResult, ffaMatchEnd, ffaLeader, ffaWinner, endKid, openPhoto, closePhoto, startReplay, stopReplay, RP, store, startRunFight, newRun, runEnd, WX, setWeather, padVin, readVersus, applyLo, myLoadout, netDropped, netLeave, showIntro, installForged, dailyPlan, openKids, openVersus, openPicks, LESSONS, rivalClub, startGrudge, startDaily, seasonState, newSeason, refreshDaily, VENUES, COMM, hitMapHtml, resetFighterForRound, DIFF, PIN, PADS, NIN, padsUpdate, seatPads, LOBBY, MM, openOnlineHub, benchDown, benchMove, REP, squirePatch, coverage, openProfile, myProfile, BOS, updateTitlePurse, ACH, progressCheck, challenges, masteryOf, S2, rankOf, counterValue, renderCareer, progressMatch, saveCareer, shopState, shopUp, tapeLeft, shopMatchEnd, shopPrizeMult, shopXpMult, swingTimes, pieceWearMult, TABARDS, refillTape, renderShop, UPGRADES, freshKit, TAPE_STOCK, enterTown, leaveTown, TOWN, openVendor, closeVendor, openTownMap, shopFx, renderVendor, VENDORS, ITEMS, itemCost, spCost, skillRoom, sponsorIncome, BOOSTS, STALL_AT, HOMES, FURNISH, pfx, squadFx, boostKit, townCollide, townRefresh, townWalkTo, townTalk, townTeardown, lookState, WORLD, guildCheck, STATIONS, townDressMe, FOLK, updateFolk, navBlocked, buildFolk, BOUT, boutStart, boutStop, boutTick, drawTownMap, updateMiniMap, costumePerson, OUTFIT, buildSkinWeapon, skinIcon, wskinList, skinFor, buildMyWeapon, wskinFamOf, GATHER, startGather, gatherSwing, stopGather, tradeState, tradeLevel, tradeGain, give, have, craft, NODES, MATS, renderTrades, TRADE_SKILLS, ARENAS, DISTRICTS, TRAVEL, setWaypoint, clearWaypoint, realmPath, callHorse, mount, dismount, ANIMAL, districtAt, realmCull, REALM_TIERS, gateOpen, townJump, stableRows, horseAvailable, peopleCull, boutArenaFor, arenaLive, bagSlots, bagState, bagRoom, secretFound, lookOwned, SECRETS, stopSpectating, startTrial, TRIALS, tierCap, ROSTER, rosterClubs, rosterLive, rosterName, liveBoutPick, aiTier, AI_TIER, guardOutcome, fighterGlow, ONB, onbStage, onbSet, openCreator, tourStart, tourEnd, TOUR_STOPS, THRONE, throneHolder, throneFight, throneBow, openThrone };
 }
 
 function autotest() {
@@ -14025,8 +14052,8 @@ async function initLobby() {
     try { await loadPeerLib(); room = p2pLobby(); await room.ready; } catch (e) { try { room && room.leave(); } catch (er) { } room = await claudeRoom(); }
     if (!room) { LOBBY.starting = null; return null; }
     LOBBY.room = room;
-    lobbySet({ name: myName(), st: lobbyStatus(), pr: myProfile(), invite: null, look: null, gd: CAREER.guild ? { id: CAREER.guild.id, name: CAREER.guild.name, tag: CAREER.guild.tag, col: CAREER.guild.col } : null });
-    setInterval(() => lobbySet({ name: myName(), st: lobbyStatus(), pr: myProfile() }), 5000);
+    lobbySet({ name: myName(), st: lobbyStatus(), pr: myProfile(), bu: (typeof BOS !== 'undefined' && BOS.user && BOS.user.id) || null, invite: null, look: null, gd: CAREER.guild ? { id: CAREER.guild.id, name: CAREER.guild.name, tag: CAREER.guild.tag, col: CAREER.guild.col } : null });
+    setInterval(() => lobbySet({ name: myName(), st: lobbyStatus(), pr: myProfile(), bu: (typeof BOS !== 'undefined' && BOS.user && BOS.user.id) || null }), 5000);
     room.onPeers(ch => {
       const me = ch.peers.find(p => p.isMe && p.sameTab); if (me) LOBBY.me = me.peer;
       LOBBY.peers = ch.peers.filter(p => !p.isMe && p.kind === 'viewer' && p.presence && p.presence.name);
@@ -14532,11 +14559,11 @@ function resultTitle(m) {
   return [drawn ? 'Draw' : won ? 'Your side wins' : 'Your side loses', `<p>${m.wins[t]}–${m.wins[1 - t]} in rounds.</p>`];
 }
 function onlineMatchEnd() { // host
-  const [title, body] = resultTitle(G.match); progressMatch(G.match, title === 'Your side wins');
+  const [title, body] = resultTitle(G.match); progressMatch(G.match, title === 'Your side wins'); if (typeof throneOnlineEnd === 'function') throneOnlineEnd(title === 'Your side wins');
   msg('online', title, body + '<p class="muted">Back to the lobby to go again, change sides or add bots.</p>', [['Back to lobby', hostBackToLobby, true], ['Leave', () => { netLeave(); toTitle(); }]]);
 }
 function netGuestEnd() {
-  const [title, body] = resultTitle(G.match); progressMatch(G.match, title === 'Your side wins');
+  const [title, body] = resultTitle(G.match); progressMatch(G.match, title === 'Your side wins'); if (typeof throneOnlineEnd === 'function') throneOnlineEnd(title === 'Your side wins');
   setHud(false); msg('online', title, body + '<p class="muted">The lobby opens again when the host is ready.</p>', [['Leave', () => { netLeave(); toTitle(); }, true]]);
 }
 function hostBackToLobby() {
@@ -14756,6 +14783,110 @@ function liveBoutPick(A) {
   return { mode: n === 4 ? 5 : n, clubA: mk2(L.a, 'live:a'), opp: mk2(L.b, 'live:b'), category: /wom|fem/i.test(L.category) ? 'women' : 'men', label: `LIVE · ${L.comp || L.event}`, live: L };
 }
 
+// ===================================================================
+// First time in: a 5 v 5 test fight with nothing but the button hints, then "want some help learning?", then the
+// character creator, then a skippable tour of the realm when you walk in. Anyone who played before the creator existed
+// gets the creator (and the tour) the next time they open the game.
+// ===================================================================
+const ONB = { tour: null };
+function onbStage() { return CAREER.onboard || (CAREER.stats.matches > 0 ? 'create' : 'fight'); }
+function onbSet(st) { CAREER.onboard = st; saveCareer(); }
+// called when the title would show: steer first-timers into the flow instead
+function onbTitle() {
+  const st = onbStage(); if (st === 'done' || G.autoflow || location.hash === '#autotest' || G.noOnboard) return false;
+  if (st === 'fight') { onbTestFight(); return true; }
+  if (st === 'help') { onbHelp(); return true; }
+  if (st === 'create') { openCreator(); return true; }
+  return false; // 'tour' happens in town
+}
+// ---- the test fight: a 5 v 5, no instructions, the buttons shown once
+function onbTestFight() {
+  G.attract = false; G.tourney = null; REP.log = []; endTraining(); G.hub = false;
+  setupMatch({ mode: 5, opp: 'wardens', stage: 'Your first fight', venue: 'field', test: true });
+  startRound(); G.phase = 'tactics'; setHud(false);
+  msg('welcome', 'Your first fight', `<p>Five a side. You're number ${CAREER.num}, in the ${CLUBS.reavers.name}. Down is out; the side with more standing at the end takes the round.</p><p>No lessons: here's what the buttons do, then in you go.</p><div class="ctrlgrid onbgrid" id="onbGrid"></div>`,
+    [['Fight', () => { beginFight(); onbHints(); }, true]]);
+  onbFillGrid($('#onbGrid'));
+}
+function onbKind() { return IN.mode === 'pad' ? 'pad' : IN.mode === 'touch' ? 'touch' : 'kb'; }
+function onbFillGrid(el) {
+  if (!el) return; const was = $('#howGrid').innerHTML; renderHow(onbKind()); el.innerHTML = $('#howGrid').innerHTML; $('#howGrid').innerHTML = was;
+}
+// a button card in the corner for the first fight; ? brings it back
+function onbHints() {
+  let el = $('#onbHints'); if (!el) { el = h('div', { id: 'onbHints', class: 'onbhints' }); document.body.append(el); }
+  el.innerHTML = ''; const grid = h('div', { class: 'ctrlgrid' }); onbFillGrid(grid);
+  el.append(h('div', { class: 'onbh' }, h('b', null, 'The buttons'), h('button', { class: 'btn tape small', onclick: () => { el.hidden = true; } }, 'Got it')), grid); el.hidden = false;
+  setTimeout(() => { if (el) el.hidden = true; }, 14000);
+}
+// after the test fight (from matchEnd)
+function onbAfterFight(m, won, withPurse) {
+  onbSet('help'); { const el = $('#onbHints'); if (el) el.hidden = true; }
+  msg('your first fight', won ? 'You won it' : 'Lost that one', withPurse(`<p>${won ? 'Not bad at all for a first go.' : 'Everyone loses their first. The steel is heavy and the lungs are small.'}</p><p>Want some help learning the moves before the festival?</p>`),
+    [['Teach me', () => { onbSet('create'); G.onbTrain = true; startTraining(); }, true], ['I’ve got it', () => { onbSet('create'); openCreator(); }]]);
+}
+function onbHelp() { msg('welcome back', 'Help learning?', '<p>Want some help learning the moves before the festival?</p>', [['Teach me', () => { onbSet('create'); G.onbTrain = true; startTraining(); }, true], ['I’ve got it', () => { onbSet('create'); openCreator(); }]]); }
+// ---- the character creator
+function openCreator() {
+  G.backTo = 'title'; skillsState(); const P = CAREER.club, L = lookState(), lo = G.loadout;
+  const box = $('#creatorBody'); box.innerHTML = '';
+  const field = (label, input) => h('label', { class: 'fld' }, h('span', { class: 'label' }, label), input);
+  const nameIn = h('input', { type: 'text', maxlength: '16', value: CAREER.name === 'You' ? '' : CAREER.name, placeholder: 'Your fighter’s name', autocomplete: 'off' });
+  nameIn.oninput = () => { CAREER.name = nameIn.value.trim() || 'You'; saveCareer(); };
+  const numIn = h('input', { type: 'number', min: '1', max: '99', value: String(CAREER.num), inputmode: 'numeric' });
+  numIn.oninput = () => { const v = clamp(parseInt(numIn.value || '4', 10) || 4, 1, 99); CAREER.num = v; saveCareer(); applyProfile(); };
+  const clubIn = h('input', { type: 'text', maxlength: '22', value: P.name, placeholder: 'Club name', autocomplete: 'off' });
+  clubIn.oninput = () => { P.name = clubIn.value.trim() || 'Reavers'; P.short = P.name.slice(0, 3).toUpperCase(); saveCareer(); applyProfile(); prev(); };
+  const seg = (opts, get, set) => { const s = h('div', { class: 'seg small' }); for (const [v, t] of opts) s.append(h('button', { 'aria-pressed': String(get() === v), onclick: () => { set(v); AU.click(); s.querySelectorAll('button').forEach(b => b.setAttribute('aria-pressed', String(b.textContent === t))); prev(); } }, t)); return s; };
+  const sw = (list, get, set) => { const row = h('div', { class: 'swatches' }); for (const c of list) row.append(h('button', { class: 'sw', style: `--c:${c}`, 'aria-pressed': String(get() === c), 'aria-label': c, onclick: () => { set(c); AU.click(); row.querySelectorAll('.sw').forEach(b => b.setAttribute('aria-pressed', String(b.style.getPropertyValue('--c') === c))); prev(); } })); return row; };
+  const pv = h('div', { class: 'crpv' }), prev = () => { pv.innerHTML = ''; PORTRAITS.none = null; const c = outfitThumb('none'); c.className = 'crportrait'; pv.append(c, shieldPreview(P, 72), h('b', null, `${CAREER.name === 'You' ? 'Your fighter' : CAREER.name} · #${CAREER.num}`), h('span', { class: 'muted' }, P.name)); };
+  box.append(h('div', { class: 'profgrid' },
+    h('div', { class: 'stack' },
+      h('div', { class: 'row fields' }, field('Name', nameIn), field('Number', numIn)),
+      h('span', { class: 'label' }, 'Fights in'), seg([['men', 'Men’s'], ['women', 'Women’s']], () => G.category, v => { G.category = v; store.set('category', v); }),
+      h('span', { class: 'label' }, 'Height'), seg([['short', 'Short'], ['avg', 'Average'], ['tall', 'Tall']], () => lo.height, v => { lo.height = v; store.set('loadout', lo); }),
+      h('span', { class: 'label' }, 'Build'), seg([['light', 'Light'], ['medium', 'Medium'], ['heavy', 'Heavy']], () => lo.build, v => { lo.build = v; store.set('loadout', lo); }),
+      h('span', { class: 'label' }, 'Skin'), sw(SKIN_TONES, () => L.skin || SKIN_TONES[2], c => { L.skin = c; saveCareer(); }),
+      h('div', { class: 'row fields' }, field('Club', clubIn)),
+      h('span', { class: 'label' }, 'Club colour'), sw(TABARDS, () => P.tabard, c => { P.tabard = c; saveCareer(); applyProfile(); }),
+      h('span', { class: 'label' }, 'Trim'), sw(TRIMS, () => P.trim, c => { P.trim = c; saveCareer(); applyProfile(); }),
+      h('span', { class: 'label' }, 'Charge'), seg(CHARGES, () => P.charge, v => { P.charge = v; saveCareer(); applyProfile(); }),
+      h('p', { class: 'muted small' }, 'Armour, weapons, outfits and everything else are bought or made in the realm. You can change all of this later in Your fighter → Profile.')),
+    pv));
+  prev();
+  $('#creatorDone').onclick = () => { AU.click(); onbSet('tour'); showScreen(null); G.hub = true; enterTown(); };
+  showScreen('creator');
+}
+// ---- the tour: a skippable fly-over of the realm with captions, the first time you walk in
+const TOUR_STOPS = [
+  { at: [0, 42, 120], look: [0, 0, 0], t: 6, cap: ['The Buhurt Festival', 'A real-life medieval festival. Everyone here is a person in costume: vendors, fighters, townsfolk. Walk up to anyone with a name over their head and press the prompt to talk.'] },
+  { at: [34, 10, 40], look: [0, 3, 0], t: 6, cap: ['The Dome', 'The list. There’s always a fight on. Press Watch at any arena to sit in the stands, or talk to Marshal Brenna by the gate to fight yourself.'] },
+  { at: [-20, 14, 40], look: [-38, 2, 16], t: 6, cap: ['The vendors', 'Smith, armourer, quartermaster, wizard, tavern, wardrobe, artificer: better gear, boosts and looks, for gold or made with your own hands.'] },
+  { at: [-60, 40, 0], look: [-200, 0, -80], t: 6, cap: ['The realm', 'Six districts: the Old Woods west, Millbrook Village south-west, Mirror Lake east, the castle north. Roads and signposts link them. Nothing teleports: walk, or hire a horse at the stables.'] },
+  { at: [0, 70, -60], look: [0, 10, -200], t: 7, cap: ['The castle', 'Two gates. Level 15 and a duel with Sergeant Brask open the Outer Bailey; level 40 and the King’s Guard open the King’s Court. The King and Queen sit in the Great Hall.'] },
+  { at: [8, 6, 52], look: [0, 1.5, 44], t: 6, cap: ['Getting about', 'Map (top right) to set a waypoint: gold markers lead you there, Walk there walks you. Minimap bottom left. 🎒 is your bag. Your fighter is in the pause menu.'] }
+];
+function tourStart() {
+  if (!TOWN.on || ONB.tour) return;
+  ONB.tour = { i: 0, t: 0, el: null }; TOWN.busy = true; TOWN.tour = true; $('#townHud').hidden = true;
+  const S = W3.scene, cam = W3.camera; ONB.view = { near: S.fog && S.fog.near, far: S.fog && S.fog.far, cf: cam.far }; if (S.fog) { S.fog.near = 260; S.fog.far = 700; } cam.far = 1200; cam.updateProjectionMatrix();
+  const el = h('div', { class: 'tour', id: 'tour' }, h('div', { class: 'tourcap' }, h('small'), h('b'), h('p')), h('button', { class: 'btn tape small', onclick: e => { e.stopPropagation(); tourEnd(); } }, 'Skip'));
+  document.body.append(el); ONB.tour.el = el; tourCap();
+}
+function tourCap() { const T = ONB.tour, S = TOUR_STOPS[T.i], el = T.el; el.querySelector('small').textContent = `${T.i + 1} / ${TOUR_STOPS.length}`; el.querySelector('b').textContent = S.cap[0]; el.querySelector('p').textContent = S.cap[1]; }
+function tourTick(dt) {
+  const T = ONB.tour; if (!T) return false;
+  const S = TOUR_STOPS[T.i], N = TOUR_STOPS[T.i + 1]; T.t += dt;
+  const k = Math.min(1, T.t / S.t), e = k * k * (3 - 2 * k), cam = W3.camera;
+  const to = N || S, p = [0, 1, 2].map(i => S.at[i] + (to.at[i] - S.at[i]) * (N ? e * 0.35 : 0)), l = [0, 1, 2].map(i => S.look[i] + (to.look[i] - S.look[i]) * (N ? e * 0.35 : 0));
+  cam.position.set(p[0], p[1], p[2]); cam.lookAt(l[0], l[1], l[2]);
+  if (TOWN.cells) for (const C of TOWN.cells) C.g.visible = true;
+  if (k >= 1) { T.i++; T.t = 0; if (T.i >= TOUR_STOPS.length) { tourEnd(); return false; } tourCap(); }
+  return true;
+}
+function tourEnd() { const T = ONB.tour; if (!T) return; if (T.el) T.el.remove(); ONB.tour = null; TOWN.busy = false; TOWN.tour = false; TOWN.cam = null; onbSet('done'); $('#townHud').hidden = false;
+  if (ONB.view) { const S = W3.scene, cam = W3.camera; if (S.fog && ONB.view.near != null) { S.fog.near = ONB.view.near; S.fog.far = ONB.view.far; } cam.far = ONB.view.cf; cam.updateProjectionMatrix(); ONB.view = null; } toastMenu('Welcome to the festival. Marshal Brenna by the gate starts your fights.'); }
+
 // ---------- the town: walk around outside the list and buy from the vendors ----------
 // Uses the field venue (tents, cottages, the crowd at the rope) with ten market stalls around it, your house at the south end and,
 // if you paid for one, a statue of you in the middle. Walk with the move stick (or WASD / left stick), turn the camera with the
@@ -14892,7 +15023,7 @@ function venueExtras(on) { for (const o of (W3.venueExtras || [])) o.visible = o
 function townRefresh() { if (!TOWN.on) return; buildHome(); buildStatue(); navBuild(); }
 
 function enterTown(vendorKey) {
-  AU.init(); G.hub = true; if (typeof LOBBY !== 'undefined' && LOBBY.pending) setTimeout(showInvite, 400);
+  AU.init(); G.hub = true; if (typeof onbStage === 'function' && onbStage() === 'tour') setTimeout(() => { if (TOWN.on && TOWN.people) tourStart(); else setTimeout(() => TOWN.on && tourStart(), 2500); }, 1200); if (typeof LOBBY !== 'undefined' && LOBBY.pending) setTimeout(showInvite, 400);
   BOUT.on = false; clearMatch(); G.attract = false; G.autopilot = false; G.tourney = null; G.paused = false; G.phase = 'town'; G.match = null;
   setHud(false); endTraining && endTraining();
   TOWN.prevVenue = TOWN.prevVenue || W3.venue; setVenue('field');
@@ -15008,6 +15139,7 @@ function townCollide() {
 }
 function updateTownCamera(dt) {
   const cam = W3.camera; if (cam.near !== 0.15 || Math.abs(cam.fov - 55) > 0.1) { cam.near = 0.15; cam.fov = 55; cam.updateProjectionMatrix(); }
+  if (ONB.tour && tourTick(dt)) return;
   if (TOWN.spec) { specCamera(dt); return; }
   if (TOWN.peek > 0) { TOWN.peek -= dt; cam.position.set(BAILEY.x0 + 2, 2.4, -196); cam.lookAt(-80, 2, -205); if (TOWN.peek <= 0) TOWN.cam = null; return; }
   const aspect = window.innerWidth / window.innerHeight, dist = TOWN.dist * (aspect < 0.8 ? 1.3 : 1);
@@ -15874,7 +16006,7 @@ function drawTownMap(ctx, view) {
   if (typeof BOUT !== 'undefined' && BOUT.on) { const o = W3.matchRoot ? W3.matchRoot.position : { x: 0, z: 0 }; for (const f of G.fighters || []) { if (f.out) continue; ctx.fillStyle = f.club && f.club.tabard ? f.club.tabard : '#888'; ctx.beginPath(); ctx.arc(X(f.pos.x + o.x), Y(f.pos.z + o.z), Math.max(1.4, k * 0.5), 0, Math.PI * 2); ctx.fill(); } }
   if (typeof GRAVE !== 'undefined') { ctx.fillStyle = '#5d6b55'; ctx.fillRect(X(GRAVE.x - 7), Y(GRAVE.z - 6), 14 * k, 12 * k); }
   // your waypoint
-  if (TOWN.wp) { ctx.strokeStyle = '#f2c40f'; ctx.lineWidth = 2; ctx.setLineDash([4, 4]); ctx.beginPath(); ctx.moveTo(X(TOWN.pos.x), Y(TOWN.pos.z)); for (const [x, z] of TRAVEL.path || []) ctx.lineTo(X(x), Y(z)); if (!(TRAVEL.path || []).length) ctx.lineTo(X(TOWN.wp.x), Y(TOWN.wp.z)); ctx.stroke(); ctx.setLineDash([]); ctx.fillStyle = '#f2c40f'; ctx.beginPath(); ctx.arc(X(TOWN.wp.x), Y(TOWN.wp.z), 5, 0, Math.PI * 2); ctx.fill(); }
+  if (TOWN.wp) { ctx.strokeStyle = '#f2c40f'; ctx.lineWidth = 2; ctx.setLineDash([4, 4]); ctx.beginPath(); ctx.moveTo(X(TRAVEL.startX != null ? TRAVEL.startX : TOWN.pos.x), Y(TRAVEL.startZ != null ? TRAVEL.startZ : TOWN.pos.z)); for (const [x, z] of TRAVEL.path || []) ctx.lineTo(X(x), Y(z)); if (!(TRAVEL.path || []).length) ctx.lineTo(X(TOWN.wp.x), Y(TOWN.wp.z)); ctx.stroke(); ctx.setLineDash([]); ctx.fillStyle = '#f2c40f'; ctx.beginPath(); ctx.arc(X(TOWN.wp.x), Y(TOWN.wp.z), 5, 0, Math.PI * 2); ctx.fill(); }
   // place names: districts when zoomed out, the fairground's corners when zoomed in
   if (view.labels) {
     ctx.textAlign = 'center'; ctx.textBaseline = 'middle';
@@ -16326,7 +16458,7 @@ const ROADS = [
   { name: 'north', pts: [[0, -24], [0, -150], [0, -210], [0, -238]], w: 6 },
   { name: 'west', pts: [[-52, -2], [-100, -16], [-150, -44], [-196, -78]], w: 5 },
   { name: 'southwest', pts: [[-16, 70], [-62, 96], [-118, 122], [-160, 140]], w: 5 },
-  { name: 'east', pts: [[52, 6], [96, 26], [128, 58], [140, 76]], w: 5 },
+  { name: 'east', pts: [[52, 6], [96, 26], [128, 58], [126, 84], [132, 100]], w: 5 },
   { name: 'woodsnorth', pts: [[-196, -78], [-170, -130], [-120, -150]], w: 4 },
   { name: 'lakenorth', pts: [[128, 58], [150, -10], [176, -60]], w: 4 },
   { name: 'south', pts: [[0, 70], [0, 120], [-30, 160]], w: 4 },
@@ -16572,6 +16704,7 @@ function buildGreatHall(R, add) {
   mk(R, new THREE.BoxGeometry(10, 0.8, 4), dark, cx, 0.4, H.z0 + 3.2); add('mk_Chair_1', cx, H.z0 + 3.4, 0, 2.2, 0); { const cr = kpiece(R, 'rp_crown', cx, 2.9, H.z0 + 3.2, 0, 0.5); }
   for (const sx of [-1, 1]) for (let i = 0; i < 4; i++) { const b = mk(R, geo('gh_ban', () => new THREE.PlaneGeometry(1.4, 3.6)), lmat({ color: i % 2 ? '#8a1a2a' : '#e3b341', side: THREE.DoubleSide }), cx + sx * (w / 2 - 0.66), 6.4, H.z0 + 8 + i * 9); b.rotation.y = sx > 0 ? -Math.PI / 2 : Math.PI / 2; }
   for (let i = 0; i < 3; i++) { const c = kpiece(R, 'mk_Chandelier', cx, 7.6, H.z0 + 10 + i * 14, 0, 1.6); }
+  if (typeof buildThrone === 'function') buildThrone(R);
   // walls block you, except the door
   const k = (x0, z0, x1, z1) => { const L = Math.hypot(x1 - x0, z1 - z0), n = Math.round(L / 1.6); for (let i = 0; i <= n; i++) TOWN.obst.push({ x: x0 + (x1 - x0) * i / n, z: z0 + (z1 - z0) * i / n, r: 1 }); };
   k(H.x0, H.z0, H.x1, H.z0); k(H.x0, H.z0, H.x0, H.z1); k(H.x1, H.z0, H.x1, H.z1); k(H.x0, H.z1, cx - 3.2, H.z1); k(cx + 3.2, H.z1, H.x1, H.z1);
@@ -16747,7 +16880,7 @@ const REALM_TIERS = {
 // Getting around the realm without teleporting: waypoints with a trail of markers along the road, autowalk,
 // a compass at the top of the screen, sprint stamina, and horses (hire one at the stables or own one).
 // ===================================================================
-const TRAVEL = { path: [], pathT: 0, auto: false, dots: null, beam: null, compassT: 0, frame: 0, astarCache: null };
+const TRAVEL = { path: [], marks: [], progress: 0, auto: false, dots: null, beam: null, compassT: 0, frame: 0, stuck: 0 };
 function realmView(on) {
   const cam = W3.camera, S = W3.scene;
   if (on) {
@@ -16777,48 +16910,138 @@ function realmTick(dt) {
   updateWaypoint(dt); updateHorse(dt); arenaTicker(dt);
 }
 // ---- waypoints
+// A route is planned ONCE when you set a waypoint: a short local leg to the nearest road, the road network between
+// districts, and a local leg at the far end (both legs are a bounded A* on a 2 m grid; inside the fairground the
+// whole route is local). Markers are fixed points along that route and never move; they just disappear behind you.
+// It's only re-planned if you wander well off it. Autowalk follows the route with a look-ahead, so it rounds corners.
+// a waypoint on something solid (a wall, the list) snaps to the nearest open ground
+function freeNear(x, z) {
+  if (!navBlocked(x, z, 0.5)) return [x, z];
+  for (let r = 2; r <= 40; r += 2) for (let k = 0; k < 16; k++) { const a = k / 16 * TAU, nx = x + Math.cos(a) * r, nz = z + Math.sin(a) * r; if (!navBlocked(nx, nz, 0.6)) return [nx, nz]; }
+  return [x, z];
+}
 function setWaypoint(x, z, label) {
-  TOWN.wp = { x, z, label: label || 'Waypoint' }; TRAVEL.pathT = 0; TRAVEL.path = []; AU.click && AU.click();
-  toastMenu(`Waypoint: ${TOWN.wp.label}. Follow the markers${IS_TOUCH ? ', or tap Walk there' : ' (R walks you there)'}.`);
+  [x, z] = freeNear(x, z);
+  TOWN.wp = { x, z, label: label || 'Waypoint' }; AU.click && AU.click();
+  travelPlan();
+  toastMenu(`Waypoint: ${TOWN.wp.label}. Follow the gold markers${IS_TOUCH ? ', or tap Walk there' : ' (R walks you there)'}.`);
   compassHud();
 }
-function clearWaypoint() { TOWN.wp = null; TRAVEL.path = []; TRAVEL.auto = false; if (TRAVEL.dots) TRAVEL.dots.count = 0; if (TRAVEL.beam) TRAVEL.beam.visible = false; compassHud(); }
+function clearWaypoint() { TOWN.wp = null; TRAVEL.path = []; TRAVEL.marks = []; TRAVEL.auto = false; TRAVEL.stuck = 0; if (TRAVEL.dots) TRAVEL.dots.count = 0; if (TRAVEL.beam) TRAVEL.beam.visible = false; compassHud(); }
 // the walk-to of old: now it marks the way instead of moving you
 function townWalkTo(key) { const S = TOWN.stalls.find(s => s.V.key === key); if (!S) return; setWaypoint(S.ax, S.az, S.V.name); }
 // for tests and debugging only: stand at someone's counter straight away
 function townJump(key) { const S = TOWN.stalls.find(s => s.V.key === key); if (!S) return; TOWN.pos = { x: S.ax, z: S.az }; TOWN.yaw = S.ry; TOWN.face = S.ry + Math.PI; TOWN.cam = null; }
 function buildWaypoint() {
-  const n = 80, g = new THREE.CircleGeometry(0.28, 10); g.rotateX(-Math.PI / 2);
+  const n = 120, g = new THREE.CircleGeometry(0.3, 10); g.rotateX(-Math.PI / 2);
   TRAVEL.dots = new THREE.InstancedMesh(g, new THREE.MeshBasicMaterial({ color: '#f2c40f', transparent: true, opacity: 0.85, depthWrite: false }), n); TRAVEL.dots.count = 0; TRAVEL.dots.frustumCulled = false; TRAVEL.dots.userData.dyn = true; TOWN.root.add(TRAVEL.dots);
   TRAVEL.beam = new THREE.Mesh(new THREE.CylinderGeometry(0.35, 0.35, 40, 10, 1, true), new THREE.MeshBasicMaterial({ color: '#f2c40f', transparent: true, opacity: 0.28, depthWrite: false, side: THREE.DoubleSide, fog: false }));
   TRAVEL.beam.visible = false; TRAVEL.beam.userData.dyn = true; TOWN.root.add(TRAVEL.beam);
-  if (TOWN.wp) TRAVEL.pathT = 0;
+  if (TOWN.wp) travelPlan();
+}
+// plan the route from where you stand and lay the markers along it
+function travelPlan() {
+  const W = TOWN.wp; if (!W || !TOWN.pos) return;
+  TRAVEL.path = realmRoute(TOWN.pos.x, TOWN.pos.z, W.x, W.z);
+  TRAVEL.marks = []; TRAVEL.stuck = 0; TRAVEL.replans = (TRAVEL.replans || 0) + 1;
+  let px = TOWN.pos.x, pz = TOWN.pos.z, s = 0, carry = 2;
+  for (const [x, z] of TRAVEL.path) { const seg = Math.hypot(x - px, z - pz); while (carry <= seg) { const t = carry / seg; TRAVEL.marks.push([px + (x - px) * t, pz + (z - pz) * t, s + carry]); carry += 3; } carry -= seg; s += seg; px = x; pz = z; }
+  TRAVEL.pathLen = s; TRAVEL.progress = 0;
+}
+// where along the route you are: the nearest point on it (within 12 m), as a distance from its start
+function travelProgress() {
+  const P = TRAVEL.path; if (!P.length) return { s: 0, off: 0 };
+  let px = TOWN.pos.x, pz = TOWN.pos.z, s = 0, best = 1e9, bs = 0, ax = TRAVEL.startX, az = TRAVEL.startZ;
+  if (ax == null) { ax = px; az = pz; }
+  let cx = ax, cz = az;
+  for (const [x, z] of P) {
+    const dx = x - cx, dz = z - cz, L2 = dx * dx + dz * dz || 1e-6, t = clamp(((px - cx) * dx + (pz - cz) * dz) / L2, 0, 1);
+    const d = Math.hypot(px - (cx + dx * t), pz - (cz + dz * t));
+    if (d < best) { best = d; bs = s + Math.sqrt(L2) * t; }
+    s += Math.sqrt(L2); cx = x; cz = z;
+  }
+  return { s: bs, off: best };
 }
 function updateWaypoint(dt) {
   const W = TOWN.wp; if (!W || !TOWN.pos) { if (TRAVEL.beam) TRAVEL.beam.visible = false; return; }
   const d = Math.hypot(W.x - TOWN.pos.x, W.z - TOWN.pos.z);
-  if (d < 3.2) { toastMenu(`You’re there: ${W.label}.`); clearWaypoint(); return; }
-  TRAVEL.pathT -= dt;
-  const off = TRAVEL.path.length ? pathOffset(TOWN.pos.x, TOWN.pos.z) : 99;
-  if (TRAVEL.pathT <= 0 || off > 7) { TRAVEL.pathT = 2.5; TRAVEL.path = realmPath(TOWN.pos.x, TOWN.pos.z, W.x, W.z) || [[W.x, W.z]]; }
-  // trim the bit you've walked
-  while (TRAVEL.path.length > 1 && Math.hypot(TRAVEL.path[0][0] - TOWN.pos.x, TRAVEL.path[0][1] - TOWN.pos.z) < 3) TRAVEL.path.shift();
-  // markers every 3 m along the path, fading out with distance
-  const D = TRAVEL.dots, m4 = new THREE.Matrix4(); let k = 0, px = TOWN.pos.x, pz = TOWN.pos.z, carry = 1.5;
-  for (const [x, z] of TRAVEL.path) { let seg = Math.hypot(x - px, z - pz); while (carry <= seg && k < D.instanceMatrix.count) { const t = carry / seg; m4.makeTranslation(px + (x - px) * t, 0.08, pz + (z - pz) * t); D.setMatrixAt(k++, m4); carry += 3; } carry -= seg; px = x; pz = z; if (k >= D.instanceMatrix.count) break; }
+  if (d < 3) { toastMenu(`You’re there: ${W.label}.`); clearWaypoint(); return; }
+  if (!TRAVEL.path.length) travelPlan();
+  const pr = travelProgress(); TRAVEL.progress = Math.max(TRAVEL.progress || 0, pr.s); TRAVEL.off = pr.off;
+  // wandered well off the route (or autowalk is stuck on something): plan again from here
+  if (pr.off > 12 || TRAVEL.stuck > 1.4) { TRAVEL.stuckLog = (TRAVEL.stuckLog || []).concat([[Math.round(TOWN.pos.x), Math.round(TOWN.pos.z)]]); TRAVEL.startX = TOWN.pos.x; TRAVEL.startZ = TOWN.pos.z; travelPlan(); }
+  // markers from just behind you to 60 m ahead; they're fixed points, only which ones show changes
+  const D = TRAVEL.dots, m4 = new THREE.Matrix4(); let k = 0;
+  for (const [x, z, s] of TRAVEL.marks) { if (s < TRAVEL.progress - 2) continue; if (s > TRAVEL.progress + 60 || k >= D.instanceMatrix.count) break; m4.makeTranslation(x, 0.08 + 0.03 * Math.sin(G.realTime * 4 + s), z); D.setMatrixAt(k++, m4); }
   D.count = k; D.instanceMatrix.needsUpdate = true;
   const B = TRAVEL.beam; B.visible = true; B.position.set(W.x, 20, W.z); B.material.opacity = 0.18 + 0.1 * Math.sin(G.realTime * 3);
   TRAVEL.compassT -= dt; if (TRAVEL.compassT <= 0) { TRAVEL.compassT = 0.15; compassHud(d); }
 }
-function pathOffset(x, z) { let best = 1e9, px = TOWN.pos.x, pz = TOWN.pos.z; for (const [ax, az] of TRAVEL.path.slice(0, 4)) { best = Math.min(best, Math.hypot(ax - x, az - z)); } return TRAVEL.path.length ? Math.min(best, Math.hypot(TRAVEL.path[0][0] - x, TRAVEL.path[0][1] - z)) : 99; }
-// A* over the 4 m nav grid, then pulled straight where there's a clear line
-function realmPath(sx, sz, tx, tz) {
-  const C = 4, key = (i, j) => i * 4096 + j, ci = v => Math.floor(v / C);
-  const free = (i, j) => !navBlocked(i * C + C / 2, j * C + C / 2, 0.7);
+// the route: local legs on the grid, the roads in between
+function realmRoute(sx, sz, tx, tz) {
+  TRAVEL.startX = sx; TRAVEL.startZ = sz;
+  const direct = Math.hypot(tx - sx, tz - sz);
+  if (direct < 70) { const L = localPath(sx, sz, tx, tz); if (L) return L; }
+  const A = nearestRoad(sx, sz), Bq = nearestRoad(tx, tz);
+  if (!A || !Bq || (A.d > 60 && Bq.d > 60)) { const L = localPath(sx, sz, tx, tz, 60); return L || [[tx, tz]]; }
+  const road = roadRoute(A, Bq);
+  const leg1 = A.d < 2 ? [] : (localPath(sx, sz, A.x, A.z) || [[A.x, A.z]]);
+  { const f = road[0], p0 = leg1.length ? leg1[leg1.length - 1] : [sx, sz]; if (f && !lineFree(p0[0], p0[1], f[0], f[1])) { const L = localPath(p0[0], p0[1], f[0], f[1], 12); if (L) road.splice(0, 0, ...L); } }
+  const leg2 = Bq.d < 2 ? [] : (localPath(Bq.x, Bq.z, tx, tz) || [[tx, tz]]);
+  const out = [...leg1, ...road, ...leg2]; if (!out.length || out[out.length - 1][0] !== tx || out[out.length - 1][1] !== tz) out.push([tx, tz]);
+  return out;
+}
+// the road network as a graph (built once)
+const ROADNET = { nodes: [], adj: [] };
+function roadNetBuild() {
+  if (ROADNET.nodes.length) return;
+  const node = (x, z) => { let i = ROADNET.nodes.findIndex(n => Math.hypot(n[0] - x, n[1] - z) < 3); if (i < 0) { i = ROADNET.nodes.length; ROADNET.nodes.push([x, z]); ROADNET.adj.push([]); } return i; };
+  const link = (a, b, local) => { if (a === b) return; const d = Math.hypot(ROADNET.nodes[a][0] - ROADNET.nodes[b][0], ROADNET.nodes[a][1] - ROADNET.nodes[b][1]) * (local ? 1.3 : 1); if (!ROADNET.adj[a].some(e => e[0] === b)) { ROADNET.adj[a].push([b, d, !!local]); ROADNET.adj[b].push([a, d, !!local]); } };
+  for (const R of ROADS) { let prev = null; for (const [x, z] of R.pts) { const i = node(x, z); if (prev != null) link(prev, i); prev = i; } }
+  // the roads meet at the fairground's edge; between those ends the way is found locally round the stalls and the dome
+  for (const [a, b] of [[[0, -24], [-52, -2]], [[0, -24], [52, 6]], [[-52, -2], [-16, 70]], [[52, 6], [0, 70]], [[0, 70], [-16, 70]]]) { const i = node(a[0], a[1]), j = node(b[0], b[1]); link(i, j, true); }
+}
+// the nearest point on any road segment, with the two nodes it lies between
+function nearestRoad(x, z) {
+  roadNetBuild(); let best = null;
+  for (let a = 0; a < ROADNET.nodes.length; a++) for (const [b, , local] of ROADNET.adj[a]) {
+    if (b < a || local) continue;
+    const [x0, z0] = ROADNET.nodes[a], [x1, z1] = ROADNET.nodes[b], dx = x1 - x0, dz = z1 - z0, L2 = dx * dx + dz * dz || 1e-6;
+    const t = clamp(((x - x0) * dx + (z - z0) * dz) / L2, 0, 1), px = x0 + dx * t, pz = z0 + dz * t, d = Math.hypot(x - px, z - pz);
+    if (!best || d < best.d) best = { x: px, z: pz, d, a, b, ta: Math.hypot(px - x0, pz - z0), tb: Math.hypot(px - x1, pz - z1) };
+  }
+  return best;
+}
+// Dijkstra over the road nodes from one projected point to another
+function roadRoute(A, B) {
+  if (A.a === B.a && A.b === B.b) return [[B.x, B.z]];
+  const N = ROADNET.nodes.length, dist = new Array(N).fill(1e9), from = new Array(N).fill(-1), done = new Array(N).fill(false);
+  dist[A.a] = A.ta; dist[A.b] = A.tb;
+  for (let it = 0; it < N; it++) {
+    let u = -1; for (let i = 0; i < N; i++) if (!done[i] && (u < 0 || dist[i] < dist[u])) u = i; if (u < 0 || dist[u] >= 1e9) break; done[u] = true;
+    for (const [v, w] of ROADNET.adj[u]) if (dist[u] + w < dist[v]) { dist[v] = dist[u] + w; from[v] = u; }
+  }
+  const end = dist[B.a] + B.ta <= dist[B.b] + B.tb ? B.a : B.b;
+  const ids = []; let c = end; while (c >= 0) { ids.push(c); c = from[c]; } ids.reverse();
+  const out = [];
+  for (let k = 0; k < ids.length; k++) {
+    const n = ROADNET.nodes[ids[k]];
+    if (k > 0) { const e = ROADNET.adj[ids[k - 1]].find(x => x[0] === ids[k]), pv = ROADNET.nodes[ids[k - 1]]; if ((e && e[2]) || !lineFree(pv[0], pv[1], n[0], n[1])) { const L = localPath(pv[0], pv[1], n[0], n[1], e && e[2] ? 20 : 12); if (L) { out.push(...L); continue; } } }
+    out.push(n);
+  }
+  // the last stretch along the road to the exit point, and the first from the entry point, may have something on them too
+  const last = out[out.length - 1]; if (!lineFree(last[0], last[1], B.x, B.z)) { const L = localPath(last[0], last[1], B.x, B.z, 12); if (L) { out.push(...L); return out; } }
+  out.push([B.x, B.z]); return out;
+}
+// a bounded A* on a 2 m grid round the two ends (for the legs off the road and short trips), string-pulled
+function localPath(sx, sz, tx, tz, margin) {
+  const C = 2, M = margin || 30, x0 = Math.min(sx, tx) - M, x1 = Math.max(sx, tx) + M, z0 = Math.min(sz, tz) - M, z1 = Math.max(sz, tz) + M;
+  const ci = v => Math.floor(v / C), key = (i, j) => (i + 4096) * 8192 + (j + 4096);
+  const free = (i, j) => { const x = i * C + 1, z = j * C + 1; return x > x0 && x < x1 && z > z0 && z < z1 && !navBlocked(x, z, 1.0); };
   const si = ci(sx), sj = ci(sz), ti = ci(tx), tj = ci(tz);
   const open = [[0, si, sj]], g = new Map([[key(si, sj), 0]]), from = new Map(); let n = 0, found = false;
-  const H = (i, j) => Math.hypot(i - ti, j - tj);
-  while (open.length && n++ < 24000) {
+  const H = (i, j) => Math.hypot(i - ti, j - tj) * 1.001;
+  while (open.length && n++ < 30000) {
     let bi = 0; for (let q = 1; q < open.length; q++) if (open[q][0] < open[bi][0]) bi = q;
     const [, i, j] = open.splice(bi, 1)[0]; if (i === ti && j === tj) { found = true; break; }
     const gc = g.get(key(i, j));
@@ -16826,25 +17049,33 @@ function realmPath(sx, sz, tx, tz) {
       const ni = i + di, nj = j + dj, kk = key(ni, nj);
       if (!(ni === ti && nj === tj) && !free(ni, nj)) continue;
       if (di && dj && (!free(i + di, j) || !free(i, j + dj))) continue;
-      const ng = gc + (di && dj ? 1.414 : 1) + (onRoad(ni * C + 2, nj * C + 2, 0) ? 0 : 0.35); // roads are quicker
+      const ng = gc + (di && dj ? 1.414 : 1) + (onRoad(ni * C + 1, nj * C + 1, 0) ? 0 : 0.25);
       if (ng < (g.has(kk) ? g.get(kk) : 1e9)) { g.set(kk, ng); from.set(kk, key(i, j)); open.push([ng + H(ni, nj), ni, nj]); }
     }
-    if (open.length > 4000) open.sort((a, b) => a[0] - b[0]).length = 2500;
   }
   if (!found) return null;
-  const cells = []; let c = key(ti, tj); while (c !== undefined && c !== key(si, sj)) { cells.push([Math.floor(c / 4096) * C + C / 2, (c % 4096 + 4096) % 4096 * C + C / 2]); c = from.get(c); }
+  const cells = []; let c = key(ti, tj); while (c !== undefined && c !== key(si, sj)) { cells.push([(Math.floor(c / 8192) - 4096) * C + 1, (c % 8192 - 4096) * C + 1]); c = from.get(c); }
   cells.reverse(); if (cells.length) cells[cells.length - 1] = [tx, tz]; else cells.push([tx, tz]);
-  // string-pull
   const out = []; let ax = sx, az = sz, i = 0;
-  while (i < cells.length) { let j = cells.length - 1; while (j > i && !lineFree(ax, az, cells[j][0], cells[j][1])) j--; out.push(cells[j]); ax = cells[j][0]; az = cells[j][1]; i = j + 1; }
+  while (i < cells.length) { let j = Math.min(cells.length - 1, i + 40); while (j > i && !lineFree(ax, az, cells[j][0], cells[j][1])) j--; out.push(cells[j]); ax = cells[j][0]; az = cells[j][1]; i = j + 1; }
   return out;
 }
-function lineFree(x0, z0, x1, z1) { const L = Math.hypot(x1 - x0, z1 - z0), n = Math.ceil(L / 1.5); for (let k = 1; k < n; k++) { const t = k / n; if (navBlocked(x0 + (x1 - x0) * t, z0 + (z1 - z0) * t, 0.6)) return false; } return true; }
-// autowalk: when on and you aren't steering, jog along the markers
+function realmPath(sx, sz, tx, tz) { return realmRoute(sx, sz, tx, tz); }
+function lineFree(x0, z0, x1, z1) { const L = Math.hypot(x1 - x0, z1 - z0), n = Math.ceil(L / 1); for (let k = 1; k < n; k++) { const t = k / n; if (navBlocked(x0 + (x1 - x0) * t, z0 + (z1 - z0) * t, 1.0)) return false; } return true; }
+// autowalk: when on and you aren't steering, walk toward a point a few metres ahead along the route
 function travelAutoVel(speed) {
   if (!TRAVEL.auto || !TOWN.wp || !TRAVEL.path.length) return null;
-  const [x, z] = TRAVEL.path[0], dx = x - TOWN.pos.x, dz = z - TOWN.pos.z, d = Math.hypot(dx, dz) || 1;
-  return { vx: dx / d * speed, vz: dz / d * speed };
+  const look = (TRAVEL.progress || 0) + (TOWN.mounted ? 6 : 3.5);
+  let px = TRAVEL.startX, pz = TRAVEL.startZ, s = 0, tx = TOWN.wp.x, tz = TOWN.wp.z;
+  for (const [x, z] of TRAVEL.path) { const seg = Math.hypot(x - px, z - pz); if (s + seg >= look) { const t = (look - s) / (seg || 1); tx = px + (x - px) * t; tz = pz + (z - pz) * t; break; } s += seg; px = x; pz = z; }
+  let dx = tx - TOWN.pos.x, dz = tz - TOWN.pos.z; const d = Math.hypot(dx, dz) || 1;
+  // blocked by someone or something: slide sideways round it
+  if ((TRAVEL.stuck || 0) >= 0.5) { const side = Math.round(TRAVEL.stuck / 0.5) % 2 ? 1 : -1, px = -dz / d, pz = dx / d; dx = dx / d + px * side * 1.5; dz = dz / d + pz * side * 1.5; }
+  const d2 = Math.hypot(dx, dz) || 1; dx /= d2; dz /= d2;
+  // not getting anywhere along the route (pushed about by something, or walking into it): count it as stuck
+  TRAVEL.stuckT = (TRAVEL.stuckT || 0) + 1 / 60;
+  if (TRAVEL.stuckT >= 0.5) { TRAVEL.stuckT = 0; if ((TRAVEL.progress || 0) - (TRAVEL.lastProg || 0) < 0.4) TRAVEL.stuck = (TRAVEL.stuck || 0) + 0.5; else TRAVEL.stuck = 0; TRAVEL.lastProg = TRAVEL.progress || 0; }
+  return { vx: dx * speed, vz: dz * speed };
 }
 // the compass: an arrow pointing at the waypoint from the camera's view, its name and distance
 function compassHud(dist) {
@@ -17175,6 +17406,97 @@ function renderSecrets(box) {
   const el = h('div', { class: 'secrets' });
   for (const S of SECRETS) el.append(h('div', { class: 'small ' + (secretFound(S.key) ? '' : 'muted') }, secretFound(S.key) ? `✨ ${S.name}: found.` : `❔ ${S.hint}`));
   box.append(el);
+}
+
+// ===================================================================
+// The King and the Queen sit in the Great Hall. Hold the Royal writ and you may challenge either for their seat.
+// If the real holder is online in the game, it's them you fight (an invite to a duel); if not, a tougher-than-the-guard
+// stand-in with their name. The very first challenge a seat ever gets is met with a bow: "The crown is yours!"
+// The seats are kept on the BuhurtOS server (steeltape-throne), so everyone sees the same King and Queen.
+// ===================================================================
+const THRONE_URL = BOS_URL + '/functions/v1/steeltape-throne';
+const THRONE = { seats: null, at: 0, loading: false, labels: {} };
+function throneLoad(force) {
+  if (THRONE.loading || typeof fetch !== 'function') return; if (!force && Date.now() - THRONE.at < 60000) return;
+  THRONE.loading = true;
+  fetch(THRONE_URL, { cache: 'no-store' }).then(r => r.ok ? r.json() : null).then(d => { THRONE.loading = false; if (d && d.seats) { THRONE.seats = d.seats; THRONE.at = Date.now(); throneLabels(); } }).catch(() => { THRONE.loading = false; });
+}
+async function thronePost(body) {
+  const headers = { 'Content-Type': 'application/json' };
+  try { const s = BOS.sb && (await BOS.sb.auth.getSession()).data.session; if (s && s.access_token) headers.Authorization = 'Bearer ' + s.access_token; } catch (e) { }
+  const r = await fetch(THRONE_URL, { method: 'POST', headers, body: JSON.stringify(body) }); if (!r.ok) throw new Error('throne ' + r.status);
+  const d = await r.json(); if (d.seats) { THRONE.seats = d.seats; THRONE.at = Date.now(); throneLabels(); } return d;
+}
+function throneHolder(seat) { const S = THRONE.seats && THRONE.seats[seat]; return S ? S : { name: seat === 'king' ? 'the King' : 'the Queen', uid: null, challenges: 1 }; }
+function throneMine(seat) { const H = throneHolder(seat); return !!(H.uid && BOS.user && BOS.user.id === H.uid); }
+// the King and Queen on the dais, with their names
+function buildThrone(R) {
+  const H = HALL, cx = (H.x0 + H.x1) / 2, z = H.z0 + 3.4;
+  THRONE.figs = {};
+  for (const [seat, dx, k, col] of [['king', -1.6, 'po_male_sitting', '#5b2a86'], ['queen', 1.6, 'po_female_sitting', '#8a1a2a']]) {
+    const p = kpiece(R, k, cx + dx, 0.8, z, 0, 1); if (p) { p.traverse(o => { if (o.isMesh) o.material = lmat({ vertexColors: true, color: col, roughness: 0.9, flatShading: true }); }); p.userData.landmark = true; }
+    kpiece(R, 'rp_crown', cx + dx, 2.45, z, 0, 0.42);
+    const lab = townLabel(seat === 'king' ? 'The King' : 'The Queen', '👑', '#e3b341'); lab.position.set(cx + dx, 3.3, z); lab.userData.landmark = true; R.add(lab); THRONE.labels[seat] = lab;
+  }
+  TOWN.stalls.push({ V: { key: 'throne', name: 'The Throne', role: 'Challenge for the crown', icon: '👑' }, g: new THREE.Object3D(), npc: null, ry: 0, x: cx, z: z + 4, ax: cx, az: z + 5, label: new THREE.Object3D(), open: openThrone, verb: 'Approach' });
+  throneLabels(); throneLoad();
+}
+function throneLabels() {
+  if (!TOWN.on || !THRONE.labels.king || !THRONE.seats) return;
+  for (const seat of ['king', 'queen']) { const old = THRONE.labels[seat]; if (!old || !old.parent) continue; const H = throneHolder(seat); const lab = townLabel((seat === 'king' ? 'King ' : 'Queen ') + H.name, '👑 ' + (throneMine(seat) ? 'That’s you' : 'Challenge for the seat'), '#e3b341'); lab.position.copy(old.position); lab.userData.landmark = true; old.parent.add(lab); old.parent.remove(old); THRONE.labels[seat] = lab; }
+}
+function openThrone() {
+  throneLoad(true);
+  if (!realmHasWrit('royal')) { toastMenu('The guards bar the way. Only a holder of the Royal writ may approach the throne.'); return; }
+  townPanel('The throne', box => {
+    const list = stationRows(box, '“Who comes before the crown? Speak, and say which seat you dare to claim.”', []);
+    for (const seat of ['king', 'queen']) {
+      const H = throneHolder(seat), mine = throneMine(seat), online = throneOnline(seat), first = THRONE.seats && H.challenges === 0;
+      const who = (seat === 'king' ? 'King ' : 'Queen ') + H.name, held = (CAREER.throne || {})[seat];
+      list.append(h('div', { class: 'up' }, h('div', null, h('div', { class: 'uph' }, h('b', null, who), h('span', { class: 'tier' }, mine ? 'You hold this seat' : online ? 'Online now' : held ? 'You took it once' : 'On the throne')),
+        h('div', { class: 'muted' }, mine ? 'Sit back. Challengers will come to you.' : online ? `${H.name} is in the realm right now: it’s them you’d fight, one on one, in the Great Hall.` : `${H.name} isn’t here; their champion fights for them. Beat them and the seat is yours${first ? '' : ''}.`)),
+        h('button', { class: 'btn small ' + (mine ? 'tape' : 'primary flagtape'), disabled: mine ? true : null, onclick: () => { if (!mine) throneChallenge(seat); } }, mine ? 'Yours' : 'Challenge')));
+    }
+    if (!THRONE.seats) list.append(h('p', { class: 'muted small' }, 'The herald is still fetching the court rolls. Try again in a moment if the names look wrong.'));
+  });
+}
+// is the real holder in the game right now? (a lobby peer signed in to BuhurtOS with the holder's id)
+function throneOnline(seat) { const H = throneHolder(seat); if (!H.uid) return null; return ((typeof LOBBY !== 'undefined' && LOBBY.peers) || []).find(p => p.presence && p.presence.bu === H.uid && p.peer !== (LOBBY.me || null)) || null; }
+async function throneChallenge(seat) {
+  AU.click(); closeVendor(); toastMenu('You step before the throne…');
+  let d; try { d = await thronePost({ seat, action: 'challenge', name: myName() }); } catch (e) { toastMenu('The herald can’t reach the court rolls. Try again when you’re online.'); return; }
+  if (d.bow) { throneBow(seat, d.was); return; }
+  const online = throneOnline(seat);
+  if (online) { THRONE.pending = seat; await sendInvite(online); toastMenu(`${throneHolder(seat).name} is here: a duel invite is sent. Win it and the seat is yours.`); return; }
+  throneFight(seat);
+}
+// the first ever challenge: the holder rises and bows
+function throneBow(seat, was) {
+  CAREER.throne = CAREER.throne || {}; CAREER.throne[seat] = Date.now(); saveCareer(); unlock('crowned', true);
+  msg('the throne', 'The crown is yours!', `<p>${was} rises from the ${seat === 'king' ? 'King’s' : 'Queen’s'} seat, looks you up and down, and bows low.</p><p><b>“The crown is yours!”</b></p><p>The hall erupts. You are ${seat === 'king' ? 'King' : 'Queen'} of the realm until someone takes it from you.</p>`, [['Take the seat', toTitle, true]]);
+  try { AU.cheer(1.8); } catch (e) { }
+}
+// the stand-in: a tougher opponent than the King's Guard, in the holder's name
+function throneFight(seat) {
+  const H = throneHolder(seat);
+  CLUBS.throne = { key: 'throne', name: H.name, full: (seat === 'king' ? 'King ' : 'Queen ') + H.name, short: 'CRN', tabard: seat === 'king' ? '#5b2a86' : '#8a1a2a', trim: '#e3b341', charge: 'quarterly', flag: '#e3b341',
+    roster: [{ num: 1, name: H.name, arch: seat === 'king' ? 'heavy' : 'striker', weapon: seat === 'king' ? 'longaxe' : 'longsword', shield: null, helm: 'greathelm', prof: { react: 0.11, aggr: 1.35, guard: 0.86, cancel: 0.84 }, stab: 1.24, keep: true, bos: H.fighter ? { id: H.fighter, team: null } : null }] };
+  G.attract = false; G.tourney = null; REP.log = []; endTraining(); TOWN.returnTo = 'throne';
+  leaveTown(() => { setupMatch({ mode: 1, opp: 'throne', stage: `For the ${seat === 'king' ? 'King’s' : 'Queen’s'} seat`, throne: seat, venue: 'hall', aiTier: 3 }); toTactics(); });
+}
+// the online duel with the real holder is over
+function throneOnlineEnd(won) {
+  const seat = THRONE.pending; if (!seat) return; THRONE.pending = null;
+  if (!won) { toastMenu(`${throneHolder(seat).name} keeps the ${seat === 'king' ? 'King’s' : 'Queen’s'} seat.`); return; }
+  thronePost({ seat, action: 'claim', name: myName() }).then(() => { CAREER.throne = CAREER.throne || {}; CAREER.throne[seat] = Date.now(); pay(5000); saveCareer(); updateTitlePurse(); unlock('crowned', true); toastMenu(`The crown is yours! You are ${seat === 'king' ? 'King' : 'Queen'} of the realm.`); }).catch(() => toastMenu('You won, but the herald couldn’t record it. Challenge again when you’re online.'));
+}
+async function throneEnd(m, won, withPurse) {
+  const seat = m.throne, H = throneHolder(seat);
+  if (won) {
+    try { await thronePost({ seat, action: 'claim', name: myName() }); } catch (e) { }
+    CAREER.throne = CAREER.throne || {}; CAREER.throne[seat] = Date.now(); pay(5000); saveCareer(); updateTitlePurse(); unlock('crowned', true);
+    msg('the throne', 'The crown is yours!', withPurse(`<p>${H.name}’s champion is down. The hall goes quiet, then roars. You are ${seat === 'king' ? 'King' : 'Queen'} of the realm. Bonus ${fmtMoney(5000)}.</p>`), [['Take the seat', toTitle, true]]);
+  } else msg('the throne', 'The crown stays', withPurse(`<p>Not this time. ${H.name} keeps the ${seat === 'king' ? 'King’s' : 'Queen’s'} seat. The Great Hall will be here when you’re ready to try again.</p>`), [['Try again', () => throneFight(seat)], ['Back to the realm', toTitle, true]]);
 }
 
 })();
