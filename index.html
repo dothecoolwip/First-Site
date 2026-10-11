@@ -247,6 +247,7 @@ h1,h2,h3{font-family:var(--display);text-wrap:balance;margin:0;line-height:1}
 .viewbtn span.on{background:var(--chalk);color:var(--rink)}
 /* action feedback: what just happened, in big letters under the crosshair */
 #toast{position:absolute;left:50%;top:61%;transform:translate(-50%,0);pointer-events:none;text-align:center;opacity:0;transition:opacity .25s;z-index:7}
+body.intown #toast{top:30%;z-index:15}
 #toast.on{opacity:1;transition:none}
 #toast b{display:inline-block;font-family:var(--display);font-weight:900;font-size:clamp(1.5rem,5vw,2.3rem);letter-spacing:.05em;text-transform:uppercase;line-height:1;padding:.08em .45em .12em;background:rgba(10,13,15,.62);color:var(--c,var(--chalk));text-shadow:0 2px 0 rgba(0,0,0,.6)}
 #toast small{display:block;margin-top:4px;font-weight:600;font-size:.86rem;color:var(--chalk);text-shadow:0 1px 3px #000}
@@ -903,6 +904,44 @@ body:not(.split) #pips:not([hidden]) ~ #statstrip{top:calc(var(--st) + 78px)}
 #townShopBody .vwide .smith{background:var(--pad);border:1px solid var(--rule);padding:10px 12px}
 @media (max-width:640px){#townShopBody .vgrid{grid-template-columns:1fr}#townShopBody .vmedal{width:46px;height:46px;font-size:1.5rem}#townShopBody .vwho b{font-size:1.15rem}#townShopBody .vhi{margin-left:14px;font-size:.88rem}}
 @media (max-height:520px){#townShopBody .vhead{padding:4px 8px;gap:10px;margin-bottom:2px}#townShopBody .vmedal{width:36px;height:36px;font-size:1.2rem}#townShopBody .vwho b{font-size:1.05rem}#townShopBody .vpurse{font-size:1.05rem}#townShopBody .vhi{margin:2px 0 4px 14px;padding:4px 10px;font-size:.8rem}#townShopBody .vtabs{padding:2px 0 4px}#townShopBody .vtabs button{min-height:34px;padding:4px 10px}}
+/* ---- gathering: the swing-timing bar ---- */
+#townHud .gather{position:absolute;left:50%;bottom:calc(18px + env(safe-area-inset-bottom));transform:translateX(-50%);width:min(520px,92vw);background:rgba(12,14,16,.86);border:1px solid var(--rule);padding:10px 14px 12px;pointer-events:auto;display:grid;gap:8px;touch-action:manipulation;user-select:none}
+#townHud .gather .gh{display:flex;align-items:center;gap:10px}
+#townHud .gather .gi{font-size:1.6rem}
+#townHud .gather .gh b{display:block;font-size:1.05rem}
+#townHud .gather .gh small{color:#c9c2b2}
+#townHud .gather .gbar{position:relative;height:26px;background:#0c0f11;border:1px solid #39444a;overflow:hidden}
+#townHud .gather .gzone{position:absolute;top:0;bottom:0;background:linear-gradient(90deg,rgba(47,168,90,.35),rgba(47,168,90,.85),rgba(47,168,90,.35))}
+#townHud .gather .gmark{position:absolute;top:-2px;bottom:-2px;width:5px;margin-left:-2px;background:var(--marshal);box-shadow:0 0 8px var(--marshal)}
+#townHud .gather .gsw{display:flex;gap:8px;justify-content:center}
+#townHud .gather .gdot{width:14px;height:14px;border-radius:50%;background:#2a3034;border:1px solid #39444a}
+#townHud .gather .gdot.hit{background:var(--card-green)}#townHud .gather .gdot.near{background:var(--marshal)}#townHud .gather .gdot.miss{background:var(--card-red)}
+#townHud .gather .gswing{width:100%}
+#townHud .gather .gswing kbd{font:700 .8rem var(--body);background:#000;color:#fff;padding:1px 6px;margin-right:6px;border-radius:3px}
+#townHud .gather .gstop{justify-self:center}
+/* ---- trades tab ---- */
+.tradegrid{display:grid;grid-template-columns:repeat(auto-fill,minmax(230px,1fr));gap:10px;margin:8px 0 14px}
+.tradecard{background:var(--pad);border:1px solid var(--rule);padding:10px 12px;display:grid;gap:6px}
+.tradecard .th{display:flex;align-items:center;gap:10px}
+.tradecard .ticon{font-size:1.6rem}
+.tradecard .th b{display:block}.tradecard .th small{color:#c9c2b2}
+.tradecard .tlv{margin-left:auto;font-size:1.6rem;font-weight:800;color:var(--marshal)}
+.tradecard .tbar{height:8px;background:#0c0f11;border:1px solid #39444a}
+.tradecard .tbar i{display:block;height:100%;background:var(--marshal)}
+.satchel{display:flex;flex-wrap:wrap;gap:8px;margin:6px 0}
+.satitem{display:flex;align-items:center;gap:6px;padding:6px 10px;background:var(--pad);border:1px solid var(--rule);border-left:4px solid var(--c)}
+.satitem .si{font-size:1.2rem}.satitem b{font-size:1.05rem}
+.matlist{display:inline-flex;flex-wrap:wrap;gap:4px 8px;font-size:.8rem}
+.matlist .mat{display:inline-flex;align-items:center;gap:3px;padding:1px 6px;background:#0c0f11;border:1px solid #39444a;white-space:nowrap}
+.matlist .mat.ok{color:#9fe0b0;border-color:#2fa85a}.matlist .mat.no{color:#ff9a8a;border-color:#7a3a30}
+#townShopBody .vmake{display:flex;flex-direction:column;gap:4px;padding-top:6px;border-top:1px dashed var(--rule)}
+#townShopBody .vmake .vmrow{display:flex;align-items:center;justify-content:space-between;gap:8px;flex-wrap:wrap}
+#townShopBody .vmake small{color:#c9c2b2}
+#townShopBody .vmake .btn.small{min-height:36px;font-size:.85rem}
+#townShopBody .bigicon{font-size:2rem;line-height:1;padding:8px}
+@media (max-height:520px){#townHud .gather{width:min(440px,70vw);padding:6px 10px 8px;gap:5px;bottom:calc(8px + env(safe-area-inset-bottom));grid-template-columns:1fr auto;align-items:center}
+#townHud .gather .gh,#townHud .gather .gbar,#townHud .gather .gsw{grid-column:1/-1}#townHud .gather .gh b{font-size:.95rem}#townHud .gather .gi{font-size:1.2rem}#townHud .gather .gbar{height:20px}
+#townHud .gather .gswing{min-height:38px;font-size:.9rem}#townHud .gather .gstop{min-height:34px}}
 
 </style>
 <div id="app">
@@ -1206,7 +1245,7 @@ body:not(.split) #pips:not([hidden]) ~ #statstrip{top:calc(var(--st) + 78px)}
   <section class="screen dimmed" id="career" hidden>
     <div class="panel wide">
       <header class="phead"><button class="back" data-back data-gp="B" aria-label="Back"><svg viewBox="0 0 24 24"><path d="M15 5l-7 7 7 7"/></svg><span>Back</span></button><h2 class="ttape tape mk">Your fighter</h2>
-        <div class="seg tabs" id="careerTabs" role="tablist"><button data-tab="skills" aria-pressed="false">Skills</button><button data-tab="profile" aria-pressed="true">Profile</button><button data-tab="shop" aria-pressed="false">Town</button><button data-tab="progress" aria-pressed="false">Progress</button><button data-tab="ach" aria-pressed="false">Awards</button><button data-tab="record" aria-pressed="false">Record</button></div>
+        <div class="seg tabs" id="careerTabs" role="tablist"><button data-tab="skills" aria-pressed="false">Skills</button><button data-tab="profile" aria-pressed="true">Profile</button><button data-tab="shop" aria-pressed="false">Town</button><button data-tab="trades" aria-pressed="false">Trades</button><button data-tab="progress" aria-pressed="false">Progress</button><button data-tab="ach" aria-pressed="false">Awards</button><button data-tab="record" aria-pressed="false">Record</button></div>
       </header>
       <div class="pbody" id="careerBody"></div>
     </div>
@@ -1217,6 +1256,7 @@ body:not(.split) #pips:not([hidden]) ~ #statstrip{top:calc(var(--st) + 78px)}
     <div class="townbar"><span class="tpurse"><b id="townPurse" class="num">$0</b><small>purse</small></span>
       <button class="btn tape small" id="townMap">Map</button><button class="btn tape small" id="townLeave">Leave town</button></div>
     <div class="townbout" id="townBout" hidden></div>
+    <div class="gather" id="gather" hidden></div>
     <canvas class="townmini" id="townMini" aria-label="Minimap. Tap for the town map." hidden></canvas>
     <button class="townprompt" id="townPrompt" hidden></button>
   </div>
@@ -9839,7 +9879,7 @@ function openPadSetup(back) {
 const HUD = { callT: 0, statusT: 0, flashT: 0, overlays: null, toastT: 0, toastPr: 0, hmT: 0 };
 // what your last move did, in big letters under the crosshair
 function toast(text, kind = 'good', sub = '') {
-  if (G.attract || G.autopilot) return;
+  if ((G.attract && !TOWN.on) || G.autopilot) return;
   if (CUTE.on) { text = CUTE_WORDS[text] || text; if (kind === 'big') text = '♥ ' + text + ' ♥'; }
   const pr = { big: 3, good: 2, bad: 1, info: 1 }[kind] || 1;
   if (HUD.toastPr === 3 && HUD.toastT > 0.7 && pr < 3) return; // only a fresh takedown / big moment holds the spot
@@ -10917,6 +10957,7 @@ function renderCareer() {
     renderSmith(box);
     box.append(h('div', { class: 'up shoplink' }, h('div', null, h('b', null, 'Looking for more to buy?'), h('div', { class: 'muted' }, 'Better weapons and armour, kit upgrades to level 10, tape refills, squires, your club hall, boosts, colours and titles are all in the Shop.')), h('button', { class: 'btn primary flagtape small', onclick: () => { AU.click(); G.careerTab = 'shop'; renderCareer(); } }, 'Open the Shop')));
   } else if (tab === 'shop') { renderShop(box);
+  } else if (tab === 'trades') { renderTrades(box);
   } else if (tab === 'progress') { renderProgress(box);
   } else if (tab === 'ach') { renderAwards(box); } else if (tab === '__oldach') {
     const got = Object.keys(CAREER.ach).length;
@@ -11298,6 +11339,9 @@ const T_DEFS = [
   ['level', 'Renown', 'Reach level {n}', [5, 10, 25, 50, 100]],
   ['bestStreak', 'On a roll', 'Win {n} matches in a row', [3, 5, 10, 20, 50]],
   ['tdMatch', 'Wrecking crew', 'Take {n} opponents down in one match', [2, 4, 6, 8, 12]],
+  ['gathered', 'Gatherer', 'Gather {n} things round the festival', [10, 100, 500, 2000, 8000]],
+  ['made', 'Maker', 'Make {n} things at the furnace, the anvil or the bench', [1, 25, 100, 400, 1500]],
+  ['tradeLv', 'Tradesman', 'Reach a total of {n} trade levels', [12, 40, 90, 180, 300]],
   ['achCount', 'Completionist', 'Earn {n} other awards', [10, 50, 100, 175, 230]],
 ];
 const VENUE_T = [1, 10, 50, 150, 500], WPN_T = [1, 10, 50, 200, 750];
@@ -11317,6 +11361,8 @@ function counterValue(k) {
   if (k === 'minutes') return Math.floor((CAREER.playSec || 0) / 60);
   if (k === 'level') return CAREER.level || 1;
   if (k === 'bestStreak') return R.streak || 0;
+  if (k === 'gathered' || k === 'made') return (CAREER.trades && CAREER.trades[k]) || 0;
+  if (k === 'tradeLv') return typeof TRADE_SKILLS === 'undefined' ? 0 : Object.keys(TRADE_SKILLS).reduce((a, sk) => a + tradeLevel(sk), 0);
   if (k === 'tdMatch') return R.tdMatch || 0;
   if (k === 'achCount') return Object.keys(CAREER.ach).filter(id => !id.startsWith('t_achCount')).length;
   if (k in S) return S[k] || 0;
@@ -11647,13 +11693,19 @@ function renderVendor(box, key, again) {
   const secs = []; let cur = null;
   const newSec = t => { cur = { t, el: h('div', { class: 'vgrid' }), n: 0 }; secs.push(cur); };
   const list = { append: (...nodes) => { for (const n of nodes) { if (!n) continue; if (n.tagName === 'H4') { newSec(n.textContent); continue; } if (!cur) newSec('Goods'); if (n.classList && n.classList.contains('up')) cur.n++; cur.el.append(n); } } };
-  const row = (name, tierTxt, desc, btnTxt, can, buy, extra, thumb) => {
+  // a card. make = { skill, R: { lvl, cost, xp }, apply, label } adds the trade route: the same thing for materials and skill instead of gold
+  const row = (name, tierTxt, desc, btnTxt, can, buy, extra, thumb, make) => {
     const m = /\$([\d,]+)/.exec(btnTxt || ''), cost = m ? +m[1].replace(/,/g, '') : 0, short = !can && cost > CAREER.purse ? cost - CAREER.purse : 0;
     const done = /^(Maxed|Owned|Signed|Built|Gilded|Done|Full|All hired|Wearing|Golden|Equipped)$/.test(btnTxt || '');
-    const b = h('button', { class: 'btn ' + (done ? 'ghost' : can ? 'primary flagtape' : 'tape') + ' small vbuy', disabled: can ? null : true, onclick: e => { if (!can) return; const card = e.target.closest('.up'); const ok = buy(); if (ok === false) return; AU.click(); TOWN.vjust = name; again(); } }, btnTxt);
+    const b = btnTxt == null ? null : h('button', { class: 'btn ' + (done ? 'ghost' : can ? 'primary flagtape' : 'tape') + ' small vbuy', disabled: can ? null : true, onclick: () => { if (!can) return; const ok = buy(); if (ok === false) return; AU.click(); TOWN.vjust = name; again(); } }, btnTxt);
     const r = h('div', { class: 'up vcard' + (extra || '') + (done ? ' done' : '') + (TOWN.vjust === name ? ' just' : '') },
       h('div', { class: 'vtop' }, thumb ? h('div', { class: 'vthumb' }, thumb) : null, h('div', { class: 'vtxt' }, h('div', { class: 'uph' }, h('b', null, name), tierTxt ? h('span', { class: 'tier' }, tierTxt) : null), h('div', { class: 'muted' }, desc))),
-      h('div', { class: 'vfoot' }, short ? h('span', { class: 'vshort' }, `Need ${fmtMoney(short)} more`) : h('span'), b));
+      b ? h('div', { class: 'vfoot' }, short ? h('span', { class: 'vshort' }, `Need ${fmtMoney(short)} more`) : h('span'), b) : null);
+    if (make && !done) {
+      const info = craftInfo(make.skill, make.R), S = TRADE_SKILLS[make.skill];
+      const mb = h('button', { class: 'btn ' + (info.can ? 'primary' : 'tape') + ' small vmk', disabled: info.can ? null : true, onclick: () => { if (craft(make.skill, make.R, name, make.apply)) { TOWN.vjust = name; again(); } } }, make.label || 'Make it');
+      r.append(h('div', { class: 'vmake' }, h('div', { class: 'vmrow' }, h('small', null, `${S.icon} ${S.name} ${make.R.lvl}${info.lvOk ? '' : ` (you're ${tradeLevel(make.skill)})`} · +${make.R.xp} xp`), mb), costHtml(make.R.cost)));
+    }
     list.append(r); return r;
   };
   const finish = () => {
@@ -11675,16 +11727,20 @@ function renderVendor(box, key, again) {
     for (const k of PICK_WEAPONS.filter(k => WEAPONS[k])) {
       const W = WEAPONS[k], lv = s.wq[k] || 0, cost = WQ_COST[lv], cur = G.loadout && G.loadout.weapon === k;
       row(`${W.name}${cur ? ' (yours)' : ''}`, QUAL_NAMES[lv], lv >= 5 ? 'Legendary. As good as steel gets.' : `Next: ${QUAL_NAMES[lv + 1]}.`, lv >= 5 ? 'Maxed' : `Upgrade ${fmtMoney(cost)}`, lv < 5 && CAREER.purse >= cost,
-        () => { if (!spend(cost, W.name)) return false; s.wq[k] = lv + 1; saveCareer(); toastMenu(`${W.name}: now ${QUAL_NAMES[lv + 1]}.`); }, cur ? ' cur' : '', weaponIcon(k, 120, 36)).querySelector('.uph').append(bar(lv, 5));
+        () => { if (!spend(cost, W.name)) return false; s.wq[k] = lv + 1; saveCareer(); toastMenu(`${W.name}: now ${QUAL_NAMES[lv + 1]}.`); }, cur ? ' cur' : '', weaponIcon(k, 120, 36),
+        lv < 5 ? { skill: 'smithing', R: WQ_MATS[lv], apply: () => { s.wq[k] = lv + 1; toastMenu(`${W.name}: now ${QUAL_NAMES[lv + 1]}, by your own hand.`); }, label: 'Forge it' } : null).querySelector('.uph').append(bar(lv, 5));
     }
     head('Fittings'); items();
+    head('Furnace'); renderFurnace(list, row);
     head('Custom forging');
     { const fw = h('div', { class: 'vwide' }); renderSmith(fw); list.append(fw); }
   } else if (key === 'armour') {
     head('Armour quality');
-    for (const A of AQ_GROUPS) { const lv = s.aq[A.key] || 0, cost = AQ_COST[lv]; row(A.name, ARM_NAMES[lv], A.desc, lv >= 5 ? 'Maxed' : `Upgrade ${fmtMoney(cost)}`, lv < 5 && CAREER.purse >= cost, () => { if (!spend(cost, A.name)) return false; s.aq[A.key] = lv + 1; saveCareer(); }).querySelector('.uph').append(bar(lv, 5)); }
+    for (const A of AQ_GROUPS) { const lv = s.aq[A.key] || 0, cost = AQ_COST[lv]; row(A.name, ARM_NAMES[lv], A.desc, lv >= 5 ? 'Maxed' : `Upgrade ${fmtMoney(cost)}`, lv < 5 && CAREER.purse >= cost, () => { if (!spend(cost, A.name)) return false; s.aq[A.key] = lv + 1; saveCareer(); }, '', null,
+      lv < 5 ? { skill: 'smithing', R: AQ_MATS[lv], apply: () => { s.aq[A.key] = lv + 1; toastMenu(`${A.name}: now ${ARM_NAMES[lv + 1]}.`); }, label: 'Make it' } : null).querySelector('.uph').append(bar(lv, 5)); }
     head('Kit upgrades (to level 10)');
-    for (const U of UPGRADES) { const lv = CAREER.upgrades[U.key] || 0, cost = UP_COST[lv]; row(U.name, `Level ${lv}`, U.desc + (lv >= 3 ? ' Levels past 3 give half as much.' : ''), lv >= UP_MAX ? 'Maxed' : `Buy ${fmtMoney(cost)}`, lv < UP_MAX && CAREER.purse >= cost, () => { if (!spend(cost, U.name)) return false; CAREER.upgrades[U.key] = lv + 1; saveCareer(); }).querySelector('.uph').append(bar(lv, UP_MAX)); }
+    for (const U of UPGRADES) { const lv = CAREER.upgrades[U.key] || 0, cost = UP_COST[lv]; row(U.name, `Level ${lv}`, U.desc + (lv >= 3 ? ' Levels past 3 give half as much.' : ''), lv >= UP_MAX ? 'Maxed' : `Buy ${fmtMoney(cost)}`, lv < UP_MAX && CAREER.purse >= cost, () => { if (!spend(cost, U.name)) return false; CAREER.upgrades[U.key] = lv + 1; saveCareer(); }, '', null,
+      lv < UP_MAX && KIT_MATS[U.key] ? { skill: 'smithing', R: { lvl: kitMatLvl(lv), cost: KIT_MATS[U.key](lv), xp: 30 + lv * 12 }, apply: () => { CAREER.upgrades[U.key] = lv + 1; }, label: 'Make it' } : null).querySelector('.uph').append(bar(lv, UP_MAX)); }
     head('Straps and fittings'); items();
     head('Repairs');
     const ac = armourerCost();
@@ -11859,9 +11915,151 @@ function renderArtificer(list, row, head) {
     for (const k of ks) {
       const R = RARITY[WSKIN_RARE[k] || 0], own = !!s.owned['ws:' + k], on = s.wskin[fam] === k, cost = wskinCost(k);
       const r = row(wskinName(k), on ? 'Equipped' : own ? 'Owned' : R.name, own ? 'Yours. Equip it any time.' : `${R.name} look for your ${WSKIN_FAM_NAME[fam].toLowerCase().replace(/s$/, '').replace(/s,/, ',')}.`, on ? 'Equipped' : own ? 'Equip' : `Buy ${fmtMoney(cost)}`, !on && (own || CAREER.purse >= cost),
-        () => { if (!own) { if (!spend(cost, wskinName(k))) return false; s.owned['ws:' + k] = 1; } s.wskin[fam] = k; saveCareer(); toastMenu(`${wskinName(k)} equipped. You'll see it in your next fight.`); if (typeof townDressMe === 'function') townDressMe(); }, (on ? ' cur' : '') + ' r' + (WSKIN_RARE[k] || 0), skinIcon(k, 96, 96));
+        () => { if (!own) { if (!spend(cost, wskinName(k))) return false; s.owned['ws:' + k] = 1; } s.wskin[fam] = k; saveCareer(); toastMenu(`${wskinName(k)} equipped. You'll see it in your next fight.`); if (typeof townDressMe === 'function') townDressMe(); }, (on ? ' cur' : '') + ' r' + (WSKIN_RARE[k] || 0), skinIcon(k, 96, 96),
+        own ? null : { skill: 'artificing', R: skinMats(k), apply: () => { s.owned['ws:' + k] = 1; s.wskin[fam] = k; toastMenu(`${wskinName(k)} made and equipped.`); if (typeof townDressMe === 'function') townDressMe(); }, label: 'Craft it' });
       r.style.setProperty('--rc', R.col);
     }
+  }
+}
+
+// ===================================================================
+// Trades: skills you get better at by doing them. Gather round the festival (mining, woodcutting, foraging), then
+// work the materials (forging, smithing, artificing) into the same upgrades and cosmetics the vendors sell for gold.
+// Everything lives in CAREER.trades: xp per skill, the satchel, and which tools you've made.
+// ===================================================================
+const TRADE_SKILLS = {
+  mining: { name: 'Mining', icon: '⛏️', desc: 'Ore, coal and crystal from the quarry and the rocks round town.', tool: 'pick' },
+  woodcut: { name: 'Woodcutting', icon: '🪓', desc: 'Haft wood from the marked trees in the woods.', tool: 'axe' },
+  forage: { name: 'Foraging', icon: '🌿', desc: 'Herbs, berries, flax, hides and bone from the fields, farm and graveyard.', tool: 'sickle' },
+  forging: { name: 'Forging', icon: '🔥', desc: 'Ore to ingots at the furnace, and better tools.' },
+  smithing: { name: 'Smithing', icon: '⚒️', desc: 'Weapon and armour quality and kit upgrades at the anvil, no gold needed.' },
+  artificing: { name: 'Artificing', icon: '✨', desc: 'Weapon skins and outfits from bone, crystal, cloth and dye.' }
+};
+const TRADE_CAP = 50;
+// materials: what they are, what they look like in the satchel
+const MATS = {
+  copper_ore: { name: 'Copper ore', icon: '🟤', col: '#b87333', kind: 'ore' }, iron_ore: { name: 'Iron ore', icon: '⚫', col: '#6e6a66', kind: 'ore' }, coal: { name: 'Coal', icon: '🪨', col: '#2a2a2a', kind: 'ore' },
+  silver_ore: { name: 'Silver ore', icon: '⚪', col: '#c0c6cc', kind: 'ore' }, gold_ore: { name: 'Gold ore', icon: '🟡', col: '#e3b341', kind: 'ore' }, crystal: { name: 'Crystal', icon: '💎', col: '#9fe3ff', kind: 'ore' },
+  ash: { name: 'Ash wood', icon: '🪵', col: '#c9b48a', kind: 'wood' }, oak: { name: 'Oak wood', icon: '🪵', col: '#8a5a2a', kind: 'wood' }, hickory: { name: 'Hickory wood', icon: '🪵', col: '#5a3a1a', kind: 'wood' },
+  herb: { name: 'Herbs', icon: '🌿', col: '#4caf50', kind: 'forage' }, berry: { name: 'Berries', icon: '🫐', col: '#7b2d8e', kind: 'forage' }, flax: { name: 'Flax', icon: '🌾', col: '#d9c47a', kind: 'forage' },
+  hide: { name: 'Hide', icon: '🟫', col: '#7a4a22', kind: 'forage' }, bone: { name: 'Bone', icon: '🦴', col: '#e8e0cc', kind: 'forage' },
+  copper_ingot: { name: 'Copper ingot', icon: '🟧', col: '#c8763a', kind: 'ingot' }, iron_ingot: { name: 'Iron ingot', icon: '⬛', col: '#8a8f94', kind: 'ingot' }, steel_ingot: { name: 'Steel ingot', icon: '◼️', col: '#c9d2d6', kind: 'ingot' },
+  silver_ingot: { name: 'Silver ingot', icon: '⬜', col: '#e6ebf0', kind: 'ingot' }, gold_ingot: { name: 'Gold ingot', icon: '🟨', col: '#ffd24d', kind: 'ingot' }
+};
+// the three gathering tools and their tiers (made at the furnace)
+const TOOL_TIERS = ['Loaner', 'Copper', 'Iron', 'Steel'];
+const TOOLS = { pick: { name: 'Pickaxe', icon: '⛏️' }, axe: { name: 'Felling axe', icon: '🪓' }, sickle: { name: 'Sickle', icon: '🔪' } };
+// what you can gather: level needed, tool tier needed, what and how much it gives
+const NODES = {
+  copper: { skill: 'mining', name: 'Copper vein', lvl: 1, tool: 0, mat: 'copper_ore', n: [1, 2], xp: 12, respawn: 70, col: '#b87333' },
+  iron: { skill: 'mining', name: 'Iron vein', lvl: 5, tool: 1, mat: 'iron_ore', n: [1, 2], xp: 20, respawn: 90, col: '#6e6a66' },
+  coal: { skill: 'mining', name: 'Coal seam', lvl: 8, tool: 1, mat: 'coal', n: [1, 3], xp: 18, respawn: 80, col: '#222' },
+  crystal: { skill: 'mining', name: 'Crystal cluster', lvl: 15, tool: 2, mat: 'crystal', n: [1, 1], xp: 40, respawn: 160, col: '#9fe3ff' },
+  silver: { skill: 'mining', name: 'Silver vein', lvl: 22, tool: 2, mat: 'silver_ore', n: [1, 2], xp: 55, respawn: 150, col: '#c0c6cc' },
+  gold: { skill: 'mining', name: 'Gold vein', lvl: 34, tool: 3, mat: 'gold_ore', n: [1, 1], xp: 90, respawn: 220, col: '#e3b341' },
+  ash: { skill: 'woodcut', name: 'Ash tree', lvl: 1, tool: 0, mat: 'ash', n: [1, 2], xp: 12, respawn: 80, col: '#c9b48a' },
+  oak: { skill: 'woodcut', name: 'Oak tree', lvl: 8, tool: 1, mat: 'oak', n: [1, 2], xp: 24, respawn: 110, col: '#8a5a2a' },
+  hickory: { skill: 'woodcut', name: 'Hickory tree', lvl: 18, tool: 2, mat: 'hickory', n: [1, 1], xp: 48, respawn: 150, col: '#5a3a1a' },
+  herb: { skill: 'forage', name: 'Herb patch', lvl: 1, tool: 0, mat: 'herb', n: [1, 3], xp: 10, respawn: 60, col: '#4caf50' },
+  berry: { skill: 'forage', name: 'Berry bush', lvl: 3, tool: 0, mat: 'berry', n: [1, 3], xp: 12, respawn: 70, col: '#7b2d8e' },
+  flax: { skill: 'forage', name: 'Flax', lvl: 6, tool: 1, mat: 'flax', n: [1, 2], xp: 18, respawn: 90, col: '#d9c47a' },
+  hide: { skill: 'forage', name: 'Hides on the rack', lvl: 10, tool: 1, mat: 'hide', n: [1, 1], xp: 30, respawn: 120, col: '#7a4a22' },
+  bone: { skill: 'forage', name: 'Bone pile', lvl: 14, tool: 2, mat: 'bone', n: [1, 2], xp: 36, respawn: 130, col: '#e8e0cc' }
+};
+// xp to go from level L to L+1, and the level a total gives
+function tradeXpFor(L) { return Math.round(40 * Math.pow(L, 1.55) + 60); }
+function tradeState() {
+  const d = { xp: {}, inv: {}, tools: { pick: 0, axe: 0, sickle: 0 }, made: 0, gathered: 0 };
+  const t = CAREER.trades || (CAREER.trades = {}); for (const k in d) if (t[k] == null) t[k] = d[k];
+  for (const k in TRADE_SKILLS) if (t.xp[k] == null) t.xp[k] = 0;
+  for (const k in TOOLS) if (t.tools[k] == null) t.tools[k] = 0;
+  return t;
+}
+function tradeLevel(skill) { let xp = tradeState().xp[skill] || 0, L = 1; while (L < TRADE_CAP && xp >= tradeXpFor(L)) { xp -= tradeXpFor(L); L++; } return L; }
+function tradeProgress(skill) { let xp = tradeState().xp[skill] || 0, L = 1; while (L < TRADE_CAP && xp >= tradeXpFor(L)) { xp -= tradeXpFor(L); L++; } return L >= TRADE_CAP ? { L, xp: 0, need: 0, f: 1 } : { L, xp, need: tradeXpFor(L), f: xp / tradeXpFor(L) }; }
+function tradeGain(skill, xp) {
+  if (G.autopilot || (G.attract && !TOWN.on) || xp <= 0) return;
+  const t = tradeState(), before = tradeLevel(skill); t.xp[skill] = (t.xp[skill] || 0) + Math.round(xp); const after = tradeLevel(skill); saveCareer();
+  const S = TRADE_SKILLS[skill];
+  if (after > before) { toast(`${S.name} level ${after}!`, 'big', after % 5 === 0 ? 'New things to gather and make.' : `+${Math.round(xp)} xp`); try { AU.cheer(0.9); } catch (e) { } }
+  else toast(`+${Math.round(xp)} ${S.name} xp`, 'info', `Level ${after} · ${Math.round(tradeProgress(skill).f * 100)}% to ${after + 1}`);
+  if (typeof progressSoon === 'function') progressSoon();
+}
+function have(mat) { return tradeState().inv[mat] || 0; }
+function give(mat, n) { const t = tradeState(); t.inv[mat] = (t.inv[mat] || 0) + n; t.gathered += Math.max(0, n); saveCareer(); }
+function tradeCanPay(cost) { for (const m in cost) if (have(m) < cost[m]) return false; return true; }
+function tradePay(cost) { if (!tradeCanPay(cost)) return false; const t = tradeState(); for (const m in cost) t.inv[m] -= cost[m]; saveCareer(); return true; }
+function costText(cost) { return Object.keys(cost).map(m => `${cost[m]} ${MATS[m].name.toLowerCase()}${have(m) < cost[m] ? ` (have ${have(m)})` : ''}`).join(', '); }
+function costHtml(cost) {
+  const w = h('span', { class: 'matlist' });
+  for (const m in cost) { const ok = have(m) >= cost[m]; w.append(h('span', { class: 'mat' + (ok ? ' ok' : ' no'), title: MATS[m].name }, h('i', null, MATS[m].icon), `${have(m)}/${cost[m]}`)); }
+  return w;
+}
+// ---- recipes
+// Forging (furnace): ingots and tools
+const SMELT = [
+  { id: 'copper_ingot', lvl: 1, cost: { copper_ore: 2, ash: 1 }, xp: 14 }, { id: 'iron_ingot', lvl: 5, cost: { iron_ore: 2, coal: 1 }, xp: 22 },
+  { id: 'steel_ingot', lvl: 12, cost: { iron_ore: 2, coal: 2 }, xp: 34 }, { id: 'silver_ingot', lvl: 22, cost: { silver_ore: 2, coal: 1 }, xp: 50 }, { id: 'gold_ingot', lvl: 34, cost: { gold_ore: 2, coal: 2 }, xp: 80 }
+];
+const TOOL_RECIPES = [ // tier -> cost, forging level
+  null, { lvl: 2, cost: { copper_ingot: 2, ash: 1 }, xp: 30 }, { lvl: 10, cost: { iron_ingot: 3, oak: 1 }, xp: 60 }, { lvl: 20, cost: { steel_ingot: 3, hickory: 1 }, xp: 110 }
+];
+// Smithing (anvil): the same tiers the vendors sell, paid in materials
+const WQ_MATS = [{ lvl: 1, cost: { copper_ingot: 2, ash: 1 }, xp: 40 }, { lvl: 8, cost: { iron_ingot: 3, oak: 1 }, xp: 70 }, { lvl: 16, cost: { steel_ingot: 3, oak: 1 }, xp: 110 }, { lvl: 26, cost: { steel_ingot: 5, silver_ingot: 1, hickory: 1 }, xp: 170 }, { lvl: 38, cost: { steel_ingot: 6, silver_ingot: 3, gold_ingot: 1, hickory: 1 }, xp: 260 }];
+const AQ_MATS = [{ lvl: 2, cost: { copper_ingot: 2, hide: 1 }, xp: 40 }, { lvl: 9, cost: { iron_ingot: 3, hide: 1 }, xp: 70 }, { lvl: 17, cost: { steel_ingot: 3, hide: 2 }, xp: 110 }, { lvl: 27, cost: { steel_ingot: 5, silver_ingot: 1, hide: 2 }, xp: 170 }, { lvl: 39, cost: { steel_ingot: 6, silver_ingot: 3, gold_ingot: 1, hide: 3 }, xp: 260 }];
+// kit upgrades: cost grows with the level you're buying; cardio is training, not smithing
+const KIT_MATS = { harness: lv => ({ iron_ingot: 1 + Math.ceil(lv / 2), hide: 1 }), boots: lv => ({ hide: 1 + Math.ceil(lv / 3), ash: 1 }), padding: lv => ({ flax: 2 + Math.ceil(lv / 2), herb: 1 }), gauntlets: lv => ({ iron_ingot: 1 + Math.ceil(lv / 3), hide: 1 }) };
+const kitMatLvl = lv => 1 + lv * 3;
+// Artificing: skins by rarity (orc looks want bone, fantasy looks want crystal), outfits by price
+const SKIN_MATS = [{ lvl: 1, cost: { bone: 3, iron_ingot: 1, hide: 1 }, xp: 50 }, { lvl: 10, cost: { bone: 4, steel_ingot: 2, berry: 2 }, xp: 90 }, { lvl: 20, cost: { crystal: 2, silver_ingot: 2, herb: 3 }, xp: 150 }, { lvl: 32, cost: { crystal: 5, gold_ingot: 1, silver_ingot: 2, berry: 3 }, xp: 240 }];
+function skinMats(k) { const R = WSKIN_RARE[k] || 0, c = { ...SKIN_MATS[R].cost }; if (k.startsWith('fw_') && c.bone) { c.crystal = (c.crystal || 0) + Math.ceil(c.bone / 2); delete c.bone; } if (k.startsWith('orc_') && c.crystal) { c.bone = (c.bone || 0) + c.crystal * 2; delete c.crystal; } return { lvl: SKIN_MATS[R].lvl, cost: c, xp: SKIN_MATS[R].xp }; }
+function outfitMats(cost) { return cost >= 6000 ? { lvl: 14, cost: { hide: 4, flax: 3, herb: 3, berry: 1 }, xp: 120 } : cost >= 4500 ? { lvl: 9, cost: { hide: 3, flax: 2, herb: 2 }, xp: 90 } : cost >= 1800 ? { lvl: 4, cost: { flax: 3, hide: 1, berry: 2 }, xp: 50 } : { lvl: 1, cost: { flax: 3, hide: 1, herb: 1 }, xp: 35 }; }
+// try a craft: checks level and materials, pays, gives xp. Returns true if it happened.
+function craft(skill, R, what, apply) {
+  const L = tradeLevel(skill);
+  if (L < R.lvl) { toastMenu(`Needs ${TRADE_SKILLS[skill].name} ${R.lvl} (you're ${L}).`); return false; }
+  if (!tradeCanPay(R.cost)) { toastMenu(`Short of materials: ${costText(R.cost)}.`); return false; }
+  tradePay(R.cost); const t = tradeState(); t.made++; apply(); saveCareer(); try { AU.clang && AU.clang(0.6, 0.8); } catch (e) { }
+  tradeGain(skill, R.xp);
+  return true;
+}
+// a card's "make it" side: label, whether you can, and a tooltip of what's missing
+function craftInfo(skill, R) {
+  const L = tradeLevel(skill), lvOk = L >= R.lvl, matOk = tradeCanPay(R.cost);
+  return { can: lvOk && matOk, why: !lvOk ? `${TRADE_SKILLS[skill].name} ${R.lvl} needed (you're ${L})` : matOk ? '' : 'Short of materials', lvOk };
+}
+// the Trades tab: six skills with bars, then the satchel
+function renderTrades(box) {
+  const t = tradeState();
+  box.append(h('p', { class: 'muted small' }, 'Skills you get better at by doing them. Gather round the festival, then work the furnace, the anvil and the Artificer’s bench. Everything the vendors sell for gold can be made here instead.'));
+  const grid = h('div', { class: 'tradegrid' });
+  for (const k in TRADE_SKILLS) {
+    const S = TRADE_SKILLS[k], P = tradeProgress(k), tool = S.tool ? `${TOOL_TIERS[t.tools[S.tool]]} ${TOOLS[S.tool].name.toLowerCase()}` : null;
+    const next = Object.values(NODES).filter(n => n.skill === k && n.lvl > P.L).sort((a, b) => a.lvl - b.lvl)[0];
+    grid.append(h('div', { class: 'tradecard' }, h('div', { class: 'th' }, h('span', { class: 'ticon' }, S.icon), h('div', null, h('b', null, S.name), h('small', null, `Level ${P.L}${P.L >= TRADE_CAP ? ' (max)' : ''}`)), h('span', { class: 'tlv num' }, P.L)),
+      h('div', { class: 'tbar' }, h('i', { style: `width:${Math.round(P.f * 100)}%` })),
+      h('div', { class: 'muted small' }, P.L >= TRADE_CAP ? 'Mastered.' : `${P.xp} / ${P.need} xp to level ${P.L + 1}`),
+      h('div', { class: 'muted small' }, S.desc), tool ? h('div', { class: 'small' }, `Tool: ${tool}`) : null, next ? h('div', { class: 'small muted' }, `Next: ${next.name} at level ${next.lvl}`) : null));
+  }
+  box.append(grid);
+  box.append(h('h3', null, 'Satchel'));
+  const inv = Object.keys(MATS).filter(m => have(m) > 0);
+  if (!inv.length) box.append(h('p', { class: 'muted small' }, 'Empty. Go and gather something: the quarry is by the watchtower, the marked trees are in the woods, the herbs are by the pond.'));
+  const sat = h('div', { class: 'satchel' });
+  for (const m of inv) sat.append(h('div', { class: 'satitem', style: `--c:${MATS[m].col}` }, h('span', { class: 'si' }, MATS[m].icon), h('b', { class: 'num' }, have(m)), h('span', null, MATS[m].name)));
+  box.append(sat, h('p', { class: 'muted small' }, `${t.gathered} things gathered, ${t.made} things made.`));
+}
+// the blacksmith's furnace: ore into ingots, and the gathering tools, all paid in materials
+function renderFurnace(list, row) {
+  const t = tradeState();
+  list.append(h('p', { class: 'muted small' }, 'Forging. Ore and fuel from the quarry go in, ingots come out. The anvil cards above take ingots instead of gold. Tools here make gathering faster and open harder veins.'));
+  for (const R of SMELT) {
+    const M = MATS[R.id];
+    row(`Smelt ${M.name.toLowerCase()}`, `Have ${have(R.id)}`, `One ${M.name.toLowerCase()} for the anvil.`, null, false, null, '', h('span', { class: 'bigicon', style: `--c:${M.col}` }, M.icon), { skill: 'forging', R, apply: () => { give(R.id, 1); }, label: 'Smelt' });
+  }
+  for (const k in TOOLS) {
+    const tier = t.tools[k] || 0, R = TOOL_RECIPES[tier + 1];
+    row(`${TOOL_TIERS[tier]} ${TOOLS[k].name.toLowerCase()}`, tier >= 3 ? 'Best' : `Tier ${tier}`, R ? `Next: ${TOOL_TIERS[tier + 1].toLowerCase()} ${TOOLS[k].name.toLowerCase()}. Wider sweet spot, better yield, opens tier ${tier + 1} nodes.` : 'As good as a tool gets.', tier >= 3 ? 'Best' : null, false, null, '', h('span', { class: 'bigicon' }, TOOLS[k].icon), R ? { skill: 'forging', R, apply: () => { t.tools[k] = tier + 1; toastMenu(`${TOOL_TIERS[tier + 1]} ${TOOLS[k].name.toLowerCase()} made.`); }, label: 'Forge it' } : null);
   }
 }
 
@@ -12500,6 +12698,7 @@ const CREDITS_HTML = `<p>Design, code and procedural art made for this prototype
 <div><span>Marshal and squire animations: Universal Animation Library by Quaternius</span><span class="muted">CC0</span></div>
 <div><span>Townsfolk costumes: Modular Character Outfits - Fantasy by Quaternius</span><span class="muted">CC0</span></div>
 <div><span>Cosmetic weapon skins: 3D Orc Weapons Pack and 3D Fantasy Weapons Pack 2 (polyy.ai)</span><span class="muted">CC0</span></div>
+<div><span>Gathering spots and tools: Kenney, Avramania nature and Slavic World pieces</span><span class="muted">CC0 / EmacEArt</span></div>
 <div><span>GLTFLoader and SkeletonUtils from three.js</span><span class="muted">MIT</span></div>
 </div>
 <p class="muted">CC BY 4.0: creativecommons.org/licenses/by/4.0. Rules cited from Buhurt International documents.</p>`;
@@ -13162,7 +13361,7 @@ function frame(now) {
   G.realTime += dt;
   try {
     readInput(dt);
-    if (IN.edges.has('pause')) { IN.edges.delete('pause'); if (G.photo) closePhoto(); else if (TOWN.on) { if (!G.screen) openTownMap(); } else togglePause(); }
+    if (IN.edges.has('pause')) { IN.edges.delete('pause'); if (G.photo) closePhoto(); else if (TOWN.on) { if (GATHER.on) stopGather(false); else if (!G.screen) openTownMap(); } else togglePause(); }
     if (TOWN.on) updateTown(dt);
     if (G.phase === 'tactics' && G.screen === 'tactics') {
       G.tacClock -= dt; $('#tacClock').textContent = fmtClock(G.tacClock);
@@ -13222,7 +13421,7 @@ async function boot(hot) {
   toTitle();
   requestAnimationFrame(frame);
   if (location.hash === '#autotest') setTimeout(autotest, 300);
-  window.__ST = { G, AU, buildShield, buildWeapon, W3, startTourney, quickFight, toTitle, openRepair, kitCheck, setupMatch, toTactics, beginFight, endRound, matchEnd, CLUBS, WEAPONS, setView, toast, renderKitPicker, applyLoadout, IN, FP, showScreen, weaponIcon, startCine, startTraining, startLadder, openCareer, openModes, openLadder, CAREER, setLesson, TR, unlock, togglePause, afterRound, renderHow, selectPiece, selectTape, msg, renderSheet, setHud, endTraining, setMode, PAD, navMove, focusFirst, sparks, CUTE, THREE, BREATH, setCuteDeco, flipFx, PHOTO, UAL, raiseFlags, startVersus, startFFA, startBracket, startKid, KID, openSeason, startSeasonMatch, setVenue, VS, SPLIT, NET, buildOnlineMatch, hostLobby, joinLobby, ONL, vinControl, openRun, openDaily, openBracket, showBracket, bracketResult, ffaMatchEnd, ffaLeader, ffaWinner, endKid, openPhoto, closePhoto, startReplay, stopReplay, RP, store, startRunFight, newRun, runEnd, WX, setWeather, padVin, readVersus, applyLo, myLoadout, netDropped, netLeave, showIntro, installForged, dailyPlan, openKids, openVersus, openPicks, LESSONS, rivalClub, startGrudge, startDaily, seasonState, newSeason, refreshDaily, VENUES, COMM, hitMapHtml, resetFighterForRound, DIFF, PIN, PADS, NIN, padsUpdate, seatPads, LOBBY, MM, openOnlineHub, benchDown, benchMove, REP, squirePatch, coverage, openProfile, myProfile, BOS, updateTitlePurse, ACH, progressCheck, challenges, masteryOf, S2, rankOf, counterValue, renderCareer, progressMatch, saveCareer, shopState, shopUp, tapeLeft, shopMatchEnd, shopPrizeMult, shopXpMult, swingTimes, pieceWearMult, TABARDS, refillTape, renderShop, UPGRADES, freshKit, TAPE_STOCK, enterTown, leaveTown, TOWN, openVendor, closeVendor, openTownMap, shopFx, renderVendor, VENDORS, ITEMS, itemCost, spCost, skillRoom, sponsorIncome, BOOSTS, STALL_AT, HOMES, FURNISH, pfx, squadFx, boostKit, townCollide, townRefresh, townWalkTo, townTalk, townTeardown, lookState, WORLD, guildCheck, STATIONS, townDressMe, FOLK, updateFolk, navBlocked, buildFolk, BOUT, boutStart, boutStop, boutTick, drawTownMap, updateMiniMap, costumePerson, OUTFIT, buildSkinWeapon, skinIcon, wskinList, skinFor, buildMyWeapon, wskinFamOf };
+  window.__ST = { G, AU, buildShield, buildWeapon, W3, startTourney, quickFight, toTitle, openRepair, kitCheck, setupMatch, toTactics, beginFight, endRound, matchEnd, CLUBS, WEAPONS, setView, toast, renderKitPicker, applyLoadout, IN, FP, showScreen, weaponIcon, startCine, startTraining, startLadder, openCareer, openModes, openLadder, CAREER, setLesson, TR, unlock, togglePause, afterRound, renderHow, selectPiece, selectTape, msg, renderSheet, setHud, endTraining, setMode, PAD, navMove, focusFirst, sparks, CUTE, THREE, BREATH, setCuteDeco, flipFx, PHOTO, UAL, raiseFlags, startVersus, startFFA, startBracket, startKid, KID, openSeason, startSeasonMatch, setVenue, VS, SPLIT, NET, buildOnlineMatch, hostLobby, joinLobby, ONL, vinControl, openRun, openDaily, openBracket, showBracket, bracketResult, ffaMatchEnd, ffaLeader, ffaWinner, endKid, openPhoto, closePhoto, startReplay, stopReplay, RP, store, startRunFight, newRun, runEnd, WX, setWeather, padVin, readVersus, applyLo, myLoadout, netDropped, netLeave, showIntro, installForged, dailyPlan, openKids, openVersus, openPicks, LESSONS, rivalClub, startGrudge, startDaily, seasonState, newSeason, refreshDaily, VENUES, COMM, hitMapHtml, resetFighterForRound, DIFF, PIN, PADS, NIN, padsUpdate, seatPads, LOBBY, MM, openOnlineHub, benchDown, benchMove, REP, squirePatch, coverage, openProfile, myProfile, BOS, updateTitlePurse, ACH, progressCheck, challenges, masteryOf, S2, rankOf, counterValue, renderCareer, progressMatch, saveCareer, shopState, shopUp, tapeLeft, shopMatchEnd, shopPrizeMult, shopXpMult, swingTimes, pieceWearMult, TABARDS, refillTape, renderShop, UPGRADES, freshKit, TAPE_STOCK, enterTown, leaveTown, TOWN, openVendor, closeVendor, openTownMap, shopFx, renderVendor, VENDORS, ITEMS, itemCost, spCost, skillRoom, sponsorIncome, BOOSTS, STALL_AT, HOMES, FURNISH, pfx, squadFx, boostKit, townCollide, townRefresh, townWalkTo, townTalk, townTeardown, lookState, WORLD, guildCheck, STATIONS, townDressMe, FOLK, updateFolk, navBlocked, buildFolk, BOUT, boutStart, boutStop, boutTick, drawTownMap, updateMiniMap, costumePerson, OUTFIT, buildSkinWeapon, skinIcon, wskinList, skinFor, buildMyWeapon, wskinFamOf, GATHER, startGather, gatherSwing, stopGather, tradeState, tradeLevel, tradeGain, give, have, craft, NODES, MATS, renderTrades, TRADE_SKILLS };
 }
 
 function autotest() {
@@ -14303,7 +14502,7 @@ function buildTown() {
   const RX = LIST.W / 2 + 4, RZ = LIST.L / 2 + 4;
   for (const [x, z] of [[-RX - 9, -10], [-RX - 10, 4], [-RX - 9, 16], [RX + 9, -14], [RX + 10, 2], [RX + 9, 15], [-8, -RZ - 10], [9, -RZ - 10]]) TOWN.obst.push({ x, z, r: 2.7 });
   for (const V of VENDORS) if (!V.custom) buildStall(V);
-  buildSpecialVendors(); buildWorld();
+  buildSpecialVendors(); buildWorld(); buildGatherNodes(TOWN.root);
   buildHome(); buildStatue(); buildAvatar(); buildMyPet(); navBuild();
 }
 // the field venue's own cottages and tree ring would sit in the middle of the festival: hide them in town
@@ -14317,6 +14516,7 @@ function enterTown(vendorKey) {
   TOWN.prevVenue = TOWN.prevVenue || W3.venue; setVenue('field');
   if (!TOWN.light) { TOWN.light = { sun: W3.sun.intensity, hemi: W3.hemi.intensity }; W3.sun.intensity = 1.6; W3.hemi.intensity = 0.75; } // the field's sun is tuned for steel; soften it for cloth and faces
   setWeather && setWeather('clear');
+  TOWN.busy = false; GATHER.on = null; { const ge = $('#gather'); if (ge) ge.hidden = true; }
   buildTown(); TOWN.on = true; TOWN.actPrev = true; TOWN.vendor = null;
   const S0 = vendorKey && TOWN.stalls.find(s => s.V.key === vendorKey);
   if (S0) { TOWN.pos = { x: S0.ax + Math.sin(S0.ry) * 1.6, z: S0.az + Math.cos(S0.ry) * 1.6 }; TOWN.yaw = S0.ry; TOWN.face = S0.ry + Math.PI; }
@@ -14330,7 +14530,7 @@ function enterTown(vendorKey) {
 }
 // leave without going anywhere (a match is starting)
 function townTeardown() {
-  if (!TOWN.on) return; boutStop();
+  if (!TOWN.on) return; boutStop(); GATHER.on = null; TOWN.busy = false; { const ge = $('#gather'); if (ge) ge.hidden = true; }
   if (TOWN.light) { W3.sun.intensity = TOWN.light.sun; W3.hemi.intensity = TOWN.light.hemi; TOWN.light = null; }
   TOWN.on = false; G.phase = ''; document.body.classList.remove('intown'); venueExtras(true); $('#townHud').hidden = true; $('#townPrompt').hidden = true;
   if (TOWN.root) { W3.scene.remove(TOWN.root); TOWN.root = null; } TOWN.me = null; TOWN.stalls = [];
@@ -14339,7 +14539,7 @@ function townTeardown() {
 }
 function leaveTown(next) {
   if (!TOWN.on) { if (next) next(); return; }
-  boutStop();
+  boutStop(); GATHER.on = null; TOWN.busy = false; { const ge = $('#gather'); if (ge) ge.hidden = true; }
   if (TOWN.light) { W3.sun.intensity = TOWN.light.sun; W3.hemi.intensity = TOWN.light.hemi; TOWN.light = null; }
   try { lobbySet({ tw: null }); WORLD.lastTw = 0; } catch (e) { }
   TOWN.on = false; G.phase = ''; document.body.classList.remove('intown'); venueExtras(true); $('#townHud').hidden = true; $('#townPrompt').hidden = true;
@@ -14354,7 +14554,8 @@ function townHudUpdate() { const p = $('#townPurse'); if (p) p.textContent = fmt
 function updateTown(dt) {
   if (!TOWN.on) return; updateMiniMap(dt);
   if (!TOWN.people && typeof UAL !== 'undefined' && UAL.ready) { const keep = { ...TOWN.pos }; buildTown(); TOWN.pos = keep; }
-  const walking = !G.screen && !G.paused;
+  updateGather(dt);
+  const walking = !G.screen && !G.paused && !TOWN.busy;
   const k = IN.keys;
   if (walking) {
     TOWN.yaw -= (PIN.rx || 0) * 2.6 * dt;
@@ -14384,7 +14585,7 @@ function updateTown(dt) {
   for (const S of TOWN.stalls) {
     const d = Math.hypot(S.ax - TOWN.pos.x, S.az - TOWN.pos.z); if (d < bd) { bd = d; best = S; }
     const N = S.npc; if (N && N.ual) { const talk = S === TOWN.near || S.V.key === TOWN.vendor; N.play(talk ? 'Idle_Talking_Loop' : 'Idle_Loop', 0.4); N.mixer.update(dt); }
-    const dd = Math.hypot(S.x - TOWN.pos.x, S.z - TOWN.pos.z); S.label.visible = dd < 30;
+    const dd = Math.hypot(S.x - TOWN.pos.x, S.z - TOWN.pos.z); S.label.visible = dd < 30 && !(S.node && S.node.until);
     if (N && N.root && !S.player && dd < 9) { const lx = TOWN.pos.x - S.x, lz = TOWN.pos.z - S.z; const local = Math.atan2(lx, lz) - S.ry; const t = clamp(Math.atan2(Math.sin(local), Math.cos(local)), -1.1, 1.1); N.root.rotation.y += (t - N.root.rotation.y) * Math.min(1, dt * 4); }
   }
   if (best !== TOWN.near) { TOWN.near = best; townPrompt(); }
@@ -14421,9 +14622,9 @@ function updateTownCamera(dt) {
 }
 function townPrompt() {
   const b = $('#townPrompt'); if (!b) return;
-  const S = TOWN.near; if (!S || G.screen) { b.hidden = true; return; }
+  const S = TOWN.near; if (!S || G.screen || TOWN.busy) { b.hidden = true; return; }
   const key = IN.mode === 'pad' ? (NIN && NIN.on ? 'A' : 'A') : IN.mode === 'touch' ? 'Tap' : 'E';
-  b.innerHTML = ''; b.append(h('kbd', null, key), h('span', null, `Talk to ${S.V.name}`), h('small', null, `${S.V.icon} ${S.V.role}`)); b.hidden = false;
+  b.innerHTML = ''; b.append(h('kbd', null, key), h('span', null, `${S.verb || 'Talk to'} ${S.V.name}`), h('small', null, `${S.V.icon} ${S.V.role}`)); b.hidden = false;
 }
 // a vendor's counter: a screen over the town, so the controller and Back work as in every menu
 function openVendor(key) {
@@ -14445,7 +14646,7 @@ function openTownMap() {
   box.append(townMapCanvas());
   box.append(h('p', { class: 'muted small' }, 'Or pick someone from the list to walk straight to them.'));
   const list = h('div', { class: 'ups shop' }); box.append(list);
-  for (const S of TOWN.stalls.filter(s => !s.player)) {
+  for (const S of TOWN.stalls.filter(s => !s.player && !s.node)) {
     const V = S.V, d = Math.round(Math.hypot(S.x - TOWN.pos.x, S.z - TOWN.pos.z));
     list.append(h('div', { class: 'up' }, h('div', null, h('div', { class: 'uph' }, h('span', { class: 'vicon' }, V.icon), h('b', null, V.name), h('span', { class: 'tier' }, V.role)), h('div', { class: 'muted' }, `${S.station ? '' : vendorBlurb(V.key) + ' '}${d} m away.`)),
       h('button', { class: 'btn tape small', onclick: () => { townWalkTo(V.key); closeVendor(); } }, 'Go')));
@@ -14530,7 +14731,7 @@ function dress(J, L) {
   }
   // in your hand
   const hand = J.handR; if (hand && L.n !== 'none') {
-    const it = grp(hand, 0, 0.08, 0.02);
+    const it = grp(hand, 0, 0.08, 0.02); J.heldItem = it;
     if (L.n === 'weapon') { try { it.add(buildMyWeapon(G.loadout && G.loadout.weapon || 'sword', CLUBS.reavers)); } catch (e) { } }
     else if (L.n === 'torch') { mk(it, geo('w_tst', () => new THREE.CylinderGeometry(0.025, 0.02, 0.55, 6)), tmat('#5a3b24'), 0, 0.2, 0); const fl = mk(it, geo('w_flame', () => new THREE.ConeGeometry(0.06, 0.18, 8)), tmat('#ffb02e', { emissive: '#ff6a00', emissiveIntensity: 1.6 }), 0, 0.55, 0); WORLD.flick.push(fl); }
     else if (L.n === 'lantern') kpiece(it, 'lanternCandle', 0, -0.25, 0, 0, 0.6);
@@ -14770,7 +14971,8 @@ function renderWardrobe(list, again, spooky, row) {
     for (const [key, name, cost, , desc] of LOOKS.outfit) {
       const own = lookOwned('outfit', key), on = (L.outfit || 'none') === key;
       row(name, on ? 'Wearing' : own && cost ? 'Owned' : null, desc || (cost ? 'Buy once, wear any time.' : 'Free.'), on ? 'Wearing' : own ? 'Wear it' : `Buy ${fmtMoney(cost)}`, !on && (own || CAREER.purse >= cost),
-        () => { if (!own) { if (!spend(cost, name)) return false; s.owned['wd:outfit:' + key] = 1; } L.outfit = key; saveCareer(); townDressMe(); }, on ? ' cur' : '', outfitThumb(key));
+        () => { if (!own) { if (!spend(cost, name)) return false; s.owned['wd:outfit:' + key] = 1; } L.outfit = key; saveCareer(); townDressMe(); }, on ? ' cur' : '', outfitThumb(key),
+        own || !cost ? null : { skill: 'artificing', R: outfitMats(cost), apply: () => { s.owned['wd:outfit:' + key] = 1; L.outfit = key; townDressMe(); }, label: 'Sew it' });
     }
     list.append(h('h4', null, 'Colours'));
     const sw = (arr, k2, dflt) => { const r = h('div', { class: 'swatches' }); for (const c of arr) r.append(h('button', { class: 'sw', style: `--c:${c}`, 'aria-pressed': String((L[k2] || dflt) === c), 'aria-label': c, onclick: () => { L[k2] = c; saveCareer(); townDressMe(); again(); } })); return r; };
@@ -15000,7 +15202,7 @@ function pd(N, P) { return Math.hypot(N.x - P.x, N.z - P.z); }
 // Everything that blocks you goes into TOWN.obst (circles); flora is scattered only outside the planned areas.
 const FEST_RESERVED = [ // [x0, x1, z0, z1] kept clear of random trees and rocks
   [-18, 18, 22, 72], [-31, 31, -108, -57], [-7, 7, -64, -22], [-53, -26, -13, 33], [23, 53, -12, 32], [27, 64, 38, 74],
-  [33, 58, -68, -42], [-51, -27, -42, -18], [-52, -32, 44, 64], [-75, -54, 34, 70], [55, 72, 0, 20], [52, 80, -40, -2], [-33, -18, 26, 48], [-30, -18, -52, -40]
+  [33, 58, -68, -42], [-51, -27, -42, -18], [-52, -32, 44, 64], [-75, -54, 34, 70], [55, 72, 0, 20], [52, 80, -40, -2], [-33, -18, 26, 48], [-30, -18, -52, -40], [-86, -52, -60, -12]
 ];
 function festReserved(x, z, pad = 0) { return FEST_RESERVED.some(([a, b, c, d]) => x > a - pad && x < b + pad && z > c - pad && z < d + pad); }
 function buildFestival(R) {
@@ -15225,6 +15427,7 @@ function tmapMarkers() {
   const out = [];
   for (const S of TOWN.stalls || []) {
     if (S.player) { const O = WORLD.others && WORLD.others[S.player]; out.push({ x: O ? O.x : S.x, z: O ? O.z : S.z, icon: '', name: S.V.name, kind: 'player', S }); continue; }
+    if (S.node) { out.push({ x: S.x, z: S.z, icon: '', name: S.V.name, role: S.V.role, kind: 'node', col: S.node.N.col, S }); continue; }
     out.push({ x: S.x, z: S.z, icon: S.V.icon || '•', name: S.V.name, role: S.V.role, kind: S.station ? 'station' : 'vendor', key: S.V.key, S });
   }
   return out;
@@ -15265,6 +15468,7 @@ function drawTownMap(ctx, view) {
   const hits = []; const icon = Math.round(clamp(k * 4.2, 11, 22));
   for (const M of tmapMarkers()) {
     const px = X(M.x), py = Y(M.z);
+    if (M.kind === 'node') { ctx.fillStyle = M.col; ctx.strokeStyle = 'rgba(0,0,0,.6)'; ctx.lineWidth = 1; ctx.beginPath(); ctx.arc(px, py, Math.max(2.5, k * 1.1), 0, Math.PI * 2); ctx.fill(); ctx.stroke(); hits.push({ px, py, M }); continue; }
     if (M.kind === 'player') {
       ctx.fillStyle = '#36c2ff'; ctx.strokeStyle = '#0b1a22'; ctx.lineWidth = 2; ctx.beginPath(); ctx.arc(px, py, Math.max(3.5, k * 1.4), 0, Math.PI * 2); ctx.fill(); ctx.stroke();
       if (view.labels) { ctx.font = `700 ${Math.round(icon * 0.62)}px system-ui, sans-serif`; ctx.fillStyle = '#bfeaff'; ctx.textAlign = 'center'; ctx.fillText(M.name, px, py - icon * 0.8); }
@@ -15287,7 +15491,7 @@ function drawTownMap(ctx, view) {
 // the big map at the top of the Map screen
 function townMapCanvas() {
   const wrap = h('div', { class: 'tmapwrap' }), cv = h('canvas', { class: 'tmap', 'aria-label': 'Town map. Tap a marker to walk there.' });
-  const tip = h('div', { class: 'tmaptip muted small' }, 'Tap a marker to walk there.');
+  const tip = h('div', { class: 'tmaptip muted small' }, 'Tap a marker to walk there. Small dots are gathering spots: the quarry west, the woods north, herbs by the pond.');
   wrap.append(cv, tip);
   const draw = () => {
     const W = Math.max(260, Math.min(wrap.clientWidth || 640, 760)), dpr = Math.min(2, window.devicePixelRatio || 1);
@@ -15302,6 +15506,7 @@ function townMapCanvas() {
     if (!best) return;
     const M = best.M; AU.click();
     if (M.kind === 'player') { TOWN.pos = { x: M.x + 1.5, z: M.z + 1.5 }; TOWN.cam = null; closeVendor(); return; }
+    if (M.kind === 'node') { TOWN.pos = { x: M.S.ax, z: M.S.az }; TOWN.cam = null; closeVendor(); return; }
     tip.textContent = `${M.icon} ${M.name}${M.role ? ' · ' + M.role : ''}`;
     townWalkTo(M.key); closeVendor();
   });
@@ -15480,6 +15685,147 @@ function outfitThumb(key) {
     const small = cvs(W, H); small.getContext('2d').drawImage(big, 0, 0, W, H); PORTRAITS[key] = small; draw(small);
   } catch (e) { console.warn('portrait', e); }
   return c;
+}
+
+// ===================================================================
+// Gathering in town: ore veins in the quarry, marked trees in the woods, herb patches, flax, hides and bone.
+// Walk up, press the prompt, then time three swings: the marker sweeps a bar and the green zone is the sweet spot.
+// Good swings give more and teach you more. Worked-out nodes grow back after a while.
+// ===================================================================
+const GATHER = { on: null, nodes: [], t: 0, dir: 1, pos: 0, swings: [], anim: 0, actPrev: true, done: 0 };
+const NODE_SITES = [ // [type, x, z, ry]
+  // the quarry west of the watchtower
+  ['copper', -62, -20, 0.3], ['copper', -66, -27, 1.2], ['iron', -70, -34, 2.1], ['coal', -64, -40, 0.4], ['coal', -72, -46, 1.6], ['iron', -58, -48, 0.9], ['silver', -76, -28, 2.8], ['crystal', -68, -53, 0.2], ['gold', -80, -40, 1.1],
+  // loose rock round the edge
+  ['copper', 78, 30, 0.5], ['iron', 72, -50, 2.2], ['copper', -40, 84, 1.4], ['coal', 48, 82, 0.8],
+  // the woods north
+  ['ash', 26, -78, 0], ['ash', 34, -87, 0.7], ['oak', 44, -80, 1.3], ['oak', 60, -72, 2], ['ash', -45, -70, 0.4], ['hickory', -40, -78, 1.9], ['hickory', -52, -64, 0.6], ['oak', -36, -88, 1.1], ['ash', 70, 58, 2.5],
+  // herbs by the pond, berries east, flax at the cornfield, hides at the farm, bone at the graveyard
+  ['herb', -50, 78, 0], ['herb', -44, 74, 1], ['herb', -36, 70, 2], ['berry', 76, 30, 0.4], ['berry', 74, 50, 1.5], ['berry', 62, 2, 2.6],
+  ['flax', -64, 66, 0], ['flax', -60, 63, 0.5], ['hide', 72, -24, -0.3], ['hide', 66, -28, 0.2], ['bone', 52, -62, 0.8], ['bone', 38, -65, 2.4]
+];
+function buildGatherNodes(R) {
+  GATHER.nodes = [];
+  // the quarry: a dirt floor and a rock face
+  { const g = mk(R, new THREE.PlaneGeometry(30, 38), lmat({ map: venueTex('dirt'), color: '#a89a86', roughness: 1 }), -68, 0.028, -37, false); g.rotation.x = -Math.PI / 2; g.receiveShadow = true; }
+  for (const [k, x, z, ry, s] of [['fy_rock_big_1', -84, -36, 0.5, 1.3], ['fy_rock_big_3', -80, -50, 1.2, 1.1], ['fy_rock_block_1', -74, -56, 0.3, 1.4], ['fy_rock_medium_4', -84, -22, 2, 1.2], ['fy_rock_big_pillar', -78, -14, 0.9, 0.8], ['nt_boulder', -56, -56, 0.4, 1.4]]) { kpiece(R, k, x, 0, z, ry, s); TOWN.obst.push({ x, z, r: 2 }); }
+  kpiece(R, 'cart', -58, 0, -30, 1.3, 1); kpiece(R, 'fy_vil_barrel', -60, 0, -36, 0, 1); kpiece(R, 'lantern', -60, 0, -24, 0, 1);
+  { const sg = townSign('QUARRY', '#5a4a3a'); sg.position.set(-57, 3.1, -26); sg.rotation.y = Math.PI / 2 + 0.3; R.add(sg); }
+  NODE_SITES.forEach(([type, x, z, ry], i) => {
+    const N = NODES[type]; if (!N) return;
+    const g = new THREE.Group(); g.position.set(x, 0, z); g.rotation.y = ry || 0; R.add(g);
+    const fruit = new THREE.Group(); g.add(fruit); // the part that disappears when you've worked it
+    const col = N.col;
+    if (N.skill === 'mining') {
+      kpiece(g, i % 2 ? 'nt_boulder' : 'fy_rock_medium_4', 0, 0, 0, 0, i % 2 ? 1.5 : 1.1);
+      const m = type === 'crystal' ? tmat(col, { emissive: '#2a7aa0', emissiveIntensity: 0.6, roughness: 0.2 }) : type === 'gold' ? tmat(col, { metalness: 0.9, roughness: 0.3 }) : tmat(col, { metalness: 0.5, roughness: 0.6 });
+      const big = i % 2 ? 1.5 : 1.1;
+      for (let k = 0; k < 7; k++) { const a = k / 7 * TAU + 0.4, r = big * (0.62 + (k % 2) * 0.3); const c = mk(fruit, geo('g_ore', () => new THREE.IcosahedronGeometry(0.2, 0)), m, Math.cos(a) * r, 0.12 + (k % 3) * 0.28, Math.sin(a) * r); c.rotation.set(k, k * 0.7, 0); c.scale.setScalar(0.9 + (k % 3) * 0.3); if (type === 'crystal') { c.scale.y = 2.2; c.rotation.set(0.2, k, 0.1); } }
+      // a seam of the stuff across the rock face
+      { const seam = mk(fruit, geo('g_seam', () => new THREE.TorusGeometry(0.5, 0.07, 6, 16)), m, 0, 0.7 * big, 0); seam.scale.set(big * 1.1, big * 0.8, big * 1.1); seam.rotation.set(1.2, 0.3, 0.5); }
+      TOWN.obst.push({ x, z, r: 1.3 });
+    } else if (N.skill === 'woodcut') {
+      const tree = kpiece(fruit, type === 'hickory' ? 'tree_oak_dark' : type === 'oak' ? 'nt_oak' : 'nt_birch', 0, 0, 0, 0, type === 'hickory' ? 2.6 : 1.3);
+      if (!tree) kpiece(fruit, 'tree', 0, 0, 0, 0, 2.6);
+      kpiece(g, 'nt_stump', 0, 0, 0, 0, 1).visible = false; g.userData.stump = g.children[g.children.length - 1];
+      // an axe blaze so you can tell it from the rest of the wood
+      mk(g, geo('g_blaze', () => new THREE.BoxGeometry(0.22, 0.3, 0.05)), tmat('#f2d6a0'), 0, 1.1, 0.34);
+      TOWN.obst.push({ x, z, r: 0.9 });
+    } else if (type === 'herb') { kpiece(fruit, 'nt_fern', -0.3, 0, 0, 0, 1.4); kpiece(fruit, 'nt_flowers', 0.4, 0, 0.2, 1, 1.4); kpiece(g, 'nt_grass', 0, 0, -0.4, 0, 1.3); }
+    else if (type === 'berry') { kpiece(g, 'slv_bush1', 0, 0, 0, 0, 1.2); const m = tmat('#6a2a8a', { roughness: 0.4 }); for (let k = 0; k < 9; k++) mk(fruit, geo('g_berry', () => new THREE.SphereGeometry(0.07, 8, 6)), m, Math.cos(k * 1.7) * 0.5, 0.5 + (k % 3) * 0.22, Math.sin(k * 1.7) * 0.5); TOWN.obst.push({ x, z, r: 0.8 }); }
+    else if (type === 'flax') { const m = tmat('#d9c47a'); for (let k = 0; k < 14; k++) { const s = mk(fruit, geo('g_flax', () => new THREE.CylinderGeometry(0.012, 0.02, 0.9, 5)), m, (k % 5 - 2) * 0.22, 0.45, Math.floor(k / 5) * 0.25 - 0.25); s.rotation.z = Math.sin(k) * 0.15; const f = mk(fruit, geo('g_flaxf', () => new THREE.SphereGeometry(0.05, 6, 5)), tmat('#7fb0ff'), (k % 5 - 2) * 0.22, 0.92, Math.floor(k / 5) * 0.25 - 0.25); f.scale.y = 1.4; } }
+    else if (type === 'hide') { const rk = kpiece(g, 'bf_armor_rack', 0, 0, 0, 0, 1); if (!rk) mk(g, geo('g_rack', () => new THREE.BoxGeometry(1.4, 0.06, 0.06)), tmat('#4a3422'), 0, 1.5, 0); const hd = mk(fruit, geo('g_hide', () => new THREE.PlaneGeometry(0.9, 1.1)), lmat({ color: '#7a4a22', roughness: 1, side: THREE.DoubleSide }), 0, 0.95, 0.12); hd.rotation.y = 0.1; TOWN.obst.push({ x, z, r: 0.8 }); }
+    else if (type === 'bone') { kpiece(fruit, 'fy_cem_bones_group', 0, 0, 0, 0, 1.3); kpiece(g, 'nt_rocks', 0.6, 0, 0.4, 0, 1); TOWN.obst.push({ x, z, r: 0.9 }); }
+    const lab = townLabel(N.name, `${TRADE_SKILLS[N.skill].icon} ${TRADE_SKILLS[N.skill].name} ${N.lvl}`, col); lab.position.y = N.skill === 'woodcut' ? 3.4 : 1.9; g.add(lab);
+    const toC = Math.atan2(-x, -z), ax = x + Math.sin(toC) * 1.7, az = z + Math.cos(toC) * 1.7;
+    const node = { id: type + i, type, N, g, fruit, x, z, ax, az, until: 0, lab };
+    GATHER.nodes.push(node);
+    TOWN.stalls.push({ V: { key: 'n:' + node.id, name: N.name, role: `${TRADE_SKILLS[N.skill].name} ${N.lvl}`, icon: TRADE_SKILLS[N.skill].icon }, g, npc: null, ry: toC + Math.PI, x, z, ax, az, label: lab, open: () => startGather(node), node, verb: N.skill === 'mining' ? 'Mine' : N.skill === 'woodcut' ? 'Chop' : 'Gather' });
+  });
+}
+function gatherVerb(N) { return N.skill === 'mining' ? 'Mining' : N.skill === 'woodcut' ? 'Chopping' : 'Gathering'; }
+function startGather(node) {
+  const N = node.N, t = tradeState(), L = tradeLevel(N.skill), S = TRADE_SKILLS[N.skill];
+  if (node.until > G.realTime) { toastMenu(`Worked out. ${N.name === 'Hides on the rack' ? 'More hides' : 'It'} comes back in ${Math.ceil(node.until - G.realTime)} s.`); return; }
+  if (L < N.lvl) { toastMenu(`${N.name} needs ${S.name} ${N.lvl}. You're level ${L}: try something easier first.`); return; }
+  if ((t.tools[S.tool] || 0) < N.tool) { toastMenu(`You need a ${TOOL_TIERS[N.tool].toLowerCase()} ${TOOLS[S.tool].name.toLowerCase()} for that. Make one at the furnace.`); return; }
+  AU.click();
+  GATHER.on = node; GATHER.swings = []; GATHER.pos = 0; GATHER.dir = 1; GATHER.t = 0; GATHER.actPrev = true; GATHER.done = 0;
+  // speed and sweet spot: harder nodes sweep faster, skill and a better tool widen the zone
+  const tier = t.tools[S.tool] || 0;
+  GATHER.speed = 1.1 + N.lvl / 28 - tier * 0.08; GATHER.zone = clamp(0.13 + L / 220 + tier * 0.02, 0.12, 0.34); GATHER.zoneAt = rand(0.3, 0.7);
+  TOWN.busy = true; $('#townPrompt').hidden = true;
+  holdTool(S.tool, tier);
+  const J = TOWN.me; if (J && J.ual) { J.play('Idle_Loop', 0.2); const dx = node.x - TOWN.pos.x, dz = node.z - TOWN.pos.z; TOWN.face = Math.atan2(dx, dz); }
+  gatherUI(true);
+}
+function gatherUI(show) {
+  const el = $('#gather'); if (!el) return; el.hidden = !show; if (!show) return;
+  const node = GATHER.on, N = node.N, S = TRADE_SKILLS[N.skill], P = tradeProgress(N.skill);
+  el.innerHTML = '';
+  const key = IN.mode === 'pad' ? 'A' : IN.mode === 'touch' ? 'Tap' : 'E';
+  el.append(h('div', { class: 'gh' }, h('span', { class: 'gi' }, S.icon), h('div', null, h('b', null, `${gatherVerb(N)}: ${N.name}`), h('small', null, `${S.name} ${P.L} · ${Math.round(P.f * 100)}% to next`))),
+    h('div', { class: 'gbar' }, h('i', { class: 'gzone', style: `left:${(GATHER.zoneAt - GATHER.zone / 2) * 100}%;width:${GATHER.zone * 100}%` }), h('i', { class: 'gmark' })),
+    h('div', { class: 'gsw' }, ...[0, 1, 2].map(i => h('span', { class: 'gdot' }))),
+    h('button', { class: 'btn primary flagtape gswing', onclick: e => { e.stopPropagation(); gatherSwing(); } }, h('kbd', null, key), ` Swing in the green`),
+    h('button', { class: 'btn tape small gstop', onclick: e => { e.stopPropagation(); stopGather(false); } }, 'Stop'));
+  el.onpointerdown = e => { if (e.target.closest('button')) return; gatherSwing(); };
+}
+function gatherSwing() {
+  if (!GATHER.on || GATHER.swings.length >= 3 || GATHER.done) return;
+  const d = Math.abs(GATHER.pos - GATHER.zoneAt), half = GATHER.zone / 2;
+  const q = d <= half ? 1 : d <= half * 2.2 ? 0.5 : 0.15;
+  GATHER.swings.push(q);
+  const J = TOWN.me; if (J && J.ual && J.acts.Sword_Attack) { const a = J.acts.Sword_Attack; a.reset(); a.setLoop(THREE.LoopOnce, 1); a.clampWhenFinished = false; a.setEffectiveWeight(1); a.fadeIn(0.05).play(); if (J.cur && J.acts[J.cur]) J.acts[J.cur].fadeOut(0.1); J.cur = 'Sword_Attack'; GATHER.anim = 0.9; }
+  const N = GATHER.on.N; try { if (N.skill === 'mining') AU.clang(0.5 + q * 0.5, 0.9); else if (N.skill === 'woodcut') AU.thud(0.8, 0.9); else AU.wrap(); } catch (e) { }
+  const dots = $$('#gather .gdot'); const i = GATHER.swings.length - 1; if (dots[i]) dots[i].classList.add(q === 1 ? 'hit' : q === 0.5 ? 'near' : 'miss');
+  if (q === 1) { const gp = new THREE.Vector3(GATHER.on.x, 0.9, GATHER.on.z); try { sparks(gp, 10, 0.8, N.col); } catch (e) { } }
+  if (GATHER.swings.length >= 3) { GATHER.done = 0.7; }
+}
+function finishGather() {
+  const node = GATHER.on, N = node.N, S = TRADE_SKILLS[N.skill], t = tradeState(), tier = t.tools[S.tool] || 0, L = tradeLevel(N.skill);
+  const qs = GATHER.swings, avg = qs.reduce((a, b) => a + b, 0) / 3, perfect = qs.every(q => q === 1);
+  let n = N.n[0] + Math.floor(Math.random() * (N.n[1] - N.n[0] + 1)); if (avg < 0.4) n = Math.max(1, n - 1); if (perfect) n++; if (Math.random() < Math.min(0.5, L / 100 + tier * 0.08)) n++;
+  const xp = N.xp * (0.55 + 0.45 * avg) * (1 + 0.06 * tier) * (perfect ? 1.25 : 1);
+  give(N.mat, n); node.until = G.realTime + N.respawn; node.fruit.visible = false; if (node.g.userData.stump) node.g.userData.stump.visible = true; node.lab.visible = false;
+  toast(`+${n} ${MATS[N.mat].name}`, perfect ? 'big' : 'good', perfect ? 'Three clean swings!' : avg >= 0.6 ? 'Good work.' : 'Sloppy, but it counts.');
+  setTimeout(() => tradeGain(N.skill, xp), 500);
+  stopGather(true);
+}
+function stopGather(finished) {
+  if (!GATHER.on) return;
+  GATHER.on = null; TOWN.busy = false; $('#gather').hidden = true; holdTool(null);
+  const J = TOWN.me; if (J && J.ual) { J.cur = null; J.play('Idle_Loop', 0.2); }
+  TOWN.actPrev = true; townPrompt(); refreshTouchUI();
+  if (!finished) AU.click();
+}
+// the tool in your hand: pickaxe, felling axe or sickle, in the tier's metal
+function holdTool(kind, tier) {
+  const J = TOWN.me; if (!J) return;
+  if (J.tool) { J.tool.parent && J.tool.parent.remove(J.tool); J.tool = null; }
+  if (!kind || !J.handR) { if (J.heldItem) J.heldItem.visible = true; return; }
+  if (J.heldItem) J.heldItem.visible = false;
+  const metal = ['#8a7a6a', '#c8763a', '#8a8f94', '#d8e0e4'][tier || 0], mm = tmat(metal, { metalness: 0.7, roughness: 0.35 }), wood = tmat('#6e4d31');
+  const g = new THREE.Group(); g.position.set(0, 0.08, 0.02);
+  if (kind === 'pick') { mk(g, geo('tl_haft', () => new THREE.CylinderGeometry(0.016, 0.02, 0.8, 7)), wood, 0, 0.3, 0); const hd = mk(g, geo('tl_pick', () => new THREE.CylinderGeometry(0.02, 0.035, 0.5, 7)), mm, 0, 0.68, 0); hd.rotation.x = Math.PI / 2; }
+  else if (kind === 'axe') { mk(g, geo('tl_haft2', () => new THREE.CylinderGeometry(0.016, 0.02, 0.7, 7)), wood, 0, 0.25, 0); const b = mk(g, geo('tl_axe', () => new THREE.BoxGeometry(0.03, 0.22, 0.2)), mm, 0, 0.56, 0.1); b.rotation.x = 0.2; }
+  else { mk(g, geo('tl_grip', () => new THREE.CylinderGeometry(0.016, 0.018, 0.26, 7)), wood, 0, 0.06, 0); const c = mk(g, geo('tl_sickle', () => new THREE.TorusGeometry(0.14, 0.012, 6, 14, Math.PI * 1.2)), mm, 0, 0.28, 0.06); c.rotation.y = Math.PI / 2; }
+  J.handR.add(g); J.tool = g;
+}
+function updateGather(dt) {
+  // nodes grow back
+  for (const n of GATHER.nodes) if (n.until && G.realTime > n.until) { n.until = 0; n.fruit.visible = true; if (n.g.userData.stump) n.g.userData.stump.visible = false; n.lab.visible = true; }
+  if (!GATHER.on) return;
+  if (G.screen) { stopGather(false); return; }
+  if (GATHER.anim > 0) { GATHER.anim -= dt; if (GATHER.anim <= 0) { const J = TOWN.me; if (J && J.ual) { J.cur = null; J.play('Idle_Loop', 0.25); } } }
+  if (GATHER.done) { GATHER.done -= dt; if (GATHER.done <= 0) { GATHER.done = 0; finishGather(); } return; }
+  GATHER.pos += GATHER.dir * GATHER.speed * Math.min(dt, 1 / 30); if (GATHER.pos > 1) { GATHER.pos = 1; GATHER.dir = -1; } if (GATHER.pos < 0) { GATHER.pos = 0; GATHER.dir = 1; }
+  const m = $('#gather .gmark'); if (m) m.style.left = (GATHER.pos * 100) + '%';
+  const k = IN.keys, act = !!(PIN.brace || k.KeyE || k.Enter || k.Space || (typeof NIN !== 'undefined' && NIN.on && IN.edges.has('trip')));
+  IN.edges.delete('trip');
+  if (act && !GATHER.actPrev) gatherSwing();
+  GATHER.actPrev = act;
+  if (IN.edges.has('pause')) { IN.edges.delete('pause'); stopGather(false); }
 }
 
 })();
