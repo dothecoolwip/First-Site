@@ -1,0 +1,11 @@
+{
+  "name": "steel-and-tape-tests",
+  "private": true,
+  "description": "Buhurt: Steel & Tape test suite (Playwright Test + ESLint). Run from this folder.",
+  "scripts": {
+    "build": "cd .. && python3 build.py",
+    "lint": "cd .. && eslint build_cache/game.js",
+    "e2e": "node node_modules/playwright/cli.js test",
+    "test": "npm run build && npm run lint && node node_modules/playwright/cli.js test"
+  }
+}

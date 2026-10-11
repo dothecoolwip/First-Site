@@ -1,0 +1,32 @@
+import time, sys
+sys.argv=['x','none']
+exec(open('run.py').read().split("with sync_playwright() as p:")[0])
+def clean(logs): return '\n'.join(l for l in logs if 'GPU stall' not in l and 'ERR_FAILED' not in l and 'Failed to load resource' not in l)[-1500:]
+with sync_playwright() as p:
+    b, pg, logs = launch(p, 1280, 720, False)
+    pg.goto(URL); time.sleep(3)
+    pg.evaluate("__ST.AU.init()"); time.sleep(4)
+    print('AUDIO', pg.evaluate("JSON.stringify({loaded:__ST.AU.loaded,total:__ST.AU.total,failed:__ST.AU.failed,status:__ST.AU.status()})"))
+    pg.evaluate("__ST.quickFight(5,'wardens'); __ST.G.loadout.wset='fantasy'; __ST.G.loadout.weapon='f_claymore'; __ST.applyLoadout(); __ST.renderKitPicker();"); time.sleep(1.5)
+    pg.evaluate("document.querySelector('#wsetSeg').scrollIntoView()"); time.sleep(0.3)
+    pg.screenshot(path=str(OUT/'v3-tactics-fantasy.png'))
+    pg.evaluate("__ST.G.loadout.wset='hist'; __ST.G.loadout.weapon='mace'; __ST.applyLoadout(); __ST.renderKitPicker();"); time.sleep(0.5)
+    pg.screenshot(path=str(OUT/'v3-tactics-hist.png'))
+    pg.evaluate("__ST.G.loadout.wset='fantasy'; __ST.G.loadout.weapon='f_maul'; __ST.applyLoadout(); __ST.beginFight();"); time.sleep(4.5)
+    pg.screenshot(path=str(OUT/'v3-fp.png'))
+    pg.evaluate("__ST.setView('tp')"); time.sleep(2.5)
+    pg.evaluate("__ST.toast('Shoved!','good','They\\u2019re stumbling. Trip now!')"); time.sleep(0.3)
+    pg.screenshot(path=str(OUT/'v3-tp.png'))
+    print('LOCK', pg.evaluate("JSON.stringify({lock: __ST.IN.lock && __ST.IN.lock.name, view: __ST.G.settings.view, phase: __ST.G.phase, err: __ST.G.stats.errors.slice(0,3)})"))
+    pg.evaluate("__ST.setView('fp')"); time.sleep(0.08); pg.screenshot(path=str(OUT/'v3-drop.png')); time.sleep(1)
+    for k in ['greathelm','sallet','grill','barbute']:
+        pg.evaluate(f"__ST.G.player.spec.helm='{k}'"); time.sleep(1.2); pg.screenshot(path=str(OUT/f'v3-visor-{k}.png'))
+    print('desk', clean(logs)); b.close()
+    b, pg, logs = launch(p, 844, 390, True)
+    pg.goto(URL); time.sleep(3); pg.evaluate("__ST.G.renderEvery=2")
+    pg.evaluate("__ST.quickFight(5,'wardens'); __ST.beginFight();"); time.sleep(6)
+    pg.screenshot(path=str(OUT/'v3-phone-fp.png'))
+    pg.evaluate("__ST.setView('tp')"); time.sleep(3)
+    pg.screenshot(path=str(OUT/'v3-phone-tp.png'))
+    print('LOCK', pg.evaluate("JSON.stringify({lock: __ST.IN.lock && __ST.IN.lock.name, soft: __ST.G.player.softTarget && __ST.G.player.softTarget.name, err: __ST.G.stats.errors.slice(0,3)})"))
+    print('phone', clean(logs)); b.close()
