@@ -11,7 +11,7 @@ Difficulty brief from the owner: "a mediocre challenge" — not easy, not a grin
 - **Size.** The game is 12.3 MB today; the Claude artifact copy caps at 16 MB, the website doesn't. The realm will not fit in 16 MB. So: split into `index.html` (engine, UI, fight, 1 district's worth of models, ~11 MB) plus `realm-*.bin` chunk files fetched on demand per district and cached by the service worker. The artifact keeps a "fairground only" build. This is phase 1 work and everything else depends on it.
 - **No agents.** Built directly, in the same file layout (`src/js/NN_name.js`), tested with the Playwright suite (desktop + phone), shipped to Vercel, patch note to Discord after each phase.
 - **Nothing fantasy as gameplay.** Costumes, cosmetic weapon looks, Halloween decoration: yes. Monsters, magic, dragons: no.
-- **Packs used** (all stored in `/home/claude/assets/group1` and `group2`): Fantasy Props MegaKit, Ultimate RPG Items, Nature Crops, Farm Buildings, Ultimate Animated Animals, Posed Background Characters, Universal Base Characters, UAL v3 + UAL2, KayKit Forest Nature, KayKit Adventurers, Kenney Retro Medieval, Kenney Impact Sounds + RPG Audio, Kevin Iglesias crafting animations (licence PDF to read first; not CC0). The three Google Drive files from 11 Oct could not be seen by the connected Drive account yet — they slot into phase 7 when they arrive.
+- **Packs used** (all stored in `/home/claude/assets/group1` and `group2`): Fantasy Props MegaKit, Ultimate RPG Items, Nature Crops, Farm Buildings, Ultimate Animated Animals, Posed Background Characters, Universal Base Characters, UAL v3 + UAL2, KayKit Forest Nature, KayKit Adventurers, Kenney Retro Medieval, Kenney Impact Sounds + RPG Audio, Kevin Iglesias crafting animations (licence PDF to read first; not CC0). Three more packs sit on Google Drive (HighLands Fantasy Buildings, Modular Weapons and Dungeon, Fantasy Ambient Pack); see §8 for what they're for and how to get them in.
 
 ---
 
@@ -151,6 +151,11 @@ The BuhurtOS database has **21 teams** and **219 fighters** (`teams`, `fighters`
 | Kenney Retro Medieval | distant background: outer farmsteads, a ruined tower by the lake |
 | Kenney Impact + RPG audio | hits, armour, coins, footsteps, crowd |
 | Kevin Iglesias crafting | mining/hammering/farming clips **only if the licence PDF allows embedding** |
+| **HighLands Fantasy Buildings** (Drive, 788 MB) | village houses, bailey halls, the chapel, the king's keep interior; the ruined tower by the lake. **Needs a trimmed re-upload**: model folder (FBX/glTF) + one base-colour texture per building + licence |
+| **Modular Weapons and Dungeon** (Drive, .unitypackage, 612 MB) | modular sword/axe/mace parts as weapon skins at the Artificer; dungeon pieces for the chapel crypt, smugglers' tunnel and wine cellar. **Needs the FBX folder dug out of the package and re-uploaded** (a .unitypackage is a gzip tar) |
+| **Fantasy Ambient Pack** (Drive, 1.57 GB) | ambience: lakeshore, deep woods, great hall, crypt. If it's audio: pick ~12 loops, re-encode to mono OGG (~0.5 MB each). If it's 3D with 4K PBR textures: only the meshes, baked to vertex colour. **Needs a trimmed re-upload** |
+
+The three Drive packs can't be pulled in from here (the Drive connection hands files over inline and the workspace can't download from Google), so each needs a small re-zip from a computer: models + one colour texture each + licence, uploaded to the chat. They slot into step 2 (buildings), step 4/5 (dungeon pieces for arenas and hidden areas) and step 8 (ambience) when they arrive; nothing waits on them.
 
 ---
 
