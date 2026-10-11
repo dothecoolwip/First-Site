@@ -22,7 +22,7 @@ function arenaSeatFolk(R, A, sides) {
   for (const sx of sides || [-1, 1]) for (let row = 0; row < 3; row++) for (let zz = -L * 0.38; zz <= L * 0.38; zz += 1.3) {
     if (rnd() > keep) continue;
     const bx = A.x + sx * (W / 2 + 1.6 + row * 0.9), y = 0.45 + row * 0.5 + 0.06;
-    const p = kpiece(R, kinds[Math.floor(rnd() * kinds.length)], bx, y - 0.5, A.z + zz + (rnd() - 0.5) * 0.3, sx < 0 ? Math.PI / 2 : -Math.PI / 2, 1);
+    const p = kpiece(R, kinds[Math.floor(rnd() * kinds.length)], bx, gy(A.x, A.z) + y - 0.5, A.z + zz + (rnd() - 0.5) * 0.3, sx < 0 ? Math.PI / 2 : -Math.PI / 2, 1);
     if (p) { const m = SEAT_MATS[Math.floor(rnd() * SEAT_MATS.length)](); p.traverse(o => { if (o.isMesh) o.material = m; }); }
   }
 }
@@ -48,13 +48,13 @@ function specCamera(dt) {
   const S = TOWN.spec, A = S.A, cam = W3.camera; S.t += dt;
   const o = W3.matchRoot.position, live = (G.fighters || []).filter(f => !f.out && f.pos);
   let cx = 0, cz = 0; for (const f of live) { cx += f.pos.x; cz += f.pos.z; } if (live.length) { cx /= live.length; cz /= live.length; }
-  const look = new THREE.Vector3(o.x + cx, 1.1, o.z + cz); let want;
+  const look = new THREE.Vector3(o.x + cx, o.y + 1.1, o.z + cz); let want;
   if (S.mode === 0) { // from the rope where you stand, head high, leaning in toward the action
     const px = TOWN.pos.x, pz = TOWN.pos.z, dx = look.x - px, dz = look.z - pz, d = Math.hypot(dx, dz) || 1, inn = Math.max(0, d - 9);
-    want = new THREE.Vector3(px + dx / d * inn, 2.4, pz + dz / d * inn);
-  } else if (S.mode === 1 && live.length) { const f = live[SPEC.follow % live.length], b = (f.facing || 0) + Math.PI; want = new THREE.Vector3(o.x + f.pos.x + Math.sin(b) * 3.6, 2.4, o.z + f.pos.z + Math.cos(b) * 3.6); look.set(o.x + f.pos.x, 1.3, o.z + f.pos.z); }
-  else if (S.mode === 2) { const a = S.t * 0.12; want = new THREE.Vector3(look.x + Math.sin(a) * 9, A.indoor ? 3.6 : 4.2, look.z + Math.cos(a) * 9); }
-  else want = new THREE.Vector3(o.x + LIST.W / 2 + 4, A.indoor ? 4 : 5.5, o.z + cz * 0.5);
+    want = new THREE.Vector3(px + dx / d * inn, o.y + 2.4, pz + dz / d * inn);
+  } else if (S.mode === 1 && live.length) { const f = live[SPEC.follow % live.length], b = (f.facing || 0) + Math.PI; want = new THREE.Vector3(o.x + f.pos.x + Math.sin(b) * 3.6, o.y + 2.4, o.z + f.pos.z + Math.cos(b) * 3.6); look.set(o.x + f.pos.x, o.y + 1.3, o.z + f.pos.z); }
+  else if (S.mode === 2) { const a = S.t * 0.12; want = new THREE.Vector3(look.x + Math.sin(a) * 9, o.y + (A.indoor ? 3.6 : 4.2), look.z + Math.cos(a) * 9); }
+  else want = new THREE.Vector3(o.x + LIST.W / 2 + 4, o.y + (A.indoor ? 4 : 5.5), o.z + cz * 0.5);
   if (!TOWN.cam) { TOWN.cam = want.clone(); TOWN.look = look.clone(); }
   const k = 1 - Math.exp(-3 * dt); TOWN.cam.lerp(want, k); TOWN.look.lerp(look, k);
   cam.position.copy(TOWN.cam); cam.lookAt(TOWN.look);

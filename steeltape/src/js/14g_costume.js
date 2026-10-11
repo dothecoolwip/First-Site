@@ -103,7 +103,7 @@ function buildSpectators() {
     if (IS_TOUCH && i % 2) return;
     const fit = folkOutfit('towns', i), J = costumePerson(Object.assign({ h: rand(1.6, 1.86), anim: pick(['Idle_Loop', 'Idle_Talking_Loop', 'Idle_Loop']) }, fit)); if (!J) return;
     if (J.costume.includes('Peasant') && Math.random() < 0.4) dress(J, { b: '#5a2a2a', t: pick(['#c9b48a', '#e8e0cc']), h: pick(['cap', 'flowers', 'hood']), c: 'none', n: 'none' });
-    J.root.position.set(x, 0, z); J.root.rotation.y = Math.atan2(-x, -z); TOWN.root.add(J.root);
+    J.root.position.set(x, gy(x, z), z); J.root.rotation.y = Math.atan2(-x, -z); TOWN.root.add(J.root);
     TOWN.obst.push({ x, z, r: 0.45 });
     SPECT.people.push({ J, t: rand(4, 16) });
   });

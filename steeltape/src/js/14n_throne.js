@@ -24,9 +24,9 @@ function buildThrone(R) {
   const H = HALL, cx = (H.x0 + H.x1) / 2, z = H.z0 + 3.4;
   THRONE.figs = {};
   for (const [seat, dx, k, col] of [['king', -1.6, 'po_male_sitting', '#5b2a86'], ['queen', 1.6, 'po_female_sitting', '#8a1a2a']]) {
-    const p = kpiece(R, k, cx + dx, 0.8, z, 0, 1); if (p) { p.traverse(o => { if (o.isMesh) o.material = lmat({ vertexColors: true, color: col, roughness: 0.9, flatShading: true }); }); p.userData.landmark = true; }
-    kpiece(R, 'rp_crown', cx + dx, 2.45, z, 0, 0.42);
-    const lab = townLabel(seat === 'king' ? 'The King' : 'The Queen', '👑', '#e3b341'); lab.position.set(cx + dx, 3.3, z); lab.userData.landmark = true; R.add(lab); THRONE.labels[seat] = lab;
+    const Y = gy(cx, z); const p = kpiece(R, k, cx + dx, Y + 0.8, z, 0, 1); if (p) { p.traverse(o => { if (o.isMesh) o.material = lmat({ vertexColors: true, color: col, roughness: 0.9, flatShading: true }); }); p.userData.landmark = true; }
+    kpiece(R, 'rp_crown', cx + dx, Y + 2.45, z, 0, 0.42);
+    const lab = townLabel(seat === 'king' ? 'The King' : 'The Queen', '👑', '#e3b341'); lab.position.set(cx + dx, Y + 3.3, z); lab.userData.landmark = true; R.add(lab); THRONE.labels[seat] = lab;
   }
   TOWN.stalls.push({ V: { key: 'throne', name: 'The Throne', role: 'Challenge for the crown', icon: '👑' }, g: new THREE.Object3D(), npc: null, ry: 0, x: cx, z: z + 4, ax: cx, az: z + 5, label: new THREE.Object3D(), open: openThrone, verb: 'Approach' });
   throneLabels(); throneLoad();

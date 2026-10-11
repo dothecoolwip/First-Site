@@ -28,7 +28,7 @@ function boutArenaFor(x, z) {
 function boutOff() { return W3.matchRoot ? W3.matchRoot.position : { x: 0, z: 0 }; }
 function boutStart() {
   if (!TOWN.on) return;
-  const Ar = boutArenaFor(TOWN.pos.x, TOWN.pos.z); TOWN.boutArena = Ar.key; W3.matchRoot.position.set(Ar.x, 0, Ar.z);
+  const Ar = boutArenaFor(TOWN.pos.x, TOWN.pos.z); TOWN.boutArena = Ar.key; W3.matchRoot.position.set(Ar.x, gy(Ar.x, Ar.z), Ar.z);
   const lv = typeof liveBoutPick === 'function' ? liveBoutPick(Ar) : null, o = lv || boutPick(), ph = G.phase, cat0 = G.category; BOUT.live = lv ? lv.live : null;
   G.attract = true; G.paused = false;
   try {

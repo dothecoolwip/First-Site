@@ -12,10 +12,17 @@ function navBuild() {
       for (let j = Math.floor((o.z - o.r) / NAV.cell); j <= Math.floor((o.z + o.r) / NAV.cell); j++) { const k = i + ',' + j; let L = NAV.grid.get(k); if (!L) NAV.grid.set(k, L = []); L.push(o); }
   }
 }
+// a terrace edge: the ground within r drops or rises by more than a step (ramps are gentle, cliffs are not)
+function cliffAt(x, z, r) {
+  if (typeof gy !== 'function' || z > BAILEY.z1 + 2 || x < BAILEY.x0 - 2 || x > BAILEY.x1 + 2) return false;
+  const y = gy(x, z), d = r + 0.6;
+  return Math.abs(gy(x + d, z) - y) > 1.2 || Math.abs(gy(x - d, z) - y) > 1.2 || Math.abs(gy(x, z + d) - y) > 1.2 || Math.abs(gy(x, z - d) - y) > 1.2;
+}
 function navBlocked(x, z, r) {
   if (arenaBlocked(x, z, r)) return true;
   if (typeof gateBlocked === 'function' && gateBlocked(x, z, r)) return true;
   if (Math.hypot(x / TOWN_RX, z / TOWN_RZ) > 0.985) return true;
+  if (cliffAt(x, z, r)) return true;
   const L = NAV.grid.get(Math.floor(x / NAV.cell) + ',' + Math.floor(z / NAV.cell)) || NAV.none;
   for (const o of L) { const dx = x - o.x, dz = z - o.z, m = o.r + r; if (dx * dx + dz * dz < m * m) return true; }
   return false;
@@ -109,7 +116,7 @@ function buildFolk() {
     if (role === 'gardener' && !J.costume) dress(J, { b: '#6b4e16', t: '#c9b48a', h: 'cap', c: 'none', n: 'none' });
     const R0 = FOLK_ROLES[role], start = role === 'guard' ? navFree(GUARD_PATH[i % 2 ? 2 : 0][0], GUARD_PATH[i % 2 ? 2 : 0][1]) : role === 'gateguard' ? navFree(i % 2 ? 3.4 : -3.4, CASTLE.z1 + 4) : freeSpot();
     const N = { J, role, kid, x: start.x, z: start.z, hx: 0, hz: 1, sideX: 0, sideZ: 0, face: rand(0, TAU), state: 'choose', spot: null, tx: 0, tz: 0, timer: rand(0, 2), best: 1e9, stuck: 0, fails: 0, spd: rand(...R0.spd), pathI: i % GUARD_PATH.length, settle: 0, anim: 'Idle_Loop' };
-    J.root.position.set(N.x, 0, N.z); J.root.userData.dyn = true; TOWN.root.add(J.root); FOLK.people.push(N);
+    J.root.position.set(N.x, gy(N.x, N.z), N.z); J.root.userData.dyn = true; TOWN.root.add(J.root); FOLK.people.push(N);
   });
 }
 function folkPlay(N, name, fade = 0.3) { N.anim = name; if (N.J.ual) N.J.play(UAL.clips[name] ? name : 'Idle_Loop', fade); }
@@ -169,7 +176,7 @@ function updateFolk(dt) {
       N.x = S.x + (S.ax - S.x) * N.settle; N.z = S.z + (S.az - S.z) * N.settle;
       if (N.settle >= 1) { folkRelease(N); N.state = 'choose'; N.timer = rand(0.3, 1.5); }
     }
-    N.J.root.position.set(N.x, 0, N.z); N.J.root.rotation.y = N.face;
+    N.J.root.position.set(N.x, gy(N.x, N.z), N.z); N.J.root.rotation.y = N.face;
     if (N.J.ual && N.J.root.visible) N.J.mixer.update(dt);
   }
 }

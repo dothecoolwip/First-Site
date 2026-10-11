@@ -37,7 +37,7 @@ function townPerson(o) {
 // a market stall: counter, posts, an awning in the vendor's colour, a sign, the vendor behind the counter and a few props
 function buildStall(V) {
   const [x, z] = STALL_AT[V.key], ry = STALL_FACE[V.key] != null ? STALL_FACE[V.key] : Math.atan2(0 - x, 22 - z);
-  const g = new THREE.Group(); g.position.set(x, 0, z); g.rotation.y = ry; TOWN.root.add(g);
+  const g = new THREE.Group(); g.position.set(x, gy(x, z), z); g.rotation.y = ry; TOWN.root.add(g);
   const wood = tmat('#6e4d31'), dark = tmat('#4a3422');
   mk(g, geo('t_counter', () => new THREE.BoxGeometry(2.8, 1.0, 0.7)), wood, 0, 0.5, 0);
   mk(g, geo('t_top', () => new THREE.BoxGeometry(2.95, 0.08, 0.85)), dark, 0, 1.03, 0);
@@ -212,7 +212,7 @@ function updateTown(dt) {
   if (walking && TOWN.keyPrev !== undefined) { if (k.KeyH && !TOWN.keyPrev.h) callHorse(); if (k.KeyR && !TOWN.keyPrev.r && TOWN.wp) { TRAVEL.auto = !TRAVEL.auto; compassHud(); } }
   TOWN.keyPrev = { h: !!k.KeyH, r: !!k.KeyR };
   if (J && !TOWN.mounted) {
-    J.root.position.set(TOWN.pos.x, 0, TOWN.pos.z); J.root.rotation.y = TOWN.face;
+    J.root.position.set(TOWN.pos.x, gy(TOWN.pos.x, TOWN.pos.z), TOWN.pos.z); J.root.rotation.y = TOWN.face;
     if (J.ual) { J.play(sp > 3.5 ? 'Jog_Fwd_Loop' : sp > 0.3 ? 'Walk_Loop' : 'Idle_Loop', 0.2); J.mixer.update(dt); }
   }
   // the nearest vendor within reach turns to you and talks
@@ -252,11 +252,12 @@ function updateTownCamera(dt) {
   const cam = W3.camera, wantFov = TOWN.spec ? 42 : 55; if (cam.near !== 0.15 || Math.abs(cam.fov - wantFov) > 0.1) { cam.near = 0.15; cam.fov = wantFov; cam.updateProjectionMatrix(); }
   if (ONB.tour && tourTick(dt)) return;
   if (TOWN.spec) { specCamera(dt); return; }
-  if (TOWN.peek > 0) { TOWN.peek -= dt; cam.position.set(BAILEY.x0 + 2, 2.4, -196); cam.lookAt(-80, 2, -205); if (TOWN.peek <= 0) TOWN.cam = null; return; }
+  if (TOWN.peek > 0) { TOWN.peek -= dt; cam.position.set(BAILEY.x0 + 2, 2.4 + gy(-100, -196), -196); cam.lookAt(-80, 2 + gy(-80, -205), -205); if (TOWN.peek <= 0) TOWN.cam = null; return; }
   const aspect = window.innerWidth / window.innerHeight, dist = TOWN.dist * (aspect < 0.8 ? 1.3 : 1);
   const tx = TOWN.pos.x, tz = TOWN.pos.z, cp = Math.cos(TOWN.pitch);
-  let want = new THREE.Vector3(tx + Math.sin(TOWN.yaw) * cp * dist, 1.4 + Math.sin(TOWN.pitch) * dist, tz + Math.cos(TOWN.yaw) * cp * dist);
-  const look = new THREE.Vector3(tx, 1.35, tz);
+  const gY = gy(tx, tz), cxp = tx + Math.sin(TOWN.yaw) * cp * dist, czp = tz + Math.cos(TOWN.yaw) * cp * dist;
+  let want = new THREE.Vector3(cxp, Math.max(gY, gy(cxp, czp)) + 1.4 + Math.sin(TOWN.pitch) * dist, czp);
+  const look = new THREE.Vector3(tx, gY + 1.35, tz);
   if (!TOWN.cam) { TOWN.cam = want.clone(); TOWN.look = look.clone(); }
   const kk = 1 - Math.exp(-8 * dt); TOWN.cam.lerp(want, kk); TOWN.look.lerp(look, kk);
   cam.position.copy(TOWN.cam); cam.lookAt(TOWN.look);

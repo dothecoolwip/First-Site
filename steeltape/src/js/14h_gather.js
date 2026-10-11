@@ -39,7 +39,7 @@ function buildGatherNodes(R) {
   GATHER.nodes = [];
   nodeSites().forEach(([type, x, z, ry], i) => {
     const N = NODES[type]; if (!N) return;
-    const g = new THREE.Group(); g.position.set(x, 0, z); g.rotation.y = ry || 0; R.add(g);
+    const g = new THREE.Group(); g.position.set(x, gy(x, z), z); g.rotation.y = ry || 0; R.add(g);
     const fruit = new THREE.Group(); g.add(fruit); // the part that disappears when you've worked it
     const col = N.col;
     if (N.skill === 'mining') {

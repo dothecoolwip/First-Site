@@ -9,7 +9,7 @@ const PMAT = { m: null };
 const SRGB_LIN = Array.from({ length: 256 }, (_, i) => { const c = i / 255; return c <= 0.04045 ? c / 12.92 : Math.pow((c + 0.055) / 1.055, 2.4); });
 function b64(s, T) { const bin = atob(s), u = new Uint8Array(bin.length); for (let i = 0; i < bin.length; i++) u[i] = bin.charCodeAt(i); return new T(u.buffer); }
 function kpiece(parent, key, x, y, z, ry = 0, s = 1) {
-  const pk = (typeof PACK_GEO !== 'undefined' && PACK_GEO[key]) || (typeof DECOR_GEO !== 'undefined' && DECOR_GEO[key]) || (typeof REALM_GEO !== 'undefined' && REALM_GEO[key]);
+  const pk = (typeof PACK_GEO !== 'undefined' && PACK_GEO[key]) || (typeof DECOR_GEO !== 'undefined' && DECOR_GEO[key]) || (typeof REALM_GEO !== 'undefined' && REALM_GEO[key]) || (typeof CASTLE_GEO !== 'undefined' && CASTLE_GEO[key]);
   if (pk) { // Slavic World / PolygonSight models: one mesh with vertex colours
     const g = new THREE.Group(); g.position.set(x, y, z); g.rotation.y = ry; g.scale.setScalar(s); parent.add(g);
     const gg = geo('pack:' + key, () => { const b = new THREE.BufferGeometry(); const P = b64(pk.p, Int16Array), F = new Float32Array(P.length); for (let i = 0; i < P.length; i++) F[i] = P[i] / 1000; b.setAttribute('position', new THREE.BufferAttribute(F, 3)); const C8 = b64(pk.c, Uint8Array), CF = new Float32Array(C8.length); for (let i = 0; i < C8.length; i++) CF[i] = SRGB_LIN[C8[i]]; b.setAttribute('color', new THREE.BufferAttribute(CF, 3)); b.setIndex(new THREE.BufferAttribute(b64(pk.i, pk.b ? Uint32Array : Uint16Array), 1)); b.computeVertexNormals(); b.computeBoundingSphere(); return b; });
@@ -102,7 +102,7 @@ const STATIONS = [
 function buildStations() {
   for (const st of STATIONS) {
     const [x, z] = st.at, ry = st.ry != null ? st.ry : st.key === 'house' ? Math.PI : 0; // gate folk face the market; the house door faces the fountain
-    const g = new THREE.Group(); g.position.set(x, 0, z); g.rotation.y = ry; TOWN.root.add(g);
+    const g = new THREE.Group(); g.position.set(x, gy(x, z), z); g.rotation.y = ry; TOWN.root.add(g);
     let npc = null, labY = 2.5, reach = 1.9;
     if (st.key === 'giant') {
       npc = costumeOr({ main: '#5a4632', joints: '#3a2a1a', h: 4.4, anim: 'Idle_Loop' }, { outfit: 'Male_Peasant', tex: 'peasant', tint: '#e8d2b0', skin: '#c68a62' }); g.add(npc.root);
@@ -175,7 +175,7 @@ function updateWorld(dt) {
   }
   updateOthers(dt);
 }
-function buildMyPet() { if (WORLD.pet) TOWN.root.remove(WORLD.pet); WORLD.pet = makePet(lookState().pet); if (WORLD.pet) { WORLD.pet.position.set(TOWN.pos.x - 1, 0, TOWN.pos.z - 1); TOWN.root.add(WORLD.pet); } }
+function buildMyPet() { if (WORLD.pet) TOWN.root.remove(WORLD.pet); WORLD.pet = makePet(lookState().pet); if (WORLD.pet) { WORLD.pet.position.set(TOWN.pos.x - 1, gy(TOWN.pos.x, TOWN.pos.z), TOWN.pos.z - 1); TOWN.root.add(WORLD.pet); } }
 // ---- other players online, walking around their own town: shown here as they move
 function townPresence() {
   if (!TOWN.on) { if (WORLD.lastTw) { lobbySet({ tw: null }); WORLD.lastTw = 0; } return; }
@@ -191,14 +191,14 @@ function updateOthers(dt) {
     if (!O) {
       const L = tw.l || {}; const J = lookPerson({ b: L.b, t: L.t, h: L.h, c: L.c, n: L.n, o: L.o, s: L.s, d: L.d }, 1.8);
       const nm = String(p.presence.name || 'A fighter').slice(0, 20), lab = townLabel(nm, (tw.g ? `[${tw.g}] ` : '') + 'online now', '#7fb6ff'); lab.position.y = 2.35; J.root.add(lab);
-      J.root.position.set(tw.x, 0, tw.z); TOWN.root.add(J.root);
+      J.root.position.set(tw.x, gy(tw.x, tw.z), tw.z); TOWN.root.add(J.root);
       O = WORLD.others[p.peer] = { J, x: tw.x, z: tw.z, f: tw.f || 0, p, lk: JSON.stringify(tw.l || {}) };
       TOWN.stalls.push({ V: { key: 'p:' + p.peer, name: nm, role: 'Online player', icon: '🟢' }, g: J.root, npc: null, ry: 0, x: tw.x, z: tw.z, ax: tw.x, az: tw.z, label: lab, open: () => { AU.click(); openProfile(O.p, () => { showScreen(null); refreshTouchUI(); townPrompt(); }); }, player: p.peer });
     }
     if (O.lk !== JSON.stringify(tw.l || {})) { TOWN.root.remove(O.J.root); delete WORLD.others[p.peer]; TOWN.stalls = TOWN.stalls.filter(s2 => s2.player !== p.peer); continue; } // they changed clothes: rebuild next frame
     O.p = p; const k = Math.min(1, dt * 4), ox = O.x, oz = O.z;
     O.x += (tw.x - O.x) * k; O.z += (tw.z - O.z) * k; O.f = tw.f || O.f;
-    O.J.root.position.set(O.x, 0, O.z); O.J.root.rotation.y = O.f;
+    O.J.root.position.set(O.x, gy(O.x, O.z), O.z); O.J.root.rotation.y = O.f;
     const sp = Math.hypot(O.x - ox, O.z - oz) / Math.max(dt, 1e-3);
     if (O.J.ual) { O.J.play(sp > 3.5 ? 'Jog_Fwd_Loop' : sp > 0.3 ? 'Walk_Loop' : 'Idle_Loop', 0.25); O.J.mixer.update(dt); }
     const S = TOWN.stalls.find(s => s.player === p.peer); if (S) { S.x = S.ax = O.x; S.z = S.az = O.z; }
@@ -335,7 +335,7 @@ function townDressMe() { if (!TOWN.on) return; buildAvatar(); buildMyPet(); }
 function buildSpecialVendors() {
   for (const V of VENDORS.filter(v => v.custom)) {
     const [x, z] = STALL_AT[V.key], ry = STALL_FACE[V.key] != null ? STALL_FACE[V.key] : Math.atan2(0 - x, 30 - z);
-    const g = new THREE.Group(); g.position.set(x, 0, z); g.rotation.y = ry; TOWN.root.add(g);
+    const g = new THREE.Group(); g.position.set(x, gy(x, z), z); g.rotation.y = ry; TOWN.root.add(g);
     let npc;
     if (V.key === 'wardrobe') {
       kpiece(g, 'tent_detailedOpen', 0, 0, -1.4, Math.PI, 3.2);

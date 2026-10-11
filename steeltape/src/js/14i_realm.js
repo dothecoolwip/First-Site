@@ -27,11 +27,12 @@ const ARENAS = [
   { key: 'peasant', name: 'Peasants’ Arena', x: -176, z: 158, bx: 13, bz: 18, district: 'village' },
   { key: 'forest', name: 'Forest Arena', x: -214, z: -104, bx: 13, bz: 18, district: 'woods' },
   { key: 'beach', name: 'Beach Arena', x: 148, z: 78, bx: 13, bz: 18, district: 'lake' },
-  { key: 'castle', name: 'Castle Arena', x: 70, z: -205, bx: 14, bz: 19, district: 'bailey', gate: 'bailey' },
+  { key: 'castle', name: 'Castle Arena', x: 78, z: -215, bx: 14, bz: 19, district: 'bailey', gate: 'bailey' },
   { key: 'hall', name: 'The Great Hall', x: 0, z: -262, bx: 12, bz: 17, district: 'ward', gate: 'royal', indoor: true }
 ];
 const ROADS = [
-  { name: 'north', pts: [[0, -24], [0, -150], [0, -210], [0, -238]], w: 6 },
+  { name: 'north', pts: [[0, -24], [0, -150], [0, -172], [0, -192], [0, -200], [0, -210], [0, -226], [0, -238]], w: 6 },
+  { name: 'terrace', pts: [[-90, -200], [0, -200], [60, -200], [60, -250], [72, -272]], w: 4 },
   { name: 'west', pts: [[-52, -2], [-100, -16], [-150, -44], [-196, -78]], w: 5 },
   { name: 'southwest', pts: [[-16, 70], [-62, 96], [-118, 122], [-160, 140]], w: 5 },
   { name: 'east', pts: [[52, 6], [96, 26], [128, 58], [126, 84], [132, 100]], w: 5 },
@@ -57,15 +58,16 @@ function realmGround(R, x0, x1, z0, z1, col, tex, y) {
 function realmRoad(R, pts, w) {
   const m = TMAT['road' + w] || (TMAT['road' + w] = lmat({ map: venueTex('dirt'), color: '#b5a079', roughness: 1 }));
   for (let i = 0; i < pts.length - 1; i++) {
-    const [x0, z0] = pts[i], [x1, z1] = pts[i + 1], L = Math.hypot(x1 - x0, z1 - z0);
-    const s = mk(R, new THREE.PlaneGeometry(w, L + w * 0.6), m, (x0 + x1) / 2, 0.018 + i * 0.0005, (z0 + z1) / 2, false); s.receiveShadow = true;
+    const [x0, z0] = pts[i], [x1, z1] = pts[i + 1], L = Math.hypot(x1 - x0, z1 - z0), y0 = gy(x0, z0), y1 = gy(x1, z1);
+    if (Math.abs(y0 - y1) > 0.01) continue; // a ramp: it has its own stone
+    const s = mk(R, new THREE.PlaneGeometry(w, L + w * 0.6), m, (x0 + x1) / 2, y0 + 0.018 + i * 0.0005, (z0 + z1) / 2, false); s.receiveShadow = true;
     s.rotation.order = 'YXZ'; s.rotation.set(-Math.PI / 2, Math.atan2(x1 - x0, z1 - z0), 0);
   }
   (TOWN.mapRoads = TOWN.mapRoads || []).push({ pts, w });
 }
 // a stone-and-timber building: stone base, plastered timber upper floor, a pitched roof; door on the +z side
 function realmHall(R, x, z, w, d, h, ry, o) {
-  o = o || {}; const g = new THREE.Group(); g.position.set(x, 0, z); g.rotation.y = ry || 0; R.add(g);
+  o = o || {}; const g = new THREE.Group(); g.position.set(x, gy(x, z), z); g.rotation.y = ry || 0; R.add(g);
   const stone = tmat(o.stone || '#9a948a'), plaster = tmat(o.plaster || '#cbb894'), timber = tmat('#5a3b24'), roofM = tmat(o.roof || '#7a3a2a');
   const base = Math.min(2.2, h * 0.45);
   mk(g, new THREE.BoxGeometry(w, base, d), stone, 0, base / 2, 0).receiveShadow = true;
@@ -106,37 +108,37 @@ function castleTower(R, x, z, h, flagCol) {
   TOWN.obst.push({ x, z, r: 3.4 });
 }
 // the gate: a gatehouse, two towers, banners and torches; the gate itself is a gate obstacle that opens with the writ
-function castleGate(R, x, z, key, label) {
-  kpiece(R, 'cs_gate_2x4_doorway', x, 0, z, Math.PI / 2, 1.5);
-  for (const sx of [-1, 1]) { const t = kpiece(R, 'cs_tower_mid', x + sx * 8.4, 0, z - 0.2, 0, 1.2); const tt = kpiece(R, 'cs_tower_top_1', x + sx * 8.4, 0, z - 0.2, 0, 1.2); if (tt) tt.position.y = 4.8; TOWN.obst.push({ x: x + sx * 8.4, z: z - 0.2, r: 2.6 }); }
-  for (const sx of [-3.6, 3.6]) { const b = kpiece(R, 'dp_banner_large', x + sx, 0, z + 0.9, 0, 1.4); if (b) b.position.y = 1.6; }
-  for (const sx of [-2.8, 2.8]) { const f = mk(R, geo('w_wtf', () => new THREE.ConeGeometry(0.08, 0.22, 8)), tmat('#ffb02e', { emissive: '#ff6a00', emissiveIntensity: 1.6 }), x + sx, 3.7, z + 0.8); WORLD.flick.push(f); kpiece(R, 'mk_Torch_Metal', x + sx, 2.6, z + 0.75, Math.PI, 1.4); }
+function castleGate(R, x, z, key, label, Y) {
+  Y = Y || 0;
+  kpiece(R, 'cs_gate_2x4_doorway', x, Y, z, Math.PI / 2, 1.5);
+  for (const sx of [-3.6, 3.6]) { const b = kpiece(R, 'dp_banner_large', x + sx, 0, z + 0.9, 0, 1.4); if (b) b.position.y = Y + 1.6; }
+  for (const sx of [-2.8, 2.8]) { const f = mk(R, geo('w_wtf', () => new THREE.ConeGeometry(0.08, 0.22, 8)), tmat('#ffb02e', { emissive: '#ff6a00', emissiveIntensity: 1.6 }), x + sx, Y + 3.7, z + 0.8); WORLD.flick.push(f); kpiece(R, 'mk_Torch_Metal', x + sx, Y + 2.6, z + 0.75, Math.PI, 1.4); }
   // the portcullis: drawn while you lack the writ
-  const port = new THREE.Group(); port.position.set(x, 0, z + 0.2); R.add(port); const iron = tmat('#3a3d40', { metalness: 0.7, roughness: 0.5 });
+  const port = new THREE.Group(); port.position.set(x, Y, z + 0.2); R.add(port); const iron = tmat('#3a3d40', { metalness: 0.7, roughness: 0.5 });
   for (let i = -2; i <= 2; i++) mk(port, geo('rlm_pbar', () => new THREE.BoxGeometry(0.12, 4.2, 0.12)), iron, i * 0.95, 2.1, 0);
   for (let j = 0; j < 4; j++) mk(port, geo('rlm_pbar2', () => new THREE.BoxGeometry(4.6, 0.12, 0.12)), iron, 0, 0.6 + j * 1.1, 0);
   const G = { key, label, x, z: z + 0.2, port, r: 2.6 }; (TOWN.gates = TOWN.gates || []).push(G); return G;
 }
 // a list for one of the outer arenas: fence, rope, posts, stands on the long sides, a scoreboard and torches
 function arenaList(R, A, o) {
-  o = o || {}; const W = LIST.W, L = LIST.L, x = A.x, z = A.z;
+  o = o || {}; const W = LIST.W, L = LIST.L, x = A.x, z = A.z, Y = gy(x, z);
   const post = tmat(o.post || '#6e4d31'), rail = tmat(o.rail || '#8a6a42');
   for (const [px, pz, len, rot] of [[0, -L / 2, W, 0], [0, L / 2, W, 0], [-W / 2, 0, L, Math.PI / 2], [W / 2, 0, L, Math.PI / 2]]) {
-    for (const yy of [0.55, 1.05]) { const r = mk(R, geo('ar_rail' + len, () => new THREE.BoxGeometry(len, 0.09, 0.09)), rail, x + px, yy, z + pz); r.rotation.y = rot; }
-    const n = Math.round(len / 2.5); for (let i = 0; i <= n; i++) { const t = -len / 2 + i * len / n; mk(R, geo('ar_post', () => new THREE.BoxGeometry(0.14, 1.25, 0.14)), post, x + (rot ? px : px + t), 0.62, z + (rot ? pz + t : pz)); }
+    for (const yy of [0.55, 1.05]) { const r = mk(R, geo('ar_rail' + len, () => new THREE.BoxGeometry(len, 0.09, 0.09)), rail, x + px, Y + yy, z + pz); r.rotation.y = rot; }
+    const n = Math.round(len / 2.5); for (let i = 0; i <= n; i++) { const t = -len / 2 + i * len / n; mk(R, geo('ar_post', () => new THREE.BoxGeometry(0.14, 1.25, 0.14)), post, x + (rot ? px : px + t), Y + 0.62, z + (rot ? pz + t : pz)); }
   }
-  if (o.floor) { const f = mk(R, new THREE.PlaneGeometry(W, L), lmat({ map: venueTex(o.floorTex || 'dirt'), color: o.floor, roughness: 1 }), x, 0.025, z, false); f.rotation.x = -Math.PI / 2; f.receiveShadow = true; }
+  if (o.floor) { const f = mk(R, new THREE.PlaneGeometry(W, L), lmat({ map: venueTex(o.floorTex || 'dirt'), color: o.floor, roughness: 1 }), x, Y + 0.025, z, false); f.rotation.x = -Math.PI / 2; f.receiveShadow = true; }
   // stands: tiered benches on both long sides
   if (o.stands !== false) for (const sx of [-1, 1]) for (let row = 0; row < 3; row++) {
-    const bx = x + sx * (W / 2 + 1.6 + row * 0.9), b = mk(R, geo('ar_bench', () => new THREE.BoxGeometry(0.7, 0.12, L * 0.8)), tmat(o.bench || '#7a5a3a'), bx, 0.45 + row * 0.5, z); b.receiveShadow = true;
-    mk(R, geo('ar_benchleg', () => new THREE.BoxGeometry(0.7, 1, 0.2)), tmat('#4a3422'), bx, (0.45 + row * 0.5) / 2, z - L * 0.38).scale.y = 0.45 + row * 0.5;
-    mk(R, geo('ar_benchleg', () => new THREE.BoxGeometry(0.7, 1, 0.2)), tmat('#4a3422'), bx, (0.45 + row * 0.5) / 2, z + L * 0.38).scale.y = 0.45 + row * 0.5;
+    const bx = x + sx * (W / 2 + 1.6 + row * 0.9), b = mk(R, geo('ar_bench', () => new THREE.BoxGeometry(0.7, 0.12, L * 0.8)), tmat(o.bench || '#7a5a3a'), bx, Y + 0.45 + row * 0.5, z); b.receiveShadow = true;
+    mk(R, geo('ar_benchleg', () => new THREE.BoxGeometry(0.7, 1, 0.2)), tmat('#4a3422'), bx, Y + (0.45 + row * 0.5) / 2, z - L * 0.38).scale.y = 0.45 + row * 0.5;
+    mk(R, geo('ar_benchleg', () => new THREE.BoxGeometry(0.7, 1, 0.2)), tmat('#4a3422'), bx, Y + (0.45 + row * 0.5) / 2, z + L * 0.38).scale.y = 0.45 + row * 0.5;
   }
   if (o.stands !== false) arenaSeatFolk(R, A);
-  for (const [sx, sz] of [[-1, -1], [1, -1], [-1, 1], [1, 1]]) { kpiece(R, 'mk_Torch_Metal', x + sx * (W / 2 + 0.6), 1.2, z + sz * (L / 2 + 0.6), 0, 1.6); const f = mk(R, geo('w_wtf', () => new THREE.ConeGeometry(0.08, 0.22, 8)), tmat('#ffb02e', { emissive: '#ff6a00', emissiveIntensity: 1.6 }), x + sx * (W / 2 + 0.6), 2.2, z + sz * (L / 2 + 0.6)); WORLD.flick.push(f); }
+  for (const [sx, sz] of [[-1, -1], [1, -1], [-1, 1], [1, 1]]) { kpiece(R, 'mk_Torch_Metal', x + sx * (W / 2 + 0.6), Y + 1.2, z + sz * (L / 2 + 0.6), 0, 1.6); const f = mk(R, geo('w_wtf', () => new THREE.ConeGeometry(0.08, 0.22, 8)), tmat('#ffb02e', { emissive: '#ff6a00', emissiveIntensity: 1.6 }), x + sx * (W / 2 + 0.6), Y + 2.2, z + sz * (L / 2 + 0.6)); WORLD.flick.push(f); }
   // the board: arena name, and the bout when one is on
-  const board = townSign(A.name, o.signCol || '#6d1b28'); board.position.set(x, 3.4, z - L / 2 - 2.2); board.scale.setScalar(2); R.add(board);
-  for (const sx of [-2.4, 2.4]) mk(R, geo('ar_bpost', () => new THREE.CylinderGeometry(0.08, 0.1, 3.6, 6)), post, x + sx, 1.8, z - L / 2 - 2.3);
+  const board = townSign(A.name, o.signCol || '#6d1b28'); board.position.set(x, Y + 3.4, z - L / 2 - 2.2); board.scale.setScalar(2); R.add(board);
+  for (const sx of [-2.4, 2.4]) mk(R, geo('ar_bpost', () => new THREE.CylinderGeometry(0.08, 0.1, 3.6, 6)), post, x + sx, Y + 1.8, z - L / 2 - 2.3);
   // block the stands so nobody walks through them (the list itself is blocked by arenaBlocked)
   return board;
 }
@@ -179,7 +181,7 @@ function signpost(R, x, z, ry, lines) {
 // ---- the whole realm
 function buildRealm(R) {
   TOWN.gates = []; TOWN.mapRoads = []; TOWN.realmBoards = {};
-  const O = TOWN.obst, add = (key, x, z, ry, s, r) => { const p = kpiece(R, key, x, 0, z, ry || 0, s || 1); if (r) O.push({ x, z, r }); return p; };
+  const O = TOWN.obst, add = (key, x, z, ry, s, r) => { const p = kpiece(R, key, x, gy(x, z), z, ry || 0, s || 1); if (r) O.push({ x, z, r }); return p; };
   const face = (x, z, tx, tz) => Math.atan2(tx - x, tz - z);
   // roads, then signposts where they leave the fairground
   for (const Rd of ROADS) realmRoad(R, Rd.pts, Rd.w);
@@ -208,34 +210,19 @@ function buildRealm(R) {
 }
 // ---- the castle: the outer bailey (tier 2) and the inner ward with the Great Hall (tier 3)
 function buildRealmCastle(R, add, face) {
-  const B = BAILEY, W = WARD, flag = CAREER.club.tabard;
-  realmGround(R, B.x0, B.x1, B.z0, B.z1, '#a9a092', 'dirt', 0.015);
-  realmGround(R, W.x0, W.x1, W.z0, W.z1, '#b4ab9c', 'dirt', 0.02);
-  // outer curtain wall with the bailey gate in the south
-  const gapS = (x, z) => Math.abs(z - B.z1) < 1 && Math.abs(x) < 6.5;
-  landmark(R, () => {
-  castleRun(R, B.x0, B.z1, B.x1, B.z1, (x, z, o) => o ? Math.abs(x) < 2.6 : Math.abs(x) < 6.5);
-  castleRun(R, B.x0, B.z0, B.x1, B.z0); castleRun(R, B.x0, B.z0, B.x0, B.z1); castleRun(R, B.x1, B.z0, B.x1, B.z1);
-  for (const [x, z] of [[B.x0, B.z1], [B.x1, B.z1], [B.x0, B.z0], [B.x1, B.z0], [B.x0, -228], [B.x1, -228], [-57, B.z1], [57, B.z1]]) castleTower(R, x, z, 2, flag);
-  castleGate(R, 0, B.z1, 'bailey', 'The Outer Bailey');
-  // inner wall with the royal gate
-  castleRun(R, W.x0, W.z1, W.x1, W.z1, (x, z, o) => o ? Math.abs(x) < 2.6 : Math.abs(x) < 6.5);
-  castleRun(R, W.x0, W.z0, W.x1, W.z0); castleRun(R, W.x0, W.z0, W.x0, W.z1); castleRun(R, W.x1, W.z0, W.x1, W.z1);
-  for (const [x, z] of [[W.x0, W.z1], [W.x1, W.z1], [W.x0, W.z0], [W.x1, W.z0]]) castleTower(R, x, z, 2, '#e3b341');
-  castleGate(R, 0, W.z1, 'royal', 'The King’s Court');
-  });
+  buildCastleHill(R, add);
   // ---- the outer bailey: a working castle yard
   realmHall(R, -80, -180, 18, 9, 5, Math.PI / 2, { sign: 'ARMOURY', signCol: '#3d4a57', tower: true });
   realmHall(R, -80, -215, 16, 9, 4.5, Math.PI / 2, { sign: 'MASTER SMITH', signCol: '#7a2b1c' });
   { add('bf_furnace', -71, -222, Math.PI / 2, 1.2, 1.6); add('mk_Anvil', -71.5, -212, Math.PI / 2, 1.3, 0.6); add('mk_Whetstone', -72, -207, 0, 1, 0.6); add('mk_WeaponStand', -71.4, -229, Math.PI / 2, 1, 0.8); }
   realmHall(R, -80, -255, 20, 10, 6, Math.PI / 2, { sign: 'BARRACKS', signCol: '#26344d' });
   realmHall(R, -38, -296, 16, 10, 4, 0, { sign: 'STABLES', signCol: '#6b4e16', flat: true });
-  { const ch = realmHall(R, 88, -278, 14, 22, 7, -Math.PI / 2, { sign: 'CHAPEL', signCol: '#4a3a6a', allStone: true, tower: true, roof: '#4a4e52' }); }
+  realmHall(R, 88, -278, 14, 22, 7, -Math.PI / 2, { sign: 'CHAPEL', signCol: '#4a3a6a', allStone: true, tower: true, roof: '#4a4e52' });
   realmHall(R, 30, -296, 18, 9, 4.5, 0, { sign: 'GUILD HALL', signCol: '#6d1b28' });
   // the training yard with pells and archery in the north-west of the bailey
-  for (let i = 0; i < 5; i++) { const x = -48 + i * 4, z = -178; mk(R, geo('fest_pell', () => new THREE.CylinderGeometry(0.13, 0.15, 1.9, 8)), tmat('#8a6a42'), x, 0.95, z).castShadow = true; O_push(x, z, 0.35); }
+  for (let i = 0; i < 5; i++) { const x = -48 + i * 4, z = -178; mk(R, geo('fest_pell', () => new THREE.CylinderGeometry(0.13, 0.15, 1.9, 8)), tmat('#8a6a42'), x, 0.95 + gy(x, z), z).castShadow = true; O_push(x, z, 0.35); }
   add('mk_Dummy', -30, -185, 0.3, 1, 0.5); add('mk_Dummy', -26, -186, -0.2, 1, 0.5); add('mk_WeaponStand', -52, -186, 0.2, 1, 0.8);
-  for (const [x, z] of [[-48, -196], [-42, -198], [-36, -200]]) add('fy_vil_archery_target', x, z, 0, 1.2, 0.6);
+  for (const [x, z] of [[-62, -178], [-58, -181], [-64, -184]]) add('fy_vil_archery_target', x, z, 0, 1.2, 0.6);
   // courtyard life: well, carts, crates, a feast table, stacked barrels, banners
   add('fb_well', 22, -180, 0, 1.2, 1.2); add('mk_Stall_Cart_Empty', 40, -168, -0.3, 1.2, 1.6); add('mk_Crate_Wooden', 44, -172, 0.2, 1.2, 0.6); add('mk_Barrel', 46, -170, 0, 1.2, 0.5); add('mk_Barrel_Holder', -60, -165, 0, 1.2, 1);
   add('mk_Table_Large', 18, -240, 0, 1.2, 1.4); add('mk_Bench', 18, -238.6, 0, 1, 0); add('mk_Bench', 18, -241.4, 0, 1, 0); add('mk_Chalice', 18, -240, 0, 2.4, 0);
@@ -244,9 +231,9 @@ function buildRealmCastle(R, add, face) {
   // the Castle arena: stone floor, wooden stands
   arenaList(R, ARENAS[4], { floor: '#b8ae9e', floorTex: 'dirt', bench: '#6a5a4a', signCol: '#26344d' });
   // the mine shaft in the north-east corner (gold and silver live here)
-  realmGround(R, 60, 108, -302, -262, '#8e8478', 'dirt', 0.03);
+  realmGround(R, 60, 108, -302, -262, '#8e8478', 'dirt', 0.03 + gy(80, -280));
   add('fy_rock_big_1', 104, -296, 0.6, 1.4, 3); add('fy_rock_big_3', 96, -300, 1.4, 1.3, 3); add('rt_pulley_crate', 70, -266, 0, 3, 0.8); add('mk_Chain_Coil', 74, -268, 0, 1.2, 0);
-  { const sg = townSign('MINE SHAFT', '#5a4a3a'); sg.position.set(64, 3, -262); R.add(sg); }
+  { const sg = townSign('MINE SHAFT', '#5a4a3a'); sg.position.set(64, 3 + gy(64, -262), -262); R.add(sg); }
   // ---- the inner ward: gardens, the treasury, the Great Hall
   for (const [x, z] of [[-38, -228], [38, -228], [-38, -280], [38, -280]]) { add('fountainRoundDetail', x, z, 0, 1.6, 1.8); }
   for (let i = 0; i < 8; i++) { add('kf_bush_3_a', -44 + i * 2, -236, 0, 1.8, 0.5); add('kf_bush_3_a', 30 + i * 2, -236, 0, 1.8, 0.5); }
@@ -262,8 +249,9 @@ function O_push(x, z, r) { TOWN.obst.push({ x, z, r }); }
 // whatever fn adds to R stays visible from afar (castle walls, towers, the dome, the hall)
 function landmark(R, fn) { const n0 = R.children.length; fn(); for (let i = n0; i < R.children.length; i++) R.children[i].userData.landmark = true; }
 // the Great Hall: stone walls with buttresses and lit windows, a roof that lifts away when you're inside, the king's dais
-function buildGreatHall(R, add) {
-  const H = HALL, w = H.x1 - H.x0, d = H.z1 - H.z0, cx = (H.x0 + H.x1) / 2, cz = (H.z0 + H.z1) / 2, ht = 11;
+function buildGreatHall(R0, add) {
+  const H = HALL, w = H.x1 - H.x0, d = H.z1 - H.z0, cx = (H.x0 + H.x1) / 2, cz = (H.z0 + H.z1) / 2, ht = 11, Y = gy(cx, cz);
+  const R = new THREE.Group(); R.position.y = Y; R0.add(R); R.userData.landmark = true;
   const stone = tmat('#8f8a82'), dark = tmat('#4a4640'), win = tmat('#ffcf6a', { emissive: '#c07010', emissiveIntensity: 0.9 });
   const wall = (x, z, len, rot) => { const m = mk(R, new THREE.BoxGeometry(len, ht, 1.2), stone, x, ht / 2, z); m.rotation.y = rot; return m; };
   wall(cx, H.z0, w, 0); wall(H.x0, cz, d, Math.PI / 2); wall(H.x1, cz, d, Math.PI / 2);
@@ -276,11 +264,11 @@ function buildGreatHall(R, add) {
   TOWN.hallRoof = roof;
   // inside: flagstones, banners, chandeliers, the king's dais and throne, torches on the walls
   const fl = mk(R, new THREE.PlaneGeometry(w - 1, d - 1), lmat({ map: venueTex('dirt'), color: '#8a8478', roughness: 1 }), cx, 0.03, cz, false); fl.rotation.x = -Math.PI / 2; fl.receiveShadow = true;
-  arenaList(R, ARENAS[5], { post: '#3a2a1a', rail: '#6a4a2a', bench: '#5a3a2a', signCol: '#8a6a12' });
+  arenaList(R0, ARENAS[5], { post: '#3a2a1a', rail: '#6a4a2a', bench: '#5a3a2a', signCol: '#8a6a12' });
   mk(R, new THREE.BoxGeometry(10, 0.8, 4), dark, cx, 0.4, H.z0 + 3.2); add('mk_Chair_1', cx, H.z0 + 3.4, 0, 2.2, 0); { const cr = kpiece(R, 'rp_crown', cx, 2.9, H.z0 + 3.2, 0, 0.5); }
   for (const sx of [-1, 1]) for (let i = 0; i < 4; i++) { const b = mk(R, geo('gh_ban', () => new THREE.PlaneGeometry(1.4, 3.6)), lmat({ color: i % 2 ? '#8a1a2a' : '#e3b341', side: THREE.DoubleSide }), cx + sx * (w / 2 - 0.66), 6.4, H.z0 + 8 + i * 9); b.rotation.y = sx > 0 ? -Math.PI / 2 : Math.PI / 2; }
   for (let i = 0; i < 3; i++) { const c = kpiece(R, 'mk_Chandelier', cx, 7.6, H.z0 + 10 + i * 14, 0, 1.6); }
-  if (typeof buildThrone === 'function') buildThrone(R);
+  if (typeof buildThrone === 'function') buildThrone(R0);
   // walls block you, except the door
   const k = (x0, z0, x1, z1) => { const L = Math.hypot(x1 - x0, z1 - z0), n = Math.round(L / 1.6); for (let i = 0; i <= n; i++) TOWN.obst.push({ x: x0 + (x1 - x0) * i / n, z: z0 + (z1 - z0) * i / n, r: 1 }); };
   k(H.x0, H.z0, H.x1, H.z0); k(H.x0, H.z0, H.x0, H.z1); k(H.x1, H.z0, H.x1, H.z1); k(H.x0, H.z1, cx - 3.2, H.z1); k(cx + 3.2, H.z1, H.x1, H.z1);

@@ -16,13 +16,13 @@ LOOKS.hand.push(['driftwood', 'Driftwood club', 0, 'hidden'], ['goblet', 'Royal 
 function secretFound(key) { return !!(CAREER.found && CAREER.found[key]); }
 // the places themselves: a few props each, and an invisible stall you can only find by walking up to it
 function buildSecrets(R) {
-  const add = (k, x, z, ry, s, y) => kpiece(R, k, x, y || 0, z, ry || 0, s || 1);
+  const add = (k, x, z, ry, s, y) => kpiece(R, k, x, (y || 0) + gy(x, z), z, ry || 0, s || 1);
   // hermit's cave: leaning boulders, a dark mouth, a candle and a bedroll
   for (const [k, dx, dz, ry, s] of [['fy_rock_big_1', -3, -2, 0.4, 1.6], ['fy_rock_big_3', 3, -2.5, 2.2, 1.5], ['fy_rock_big_pillar', 0, -4.5, 1.2, 1.2], ['fy_rock_medium_4', -4, 1.5, 0.8, 1.1]]) { add(k, -286 + dx, -40 + dz, ry, s); TOWN.obst.push({ x: -286 + dx, z: -40 + dz, r: 1.6 }); }
   { const m = mk(R, new THREE.PlaneGeometry(2.2, 2.4), lmat({ color: '#0a0806' }), -286, 1.2, -42.6); m.rotation.y = 0; }
   add('dp_candle_big', -285, -40.6, 0, 1.2); add('mk_Chest_Wood', -287.4, -41.2, 0.3, 0.9);
   // crypt lever behind the chapel
-  add('mk_Chain_Coil', 101, -281, 0, 0.9); { const lv = mk(R, geo('sc_lever', () => new THREE.BoxGeometry(0.08, 0.9, 0.08)), tmat('#3a3d40', { metalness: 0.7 }), 101, 0.9, -279.6); lv.rotation.z = 0.5; }
+  add('mk_Chain_Coil', 101, -281, 0, 0.9); { const lv = mk(R, geo('sc_lever', () => new THREE.BoxGeometry(0.08, 0.9, 0.08)), tmat('#3a3d40', { metalness: 0.7 }), 101, 0.9 + gy(101, -279.6), -279.6); lv.rotation.z = 0.5; }
   // lookout: a tall trunk, a ladder, a platform
   { const tr = mk(R, geo('sc_trunk', () => new THREE.CylinderGeometry(0.5, 0.7, 9, 8)), tmat('#5a3b24'), -238, 4.5, -123.4); tr.castShadow = true; TOWN.obst.push({ x: -238, z: -123.4, r: 0.8 }); }
   for (let i = 0; i < 12; i++) mk(R, geo('sc_rung', () => new THREE.BoxGeometry(0.6, 0.05, 0.05)), tmat('#7a5a36'), -238, 0.4 + i * 0.55, -122.7);
@@ -32,7 +32,7 @@ function buildSecrets(R) {
   { const hull = mk(R, geo('sc_hull', () => new THREE.SphereGeometry(1.4, 10, 6, 0, TAU, 0, Math.PI / 2)), tmat('#5a4630'), 226, 0.1, 128); hull.scale.set(1, 0.5, 2.4); hull.rotation.x = Math.PI + 0.25; TOWN.obst.push({ x: 226, z: 128, r: 1.8 }); }
   for (let i = 0; i < 10; i++) add('cr_grass_1', 222 + (i % 5) * 2, 124 + Math.floor(i / 5) * 6, i, 1.6);
   // cellar steps in the ward
-  mk(R, geo('sc_hatch', () => new THREE.BoxGeometry(1.8, 0.08, 1.4)), tmat('#4a3422'), -47, 0.05, -289); add('mk_Barrel', -49, -290, 0, 1); add('mk_Barrel', -45, -290.5, 0.4, 1);
+  mk(R, geo('sc_hatch', () => new THREE.BoxGeometry(1.8, 0.08, 1.4)), tmat('#4a3422'), -47, 0.05 + gy(-47, -289), -289); add('mk_Barrel', -49, -290, 0, 1); add('mk_Barrel', -45, -290.5, 0.4, 1);
   // the smugglers' grate low in the bailey's west wall (and a hint scrawled by the mill)
   mk(R, geo('sc_grate', () => new THREE.BoxGeometry(0.1, 0.9, 1.4)), tmat('#2a2d30', { metalness: 0.8 }), BAILEY.x0 - 1.3, 0.5, -196);
   for (const S of SECRETS) {

@@ -23,7 +23,7 @@ function realmTick(dt) {
   if (TRAVEL.frame % 10 === 3) peopleCull();
   if (TRAVEL.frame % 1800 === 900 && typeof rosterLoad === 'function') rosterLoad(true);
   // the sun (and its shadows) follow you round the realm
-  if (TRAVEL.saved && TOWN.pos) { const o = TRAVEL.saved.sun.clone().sub(TRAVEL.saved.sunT); W3.sun.target.position.set(TOWN.pos.x, 0, TOWN.pos.z); W3.sun.position.set(TOWN.pos.x + o.x, o.y, TOWN.pos.z + o.z); W3.sun.target.updateMatrixWorld(); }
+  if (TRAVEL.saved && TOWN.pos) { const o = TRAVEL.saved.sun.clone().sub(TRAVEL.saved.sunT); W3.sun.target.position.set(TOWN.pos.x, gy(TOWN.pos.x, TOWN.pos.z), TOWN.pos.z); W3.sun.position.set(TOWN.pos.x + o.x, o.y, TOWN.pos.z + o.z); W3.sun.target.updateMatrixWorld(); }
   // stamina for sprinting
   const run = TOWN.speed > 3.6 && !TOWN.mounted;
   TOWN.stam = clamp((TOWN.stam == null ? 1 : TOWN.stam) + (run ? -0.16 : 0.22) * dt, 0, 1);
@@ -94,22 +94,22 @@ function updateWaypoint(dt) {
   if (pr.off > 12 || TRAVEL.stuck > 1.4) { TRAVEL.stuckLog = (TRAVEL.stuckLog || []).concat([[Math.round(TOWN.pos.x), Math.round(TOWN.pos.z)]]); TRAVEL.startX = TOWN.pos.x; TRAVEL.startZ = TOWN.pos.z; travelPlan(); }
   // markers from just behind you to 60 m ahead; they're fixed points, only which ones show changes
   const D = TRAVEL.dots, m4 = new THREE.Matrix4(); let k = 0;
-  for (const [x, z, s] of TRAVEL.marks) { if (s < TRAVEL.progress - 2) continue; if (s > TRAVEL.progress + 60 || k >= D.instanceMatrix.count) break; m4.makeTranslation(x, 0.08 + 0.03 * Math.sin(G.realTime * 4 + s), z); D.setMatrixAt(k++, m4); }
+  for (const [x, z, s] of TRAVEL.marks) { if (s < TRAVEL.progress - 2) continue; if (s > TRAVEL.progress + 60 || k >= D.instanceMatrix.count) break; m4.makeTranslation(x, gy(x, z) + 0.08 + 0.03 * Math.sin(G.realTime * 4 + s), z); D.setMatrixAt(k++, m4); }
   D.count = k; D.instanceMatrix.needsUpdate = true;
-  const B = TRAVEL.beam; B.visible = true; B.position.set(W.x, 20, W.z); B.material.opacity = 0.18 + 0.1 * Math.sin(G.realTime * 3);
+  const B = TRAVEL.beam; B.visible = true; B.position.set(W.x, gy(W.x, W.z) + 20, W.z); B.material.opacity = 0.18 + 0.1 * Math.sin(G.realTime * 3);
   TRAVEL.compassT -= dt; if (TRAVEL.compassT <= 0) { TRAVEL.compassT = 0.15; compassHud(d); }
 }
 // the route: local legs on the grid, the roads in between
 function realmRoute(sx, sz, tx, tz) {
   TRAVEL.startX = sx; TRAVEL.startZ = sz;
   const direct = Math.hypot(tx - sx, tz - sz);
-  if (direct < 70) { const L = localPath(sx, sz, tx, tz); if (L) return L; }
+  if (direct < 70) { const L = localPath(sx, sz, tx, tz) || (direct < 40 ? localPath(sx, sz, tx, tz, 70) : null); if (L) return L; }
   const A = nearestRoad(sx, sz), Bq = nearestRoad(tx, tz);
   if (!A || !Bq || (A.d > 60 && Bq.d > 60)) { const L = localPath(sx, sz, tx, tz, 60); return L || [[tx, tz]]; }
   const road = roadRoute(A, Bq);
-  const leg1 = A.d < 2 ? [] : (localPath(sx, sz, A.x, A.z) || [[A.x, A.z]]);
+  const leg1 = A.d < 2 ? [] : (localPath(sx, sz, A.x, A.z) || localPath(sx, sz, A.x, A.z, 70) || [[A.x, A.z]]);
   { const f = road[0], p0 = leg1.length ? leg1[leg1.length - 1] : [sx, sz]; if (f && !lineFree(p0[0], p0[1], f[0], f[1])) { const L = localPath(p0[0], p0[1], f[0], f[1], 12); if (L) road.splice(0, 0, ...L); } }
-  const leg2 = Bq.d < 2 ? [] : (localPath(Bq.x, Bq.z, tx, tz) || [[tx, tz]]);
+  const leg2 = Bq.d < 2 ? [] : (localPath(Bq.x, Bq.z, tx, tz) || localPath(Bq.x, Bq.z, tx, tz, 70) || [[tx, tz]]);
   const out = [...leg1, ...road, ...leg2]; if (!out.length || out[out.length - 1][0] !== tx || out[out.length - 1][1] !== tz) out.push([tx, tz]);
   return out;
 }
@@ -245,7 +245,7 @@ function callHorse() {
   animalMake('Horse', A => {
     if (!TOWN.on) return;
     const back = TOWN.face + Math.PI, x = TOWN.pos.x + Math.sin(back) * 16, z = TOWN.pos.z + Math.cos(back) * 16;
-    TOWN.horse = { A, x, z, face: TOWN.face, come: true }; A.root.position.set(x, 0, z); A.root.userData.dyn = true; TOWN.root.add(A.root);
+    TOWN.horse = { A, x, z, face: TOWN.face, come: true }; A.root.position.set(x, gy(x, z), z); A.root.userData.dyn = true; TOWN.root.add(A.root);
     toastMenu('You whistle. Your horse trots over.');
   }, shopState().owned.horse === 'white' ? '#ffffff' : null);
 }
@@ -259,9 +259,9 @@ function updateHorse(dt) {
     if (d > 2.6) { const sp = d > 10 ? 7 : 3; H.x += dx / d * sp * dt; H.z += dz / d * sp * dt; H.face = Math.atan2(dx, dz); H.spd = sp; } else { H.come = false; H.spd = 0; }
   } else H.spd = 0;
   const sp = TOWN.mounted ? TOWN.speed : H.spd || 0;
-  H.A.root.position.set(H.x, 0, H.z); H.A.root.rotation.y = H.face; H.A.play(sp > 6 ? 'Gallop' : sp > 0.4 ? 'Walk' : 'Idle', 0.25); H.A.mixer.update(dt);
+  const hy = gy(H.x, H.z); H.A.root.position.set(H.x, hy, H.z); H.A.root.rotation.y = H.face; H.A.root.rotation.x = Math.atan2(gslope(H.x, H.z), 1) * 0.5; H.A.play(sp > 6 ? 'Gallop' : sp > 0.4 ? 'Walk' : 'Idle', 0.25); H.A.mixer.update(dt);
   // the rider sits on the saddle
-  const J = TOWN.me; if (J) { if (TOWN.mounted) { J.root.position.set(H.x - Math.sin(H.face) * 0.1, 1.12, H.z - Math.cos(H.face) * 0.1); J.root.rotation.y = H.face; if (J.ual) { J.play('Sitting_Idle_Loop', 0.2); J.mixer.update(dt); } } }
+  const J = TOWN.me; if (J) { if (TOWN.mounted) { J.root.position.set(H.x - Math.sin(H.face) * 0.1, hy + 1.12, H.z - Math.cos(H.face) * 0.1); J.root.rotation.y = H.face; if (J.ual) { J.play('Sitting_Idle_Loop', 0.2); J.mixer.update(dt); } } }
   if (TRAVEL.frame % 20 === 0) horseHud();
 }
 function horseHud() {
@@ -284,7 +284,7 @@ function buildAnimals() {
   ANIMAL.list = [];
   const spots = [['Cow', -244, 186], ['Cow', -252, 192], ['Cow', -238, 172], ['Horse', -30, -296], ['Horse', -44, -294], ['Horse', 22, 90], ['Cow', 70, -12], ['Alpaca', -150, 205]];
   for (const [k, x, z] of spots.slice(0, IS_TOUCH ? 5 : 8)) animalMake(k, A => {
-    if (!TOWN.on) return; A.root.position.set(x, 0, z); A.root.rotation.y = Math.random() * TAU; A.root.userData.dyn = true; TOWN.root.add(A.root);
+    if (!TOWN.on) return; A.root.position.set(x, gy(x, z), z); A.root.rotation.y = Math.random() * TAU; A.root.userData.dyn = true; TOWN.root.add(A.root);
     ANIMAL.list.push({ A, hx: x, hz: z, x, z, tx: x, tz: z, t: Math.random() * 6, face: A.root.rotation.y });
   });
 }
@@ -295,7 +295,7 @@ function updateAnimals(dt) {
     const dx = N.tx - N.x, dz = N.tz - N.z, d = Math.hypot(dx, dz);
     if (d > 0.4) { N.x += dx / d * 0.8 * dt; N.z += dz / d * 0.8 * dt; N.face += Math.atan2(Math.sin(Math.atan2(dx, dz) - N.face), Math.cos(Math.atan2(dx, dz) - N.face)) * Math.min(1, dt * 3); N.A.play('Walk'); }
     else N.A.play(N.A.acts.Eating && N.t > 6 ? 'Eating' : 'Idle');
-    N.A.root.position.set(N.x, 0, N.z); N.A.root.rotation.y = N.face; N.A.mixer.update(dt);
+    N.A.root.position.set(N.x, gy(N.x, N.z), N.z); N.A.root.rotation.y = N.face; N.A.mixer.update(dt);
   }
 }
 // people far off aren't drawn or animated (skinning a whole realm's worth of townsfolk is the heaviest thing we do)
