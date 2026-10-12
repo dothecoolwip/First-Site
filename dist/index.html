@@ -1,5 +1,5 @@
 <!doctype html><html><head><meta charset="utf-8"><link rel="manifest" href="manifest.webmanifest"><meta name="theme-color" content="#0f1316"><link rel="apple-touch-icon" href="icon-192.png"><meta name="apple-mobile-web-app-capable" content="yes"><meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover"></head><body>
-<script>window.BUILD_VER="steel-tape-967e6379e8";</script><title>Buhurt: Steel &amp; Tape</title>
+<script>window.BUILD_VER="steel-tape-02e7a3c6ab";</script><title>Buhurt: Steel &amp; Tape</title>
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Barlow+Semi+Condensed:wght@400;500;600;700&family=Big+Shoulders+Display:wght@700;800;900&family=Permanent+Marker&display=swap">
@@ -13150,7 +13150,7 @@ function initMenus() {
   $('#btnFull').onclick = () => goFullscreen(true);
   $('#btnPadSetup').onclick = () => { AU.click(); openPadSetup(); };
   $('#btnBos').onclick = () => { AU.click(); const back = () => showScreen('settings'); if (BOS.info) msg('buhurtos', 'BuhurtOS account', '<div id="bosBox" class="bosbox"></div>', [['Back', back, true]]), renderBosBox(); else openBosSignIn(back); };
-  setTimeout(bosBoot, 0); setTimeout(() => { if (typeof rosterLoad === 'function') rosterLoad(); }, 1500); setTimeout(() => { if (typeof eventSession === 'function') eventSession(); }, 4000);
+  bosBoot(); setTimeout(() => { if (typeof rosterLoad === 'function') rosterLoad(); }, 1500); setTimeout(() => { if (typeof eventSession === 'function') eventSession(); }, 4000);
   { const segL = () => $$('#lettersSeg button').forEach(b => b.setAttribute('aria-pressed', String(b.dataset.l === (G.settings.padLetters || 'auto')))); segL(); $$('#lettersSeg button').forEach(b => b.onclick = () => { G.settings.padLetters = b.dataset.l; saveSettings(); segL(); NIN.on = null; checkNintendo(); AU.click(); }); }
   $('#btnPausePad').onclick = () => { AU.click(); openPadSetup(() => showScreen('pause')); };
   $('#btnPauseFeedback').onclick = () => { AU.click(); openFeedback(() => showScreen('pause')); };
@@ -13976,7 +13976,7 @@ async function boot(hot) {
   if (location.hash === '#autotest') setTimeout(autotest, 300);
   window.__ST = { G, AU, buildShield, buildWeapon, W3, startTourney, quickFight, toTitle, openRepair, kitCheck, setupMatch, toTactics, beginFight, endRound, matchEnd, CLUBS, WEAPONS, setView, toast, renderKitPicker, applyLoadout, IN, FP, showScreen, weaponIcon, startCine, startTraining, startLadder, openCareer, openModes, openLadder, CAREER, setLesson, TR, unlock, togglePause, afterRound, renderHow, selectPiece, selectTape, msg, renderSheet, setHud, endTraining, setMode, PAD, navMove, focusFirst, sparks, CUTE, THREE, BREATH, setCuteDeco, flipFx, PHOTO, UAL, raiseFlags, startVersus, startFFA, startBracket, startKid, KID, openSeason, startSeasonMatch, setVenue, VS, SPLIT, NET, buildOnlineMatch, hostLobby, joinLobby, ONL, vinControl, openRun, openDaily, openBracket, showBracket, bracketResult, ffaMatchEnd, ffaLeader, ffaWinner, endKid, openPhoto, closePhoto, startReplay, stopReplay, RP, store, startRunFight, newRun, runEnd, WX, setWeather, padVin, readVersus, applyLo, myLoadout, netDropped, netLeave, showIntro, installForged, dailyPlan, openKids, openVersus, openPicks, LESSONS, rivalClub, startGrudge, startDaily, seasonState, newSeason, refreshDaily, VENUES, COMM, hitMapHtml, resetFighterForRound, DIFF, PIN, PADS, NIN, padsUpdate, seatPads, LOBBY, MM, openOnlineHub, benchDown, benchMove, REP, squirePatch, coverage, openProfile, myProfile, BOS, updateTitlePurse, ACH, progressCheck, challenges, masteryOf, S2, rankOf, counterValue, renderCareer, progressMatch, saveCareer, shopState, shopUp, tapeLeft, shopMatchEnd, shopPrizeMult, shopXpMult, swingTimes, pieceWearMult, TABARDS, refillTape, renderShop, UPGRADES, freshKit, TAPE_STOCK, enterTown, leaveTown, TOWN, openVendor, closeVendor, openTownMap, shopFx, renderVendor, VENDORS, ITEMS, itemCost, spCost, skillRoom, sponsorIncome, BOOSTS, STALL_AT, HOMES, FURNISH, pfx, squadFx, boostKit, townCollide, townRefresh, townWalkTo, townTalk, townTeardown, lookState, WORLD, guildCheck, STATIONS, townDressMe, FOLK, updateFolk, navBlocked, buildFolk, BOUT, boutStart, boutStop, boutTick, drawTownMap, updateMiniMap, costumePerson, OUTFIT, buildSkinWeapon, skinIcon, wskinList, skinFor, buildMyWeapon, wskinFamOf, GATHER, startGather, gatherSwing, stopGather, tradeState, tradeLevel, tradeGain, give, have, craft, NODES, MATS, renderTrades, TRADE_SKILLS, ARENAS, DISTRICTS, TRAVEL, setWaypoint, clearWaypoint, realmPath, callHorse, mount, dismount, ANIMAL, districtAt, realmCull, REALM_TIERS, gateOpen, townJump, stableRows, horseAvailable, peopleCull, boutArenaFor, arenaLive, bagSlots, bagState, bagRoom, secretFound, lookOwned, SECRETS, stopSpectating, startTrial, TRIALS, tierCap, gy, tierOf, HILL, hillHouses, cliffAt, gateBlocked, arenaBlocked, localPath, NAV, rampAt, ROSTER, rosterClubs, rosterLive, rosterName, liveBoutPick, aiTier, AI_TIER, guardOutcome, fighterGlow, ONB, onbStage, onbSet, openCreator, tourStart, tourEnd, TOUR_STOPS, THRONE, throneHolder, throneFight, throneBow, openThrone, sideFromDrag, VOICE };
   if (location.protocol === 'file:' && window.__steeltapeTest)
-    Object.assign(window.__ST, { penalize, failPiece, closeRepair, xpNeed, tierProf, runToRepairCorner, onbAfterAccount, leaveTarget, leaveScreen, CLOUD, bosLoadInfo });
+    Object.assign(window.__ST, { penalize, failPiece, closeRepair, xpNeed, tierProf, runToRepairCorner, onbAfterAccount, onbAccountGate, onbResumeAfterAuth, leaveTarget, leaveScreen, CLOUD, bosLoadInfo, bosBoot });
 }
 
 function autotest() {
@@ -14841,7 +14841,7 @@ function netLeave() { try { NET.unsub && NET.unsub(); NET.room && NET.room.leave
 // signed-in person may read (their own fighter link; public fighter records and career stats). Nothing is written.
 const BOS_URL = 'https://mvbxlebznlgroptwwdsm.supabase.co';
 const BOS_KEY = 'sb_publishable_u76M-dggKSsdsyhUQKveJg_5fPJ5Nan';
-const BOS = { sb: null, p: null, user: null, info: null, otpEmail: '' };
+const BOS = { sb: null, p: null, user: null, info: null, otpEmail: '', booting: false };
 function loadSupabaseLib() {
   if (window.supabase && window.supabase.createClient) return Promise.resolve(window.supabase);
   if (BOS.p) return BOS.p;
@@ -14880,7 +14880,17 @@ function bosBoot() {
   let saved = false; try { saved = !!localStorage.getItem('buhurt-game-buhurtos'); } catch (e) { }
   const back = /access_token=|[?&]code=/.test(location.hash + location.search);
   if (!saved && !back) return;
-  bosClient().then(sb => sb.auth.getSession()).then(r => { const s = r && r.data && r.data.session; if (s) { BOS.user = s.user; bosLoadInfo(); } }).catch(() => { });
+  BOS.booting = true;
+  bosClient().then(sb => sb.auth.getSession()).then(async r => {
+    const s = r && r.data && r.data.session;
+    if (s) { BOS.user = s.user; await bosLoadInfo(); }
+  }).catch(() => { }).finally(() => {
+    BOS.booting = false;
+    if (ONB.awaitingAuth && !CLOUD.applying) {
+      if (BOS.user && (CLOUD.ready || CLOUD.offline)) onbResumeAfterAuth();
+      else toTitle();
+    }
+  });
 }
 async function bosLoadInfo() {
   const sb = BOS.sb, u = BOS.user; if (!sb || !u) return;
@@ -15424,6 +15434,14 @@ function onbAccountRequired() {
 function onbAccountGate(forceAccount) {
   // Direct entry to the town requires a linked account even if the tutorial is unfinished.
   if (location.protocol === 'file:' && window.__steeltapeTest && !window.__onboard) return false;
+  if (BOS.booting) {
+    ONB.awaitingAuth = true;
+    if (!(G.screen === 'msgScr' && $('#msgPanel')?.textContent.includes('Restoring your account'))) {
+      msg('account', 'Restoring your account', '<p>Checking your BuhurtOS sign-in and saved fighter…</p>', []);
+      const back = $('#msgPanel .back'); if (back) back.hidden = true;
+    }
+    return true;
+  }
   if (!forceAccount && !onbAccountRequired()) return false;
   // Offline is the one exception: keep playing from the device save, even
   // if sign-in or the cloud cannot be reached. Require sign-in on reconnect.
@@ -15447,6 +15465,7 @@ function onbAccountGate(forceAccount) {
   return true;
 }
 function onbResumeAfterAuth() {
+  if (BOS.booting) return;
   if (!ONB.awaitingAuth || (!BOS.user && !(typeof cloudIsOffline === 'function' && cloudIsOffline()))) return;
   if (typeof CLOUD !== 'undefined' && !CLOUD.ready && !CLOUD.offline && !(location.protocol === 'file:' && window.__steeltapeTest)) return;
   ONB.awaitingAuth = false;
