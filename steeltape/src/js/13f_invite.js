@@ -12,7 +12,12 @@ function lobbyStatus() { return NET.on ? 'in an online fight' : NET.room ? (NET.
 // play time: counted while the game is on screen, saved with the career
 setInterval(() => { if (document.visibilityState === 'visible') { CAREER.playSec = (CAREER.playSec || 0) + 1; if (CAREER.playSec % 30 === 0) saveCareer(); } }, 1000);
 function fmtDur(sec) { sec = Math.max(0, Math.round(sec || 0)); const hh = Math.floor(sec / 3600), mm = Math.floor(sec % 3600 / 60); return hh ? `${hh} h ${mm} min` : mm ? `${mm} min` : `${sec} s`; }
-function myProfile() { const s = CAREER.stats || {}; return { m: s.matches || 0, w: s.wins || 0, td: s.takedowns || 0, hits: s.hits || 0, rw: s.rumbleWins || 0, t: Math.round(CAREER.playSec || 0), on: SESSION_START, wpn: (WEAPONS[G.loadout.weapon] || WEAPONS.mace).name, club: CAREER.club && CAREER.club.name || '', ach: Object.keys(CAREER.ach || {}).length, bos: bosRecord(), lv: CAREER.level || 1, rank: rankOf(CAREER.level || 1) }; }
+function myProfile() {
+  const s = CAREER.stats || {}, shop = typeof shopState === 'function' ? shopState() : {};
+  const items = typeof bagState === 'function' ? bagState().items || {} : {};
+  const talents = Object.entries(CAREER.skills || {}).filter(([, v]) => v > 0).map(([k, v]) => `${k}:${v}`);
+  return { m: s.matches || 0, w: s.wins || 0, td: s.takedowns || 0, hits: s.hits || 0, rw: s.rumbleWins || 0, t: Math.round(CAREER.playSec || 0), on: SESSION_START, wpn: (WEAPONS[G.loadout.weapon] || WEAPONS.mace).name, club: CAREER.club && CAREER.club.name || '', ach: Object.keys(CAREER.ach || {}).length, bos: bosRecord(), lv: CAREER.level || 1, rank: rankOf(CAREER.level || 1), talents, inventory: items, purchases: shop.owned || {}, spent: shop.spent || 0, purse: CAREER.purse || 0 };
+}
 async function claudeRoom() { try { return window.claude && window.claude.use ? await window.claude.use('room') : null; } catch (e) { return null; } }
 function lobbySet(patch) { try { LOBBY.room && LOBBY.room.presence(patch); } catch (e) { } }
 async function initLobby() {
@@ -72,6 +77,9 @@ function openProfile(p, back) {
   const name = String(P.name || 'A fighter').slice(0, 20);
   const rate = R.m ? Math.round(100 * (R.w || 0) / R.m) + '%' : '–';
   const rows = [['Rank', R.lv ? `${R.rank || rankOf(R.lv)}, level ${R.lv}` : '–'], ['Online now for', R.on ? fmtDur((Date.now() - R.on) / 1000) : '–'], ['Total time played', R.t != null ? fmtDur(R.t) : '–'], ['Matches', R.m ?? '–'], ['Wins', R.w ?? '–'], ['Win rate', rate], ['Takedowns', R.td ?? '–'], ['Clean hits', R.hits ?? '–'], ['Rumbles won', R.rw ?? '–'], ['Achievements', R.ach ?? '–'], ['Favourite weapon', R.wpn || '–'], ['Club', R.club || '–'], ['Right now', P.st || '–']];
+  const talentHtml = Array.isArray(R.talents) && R.talents.length ? `<p class="small"><b>Talents:</b> ${R.talents.map(escTxt).join(', ')}</p>` : '<p class="muted small">No talents spent yet.</p>';
+  const invHtml = R.inventory && Object.keys(R.inventory).length ? `<p class="small"><b>Inventory:</b> ${Object.entries(R.inventory).map(([k, v]) => `${escTxt(k)} × ${escTxt(v)}`).join(', ')}</p>` : '<p class="muted small"><b>Inventory:</b> empty</p>';
+  const buyHtml = R.purchases && Object.keys(R.purchases).length ? `<p class="small"><b>Purchases:</b> ${Object.keys(R.purchases).map(escTxt).join(', ')} · ${fmtMoney(R.spent || 0)} spent</p>` : '<p class="muted small"><b>Purchases:</b> none</p>';
   const B = R.bos; // their BuhurtOS account and real record, if they signed in with it
   const bosHtml = B ? `<div class="bosrec"><b><span class="bostick">✓</span> BuhurtOS: ${escTxt(B.name)}</b><span>${B.linked ? `${B.team ? escTxt(B.team) + ' · ' : ''}${B.m} real matches, ${B.w} wins${B.l ? ', ' + B.l + ' losses' : ''}${B.g ? ' · ' + B.g + ' gold' : ''}${B.p ? ' · ' + B.p + ' podiums' : ''}${B.tv ? ' · ' + B.tv + ' tournaments won' : ''}` : 'Signed in, no fighter record linked yet'}</span></div>` : '';
   const canJoin = /^[A-Z]{4}$/.test(String(P.look || ''));
@@ -80,7 +88,7 @@ function openProfile(p, back) {
   else if (p && p.peer && LOBBY.peers.includes(p)) btns.push(['Invite to a fight', () => sendInvite(p), true]);
   if (p && p.peer && CAREER.guild && LOBBY.peers.includes(p) && !(P.gd && P.gd.id === CAREER.guild.id)) btns.push([`Invite to [${CAREER.guild.tag}]`, () => { guildInvite(p); }]);
   btns.push(['Back', back || (() => (NET.room && !ONL.inMatch ? renderLobby() : openOnlineHub()))]);
-  msg('player', (B ? '✓ ' : '') + name, `${bosHtml}<div class="profgrid">${rows.map(([k, v]) => `<span>${k}</span><b>${escTxt(v)}</b>`).join('')}</div>${p && p.guest ? '<p class="muted small">Guest player</p>' : ''}`, btns);
+  msg('player', (B ? '✓ ' : '') + name, `${bosHtml}<div class="profgrid">${rows.map(([k, v]) => `<span>${k}</span><b>${escTxt(v)}</b>`).join('')}</div>${talentHtml}${invHtml}${buyHtml}${p && p.guest ? '<p class="muted small">Guest player</p>' : ''}`, btns);
 }
 // a profile for someone in a lobby: use their global-list entry if we can find it, else what the lobby knows
 function openProfileByUid(uid, x) {

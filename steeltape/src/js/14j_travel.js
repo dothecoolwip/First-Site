@@ -26,7 +26,13 @@ function realmTick(dt) {
   if (TRAVEL.saved && TOWN.pos) { const o = TRAVEL.saved.sun.clone().sub(TRAVEL.saved.sunT); W3.sun.target.position.set(TOWN.pos.x, gy(TOWN.pos.x, TOWN.pos.z), TOWN.pos.z); W3.sun.position.set(TOWN.pos.x + o.x, o.y, TOWN.pos.z + o.z); W3.sun.target.updateMatrixWorld(); }
   // stamina for sprinting
   const run = TOWN.speed > 3.6 && !TOWN.mounted;
-  TOWN.stam = clamp((TOWN.stam == null ? 1 : TOWN.stam) + (run ? -0.16 : 0.22) * dt, 0, 1);
+  // Village travel is intentionally more forgiving than a fight. Lungs talents
+  // then improve recovery and reduce the running drain on top of that baseline.
+  const breath = G.player && typeof perk === 'function' ? perk(G.player, 'lungs.breath') : 0;
+  const marathon = G.player && typeof perk === 'function' ? perk(G.player, 'lungs.marathon') : 0;
+  const drain = 0.105 * (marathon ? 0.7 : 1);
+  const recovery = 0.30 * (1 + 0.08 * breath);
+  TOWN.stam = clamp((TOWN.stam == null ? 1 : TOWN.stam) + (run ? -drain : recovery) * dt, 0, 1);
   if (TOWN.stam <= 0.01) TOWN.winded = true; if (TOWN.winded && TOWN.stam > 0.35) TOWN.winded = false;
   const sb = $('#townStam'); if (sb) { sb.hidden = TOWN.stam > 0.995; sb.firstChild.style.width = Math.round(TOWN.stam * 100) + '%'; sb.classList.toggle('low', !!TOWN.winded); }
   updateWaypoint(dt); updateHorse(dt); arenaTicker(dt);

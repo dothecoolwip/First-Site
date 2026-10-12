@@ -37,7 +37,7 @@ test('a phantom device listed first does not steal or jam the controls', async (
 
 test('the pad that wakes up on a button press counts straight away', async ({ game, page }) => {
   const p = await game.addPad({ held: [B.DOWN] }); // browsers reveal a pad on the press that wakes it
-  await game.frames(3);
+  await game.until('PADS.active.length === 1');
   expect(await game.run('PADS.active.length')).toBe(1);
   await game.setButton(p, B.DOWN, 0); await game.frames(2);
   await game.press(p, B.DOWN);

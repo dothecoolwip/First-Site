@@ -102,6 +102,15 @@ function penalize(f, text, cite, straightYellow) {
   if (card === 'red') {
     r.red = true; f.redMatches = 2;
     if (isUp(f)) marshalGround(f, 'red card, out of the list', 'REG 6.3.3');
+    if (G.match && G.match.duel && G.phase === 'fight') {
+      // In a duel a red card is an immediate disqualification, not a
+      // suspension that carries into the next round.  Award the match to the
+      // other fighter and stop the current round so the red-carded fighter
+      // cannot recover and win on points.
+      G.match.duelDQ = f.team;
+      G.match.wins[1 - f.team] = 2;
+      after(0.35, () => { if (G.phase === 'fight') endRound('duel'); });
+    }
     if (f.isPlayer) after(0.3, () => setStatus('Red card. You sit out the rest of this match and the next (REG 6.3.3).', 'var(--card-red)', 5));
   }
 }

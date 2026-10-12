@@ -145,6 +145,7 @@ function enterTown(vendorKey) {
   buildTown(); TOWN.on = true; TOWN.actPrev = true; TOWN.vendor = null;
   const S0 = vendorKey && TOWN.stalls.find(s => s.V.key === vendorKey);
   if (S0) { TOWN.pos = { x: S0.ax + Math.sin(S0.ry) * 1.6, z: S0.az + Math.cos(S0.ry) * 1.6 }; TOWN.yaw = S0.ry; TOWN.face = S0.ry + Math.PI; }
+  else if (TOWN.matchExit) { TOWN.pos = { ...TOWN.matchExit }; TOWN.matchExit = null; TOWN.yaw = 0; TOWN.face = Math.PI; }
   else { TOWN.pos = { x: 0, z: 31 }; TOWN.yaw = 0; TOWN.face = Math.PI; }
   TOWN.cam = null; TOWN.fpYaw = FP.yaw;
   document.body.classList.add('intown'); venueExtras(false); showScreen(null); $('#townHud').hidden = false; townHudUpdate(); refreshTouchUI();
@@ -287,10 +288,9 @@ function openTownMap() {
   $('#townShopHead').innerHTML = '';
   $('#townShopHead').append(h('button', { class: 'back', 'data-back': '', 'data-gp': 'B', 'aria-label': 'Back', onclick: e => { e.stopPropagation(); AU.click(); closeVendor(); } }, h('span', null, '‹ Back')), h('h2', { class: 'ttape tape mk' }, 'Realm map'));
   box.append(townMapCanvas());
-  box.append(h('p', { class: 'muted small' }, 'Or pick a place below to mark the way there. Nothing teleports: walk, or hire a horse at the stables.'));
+  box.append(h('p', { class: 'muted small' }, 'Other places are below. Nothing teleports: walk, or hire a horse at the stables.'));
   const list = h('div', { class: 'ups shop' }); box.append(list);
-  const rows = [...ARENAS.map(A => ({ icon: arenaLive(A) ? '🔴' : '🏟️', name: A.name, role: arenaLive(A) ? 'Fight on now' : 'Arena', x: A.x + A.bx + 0.9, z: A.z, blurb: arenaNews(A) ? arenaNews(A) + '. ' : '' })),
-    ...TOWN.stalls.filter(s => !s.player && !s.node && !s.arena && (!s.secret || secretFound(s.secret.key))).map(S => ({ icon: S.V.icon, name: S.V.name, role: S.V.role, x: S.ax, z: S.az, blurb: S.station ? '' : vendorBlurb(S.V.key) + ' ' }))];
+  const rows = TOWN.stalls.filter(s => !s.player && !s.node && !s.arena && (!s.secret || secretFound(s.secret.key))).map(S => ({ icon: S.V.icon, name: S.V.name, role: S.V.role, x: S.ax, z: S.az, blurb: S.station ? '' : vendorBlurb(S.V.key) + ' ' }));
   for (const r of rows) r.d = Math.hypot(r.x - TOWN.pos.x, r.z - TOWN.pos.z);
   rows.sort((a, b) => a.d - b.d);
   for (const r of rows) {

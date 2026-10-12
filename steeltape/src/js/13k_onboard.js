@@ -55,7 +55,7 @@ function creatorSignIn() {
     <label class="runcode"><span>Password</span><input id="bosPass" type="password" autocomplete="current-password"></label>
     <div class="bosalt"><button class="btn tape small" id="bosCode">Email me a code (new or existing)</button><button class="btn tape small" id="bosGoogle">Google</button><button class="btn tape small" id="bosDiscord">Discord</button></div>
     <p class="muted small" id="bosMsg"></p>`,
-    [['Sign in', () => bosPassword(openCreator), true]]);
+    [['Sign in', () => bosPassword(openCreator), true], ['Play under my own banner', () => { creatorJoin(null, null); creatorFighter(); }]]);
   const say = t => { const m = $('#bosMsg'); if (m) m.textContent = t; };
   $('#bosCode').onclick = async () => {
     const email = ($('#bosEmail').value || '').trim(); if (!email) { say('Type your email first.'); return; }

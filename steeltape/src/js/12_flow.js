@@ -57,7 +57,7 @@ function matchDuelOpponent() {
   for (const f of G.fighters) if (f.team === 1) { f.spec = { ...f.spec, weapon: st.weapon, shield: st.shield }; f.weapon = WEAPONS[st.weapon]; f.shield = st.shield ? SHIELDS[st.shield] : null; resetFighterForRound(f); }
 }
 function setupMatch(o) {
-  if (typeof TOWN !== 'undefined' && TOWN.on && !o.townBout) townTeardown(); // a fight started from town: put the town away (a festival bout runs inside it)
+  if (typeof TOWN !== 'undefined' && TOWN.on && !o.townBout) { TOWN.matchExit = TOWN.pos ? { x: TOWN.pos.x, z: TOWN.pos.z } : null; townTeardown(); } // a fight started from town: put the town away (a festival bout runs inside it)
   clearMatch(); clearReplay(); COMM.q = []; { const ce = $('#comm'); if (ce) { ce.textContent = ''; ce.classList.remove('on'); } } if (KID.on && !o.kids) { KID.on = false; KID.objs.forEach(x => W3.matchRoot.remove(x)); KID.objs = []; if (KID.pig) { W3.matchRoot.remove(KID.pig.g); KID.pig = null; } $('#lSkip').hidden = false; $('#lesson').hidden = true; }
   $('#lExit').onclick = lExitDefault; dropPhoto();
   G.strict = !!(G.tourney || o.ladder != null); if (!o.attract) resetMatchTally();
@@ -122,7 +122,7 @@ function resetFighterForRound(f) {
   if (f.kit.haft.failed) { if (f.isPlayer || G.attract) wk = 'sword'; else { f.kit.haft.failed = false; f.kit.haft.cond = 0.7; } }
   f.weapon = WEAPONS[wk]; recalcBody(f);
   for (const k in f.kit) if (k !== 'haft' && f.kit[k].failed && !f.kit[k].covered && !f.isPlayer) { f.kit[k].failed = false; f.kit[k].cond = Math.max(f.kit[k].cond, 0.55); f.kit[k].tape = 'black'; }
-  if (f.kit.helmet.failed) { f.kit.helmet.failed = false; f.kit.helmet.cond = Math.max(f.kit.helmet.cond, 0.5); }
+  if (f.kit.helmet.failed && !f.isPlayer) { f.kit.helmet.failed = false; f.kit.helmet.cond = Math.max(f.kit.helmet.cond, 0.5); }
   // rebuild the model (helmet back on, weapon, tape)
   W3.matchRoot.remove(f.model.root); buildFighterModel(f); W3.matchRoot.add(f.model.root);
   f.model.root.visible = !f.out;
@@ -257,9 +257,15 @@ function afterRound() {
   }
   if (m.online || m.versus) { after(0.1, () => { startRound(); beginFight(); }); G.phase = 'between'; return; } // no bench between online or versus rounds
   if (G.autoflow) { toTactics(); return; }
+  const failedArmour = G.player && ['helmet', 'armL', 'armR', 'legs'].some(k => G.player.kit[k].failed);
+  if (!failedArmour && !m.online && !m.versus && G.player && !G.player.out) { after(0.1, () => { startRound(); beginFight(); }); G.phase = 'between'; return; }
   setHud(false); renderSheet(); showScreen('sheetScr');
-  $('#btnSheetNext').textContent = 'To the repair bench';
-  $('#btnSheetNext').onclick = () => openRepair(Math.round(45 * mod(null, 'repair') + (G.boon && G.boon.repairAdd || 0)), () => { teamRepairs(); toTactics(); });
+  $('#btnSheetNext').textContent = 'Continue';
+  $('#btnSheetNext').onclick = () => {
+    const failedArmour = G.player && ['helmet', 'armL', 'armR', 'legs'].some(k => G.player.kit[k].failed);
+    if (failedArmour) openRepair(30, () => { teamRepairs(); toTactics(); }, { failuresOnly: true, emergency: true });
+    else openRepair(Math.round(45 * mod(null, 'repair') + (G.boon && G.boon.repairAdd || 0)), () => { teamRepairs(); toTactics(); });
+  };
 }
 
 function teamRepairs() { // your club patches its own kit; they stick to legal cloth tape
@@ -322,6 +328,12 @@ function tapeLogHtml(list) {
 
 function matchEnd() {
   const m = G.match; G.phase = 'over'; setHud(false);
+  if (!m.repairDone && G.player && !m.training && !m.online && !m.versus && !m.tourney && !m.test) {
+    m.repairDone = true;
+    const failed = ['helmet', 'armL', 'armR', 'legs'].some(k => G.player.kit[k].failed);
+    openRepair(failed ? 30 : Math.round(45 * mod(null, 'repair') + (G.boon && G.boon.repairAdd || 0)), () => { teamRepairs(); matchEnd(); }, failed ? { failuresOnly: true, emergency: true } : {});
+    return;
+  }
   if (G.autoflow) { G.stats.matches = (G.stats.matches || 0) + 1; if (G.autoNext) G.autoNext(); return; }
   const won = m.wins[0] > m.wins[1], drawn = m.wins[0] === m.wins[1]; AU.music(true);
   if (m.versus && G.bracket) { VS.on = false; document.body.classList.remove('split', 'split4'); $('#splitLabels').innerHTML = ''; bracketResult(m.wins[0] > m.wins[1] ? 0 : m.wins[1] > m.wins[0] ? 1 : (m.pts && m.pts[1] > m.pts[0] ? 1 : 0)); return; }
@@ -428,7 +440,7 @@ function openModes() {
   G.backTo = 'title'; const box = $('#modeCards'); box.innerHTML = '';
   for (const M of MODES) box.append(h('button', { class: 'mode', onclick: () => { AU.init(); AU.click(); M.mode === 'ffa' ? startFFA(6, 0) : quickFight(M.mode, G.quickOpp === 'random' ? null : G.quickOpp, M.pro ? { pro: true } : null); } }, h('span', { class: 'big num', html: M.pro ? 'PRO' : M.mode === 'ffa' ? 'FFA' : `${M.mode}<i>v</i>${M.mode}` }), h('b', null, M.name), h('span', null, M.desc)));
   const vs = $('#venueSeg'); vs.innerHTML = ''; G.quickVenue = G.quickVenue || W3.venue || 'arena';
-  for (const V of Object.values(VENUES)) vs.append(h('button', { 'aria-pressed': String(G.quickVenue === V.key), title: V.sub, onclick: () => { G.quickVenue = V.key; setVenue(V.key); setWeather('clear'); openModes(); AU.click(); } }, V.name));
+  for (const V of Object.values(VENUES)) { if (V.practice) continue; vs.append(h('button', { 'aria-pressed': String(G.quickVenue === V.key), title: V.sub, onclick: () => { G.quickVenue = V.key; setVenue(V.key); setWeather('clear'); openModes(); AU.click(); } }, V.name)); }
   const ms = $('#modSeg'); if (ms) { ms.innerHTML = ''; G.quickMods = G.quickMods || store.get('quickMods', []);
     for (const [k, t, d] of PARTY_MODS) ms.append(h('button', { 'aria-pressed': String(G.quickMods.includes(k)), title: d, onclick: () => { G.quickMods = G.quickMods.includes(k) ? G.quickMods.filter(x => x !== k) : G.quickMods.concat(k); store.set('quickMods', G.quickMods); openModes(); AU.click(); } }, t)); }
   const wx = $('#weatherSeg'); if (wx) { wx.innerHTML = ''; for (const [v, t] of [['clear', 'Clear'], ['rain', 'Rain'], ['snow', 'Snow'], ['random', 'Random']]) wx.append(h('button', { 'aria-pressed': String((G.quickWeather || 'clear') === v), onclick: () => { G.quickWeather = v; openModes(); AU.click(); } }, t)); }
@@ -559,7 +571,7 @@ function saveSettings() { store.set('settings3', G.settings); }
 function selectTab(bar, tab) {
   bar.querySelectorAll('[data-tab]').forEach(x => x.setAttribute('aria-pressed', String(x.dataset.tab === tab)));
   const panel = bar.closest('.panel'); panel.querySelectorAll('.tabpane').forEach(p => p.hidden = p.dataset.pane !== tab);
-  const body = panel.querySelector('.pbody'); if (body) body.scrollTop = 0;
+  const body = panel.querySelector('.pbody'); if (body) { body.scrollTop = 0; body.scrollLeft = 0; }
   if (bar.id === 'careerTabs') { G.careerTab = tab; renderCareer(); }
 }
 

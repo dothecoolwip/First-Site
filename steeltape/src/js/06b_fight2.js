@@ -17,7 +17,8 @@ function aiTier(f) {
   if (m.aiTier) return m.aiTier;
   if (m.trial) return m.trial === 'royal' ? 3 : 2;
   if (m.townBout && typeof TOWN !== 'undefined' && TOWN.boutArena) { const A = ARENAS.find(a => a.key === TOWN.boutArena); return A && A.district === 'ward' ? 3 : A && A.district === 'bailey' ? 2 : 1; }
-  return 1;
+  const level = typeof CAREER !== 'undefined' && CAREER.level || 1;
+  return Math.min(3, 1 + Math.floor(level / 20));
 }
 const AI_TIER = {
   1: { read: 0.4, learn: 0.18, parry: 0.04, feint: 0, unfooled: 0, peel: 0.6 },
@@ -25,8 +26,19 @@ const AI_TIER = {
   3: { read: 0.72, learn: 0.28, parry: 0.24, feint: 0.2, unfooled: 0.6, peel: 1.8 }
 };
 function tierProf(prof, f) {
-  const k = aiTier(f); if (k <= 1 || f.team === 0 && !(G.match && G.match.ffa)) return prof;
-  return { ...prof, react: prof.react * (k === 3 ? 0.82 : 0.92), guard: Math.min(0.95, prof.guard + (k === 3 ? 0.14 : 0.07)), aggr: prof.aggr * (k === 3 ? 1.1 : 1.04) };
+  const k = aiTier(f); if (f.team === 0 && !(G.match && G.match.ffa)) return prof;
+  const level = typeof CAREER !== 'undefined' && CAREER.level || 1;
+  const growth = clamp((level - 1) / 99, 0, 1);
+  const late = level > 70 ? Math.pow(1.035, level - 70) : 1;
+  const tierReact = k === 3 ? 0.82 : k === 2 ? 0.92 : 1;
+  const tierGuard = k === 3 ? 0.14 : k === 2 ? 0.07 : 0;
+  const tierAggr = k === 3 ? 1.1 : k === 2 ? 1.04 : 1;
+  return {
+    ...prof,
+    react: prof.react * tierReact * (1 - 0.18 * growth) / late,
+    guard: Math.min(0.99, prof.guard + tierGuard + 0.14 * growth + 0.08 * (late - 1)),
+    aggr: prof.aggr * tierAggr * (1 + 0.22 * growth) * late
+  };
 }
 // which side will this blow come from? a bot guesses, better if it has seen you favour one side
 function aiReadArc(f, e) {

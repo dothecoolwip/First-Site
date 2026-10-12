@@ -1,17 +1,22 @@
 // ---------- the repair bench: rip, wrap, smooth (BR 2.1.5, BR 2.3, WR 7.2.2) ----------
-const REP = { piece: null, tape: null, roll: 'black', step: null, timer: 45, ripT: 0, wraps: [], sloppy: 0, side: 0, wrinkles: [], smoothT: 0, q: {}, ptr: null, active: false, onDone: null, log: [], squire: 1, pop: null, lastSec: 99, trail: [] };
+const REP = { piece: null, tape: null, roll: 'black', step: null, timer: 45, ripT: 0, wraps: [], sloppy: 0, side: 0, wrinkles: [], smoothT: 0, q: {}, ptr: null, active: false, onDone: null, log: [], squire: 1, pop: null, lastSec: 99, trail: [], forcedPiece: null, failuresOnly: false, emergency: false };
 const PIECE_SHORT = { helmet: ['Helmet', '⛑️'], armL: ['Left arm', '💪'], armR: ['Right arm', '💪'], legs: ['Legs', '🦵'], haft: ['Haft', '🪓'] };
 const ZONE = { a: 0.36, b: 0.64 }; // the tear, as a fraction of the bench width
 const BAND = { top: 0.42, bot: 0.6 };
 
-function openRepair(seconds, onDone) {
-  if (CAREER.skills && CAREER.skills['show.tape']) seconds += 15; // Tape artist
-  if (typeof shopFx === 'function') seconds += shopFx('repairSec'); // good scissors
-  Object.assign(REP, { piece: null, tape: null, step: null, timer: seconds, active: true, onDone, wraps: [], wrinkles: [], squire: 1 + (G.boon && G.boon.squire ? 1 : 0) + (typeof shopState === 'function' ? shopState().squires : 0), pop: null, lastSec: 99, trail: [] });
+function openRepair(seconds, onDone, options) {
+  options = options || {};
+  if (!options.emergency && CAREER.skills && CAREER.skills['show.tape']) seconds += 15; // Tape artist
+  if (!options.emergency && typeof shopFx === 'function') seconds += shopFx('repairSec'); // good scissors
+  Object.assign(REP, { piece: null, tape: null, step: null, timer: seconds, active: true, onDone, wraps: [], wrinkles: [], squire: 1 + (G.boon && G.boon.squire ? 1 : 0) + (typeof shopState === 'function' ? shopState().squires : 0), pop: null, lastSec: 99, trail: [], forcedPiece: options.forcedPiece || null, failuresOnly: !!options.failuresOnly, emergency: !!options.emergency });
   REP.roll = REP.roll && TAPES[REP.roll] && TAPES[REP.roll].legal && tapeLeft(REP.roll) > 0 ? REP.roll : (['black', 'grey', 'white', 'pro', 'kevlar'].find(x => tapeLeft(x) > 0) || 'black');
   renderKitList(); renderDrawer(); setSteps(null);
   const worst = worstPiece();
   $('#benchMsg').textContent = worst ? `Tap a strap to fix it. ${PIECE_SHORT[worst][0]} is the worst.` : 'Everything is in good shape. Tap Done, or top anything up.';
+  if (REP.forcedPiece || REP.failuresOnly) {
+    $('#benchMsg').textContent = 'Run back to your corner! Your squire helps repair the failed armour. Tap a failed piece to begin.';
+    if (REP.forcedPiece) selectPiece(REP.forcedPiece);
+  }
   showScreen('repair'); sizeBench();
 }
 function worstPiece() { const kit = G.player.kit; let w = null; for (const k of pieceKeys()) { const pc = kit[k]; const v = pc.failed ? -1 : pc.cond; if (v < 0.75 && (w === null || v < (kit[w].failed ? -1 : kit[w].cond))) w = k; } return w; }
@@ -39,7 +44,7 @@ function pieceStatus(k, pc) {
 function renderKitList() {
   const box = $('#kitlist'); box.innerHTML = '';
   const kit = G.player.kit, worst = worstPiece();
-  for (const k of pieceKeys()) {
+  for (const k of pieceKeys().filter(k => (!REP.forcedPiece || k === REP.forcedPiece) && (!REP.failuresOnly || G.player.kit[k].failed))) {
     const pc = kit[k]; const col = pc.failed || pc.cond < 0.3 ? 'var(--card-red)' : pc.cond < 0.55 ? 'var(--marshal)' : pc.cond < 0.8 ? '#9fb0b4' : 'var(--card-green)';
     const [nm, ic] = PIECE_SHORT[k];
     const st = k === 'haft' && pc.failed ? 'torn!' : pc.failed ? 'broken' : pc.cond < 0.3 ? 'about to go' : pc.cond >= 0.9 ? 'solid' : pc.tape ? TAPES[pc.tape].name.split(' ')[0].toLowerCase() + ' tape' : '';
@@ -94,7 +99,7 @@ function startTaping(k) {
 // your squire tapes a strap for you: decent, not as good as doing it well yourself
 function squirePatch() {
   if (REP.squire <= 0 || REP.step) return;
-  const k = REP.piece && G.player.kit[REP.piece].cond < 0.92 ? REP.piece : worstPiece(); if (!k) { $('#benchMsg').textContent = 'Nothing needs patching.'; return; }
+  const k = REP.forcedPiece || (REP.piece && G.player.kit[REP.piece].cond < 0.92 ? REP.piece : worstPiece()); if (!k) { $('#benchMsg').textContent = 'Nothing needs patching.'; return; }
   REP.squire--; REP.piece = k; REP.tape = 'black';
   const pc = G.player.kit[k], q = 0.62; pc.cond = Math.min(0.92, pc.cond + 0.12 + 0.62 * q); pc.tape = 'black'; pc.failed = false; pc.covered = false;
   logTape(k, 'black', q); AU.wrap(); AU.rip(0.6); repPop('SQUIRE DID IT', '#62c462');
@@ -103,6 +108,11 @@ function squirePatch() {
 }
 function finishPiece() {
   REP.step = null; setSteps(null); renderKitList(); applyTapeVisuals(G.player);
+  if (REP.piece === 'helmet' && !G.player.kit.helmet.failed) rebuildHelmet(G.player);
+}
+function rebuildHelmet(f) {
+  if (!f.model || !W3.matchRoot) return;
+  W3.matchRoot.remove(f.model.root); buildFighterModel(f); W3.matchRoot.add(f.model.root); f.model.root.visible = !f.out;
 }
 function logTape(piece, tape, q) {
   const where = G.match ? `${G.match.stage}, after round ${G.match.round}` : 'practice';
@@ -184,6 +194,10 @@ function updateRepair(dt) {
 }
 function closeRepair() {
   if (!REP.active) return;
+  if (REP.emergency && G.player.kit.helmet.failed && REP.timer > 0) {
+    $('#benchMsg').textContent = 'The helmet is not fixed yet. Keep working until the 30-second repair window ends.';
+    return;
+  }
   if (REP.step === 'wrap') { REP.q.wrap = coverage() * 0.8; REP.step = 'smooth'; REP.wrinkles = [{ x: 0.5, gone: false }]; }
   if (REP.step === 'smooth') finishSmooth();
   if (REP.step === 'rip') { REP.step = null; setSteps(null); }

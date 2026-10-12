@@ -1,6 +1,14 @@
 // Progression: ten times the awards, renown ranks, weapon mastery, daily and weekly challenges.
 const { test, expect } = require('./fixtures');
 
+test('purchased skill points survive recalculation and a talent reset', async ({ game }) => {
+  await game.noRender();
+  const points = await game.run("(CAREER.level = 10, shopState().spBought = 2, CAREER.skills = { 'show.purse': 1 }, skillRoom(), CAREER.sp)");
+  expect(points).toBe(13);
+  expect(await game.run("(skillRoom(), CAREER.sp)")).toBe(13);
+  expect(await game.run("(CAREER.skills = {}, skillRoom(), CAREER.sp)")).toBe(14);
+});
+
 test('awards, ranks, mastery and challenges @touch', async ({ game, page }) => {
   await game.noRender();
   expect(await game.run('ACH.length')).toBeGreaterThanOrEqual(240);

@@ -2,7 +2,7 @@
 const VENUES = {
   arena:  { key: 'arena',  name: 'Arena',          sub: 'Westerner Park, Red Deer. Concrete pad, boards and glass.' },
   field:  { key: 'field',  name: 'Summer field',   sub: 'Outdoors on packed earth, tents and a roped-off crowd.' },
-  castle: { key: 'castle', name: 'Castle at night', sub: 'Torchlit courtyard, stone walls, moon overhead.' },
+  castle: { key: 'castle', name: 'Bailey Stone Lists', sub: 'Torchlit courtyard, stone walls, moon overhead.' },
 };
 const VTEX = {};
 function venueTex(kind) {

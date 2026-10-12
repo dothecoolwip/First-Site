@@ -4,7 +4,7 @@ const { test, expect } = require('./fixtures');
 test('waypoints lead the way, autowalk walks it, horses gallop, gates stay shut without the writ @touch', async ({ game, page }) => {
   await game.noRender();
   await page.locator('#btnFight').click();
-  await game.until("TOWN.on && G.hub && TOWN.people");
+  await game.until("TOWN.on && G.hub");
   // reagents are spread across the districts, and every district has some
   expect(await game.run("GATHER.nodes.length")).toBeGreaterThan(80);
   expect(await game.run("['fair', 'woods', 'village', 'lake', 'bailey'].every(k => GATHER.nodes.some(n => districtAt(n.x, n.z).key === k))")).toBe(true);
@@ -52,7 +52,7 @@ test('waypoints lead the way, autowalk walks it, horses gallop, gates stay shut 
 test('tiers: fairground smiths stop part-way up the bar; Sergeant Brask duels you for the Bailey writ; the gate opens', async ({ game, page }) => {
   await game.noRender();
   await page.locator('#btnFight').click();
-  await game.until("TOWN.on && G.hub && TOWN.people");
+  await game.until("TOWN.on && G.hub");
   // the bailey and court vendors exist, inside the walls
   expect(await game.run("['msmith', 'marmour', 'mtrainer', 'rsmith', 'rarmour', 'rtailor'].every(k => TOWN.stalls.some(s => s.V.key === k))")).toBe(true);
   expect(await game.run("districtAt(TOWN.stalls.find(s => s.V.key === 'msmith').x, TOWN.stalls.find(s => s.V.key === 'msmith').z).key")).toBe('bailey');
@@ -79,6 +79,8 @@ test('tiers: fairground smiths stop part-way up the bar; Sergeant Brask duels yo
   await game.until("!TOWN.on && G.match && G.match.trial === 'bailey'");
   expect(await game.run("G.fighters.find(f => f.team === 1).name")).toBe('Sgt. Brask');
   await game.run("(G.match.wins = [2, 0], matchEnd(), true)");
+  await game.until("G.screen === 'repair'");
+  await page.locator('#btnRepairDone').click();
   await game.until("G.screen === 'msgScr'");
   await expect(page.locator('#msgPanel')).toContainText('Bailey writ won');
   expect(await game.run("gateOpen('bailey')")).toBe(true);
@@ -90,7 +92,7 @@ test('tiers: fairground smiths stop part-way up the bar; Sergeant Brask duels yo
 test('inventory: slots, stacks and equipment; a full bag stops gathering; hidden places give free cosmetics; spectate an arena', async ({ game, page }) => {
   await game.noRender();
   await page.locator('#btnFight').click();
-  await game.until("TOWN.on && G.hub && TOWN.people");
+  await game.until("TOWN.on && G.hub");
   // the bag button opens the inventory with slots and the equipment panel
   await game.run("(give('copper_ore', 150), true)");
   await page.locator('#townBag').click();

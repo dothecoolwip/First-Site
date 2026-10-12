@@ -10,6 +10,7 @@
 // Everything that blocks you goes into TOWN.obst (circles); flora is scattered only outside the planned areas.
 const FEST_RESERVED = [ // [x0, x1, z0, z1] kept clear of random trees and rocks
   [-18, 18, 22, 72], [-31, 31, -108, -57], [-7, 7, -64, -22], [-53, -26, -13, 33], [23, 53, -12, 32], [27, 64, 38, 74],
+  [-72, -44, -76, -35],
   [33, 58, -68, -42], [-51, -27, -42, -18], [-52, -32, 44, 64], [-75, -54, 34, 70], [55, 72, 0, 20], [52, 80, -40, -2], [-33, -18, 26, 48], [-30, -18, -52, -40], [-86, -52, -60, -12]
 ];
 function festReserved(x, z, pad = 0) { return FEST_RESERVED.some(([a, b, c, d]) => x > a - pad && x < b + pad && z > c - pad && z < d + pad); }
@@ -50,6 +51,17 @@ function buildFestival(R) {
   for (const [x, z] of [[-31, -26], [-31, -30.5], [-31, -35]]) { mk(R, geo('fest_pell', () => new THREE.CylinderGeometry(0.13, 0.15, 1.9, 8)), tmat('#8a6a42'), x, 0.95, z).castShadow = true; mk(R, geo('fest_pellb', () => new THREE.CylinderGeometry(0.2, 0.2, 0.12, 8)), tmat('#5a4430'), x, 0.06, z); O.push({ x, z, r: 0.35 }); }
   add('dp_weapon_rack', -44, -26.6, Math.PI / 2, 1, 0.6); add('dp_bench', -44, -33.4, Math.PI / 2, 1, 0.5); add('bf_armor_rack', -44, -36.6, Math.PI / 2, 1, 0.6);
   add('slv_tower', -60, -30, 0.3, 1, 4.6); add('slv_cauldron', -27.6, -43.6, 0, 2.2, 0.7); { const brew = mk(R, geo('w_brew', () => new THREE.SphereGeometry(0.32, 12, 8, 0, TAU, 0, Math.PI / 2)), tmat('#7cff6b', { emissive: '#1aa000', emissiveIntensity: 1.2 }), -27.6, 0.62, -43.6); brew.rotation.x = Math.PI; WORLD.flick.push(brew); }
+  // The tutorial is a place you can enter on foot, beside the trainer rather than a disconnected menu scene.
+  arenaList(R, TRAINING_GROUND, { floor: '#b08d62', floorTex: 'dirt', post: '#70502d', rail: '#b88d53', signCol: '#a36b37', stands: false });
+  for (const x of [-63, -58, -53]) {
+    mk(R, geo('training_pell', () => new THREE.CylinderGeometry(0.16, 0.2, 2.2, 8)), tmat('#8a6a42'), x, 1.1, -59);
+    add('mk_Dummy', x, -66, 0, 0.9, 0.45);
+    O.push({ x, z: -59, r: 0.3 });
+  }
+  // Collide with the rails but leave a clear four-metre entrance on the south side.
+  for (let z = -71; z <= -41; z += 2.5) for (const x of [-68, -48]) O.push({ x, z, r: 0.3 });
+  for (let x = -66; x <= -50; x += 2.5) O.push({ x, z: -71, r: 0.3 });
+  for (let x = -66; x <= -50; x += 2.5) if (Math.abs(x + 58) > 2.5) O.push({ x, z: -41, r: 0.3 });
   // ---- the north road and the castle
   for (const z of [-30, -40, -50, -59]) for (const sx of [-5.6, 5.6]) add('ps_lamp', sx, z, face(sx, z, 0, z), 1, 0.3);
   // ---- food and fun (east): the tavern's campfire and long table, the bard's stage, food stalls, the archery range

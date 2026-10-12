@@ -24,13 +24,35 @@ const DISTRICTS = [
 ];
 // arenas: every one is a 20 x 30 list (LIST) so the fight engine runs unchanged; the bout plays at the nearest one
 const ARENAS = [
-  { key: 'dome', name: 'The Dome', x: 0, z: 0, bx: 18, bz: 23, district: 'fair' },
-  { key: 'peasant', name: 'Peasants’ Arena', x: -176, z: 158, bx: 13, bz: 18, district: 'village' },
-  { key: 'forest', name: 'Forest Arena', x: -214, z: -104, bx: 13, bz: 18, district: 'woods' },
-  { key: 'beach', name: 'Beach Arena', x: 148, z: 78, bx: 13, bz: 18, district: 'lake' },
-  { key: 'castle', name: 'Castle Arena', x: -74, z: -204, bx: 14, bz: 19, district: 'bailey', gate: 'bailey' },
-  { key: 'hall', name: 'The Great Hall', x: 0, z: -264, bx: 12, bz: 15, district: 'ward', gate: 'royal', indoor: true }
+  { key: 'dome', name: 'The Red Deer Dome', x: 0, z: 0, bx: 18, bz: 23, district: 'fair', icon: '🏟️', accent: '#b43135', entry: [0, 27] },
+  { key: 'peasant', name: 'Millbrook Mudlists', x: -176, z: 158, bx: 13, bz: 18, district: 'village', icon: '🌾', accent: '#a56b30', entry: [-176, 134] },
+  { key: 'forest', name: 'Old Woods Clearing', x: -214, z: -104, bx: 13, bz: 18, district: 'woods', icon: '🌲', accent: '#3d7650', entry: [-214, -74] },
+  { key: 'beach', name: 'Mirror Lake Strand', x: 148, z: 78, bx: 13, bz: 18, district: 'lake', icon: '🌊', accent: '#3185ac', entry: [148, 103] },
+  { key: 'castle', name: 'Bailey Stone Lists', x: -74, z: -204, bx: 14, bz: 19, district: 'bailey', gate: 'bailey', icon: '🏰', accent: '#647084', entry: [-74, -179] },
+  { key: 'hall', name: 'King’s Great Hall', x: 0, z: -264, bx: 12, bz: 15, district: 'ward', gate: 'royal', indoor: true, icon: '👑', accent: '#b78a35', entry: [0, -244] }
 ];
+// A walk-in practice list, separate from the six competitive/spectator arenas.
+const TRAINING_GROUND = { key: 'training', name: 'Fairground Training Yard', x: -58, z: -56, bx: 12, bz: 17,
+  district: 'fair', icon: '🥊', accent: '#c38c36', entry: [-58, -37], practice: true };
+// Local crews share services, not identities. The Dome retains its original three hosts.
+const ARENA_CREWS = [
+  ['peasant', [-7, 134], [0, 134], [7, 134], ['Hilda of Millbrook', 'Tomas the Thresher', 'Pip the Bellringer'], ['#86513b', '#697641', '#b87932']],
+  ['forest', [-221, -74], [-214, -74], [-207, -74], ['Rowan Ashshield', 'Bram of the Pines', 'Mara Mossbell'], ['#4a6240', '#765437', '#596d58']],
+  ['beach', [141, 103], [148, 103], [155, 103], ['Captain Irena Shore', 'Dagan Driftwood', 'Nessa Tidecaller'], ['#335d79', '#a27b4c', '#36919a']],
+  ['castle', [-81, -179], [-74, -179], [-67, -179], ['Ser Corvin Vale', 'Odo Stonevoice', 'Lady Elspeth Grey'], ['#48566f', '#74544c', '#775578']],
+  ['hall', [-7, -244], [0, -244], [7, -244], ['Dame Ysabel Crown', 'Lord Roderic Gold', 'Herald Celestine'], ['#65496b', '#a47b31', '#784057']]
+];
+for (const [arena, marshalAt, heraldAt, crierAt, names, colours] of ARENA_CREWS) {
+  const A = ARENAS.find(a => a.key === arena);
+  [marshalAt, heraldAt, crierAt].forEach((at, i) => STATIONS.push({
+    key: `${arena}:${['marshal', 'giant', 'crier'][i]}`, service: ['marshal', 'giant', 'crier'][i], arena,
+    name: names[i], role: ['Lists marshal', 'Tournament herald', 'Online crier'][i],
+    icon: ['⚔️', '📜', '🔔'][i], at, ry: Math.PI, col: colours[i], look: i,
+    district: A.district
+  }));
+}
+STATIONS.push({ key: 'training:coach', service: 'training', name: 'Coach Sigrid', role: 'Learn the moves',
+  icon: '🥊', at: [-53, -35], ry: Math.PI, col: '#a36b37', look: 2, practice: true });
 const ROADS = [
   { name: 'north', pts: [[0, -24], [0, -140]], w: 6 },
   { name: 'west', pts: [[-52, -2], [-100, -16], [-150, -44], [-196, -78]], w: 5 },
@@ -38,7 +60,10 @@ const ROADS = [
   { name: 'east', pts: [[52, 6], [96, 26], [128, 58], [126, 84], [132, 100]], w: 5 },
   { name: 'woodsnorth', pts: [[-196, -78], [-170, -130], [-120, -150]], w: 4 },
   { name: 'lakenorth', pts: [[128, 58], [150, -10], [176, -60]], w: 4 },
-  { name: 'south', pts: [[0, 70], [0, 120], [-30, 160]], w: 4 }
+  { name: 'south', pts: [[0, 70], [0, 120], [-30, 160]], w: 4 },
+  { name: 'millbrook-lists', pts: [[-160, 140], [-176, 134]], w: 3 },
+  { name: 'woods-lists', pts: [[-196, -78], [-214, -74]], w: 3 },
+  { name: 'shore-lists', pts: [[132, 100], [148, 103]], w: 3 }
 ];
 function arenaBlocked(x, z, r) { for (const A of ARENAS) if (Math.abs(x - A.x) < A.bx + r && Math.abs(z - A.z) < A.bz + r) return A; return null; }
 function lakeIn(x, z, pad = 0) { const dx = (x - LAKE.x) / (LAKE.rx + pad), dz = (z - LAKE.z) / (LAKE.rz + pad); return dx * dx + dz * dz < 1; }
@@ -117,15 +142,21 @@ function castleGate(R, x, z, key, label, Y, ry) {
   for (let j = 0; j < 4; j++) mk(port, geo('rlm_pbar2', () => new THREE.BoxGeometry(4.6, 0.12, 0.12)), iron, 0, 0.5 + j * 0.95, 0);
   // the gatehouse walls either side of the opening (so nobody slips past the portcullis)
   for (const sx of [-4, 4]) TOWN.obst.push({ x: x + Math.cos(ry) * sx, z: z - Math.sin(ry) * sx, r: 1.5 });
-  const G = { key, label, x: x + Math.sin(ry) * 0.2, z: z + Math.cos(ry) * 0.2, port, r: 2.6 }; (TOWN.gates = TOWN.gates || []).push(G); return G;
+  const G = { key, label, x: x + Math.sin(ry) * 0.2, z: z + Math.cos(ry) * 0.2, port, r: 4.2 }; (TOWN.gates = TOWN.gates || []).push(G); return G;
 }
 // a list for one of the outer arenas: fence, rope, posts, stands on the long sides, a scoreboard and torches
 function arenaList(R, A, o) {
   o = o || {}; const W = LIST.W, L = LIST.L, x = A.x, z = A.z, Y = gy(x, z);
   const post = tmat(o.post || '#6e4d31'), rail = tmat(o.rail || '#8a6a42');
   for (const [px, pz, len, rot] of [[0, -L / 2, W, 0], [0, L / 2, W, 0], [-W / 2, 0, L, Math.PI / 2], [W / 2, 0, L, Math.PI / 2]]) {
-    for (const yy of [0.55, 1.05]) { const r = mk(R, geo('ar_rail' + len, () => new THREE.BoxGeometry(len, 0.09, 0.09)), rail, x + px, Y + yy, z + pz); r.rotation.y = rot; }
-    const n = Math.round(len / 2.5); for (let i = 0; i <= n; i++) { const t = -len / 2 + i * len / n; mk(R, geo('ar_post', () => new THREE.BoxGeometry(0.14, 1.25, 0.14)), post, x + (rot ? px : px + t), Y + 0.62, z + (rot ? pz + t : pz)); }
+    const practiceGate = A.practice && pz === L / 2 && !rot;
+    for (const yy of [0.55, 1.05]) {
+      if (practiceGate) {
+        const half = (W - 5) / 2;
+        for (const sx of [-1, 1]) mk(R, new THREE.BoxGeometry(half, 0.09, 0.09), rail, x + sx * (W + 5) / 4, Y + yy, z + pz);
+      } else { const r = mk(R, geo('ar_rail' + len, () => new THREE.BoxGeometry(len, 0.09, 0.09)), rail, x + px, Y + yy, z + pz); r.rotation.y = rot; }
+    }
+    const n = Math.round(len / 2.5); for (let i = 0; i <= n; i++) { const t = -len / 2 + i * len / n; if (practiceGate && Math.abs(t) < 2.5) continue; mk(R, geo('ar_post', () => new THREE.BoxGeometry(0.14, 1.25, 0.14)), post, x + (rot ? px : px + t), Y + 0.62, z + (rot ? pz + t : pz)); }
   }
   if (o.floor) { const f = mk(R, new THREE.PlaneGeometry(W, L), lmat({ map: venueTex(o.floorTex || 'dirt'), color: o.floor, roughness: 1 }), x, Y + 0.025, z, false); f.rotation.x = -Math.PI / 2; f.receiveShadow = true; }
   // stands: tiered benches on both long sides
@@ -139,6 +170,19 @@ function arenaList(R, A, o) {
   // the board: arena name, and the bout when one is on
   const board = townSign(A.name, o.signCol || '#6d1b28'); board.position.set(x, Y + 3.4, z - L / 2 - 2.2); board.scale.setScalar(2); R.add(board);
   for (const sx of [-2.4, 2.4]) mk(R, geo('ar_bpost', () => new THREE.CylinderGeometry(0.08, 0.1, 3.6, 6)), post, x + sx, Y + 1.8, z - L / 2 - 2.3);
+  // A visible entrance arch on the road-facing side gives each list a distinct silhouette in the realm.
+  const [ex, ez] = A.entry, EY = gy(ex, ez), stone = A.key === 'castle' || A.key === 'hall';
+  const gateMat = tmat(stone ? '#a9a49b' : A.key === 'beach' ? '#a89774' : '#6b4a2c');
+  for (const sx of [-1, 1]) {
+    const postH = stone ? 4.8 : A.key === 'forest' ? 4.2 : 3.5;
+    mk(R, new THREE.BoxGeometry(stone ? 0.8 : 0.35, postH, stone ? 0.8 : 0.35), gateMat, ex + sx * 3.4, EY + postH / 2, ez);
+    const flag = mk(R, new THREE.PlaneGeometry(0.9, 1.4), lmat({ color: A.accent, side: THREE.DoubleSide }), ex + sx * 3.4, EY + postH - 1.1, ez + 0.45);
+    flag.rotation.y = sx * 0.14;
+  }
+  mk(R, new THREE.BoxGeometry(7.2, stone ? 0.8 : 0.38, stone ? 0.9 : 0.45), gateMat, ex, EY + (stone ? 4.5 : A.key === 'forest' ? 4.0 : 3.3), ez);
+  if (A.key === 'peasant') for (const sx of [-1, 1]) kpiece(R, 'fy_vil_hay_1', ex + sx * 5.4, EY, ez + 1, 0, 1.1);
+  if (A.key === 'forest') for (const sx of [-1, 1]) kpiece(R, 'nt_log', ex + sx * 5.4, EY, ez + 1, Math.PI / 2, 1.1);
+  if (A.key === 'beach') for (const sx of [-1, 1]) kpiece(R, 'nt_log', ex + sx * 5.4, EY, ez + 1, 0, 1.1);
   // block the stands so nobody walks through them (the list itself is blocked by arenaBlocked)
   return board;
 }
@@ -149,7 +193,7 @@ function buildDome(R) {
   const cone = new THREE.CylinderGeometry(4, rad + 1.5, 7, 32, 1, true); const c = mk(R, cone, roof, 0, 12.5, 0, false); c.scale.z = 1.18;
   const ring = mk(R, new THREE.TorusGeometry(rad, 0.35, 6, 48), wood, 0, 9, 0); ring.rotation.x = Math.PI / 2; ring.scale.y = 1.18;
   for (let i = 0; i < 12; i++) { const a = i / 12 * TAU; const b = mk(R, geo('dome_flag', () => new THREE.PlaneGeometry(1.1, 2.2)), lmat({ color: i % 2 ? CAREER.club.tabard : '#e8e1cf', side: THREE.DoubleSide }), Math.cos(a) * (rad - 0.2), 7.6, Math.sin(a) * (rad - 0.2) * 1.18); b.lookAt(0, 7.6, 0); }
-  const s = townSign('THE DOME', '#6d1b28'); s.position.set(0, 10.4, rad * 1.18 + 0.3); s.scale.setScalar(2.2); R.add(s);
+  const s = townSign(ARENAS[0].name.toUpperCase(), '#6d1b28'); s.position.set(0, 10.4, rad * 1.18 + 0.3); s.scale.setScalar(2.2); R.add(s);
 }
 // trees: a forest patch scattered in a circle, avoiding roads, obstacles and the given clear zones
 function realmForest(R, cx, cz, rad, n, kinds, seed, clear) {
@@ -157,7 +201,7 @@ function realmForest(R, cx, cz, rad, n, kinds, seed, clear) {
   for (let t = 0; t < n * 6 && placed < n; t++) {
     const a = rnd() * TAU, rr = Math.sqrt(rnd()) * rad, x = cx + Math.cos(a) * rr, z = cz + Math.sin(a) * rr;
     if (Math.hypot(x / TOWN_RX, z / TOWN_RZ) > 0.99) continue;
-    if (arenaBlocked(x, z, 6) || lakeIn(x, z, 4) || onRoad(x, z, 4) || (clear && clear(x, z))) continue;
+    if (arenaBlocked(x, z, 6) || (Math.abs(x - TRAINING_GROUND.x) < TRAINING_GROUND.bx + 6 && Math.abs(z - TRAINING_GROUND.z) < TRAINING_GROUND.bz + 6) || lakeIn(x, z, 4) || onRoad(x, z, 4) || (clear && clear(x, z))) continue;
     if (x > BAILEY.x0 - 6 && x < BAILEY.x1 + 6 && z > BAILEY.z0 - 6 && z < BAILEY.z1 + 6) continue;
     const [k, s, r] = kinds[Math.floor(rnd() * kinds.length)];
     kpiece(R, k, x, 0, z, rnd() * TAU, s * (0.8 + rnd() * 0.45)); if (r) TOWN.obst.push({ x, z, r }); placed++;
@@ -191,8 +235,8 @@ function buildRealm(R) {
   signpost(R, 56, 10, Math.PI / 2, [['MIRROR LAKE', Math.PI / 2], ['FAIRGROUND', -Math.PI / 2]]);
   signpost(R, -22, 74, 0, [['MILLBROOK', -2.2], ['FAIRGROUND', 0.9]]);
   signpost(R, 6, -126, 0, [['OUTER BAILEY', 0], ['FAIRGROUND', Math.PI]]);
-  signpost(R, -192, -70, 0, [['QUARRY', -1.6], ['FOREST ARENA', 2.8], ['CASTLE', 0.6]]);
-  signpost(R, 134, 62, 0, [['BEACH ARENA', 1.2], ['CLIFFS', 0]]);
+  signpost(R, -192, -70, 0, [['QUARRY', -1.6], ['OLD WOODS LISTS', 2.8], ['CASTLE', 0.6]]);
+  signpost(R, 134, 62, 0, [['MIRROR LAKE STRAND', 1.2], ['CLIFFS', 0]]);
   for (const Rd of ROADS) for (let i = 1; i < Rd.pts.length - 1; i += 1) { const [x, z] = Rd.pts[i]; if (Math.hypot(x, z) > 110) { add('ps_lamp', x + Rd.w / 2 + 1, z, 0, 1, 0.3); } }
   landmark(R, () => buildDome(R));
   buildRealmCastle(R, add, face);
