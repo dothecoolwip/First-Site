@@ -1,5 +1,5 @@
 <!doctype html><html><head><meta charset="utf-8"><link rel="manifest" href="manifest.webmanifest"><meta name="theme-color" content="#0f1316"><link rel="apple-touch-icon" href="icon-192.png"><meta name="apple-mobile-web-app-capable" content="yes"><meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover"></head><body>
-<script>window.BUILD_VER="steel-tape-7cb864adcc";</script><title>Buhurt: Steel &amp; Tape</title>
+<script>window.BUILD_VER="steel-tape-spectate13";</script><title>Buhurt: Steel &amp; Tape</title>
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Barlow+Semi+Condensed:wght@400;500;600;700&family=Big+Shoulders+Display:wght@700;800;900&family=Permanent+Marker&display=swap">
@@ -987,11 +987,13 @@ body:not(.split) #pips:not([hidden]) ~ #statstrip{top:calc(var(--st) + 78px)}
 .tmap{touch-action:none;cursor:grab}
 .vcard.vlocked{opacity:.72}
 .vcard .vtiernote{margin-top:4px;font-size:.72rem;color:var(--marshal,#e3b341)}
-#townHud .townspec{position:absolute;bottom:calc(96px + env(safe-area-inset-bottom));left:50%;transform:translateX(-50%);display:flex;align-items:center;gap:8px;background:rgba(12,14,16,.82);padding:6px 10px;pointer-events:auto;max-width:94vw}
+#townHud .townspec{position:absolute;bottom:calc(10px + env(safe-area-inset-bottom));right:10px;display:flex;align-items:center;gap:4px;background:rgba(12,14,16,.58);padding:3px;pointer-events:auto;max-width:calc(100vw - 20px);border-radius:5px}
 #townHud .townspec[hidden]{display:none}
-#townHud .spectxt{display:flex;flex-direction:column;line-height:1.2;min-width:0}
+#townHud .townspec .btn.small{font-size:.75rem;min-height:36px;padding:5px 8px;white-space:nowrap}
+#townHud .spectxt{display:flex;flex-direction:column;line-height:1.2;min-width:0;max-width:180px}
 #townHud .spectxt small{color:var(--marshal,#e3b341);font-size:.68rem;text-transform:uppercase;letter-spacing:.08em}
-#townHud .spectxt b{color:#f2ede2;font-size:.85rem;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;max-width:56vw}
+#townHud .spectxt b{color:#f2ede2;font-size:.75rem;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+@media (max-width:700px),(max-height:500px){#townHud .spectxt{display:none}}
 .invhead{display:flex;align-items:center;gap:10px;margin:4px 0 8px}
 .invbar{flex:1;height:8px;background:rgba(255,255,255,.12);border-radius:4px;overflow:hidden}
 .invbar i{display:block;height:100%;background:#c9a227}
@@ -16330,7 +16332,7 @@ function updateTown(dt) {
   let best = null, bd = 5;
   for (const S of TOWN.stalls) {
     if (!!S.mine !== !!TOWN.mineOn) continue;
-    const d = Math.hypot(S.ax - TOWN.pos.x, S.az - TOWN.pos.z); if (d < (S.arena ? 5 : 2.8) && d < bd) { bd = d; best = S; }
+    const d = Math.hypot(S.ax - TOWN.pos.x, S.az - TOWN.pos.z); if (d < (S.reach || 2.8) && d < bd) { bd = d; best = S; }
     const N = S.npc; if (N && N.ual) { const talk = S === TOWN.near || S.V.key === TOWN.vendor; N.play(talk ? 'Idle_Talking_Loop' : 'Idle_Loop', 0.4); if (N.root.visible) N.mixer.update(dt); }
     const dd = Math.hypot(S.x - TOWN.pos.x, S.z - TOWN.pos.z); S.label.visible = dd < 30 && !(S.node && S.node.until);
     if (N && N.root && !S.player && dd < 9) { const lx = TOWN.pos.x - S.x, lz = TOWN.pos.z - S.z; const local = Math.atan2(lx, lz) - S.ry; const t = clamp(Math.atan2(Math.sin(local), Math.cos(local)), -1.1, 1.1); N.root.rotation.y += (t - N.root.rotation.y) * Math.min(1, dt * 4); }
@@ -16346,15 +16348,22 @@ function updateTown(dt) {
   updateWorld(dt);
 }
 function townTalk(S) { if (S.open) S.open(); else openVendor(S.V.key); }
+function townPushRect(P, x, z, hx, hz, r) {
+  const dx = P.x - x, dz = P.z - z, px = hx + r - Math.abs(dx), pz = hz + r - Math.abs(dz);
+  if (px <= 0 || pz <= 0) return;
+  if (px < pz) P.x = x + Math.sign(dx || 1) * (hx + r);
+  else P.z = z + Math.sign(dz || 1) * (hz + r);
+}
 function townCollide() {
   const P = TOWN.pos, r = 0.42;
   if (TOWN.spec) return; // the spectator is seated above the blocked bleacher footprint
   if (TOWN.mineOn) { mineCollide(P, r); return; }
   for (let it = 0; it < 2; it++) {
-    const A = arenaBlocked(P.x, P.z, r);
-    if (A) { // push out of the list along the shortest way (you watch from the rope or the stands)
-      const lx = P.x - A.x, lz = P.z - A.z, px = A.bx + r - Math.abs(lx), pz = A.bz + r - Math.abs(lz);
-      if (px < pz) P.x = A.x + Math.sign(lx || 1) * (A.bx + r); else P.z = A.z + Math.sign(lz || 1) * (A.bz + r);
+    for (const A of ARENAS) {
+      // Only the actual wooden list is off-limits; the old arena footprint blocked metres of open ground.
+      townPushRect(P, A.x, A.z, LIST.W / 2, LIST.L / 2, r);
+      // The tiered benches are solid, but the spectator can stand at their outer edge.
+      for (const side of [-1, 1]) townPushRect(P, A.x + side * (LIST.W / 2 + 2.5), A.z, 1.25, LIST.L * 0.4, r);
     }
     const ci = Math.floor(P.x / NAV.cell), cj = Math.floor(P.z / NAV.cell);
     for (let i = ci - 1; i <= ci + 1; i++) for (let j = cj - 1; j <= cj + 1; j++) for (const o of (NAV.grid.get(i + ',' + j) || NAV.none)) { const dx = P.x - o.x, dz = P.z - o.z, d = Math.hypot(dx, dz), m = o.r + r; if (d < m && d > 1e-4) { P.x = o.x + dx / d * m; P.z = o.z + dz / d * m; } }
@@ -18751,11 +18760,15 @@ function trialEnd(m, won, withPurse) {
 // ===================================================================
 const SPEC = { results: {}, t: 0, follow: 0, zoom: 1 };
 const SPEC_MODES = ['Front row', 'Back row', 'Opposite stand', 'High stand'];
-// the stands of every arena are somewhere to talk to (no NPC: the prompt just says Watch)
+// Both stands have a short-range interaction at their road-facing ends.
 function buildArenaSeats() {
   for (const A of ARENAS) {
-    const [ex, ez] = A.entry, x = ex, z = ez + Math.sign(A.z - ez) * 3, lab = new THREE.Object3D();
-    TOWN.stalls.push({ V: { key: 'a:' + A.key, name: A.name, role: 'Watch from the stands', icon: '🏟️' }, g: lab, npc: null, ry: 0, x, z, ax: x, az: z, label: lab, arena: A, open: () => spectate(A), verb: 'Spectate' });
+    for (const side of [-1, 1]) {
+      const x = A.x + side * (LIST.W / 2 + 4.55);
+      const z = A.z + Math.sign(A.entry[1] - A.z) * LIST.L * 0.3;
+      const lab = new THREE.Object3D();
+      TOWN.stalls.push({ V: { key: 'a:' + A.key + ':' + side, name: A.name, role: 'Watch from the stands', icon: '🏟️' }, g: lab, npc: null, ry: 0, x, z, ax: x, az: z, label: lab, arena: A, reach: 2.2, open: () => spectate(A), verb: 'Spectate' });
+    }
   }
 }
 // festival clothes for the posed crowd (a few shared materials, so the stands still merge into a handful of meshes)
@@ -18788,11 +18801,12 @@ function specHud() {
   const S = TOWN.spec; el.hidden = !S || !!G.screen; if (!S) return;
   if (!el.firstChild) el.append(h('span', { class: 'spectxt' }, h('small'), h('b')),
     h('button', { class: 'btn tape small', onclick: e => { e.stopPropagation(); if (TOWN.spec) { TOWN.spec.mode = (TOWN.spec.mode + 1) % SPEC_MODES.length; SPEC.follow++; specHud(); } } }, 'Angle'),
-    h('button', { class: 'btn tape small', onclick: e => { e.stopPropagation(); SPEC.zoom = SPEC.zoom === 1 ? 2 : SPEC.zoom === 2 ? 3 : 1; specHud(); } }, 'Binoculars'),
+    h('button', { class: 'btn tape small', 'aria-label': 'Binoculars zoom', onclick: e => { e.stopPropagation(); SPEC.zoom = SPEC.zoom === 1 ? 2 : SPEC.zoom === 2 ? 3 : 1; specHud(); } }, 'Zoom'),
     h('button', { class: 'btn tape small', onclick: e => { e.stopPropagation(); stopSpectating(); } }, 'Leave'));
   const m = G.match, w = m && m.wins ? m.wins : [0, 0];
   el.querySelector('.spectxt small').textContent = `${S.A.name} · ${SPEC_MODES[S.mode]} · ${SPEC.zoom}×`;
   el.querySelector('.spectxt b').textContent = BOUT.on ? `${BOUT.vs} · ${w[0]}–${w[1]}` : 'Next pairing walking on…';
+  el.querySelector('[aria-label="Binoculars zoom"]').textContent = `Zoom ${SPEC.zoom}×`;
 }
 // the spectator camera (called from updateTownCamera)
 function specCamera(dt) {
