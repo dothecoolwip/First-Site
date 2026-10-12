@@ -1,5 +1,5 @@
 <!doctype html><html><head><meta charset="utf-8"><link rel="manifest" href="manifest.webmanifest"><meta name="theme-color" content="#0f1316"><link rel="apple-touch-icon" href="icon-192.png"><meta name="apple-mobile-web-app-capable" content="yes"><meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover"></head><body>
-<script>window.BUILD_VER="steel-tape-capes-20261012b";</script><title>Buhurt: Steel &amp; Tape</title>
+<script>window.BUILD_VER="steel-tape-capes-admin-gates-20261012";</script><title>Buhurt: Steel &amp; Tape</title>
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Barlow+Semi+Condensed:wght@400;500;600;700&family=Big+Shoulders+Display:wght@700;800;900&family=Permanent+Marker&display=swap">
@@ -35173,7 +35173,7 @@ async function boot(hot) {
   if (location.hash === '#autotest') setTimeout(autotest, 300);
   window.__ST = { GAMEPLAY, SAT, YUKA, CANNON, RAPIER, BVH, gameplayShape, gameplayShapeBlocked, gameplayGroundAt, gameplayMove, G, AU, buildShield, buildWeapon, W3, startTourney, quickFight, toTitle, openRepair, kitCheck, setupMatch, toTactics, beginFight, endRound, matchEnd, CLUBS, WEAPONS, setView, toast, renderKitPicker, applyLoadout, IN, FP, showScreen, weaponIcon, startCine, startTraining, startLadder, openCareer, openModes, openLadder, CAREER, setLesson, TR, unlock, togglePause, afterRound, renderHow, selectPiece, selectTape, msg, renderSheet, setHud, endTraining, setMode, PAD, navMove, focusFirst, sparks, CUTE, THREE, BREATH, setCuteDeco, flipFx, PHOTO, UAL, raiseFlags, startVersus, startFFA, startBracket, startKid, KID, openSeason, startSeasonMatch, setVenue, VS, SPLIT, NET, buildOnlineMatch, hostLobby, joinLobby, ONL, vinControl, openRun, openDaily, openBracket, showBracket, bracketResult, ffaMatchEnd, ffaLeader, ffaWinner, endKid, openPhoto, closePhoto, startReplay, stopReplay, RP, store, startRunFight, newRun, runEnd, WX, setWeather, padVin, readVersus, applyLo, myLoadout, netDropped, netLeave, showIntro, installForged, dailyPlan, openKids, openVersus, openPicks, LESSONS, rivalClub, startGrudge, startDaily, seasonState, newSeason, refreshDaily, VENUES, COMM, hitMapHtml, resetFighterForRound, DIFF, PIN, PADS, NIN, padsUpdate, seatPads, LOBBY, MM, openOnlineHub, benchDown, benchMove, REP, squirePatch, coverage, openProfile, myProfile, BOS, updateTitlePurse, ACH, progressCheck, challenges, masteryOf, S2, rankOf, counterValue, renderCareer, progressMatch, saveCareer, shopState, shopUp, tapeLeft, shopMatchEnd, shopPrizeMult, shopXpMult, swingTimes, pieceWearMult, TABARDS, refillTape, renderShop, UPGRADES, freshKit, TAPE_STOCK, enterTown, leaveTown, TOWN, openVendor, closeVendor, openTownMap, shopFx, renderVendor, VENDORS, ITEMS, itemCost, spCost, skillRoom, sponsorIncome, BOOSTS, STALL_AT, HOMES, FURNISH, pfx, squadFx, boostKit, townCollide, townRefresh, townWalkTo, townTalk, townTeardown, lookState, WORLD, guildCheck, STATIONS, townDressMe, FOLK, updateFolk, navBlocked, buildFolk, BOUT, boutStart, boutStop, boutTick, drawTownMap, updateMiniMap, costumePerson, OUTFIT, buildSkinWeapon, skinIcon, wskinList, skinFor, buildMyWeapon, wskinFamOf, GATHER, startGather, gatherSwing, stopGather, tradeState, tradeLevel, tradeGain, give, have, craft, NODES, MATS, renderTrades, TRADE_SKILLS, ARENAS, DISTRICTS, TRAVEL, setWaypoint, clearWaypoint, realmPath, callHorse, mount, dismount, ANIMAL, districtAt, realmCull, REALM_TIERS, gateOpen, townJump, stableRows, horseAvailable, peopleCull, boutArenaFor, arenaLive, bagSlots, bagState, bagRoom, secretFound, lookOwned, SECRETS, stopSpectating, startTrial, TRIALS, tierCap, gy, tierOf, HILL, hillHouses, cliffAt, gateBlocked, arenaBlocked, localPath, NAV, rampAt, ROSTER, rosterClubs, rosterLive, rosterName, liveBoutPick, aiTier, AI_TIER, guardOutcome, fighterGlow, ONB, onbStage, onbSet, openCreator, tourStart, tourEnd, TOUR_STOPS, THRONE, throneHolder, throneFight, throneBow, openThrone, sideFromDrag, VOICE };
   if (location.protocol === 'file:' && window.__steeltapeTest)
-    Object.assign(window.__ST, { penalize, failPiece, closeRepair, xpNeed, tierProf, runToRepairCorner, onbAfterAccount, onbAccountGate, onbResumeAfterAuth, leaveTarget, leaveScreen, CLOUD, bosLoadInfo, bosBoot, swingLeverage, weaponBindPossible, resolveSwing, sweptSwingTarget, updateAction, think, updateTownCamera, LIBRARY, LIBRARY_DATA, WEAPON_VARIANTS, playerWeaponDef, libraryModel, libraryThumb, LIST, navPushOut, townCollide, SPECT, updateArenaSeatFolk, testAdminApply, testAdminRefresh, testAdminTeleport, openTestAdmin, gameplayShapePush, gameplayCannonTick, gameplayFolkDirection, arenaRope });
+    Object.assign(window.__ST, { penalize, failPiece, closeRepair, xpNeed, tierProf, runToRepairCorner, onbAfterAccount, onbAccountGate, onbResumeAfterAuth, leaveTarget, leaveScreen, CLOUD, bosLoadInfo, bosBoot, swingLeverage, weaponBindPossible, resolveSwing, sweptSwingTarget, updateAction, think, updateTownCamera, LIBRARY, LIBRARY_DATA, WEAPON_VARIANTS, playerWeaponDef, libraryModel, libraryThumb, LIST, navPushOut, townCollide, SPECT, updateArenaSeatFolk, testAdminApply, testAdminRefresh, testAdminTeleport, openTestAdmin, gameplayShapePush, gameplayCannonTick, gameplayFolkDirection, arenaRope, gateRefused, stationTrial });
 }
 
 function autotest() {
@@ -36108,6 +36108,8 @@ async function bosLoadInfo() {
   if (verifiedUser && verifiedUser.id !== u.id) return;
   if (verifiedUser) BOS.user = verifiedUser;
   BOS.testAdmin = !!(verifiedUser && verifiedUser.app_metadata?.steel_tape_test_admin === true);
+  // Apply verified testing powers before cloud reconciliation can hold the flow.
+  if (BOS.testAdmin && typeof testAdminApply === 'function') testAdminApply();
   if (typeof testAdminRefresh === 'function') testAdminRefresh();
   // Load this user's complete Steel & Tape save before applying their BuhurtOS profile name.
   // Cloud saves may require an explicit conflict choice; gameplay is never silently overwritten.
@@ -36501,7 +36503,7 @@ window.addEventListener('pagehide',()=>{cloudFlush();});
 function testAdminApply(save = true) {
   if (typeof BOS === 'undefined' || !BOS.testAdmin) return;
   let changed = false;
-  if ((CAREER.level || 1) < 100) { CAREER.level = 100; CAREER.xp = 0; changed = true; }
+  if (CAREER.level !== 100 || CAREER.xp !== 0) { CAREER.level = 100; CAREER.xp = 0; changed = true; }
   // Existing shops compare and subtract purse directly. Refill a generous test
   // balance on each save so buying anything never blocks this account.
   if (!Number.isFinite(CAREER.purse) || CAREER.purse < 100000000) { CAREER.purse = 1000000000; changed = true; }
@@ -39659,7 +39661,15 @@ function realmGateCollide(P, r) {
     if (d < m) { if (d < 1e-4) { P.z = G.z + m; } else { P.x = G.x + dx / d * m; P.z = G.z + dz / d * m; } if (!TOWN.gateMsgT || window.performance.now() - TOWN.gateMsgT > 4000) { TOWN.gateMsgT = window.performance.now(); gateRefused(G); } }
   }
 }
-function gateRefused(G) { const T = REALM_TIERS[G.key]; toastMenu(`${G.label}: ${T ? T.need : 'closed'}`); }
+function gateRefused(G) {
+  const T = REALM_TIERS[G.key];
+  if (!T) { toastMenu(`${G.label}: closed`); return; }
+  if (typeof BOS !== 'undefined' && BOS.testAdmin) testAdminApply();
+  const level = CAREER.level || 1;
+  toastMenu(level < T.level
+    ? `${G.label}: level ${T.level} needed (you’re level ${level}), plus the ${T.name}.`
+    : `${G.label}: level met (${level}). Earn the ${T.name} from the gatekeeper to enter.`);
+}
 // the castle, for the folk (gate guards stand outside the bailey gate) and the map
 const CASTLE = { x0: BAILEY.x0, x1: BAILEY.x1, z0: BAILEY.z0, z1: BAILEY.z1, gate: 2.4 };
 function gateBlocked(x, z, r) { for (const G of TOWN.gates || []) if (!gateOpen(G.key) && Math.hypot(x - G.x, z - G.z) < G.r + r) return true; return false; }
@@ -40047,6 +40057,7 @@ const TRIALS = {
   royal: { station: 'captain', club: 'kingsguard', mode: 5, venue: 'castle', stage: 'The Royal writ: 5 v 5 against the King’s Guard', title: 'Royal writ won', prize: 2500 }
 };
 function stationTrial(key) {
+  if (typeof BOS !== 'undefined' && BOS.testAdmin) testAdminApply();
   const T = TRIALS[key], R = REALM_TIERS[key], lv = CAREER.level || 1, has = realmHasWrit(key);
   const intro = key === 'bailey'
     ? (has ? '“You’ve got your writ. In you go, and wipe your feet.”' : lv < R.level ? `“The bailey’s for proven fighters. Come back at level ${R.level}. You’re level ${lv}.”` : '“Level enough, are you? Then show me. Best of three, here and now. Beat me and the gate’s yours.”')
@@ -40054,7 +40065,7 @@ function stationTrial(key) {
   townPanel(R.name, box => {
     const list = stationRows(box, intro, []);
     const can = !has && lv >= R.level;
-    list.append(h('div', { class: 'up' }, h('div', null, h('div', { class: 'uph' }, h('b', null, has ? 'Writ held' : key === 'bailey' ? 'Duel Sergeant Brask' : 'Fight the King’s Guard')), h('div', { class: 'muted' }, has ? 'The gate opens for you. Walk on through.' : R.need)),
+    list.append(h('div', { class: 'up' }, h('div', null, h('div', { class: 'uph' }, h('b', null, has ? 'Writ held' : key === 'bailey' ? 'Duel Sergeant Brask' : 'Fight the King’s Guard')), h('div', { class: 'muted' }, has ? 'The gate opens for you. Walk on through.' : lv < R.level ? R.need : `Level met. Win this fight to earn the ${R.name}.`)),
       h('button', { class: 'btn small ' + (can ? 'primary flagtape' : 'tape'), disabled: can ? null : true, onclick: () => { if (!can) return; AU.click(); TOWN.returnTo = T.station; leaveTown(() => startTrial(key)); } }, has ? 'Done' : lv < R.level ? `Level ${R.level} needed` : 'Fight')));
   });
 }
