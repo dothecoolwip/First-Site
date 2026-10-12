@@ -9,12 +9,14 @@ function onbSet(st) { CAREER.onboard = st; saveCareer(); }
 // Production game policy: no guest play beyond the first instructional fight.
 // Tests that run from file: explicitly opt in to their isolated mock accounts.
 function onbAccountRequired() {
-  if (location.hash === '#autotest' || G.autoflow) return false;
+  // Never allow a hosted game URL parameter to bypass sign-in.
   if (location.protocol === 'file:' && window.__steeltapeTest && !window.__onboard) return false;
   return onbStage() !== 'fight';
 }
-function onbAccountGate() {
-  if (!onbAccountRequired()) return false;
+function onbAccountGate(forceAccount) {
+  // Direct entry to the town requires a linked account even if the tutorial is unfinished.
+  if (location.protocol === 'file:' && window.__steeltapeTest && !window.__onboard) return false;
+  if (!forceAccount && !onbAccountRequired()) return false;
   if (BOS.user) {
     if (location.protocol === 'file:' && window.__steeltapeTest) return false;
     if (typeof CLOUD !== 'undefined' && !CLOUD.ready && !CLOUD.optedOut) {
