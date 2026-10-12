@@ -29,7 +29,18 @@ function cloudCanonical(value) {
   }
   return value;
 }
-function cloudHash(snapshot) { return JSON.stringify(cloudCanonical(snapshot)); }
+function cloudHash(snapshot) {
+  // Two independent 32-bit checksums plus length, rather than storing another complete
+  // copy of the player's save inside the sync metadata (which could exhaust localStorage).
+  const serialized = JSON.stringify(cloudCanonical(snapshot));
+  let a = 2166136261, b = 0x9e3779b9;
+  for (let i = 0; i < serialized.length; i++) {
+    const ch = serialized.charCodeAt(i);
+    a = Math.imul(a ^ ch, 16777619);
+    b = Math.imul(b ^ ch, -2048144789) ^ (b >>> 13);
+  }
+  return serialized.length + ':' + (a >>> 0).toString(16) + ':' + (b >>> 0).toString(16);
+}
 function cloudMeaningful(snapshot) {
   const c = snapshot['st-career'];
   if (c && typeof c === 'object') {
@@ -208,7 +219,7 @@ async function cloudFlush() {
     const ok=await cloudCommit(uid,CLOUD.revision,snapshot);
     if(!ok && CLOUD.uid===uid){CLOUD.ready=false;await cloudStart(uid,true);}
   }catch(e){if(CLOUD.uid===uid){CLOUD.ready=false;cloudProblem(uid,e);}}
-  finally{CLOUD.busy=false;}
+  finally{CLOUD.busy=false;if(CLOUD.uid===uid&&CLOUD.ready&&cloudHash(cloudSnapshot())!==CLOUD.lastHash)cloudSchedule();}
 }
 const cloudOriginalSet=store.set.bind(store),cloudOriginalDel=store.del.bind(store);
 store.set=function(k,v){cloudOriginalSet(k,v);cloudSchedule();};
