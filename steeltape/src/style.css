@@ -844,6 +844,15 @@ body:not(.split) #pips:not([hidden]) ~ #statstrip{top:calc(var(--st) + 78px)}
 .townrow{display:flex;gap:8px;flex-wrap:wrap;margin-top:12px}
 .intown #tcmd,.intown #tc,.intown #bSalute{display:none!important}
 
+/* A tiny hand-drawn snail and build stamp, tucked into the home-screen corner.
+   Deliberately low-key, but with an accessible tap area on phones. */
+#title .title-corner{position:absolute;right:calc(var(--sr) + 10px);bottom:calc(var(--sb) + 9px);z-index:4;display:flex;align-items:center;gap:5px;pointer-events:auto}
+#title .title-version{font-family:var(--body);font-size:.69rem;font-weight:500;letter-spacing:.04em;color:rgba(170,180,184,.65);white-space:nowrap;font-variant-numeric:tabular-nums}
+#title .shell-key{display:grid;place-items:center;width:38px;height:38px;min-width:38px;min-height:38px;padding:0;color:rgba(170,180,184,.66);border:0;background:transparent;border-radius:50%;cursor:pointer;text-decoration:none;transition:color .15s ease,transform .15s ease}
+#title .shell-key:hover{color:var(--chalk);transform:rotate(-7deg)}
+#title .shell-key:focus-visible{outline:2px solid var(--marshal);outline-offset:0}
+#title .shell-key svg{display:block;max-width:26px;max-height:26px}
+@media (max-width:560px){#title .title-corner{right:calc(var(--sr) + 6px);bottom:calc(var(--sb) + 5px)}#title .title-version{font-size:.65rem}}
 /* the home page: one big button; everything else lives in town */
 #title #btnRumble,#title #btnContinue,#title .mgrid,#title #nowPlaying,#title #btnHow{display:none!important}
 #btnFight{font-size:clamp(1.6rem,5vw,2.6rem);padding:.6em 1.4em;margin:12px 0 6px}
