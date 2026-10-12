@@ -3,12 +3,47 @@
 // character creator, then a skippable tour of the realm when you walk in. Anyone who played before the creator existed
 // gets the creator (and the tour) the next time they open the game.
 // ===================================================================
-const ONB = { tour: null };
+const ONB = { tour: null, awaitingAuth: false };
 function onbStage() { return CAREER.onboard || (CAREER.stats.matches > 0 ? 'create' : 'fight'); }
 function onbSet(st) { CAREER.onboard = st; saveCareer(); }
+// Production game policy: no guest play beyond the first instructional fight.
+// Tests that run from file: explicitly opt in to their isolated mock accounts.
+function onbAccountRequired() {
+  if (location.hash === '#autotest' || G.autoflow) return false;
+  if (location.protocol === 'file:' && window.__steeltapeTest && !window.__onboard) return false;
+  return onbStage() !== 'fight';
+}
+function onbAccountGate() {
+  if (!onbAccountRequired()) return false;
+  if (BOS.user) {
+    if (location.protocol === 'file:' && window.__steeltapeTest) return false;
+    if (typeof CLOUD !== 'undefined' && !CLOUD.ready && !CLOUD.optedOut) {
+      ONB.awaitingAuth = true;
+      if (!CLOUD.loading && !CLOUD.holding) cloudOnAuth(BOS.user.id, true);
+      if (!CLOUD.holding && !(G.screen === 'msgScr' && $('#msgPanel')?.textContent.includes('Cloud save'))) {
+        msg('link save', 'Connecting your game save', '<p>Checking your saved character and inventory before you continue. Your local progress is still on this device.</p>', []);
+      }
+      return true;
+    }
+    return false;
+  }
+  ONB.awaitingAuth = true;
+  // This backup is local and temporary. A cloud save is only linked after verified login.
+  if (typeof cloudPrepareGuestLink === 'function') cloudPrepareGuestLink();
+  if (!(G.screen === 'msgScr' && $('#bosEmail'))) creatorSignIn();
+  return true;
+}
+function onbResumeAfterAuth() {
+  if (!ONB.awaitingAuth || !BOS.user) return;
+  if (typeof CLOUD !== 'undefined' && !CLOUD.ready && !CLOUD.optedOut && !(location.protocol === 'file:' && window.__steeltapeTest)) return;
+  ONB.awaitingAuth = false;
+  toTitle();
+}
 // called when the title would show: steer first-timers into the flow instead
 function onbTitle() {
-  const st = onbStage(); if (st === 'done' || G.autoflow || location.hash === '#autotest' || G.noOnboard) return false;
+  const st = onbStage();
+  if (onbAccountGate()) return true;
+  if (st === 'done' || G.autoflow || location.hash === '#autotest' || G.noOnboard) return false;
   if (st === 'fight') { onbTestFight(); return true; }
   if (st === 'help') { onbHelp(); return true; }
   if (st === 'create') { openCreator(); return true; }
@@ -37,12 +72,18 @@ function onbHints() {
 // after the test fight (from matchEnd)
 function onbAfterFight(m, won, withPurse) {
   onbSet('help'); { const el = $('#onbHints'); if (el) el.hidden = true; }
-  msg('your first fight', won ? 'You won it' : 'Lost that one', withPurse(`<p>${won ? 'Not bad at all for a first go.' : 'Everyone loses their first. The steel is heavy and the lungs are small.'}</p><p>Want some help learning the moves before the festival?</p>`),
-    [['Teach me', () => { onbSet('create'); G.onbTrain = true; startTraining(); }, true], ['I’ve got it', () => { onbSet('create'); openCreator(); }]]);
+  if (typeof cloudPrepareGuestLink === 'function' && !BOS.user) cloudPrepareGuestLink();
+  msg('your first fight', won ? 'You won it' : 'Lost that one',
+    withPurse(`<p>${won ? 'Not bad at all for a first go.' : 'Everyone loses their first. The steel is heavy and the lungs are small.'}</p><p>Your progress is saved on this device. To go beyond the tutorial, sign in with BuhurtOS and link your save.</p>`),
+    [['Sign in to continue', () => { onbAccountGate(); }, true]]);
 }
-function onbHelp() { msg('welcome back', 'Help learning?', '<p>Want some help learning the moves before the festival?</p>', [['Teach me', () => { onbSet('create'); G.onbTrain = true; startTraining(); }, true], ['I’ve got it', () => { onbSet('create'); openCreator(); }]]); }
+function onbHelp() {
+  if (onbAccountGate()) return;
+  msg('welcome back', 'Help learning?', '<p>Want some help learning the moves before the festival?</p>', [['Teach me', () => { onbSet('create'); G.onbTrain = true; startTraining(); }, true], ['I’ve got it', () => { onbSet('create'); openCreator(); }]]);
+}
 // ---- the character creator: sign in with BuhurtOS, join your real team (or say you're not on one), make your fighter
 function openCreator() {
+  if (onbAccountGate()) return;
   G.backTo = 'title'; skillsState();
   if (typeof rosterLoad === 'function') rosterLoad();
   if (!BOS.user) { creatorSignIn(); return; }
@@ -50,7 +91,8 @@ function openCreator() {
   creatorFighter();
 }
 function creatorSignIn() {
-  msg('your fighter', 'Sign in with BuhurtOS', `<p>Everyone in the realm plays as themselves: your BuhurtOS account names your fighter and puts you on your real team. Not on BuhurtOS yet? Use <b>Email me a code</b> or <b>Google</b> / <b>Discord</b> below and an account is made for you.</p>
+  ONB.awaitingAuth = true;
+  msg('your fighter', 'Sign in with BuhurtOS', `<p>Everyone in the realm plays as themselves: your BuhurtOS account names your fighter and puts you on your real team. Your existing progress is kept on this device until you connect your account. Already registered? Sign in to link this character. New players can create an account using <b>Email me a code</b>, <b>Google</b> or <b>Discord</b>.</p>
     <label class="runcode"><span>Email</span><input id="bosEmail" type="email" autocomplete="email" placeholder="you@example.com"></label>
     <label class="runcode"><span>Password</span><input id="bosPass" type="password" autocomplete="current-password"></label>
     <div class="bosalt"><button class="btn tape small" id="bosCode">Email me a code (new or existing)</button><button class="btn tape small" id="bosGoogle">Google</button><button class="btn tape small" id="bosDiscord">Discord</button></div>
@@ -122,7 +164,7 @@ function creatorFighter() {
   prev();
   $('#creatorDone').hidden = false; $('#creatorBack').hidden = false;
   $('#creatorBack').onclick = () => { AU.click(); CAREER.teamPicked = false; saveCareer(); creatorTeam(); };
-  $('#creatorDone').onclick = () => { AU.click(); onbSet('tour'); showScreen(null); G.hub = true; enterTown(); };
+  $('#creatorDone').onclick = () => { AU.click(); if (onbAccountGate()) return; onbSet('tour'); showScreen(null); G.hub = true; enterTown(); };
   showScreen('creator');
 }
 // ---- the tour: a skippable fly-over of the realm with captions, the first time you walk in
