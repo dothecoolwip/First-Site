@@ -26,7 +26,13 @@ function realmTick(dt) {
   if (TRAVEL.saved && TOWN.pos) { const o = TRAVEL.saved.sun.clone().sub(TRAVEL.saved.sunT); W3.sun.target.position.set(TOWN.pos.x, gy(TOWN.pos.x, TOWN.pos.z), TOWN.pos.z); W3.sun.position.set(TOWN.pos.x + o.x, o.y, TOWN.pos.z + o.z); W3.sun.target.updateMatrixWorld(); }
   // stamina for sprinting
   const run = TOWN.speed > 3.6 && !TOWN.mounted;
-  TOWN.stam = clamp((TOWN.stam == null ? 1 : TOWN.stam) + (run ? -0.16 : 0.22) * dt, 0, 1);
+  // Village travel is intentionally more forgiving than a fight. Lungs talents
+  // then improve recovery and reduce the running drain on top of that baseline.
+  const breath = G.player && typeof perk === 'function' ? perk(G.player, 'lungs.breath') : 0;
+  const marathon = G.player && typeof perk === 'function' ? perk(G.player, 'lungs.marathon') : 0;
+  const drain = 0.105 * (marathon ? 0.7 : 1);
+  const recovery = 0.30 * (1 + 0.08 * breath);
+  TOWN.stam = clamp((TOWN.stam == null ? 1 : TOWN.stam) + (run ? -drain : recovery) * dt, 0, 1);
   if (TOWN.stam <= 0.01) TOWN.winded = true; if (TOWN.winded && TOWN.stam > 0.35) TOWN.winded = false;
   const sb = $('#townStam'); if (sb) { sb.hidden = TOWN.stam > 0.995; sb.firstChild.style.width = Math.round(TOWN.stam * 100) + '%'; sb.classList.toggle('low', !!TOWN.winded); }
   updateWaypoint(dt); updateHorse(dt); arenaTicker(dt);
@@ -240,6 +246,7 @@ function animalMake(kind, cb, tint) {
 const ANIMAL = { list: [] };
 function horseAvailable() { return !!(TOWN.horseRent || shopState().owned.horse); }
 function callHorse() {
+  if (TOWN.mineOn) { toastMenu('Your horse must wait above ground. Take the lift to call it.'); return; }
   if (!horseAvailable()) { toastMenu('No horse. Hire one from Edda at the stables just outside the festival gate.'); return; }
   if (TOWN.horse) { if (TOWN.mounted) dismount(); else if (Math.hypot(TOWN.horse.x - TOWN.pos.x, TOWN.horse.z - TOWN.pos.z) < 3.5) mount(); else { TOWN.horse.come = true; toastMenu('You whistle. Your horse trots over.'); } return; }
   animalMake('Horse', A => {
@@ -253,6 +260,8 @@ function mount() { if (!TOWN.horse) return; TOWN.mounted = true; unlock('rider',
 function dismount() { if (!TOWN.horse) return; TOWN.mounted = false; const s = TOWN.face + Math.PI / 2; TOWN.pos.x += Math.sin(s) * 1.4; TOWN.pos.z += Math.cos(s) * 1.4; townCollide(); horseHud(); }
 function updateHorse(dt) {
   const H = TOWN.horse; if (!H) { horseHud(); return; }
+  if (TOWN.mineOn) { H.A.root.visible = false; horseHud(); return; }
+  H.A.root.visible = true;
   if (TOWN.mounted) { H.x = TOWN.pos.x; H.z = TOWN.pos.z; H.face = TOWN.face; H.come = false; }
   else if (H.come) {
     const dx = TOWN.pos.x - H.x, dz = TOWN.pos.z - H.z, d = Math.hypot(dx, dz);
@@ -266,7 +275,7 @@ function updateHorse(dt) {
 }
 function horseHud() {
   const b = $('#townHorse'); if (!b) return;
-  const ok = horseAvailable() && !G.screen; b.hidden = !ok; if (!ok) return;
+  const ok = horseAvailable() && !TOWN.mineOn && !G.screen; b.hidden = !ok; if (!ok) return;
   const near = TOWN.horse && Math.hypot(TOWN.horse.x - TOWN.pos.x, TOWN.horse.z - TOWN.pos.z) < 3.5;
   b.textContent = TOWN.mounted ? '🐴 Dismount' : near ? '🐴 Mount' : '🐴 Whistle';
 }

@@ -272,7 +272,7 @@ function renderVendor(box, key, again) {
     head('Talent, bottled');
     const room = skillRoom(), c = spCost();
     row('A skill point', `${s.spBought} bought`, room ? 'One more point to spend in your skill trees. Each costs more than the last.' : 'Your skill trees are full. Nothing left to learn!', room ? `Buy ${fmtMoney(c)}` : 'Full', room > 0 && CAREER.purse >= c,
-      () => { if (!spend(c, 'A skill point')) return false; s.spBought++; skillsState(); CAREER.sp++; saveCareer(); updateTitlePurse(); toastMenu('+1 skill point. Spend it in Your fighter → Skills.'); });
+      () => { if (!spend(c, 'A skill point')) return false; s.spBought++; skillsState(); saveCareer(); updateTitlePurse(); toastMenu('+1 skill point. Spend it in Your fighter → Skills.'); });
     head('Runes (permanent)'); items();
     head('Potions (a few matches)'); boosts();
   } else if (key === 'tavern') {

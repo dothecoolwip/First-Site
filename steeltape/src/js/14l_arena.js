@@ -3,7 +3,7 @@
 // takes a spectator's view (orbit, follow a fighter, broadcast angle), and you leave by walking off or pressing Leave.
 // Arenas you aren't at still have results on their boards: they tick cheaply in the background.
 // ===================================================================
-const SPEC = { results: {}, t: 0, follow: 0 };
+const SPEC = { results: {}, t: 0, follow: 0, zoom: 1 };
 const SPEC_MODES = ['Rail', 'Follow', 'Orbit', 'Broadcast'];
 // the stands of every arena are somewhere to talk to (no NPC: the prompt just says Watch)
 function buildArenaSeats() {
@@ -38,6 +38,7 @@ function specHud() {
   const S = TOWN.spec; el.hidden = !S || !!G.screen; if (!S) return;
   if (!el.firstChild) el.append(h('span', { class: 'spectxt' }, h('small'), h('b')),
     h('button', { class: 'btn tape small', onclick: e => { e.stopPropagation(); if (TOWN.spec) { TOWN.spec.mode = (TOWN.spec.mode + 1) % SPEC_MODES.length; SPEC.follow++; specHud(); } } }, 'Angle'),
+    h('button', { class: 'btn tape small', onclick: e => { e.stopPropagation(); SPEC.zoom = SPEC.zoom === 1 ? 1.5 : SPEC.zoom === 1.5 ? 2 : 1; specHud(); } }, 'Binoculars'),
     h('button', { class: 'btn tape small', onclick: e => { e.stopPropagation(); stopSpectating(); } }, 'Leave'));
   const m = G.match, w = m && m.wins ? m.wins : [0, 0];
   el.querySelector('.spectxt small').textContent = `${S.A.name} · ${SPEC_MODES[S.mode]}`;
@@ -57,7 +58,7 @@ function specCamera(dt) {
   else want = new THREE.Vector3(o.x + LIST.W / 2 + 4, o.y + (A.indoor ? 4 : 5.5), o.z + cz * 0.5);
   if (!TOWN.cam) { TOWN.cam = want.clone(); TOWN.look = look.clone(); }
   const k = 1 - Math.exp(-3 * dt); TOWN.cam.lerp(want, k); TOWN.look.lerp(look, k);
-  cam.position.copy(TOWN.cam); cam.lookAt(TOWN.look);
+  cam.position.copy(TOWN.cam); cam.lookAt(TOWN.look); cam.fov = 48 / SPEC.zoom; cam.updateProjectionMatrix();
   if ((G.frameN || 0) % 20 === 0) specHud();
 }
 // arenas you're not at: a pairing and a result every minute or two, so the boards and the map always have news

@@ -59,12 +59,27 @@ const SKILL_TREES = [
   ] },
 ];
 const SKILL_BY_ID = {}; SKILL_TREES.forEach(T => T.nodes.forEach(n => { n.tree = T.key; SKILL_BY_ID[T.key + '.' + n.id] = n; }));
-function skillsState() { if (!CAREER.skills) CAREER.skills = {}; if (CAREER.xp == null) { CAREER.xp = 0; CAREER.level = 1; CAREER.sp = 3; } return CAREER.skills; }
+function skillsState() {
+  if (!CAREER.skills) CAREER.skills = {};
+  if (CAREER.xp == null) { CAREER.xp = 0; CAREER.level = 1; }
+  // Every level grants exactly one spendable point. Keep old saves compatible
+  // while making the rule explicit and repairing saves from older builds.
+  const earned = Math.max(0, (CAREER.level || 1) - 1) + 3 + ((typeof shopState === 'function' && shopState().spBought) || 0);
+  const spent = Object.values(CAREER.skills).reduce((n, v) => n + (Number(v) || 0), 0);
+  CAREER.sp = Math.max(0, earned - spent);
+  return CAREER.skills;
+}
 // rank of a perk for this fighter (only the player has perks)
 function perk(f, key) { if (!f || !f.isPlayer || G.autopilot) return 0; return (CAREER.skills && CAREER.skills[key]) || 0; }
 function treeSpent(tree) { const S = skillsState(); let n = 0; for (const k in S) if (k.startsWith(tree + '.')) n += S[k]; return n; }
 function totalSpent() { const S = skillsState(); let n = 0; for (const k in S) n += S[k]; return n; }
-function xpNeed(lv) { return 120 + 80 * lv; }
+// The early and mid-game curve is steady. From level 70 onward the next
+// level grows exponentially, making the top levels a long-term achievement.
+function xpNeed(lv) {
+  const normal = 160 + 100 * lv + 2 * lv * lv;
+  const at70 = 160 + 100 * 70 + 2 * 70 * 70;
+  return Math.round(lv <= 70 ? normal : at70 * Math.pow(1.08, lv - 70));
+}
 function canLearn(n) {
   const S = skillsState(), key = n.tree + '.' + n.id, r = S[key] || 0;
   if (r >= n.max) return 'Maxed';
@@ -73,7 +88,7 @@ function canLearn(n) {
   if (n.req && !(S[n.tree + '.' + n.req] > 0)) return `Needs ${SKILL_BY_ID[n.tree + '.' + n.req].name}`;
   return '';
 }
-function learn(n) { const why = canLearn(n); if (why) return why; const S = skillsState(), key = n.tree + '.' + n.id; S[key] = (S[key] || 0) + 1; CAREER.sp--; saveCareer(); AU.cheer(0.5); return ''; }
+function learn(n) { const why = canLearn(n); if (why) return why; const S = CAREER.skills, key = n.tree + '.' + n.id; S[key] = (S[key] || 0) + 1; skillsState(); saveCareer(); AU.cheer(0.5); return ''; }
 // XP for everything you do; a level is a skill point
 const XP_FOR = { hit: 3, block: 2, trip: 8, throw: 12, disarm: 12, tackle: 6, takedown: 25, knee: 1, shove: 2, repair: 6 };
 function gainXP(amount, why) {
@@ -103,7 +118,7 @@ function renderSkills(box) {
   const head = h('div', { class: 'skhead' },
     h('div', { class: 'sklv' }, h('span', { class: 'lvnum num' }, String(CAREER.level)), h('span', null, h('b', null, `Level ${CAREER.level}`), h('span', { class: 'xpbar' }, h('i', { style: `width:${Math.round(CAREER.xp / xpNeed(CAREER.level) * 100)}%` })), h('small', { class: 'muted num' }, `${CAREER.xp} / ${xpNeed(CAREER.level)} XP`))),
     h('div', { class: 'skpts' + (CAREER.sp > 0 ? ' has' : '') }, h('b', { class: 'num' }, String(CAREER.sp)), h('span', null, CAREER.sp === 1 ? 'skill point' : 'skill points')),
-    h('button', { class: 'chip', onclick: () => { const n = totalSpent(); if (!n) return; if (!renderSkills.armed) { renderSkills.armed = true; setTimeout(() => renderSkills.armed = false, 3000); toastMenu('Press again to refund every point'); return; } CAREER.sp += n; CAREER.skills = {}; saveCareer(); renderCareer(); } }, 'Refund all'));
+    h('button', { class: 'chip', title: 'Return every spent point so you can choose a different path', onclick: () => { const n = totalSpent(); if (!n) { toastMenu('No points have been spent yet'); return; } if (!renderSkills.armed) { renderSkills.armed = true; setTimeout(() => renderSkills.armed = false, 3000); toastMenu('Press again to refund every point'); return; } CAREER.skills = {}; skillsState(); saveCareer(); renderCareer(); } }, 'Reset talents'));
   box.append(head);
   const trees = h('div', { class: 'sktrees' });
   for (const T of SKILL_TREES) {

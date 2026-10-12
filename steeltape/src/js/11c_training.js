@@ -44,7 +44,7 @@ function place(i, mode, dx, dz, stab, ahead) {
 }
 function startTraining() {
   G.attract = false; G.tourney = null; REP.log = [];
-  setupMatch({ mode: 'train', opp: 'sparring', stage: 'Training yard', training: true });
+  setupMatch({ mode: 'train', opp: 'sparring', stage: 'Fairground Training Yard', training: true, venue: 'training' });
   startRound(); TR.on = true; $('#app').classList.add('training');
   beginFight();
   setLesson(CAREER.trained ? LESSONS.length - 1 : 0);

@@ -1,5 +1,5 @@
 // Offline cache for Buhurt: Steel & Tape. Bump VERSION when you upload a new build.
-const VERSION = 'steel-tape-boards-20261011a-adminfix1';
+const VERSION = 'steel-tape-3b9e602d7c';
 const CORE = ['./', './index.html', './manifest.webmanifest', './icon-192.png', './icon-512.png'];
 self.addEventListener('install', e => { e.waitUntil(caches.open(VERSION).then(c => c.addAll(CORE)).then(() => self.skipWaiting())); });
 self.addEventListener('activate', e => { e.waitUntil(caches.keys().then(ks => Promise.all(ks.filter(k => k !== VERSION).map(k => caches.delete(k)))).then(() => self.clients.claim())); });
@@ -12,7 +12,7 @@ self.addEventListener('fetch', e => {
   if (url.origin === self.location.origin && /^\/admin(?:[.\/-]|$)/.test(url.pathname)) {
     e.respondWith(fetch(e.request, { cache: 'no-store' }).catch(() =>
       new Response('Admin dashboard is unavailable offline. Reconnect and reload.', {
-        status:503, headers:{'Content-Type':'text/plain; charset=utf-8','Cache-Control':'no-store'}
+        status: 503, headers: { 'Content-Type': 'text/plain; charset=utf-8', 'Cache-Control': 'no-store' }
       })));
     return;
   }

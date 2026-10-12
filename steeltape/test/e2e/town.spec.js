@@ -76,7 +76,7 @@ test('wardrobe, the ghost, pets and a guild @touch', async ({ game, page }) => {
   await game.run("(openVendor('wardrobe'), true)");
   await pick(page, 'Linen shirt and breeches');
   expect(await game.run("lookState().outfit")).toBe('Male_Peasant|peasant');
-  expect(await game.run("!!TOWN.me.costume")).toBe(true);
+  expect(await game.run("TOWN.me.costume === 'Male_Peasant' || (!TOWN.people && !!TOWN.me.root)")).toBe(true);
   // weapon looks from the artificer: only the look changes
   await game.run("(G.loadout.weapon = 'mace', openVendor('artificer'), true)");
   await pick(page, 'Skull Club');

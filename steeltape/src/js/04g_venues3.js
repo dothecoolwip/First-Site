@@ -1,16 +1,28 @@
 // ---------- the realm's arenas as venues you can fight in: Peasants' arena, Forest arena, Beach arena, the Great Hall ----------
 // (the Dome is the summer field's list, the Castle arena is the castle courtyard)
 Object.assign(VENUES, {
-  peasant: { key: 'peasant', name: 'Peasants’ arena', sub: 'Millbrook village: mud, hay bales and the pigs watching.', build: buildVenuePeasant },
-  forest: { key: 'forest', name: 'Forest arena', sub: 'A glade in the Old Woods, a log fence and torches.', build: buildVenueForest },
-  beach: { key: 'beach', name: 'Beach arena', sub: 'Mirror Lake’s sandy shore, driftwood and gulls.', build: buildVenueBeach },
-  hall: { key: 'hall', name: 'The Great Hall', sub: 'Inside the keep: banners, chandeliers and the king watching.', build: buildVenueHall }
+  peasant: { key: 'peasant', name: 'Millbrook Mudlists', sub: 'Millbrook village: mud, hay bales and the pigs watching.', build: buildVenuePeasant },
+  forest: { key: 'forest', name: 'Old Woods Clearing', sub: 'A glade in the Old Woods, a log fence and torches.', build: buildVenueForest },
+  beach: { key: 'beach', name: 'Mirror Lake Strand', sub: 'Mirror Lake’s sandy shore, driftwood and gulls.', build: buildVenueBeach },
+  hall: { key: 'hall', name: 'King’s Great Hall', sub: 'Inside the keep: banners, chandeliers and the king watching.', build: buildVenueHall },
+  training: { key: 'training', name: 'Fairground Training Yard', sub: 'A quiet practice list with pells and a coach.', build: buildVenueTraining, practice: true }
 });
 function v3ring(root, keys, n, r0, r1, seed, s0, s1) {
   const rnd = seeded(seed);
   for (let i = 0; i < n; i++) { const a = rnd() * TAU, r = r0 + rnd() * (r1 - r0); const x = Math.cos(a) * r * 0.85, z = Math.sin(a) * r; if (Math.abs(x) < LIST.W / 2 + 9 && Math.abs(z) < LIST.L / 2 + 9) continue; kpiece(root, keys[Math.floor(rnd() * keys.length)], x, 0, z, rnd() * TAU, s0 + rnd() * (s1 - s0)); }
 }
 function v3plane(root, w, l, col, tex, y) { const m = new THREE.Mesh(new THREE.PlaneGeometry(w, l), new THREE.MeshStandardMaterial({ map: tex ? venueTex(tex) : null, color: col, roughness: 1 })); m.rotation.x = -Math.PI / 2; m.position.y = y; m.receiveShadow = true; root.add(m); return m; }
+function buildVenueTraining(root) {
+  const S = W3.scene;
+  S.background = new THREE.Color('#a9cbe8'); S.fog = new THREE.Fog('#b9d3ea', 45, 145);
+  W3.hemi.color.set('#cfe3f7'); W3.hemi.groundColor.set('#4d5e2c'); W3.hemi.intensity = 0.85;
+  W3.sun.color.set('#fff1d6'); W3.sun.intensity = 1.9; W3.sun.position.set(-12, 30, 10); W3.fill.intensity = 0.25;
+  v3plane(root, 180, 200, '#86a86b', 'grass', 0);
+  v3plane(root, LIST.W + 4, LIST.L + 4, '#b08d62', 'dirt', 0.03);
+  for (const x of [-16, 16]) for (const z of [-9, 0, 9]) kpiece(root, 'mk_Dummy', x, 0, z, x < 0 ? Math.PI / 2 : -Math.PI / 2, 1);
+  for (const [key, x, z, ry, scale] of [['dp_weapon_rack', -19, 18, Math.PI / 2, 1], ['dp_bench', 18, 18, -Math.PI / 2, 1], ['slv_tower', -33, -28, 0.3, 1], ['ps_tent', 30, 24, 0, 1.2]]) kpiece(root, key, x, 0, z, ry, scale);
+  v3ring(root, ['kf_tree_1_a', 'kf_tree_3_b', 'kf_bush_3_a'], IS_TOUCH ? 14 : 28, 42, 72, 'trainingv', 1, 1.4);
+}
 function buildVenuePeasant(root) {
   buildVenueField(root);
   const { W, L } = LIST;

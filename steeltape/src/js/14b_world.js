@@ -104,7 +104,22 @@ function buildStations() {
     const [x, z] = st.at, ry = st.ry != null ? st.ry : st.key === 'house' ? Math.PI : 0; // gate folk face the market; the house door faces the fountain
     const g = new THREE.Group(); g.position.set(x, gy(x, z), z); g.rotation.y = ry; TOWN.root.add(g);
     let npc = null, labY = 2.5, reach = 1.9;
-    if (st.key === 'giant') {
+    if (st.arena || st.practice) {
+      const tall = st.service === 'giant';
+      npc = costumeOr({ main: st.col, joints: '#302b28', h: tall ? 2.15 : 1.68 + st.look * 0.1, anim: st.service === 'crier' ? 'Idle_Talking_Loop' : 'Idle_Loop' },
+        { outfit: st.service === 'marshal' ? 'Female_Ranger' : st.look === 2 ? 'Female_Peasant' : 'Male_Peasant', tex: st.service === 'marshal' ? 'ranger' : 'peasant', tint: st.col,
+          skin: ['#a97453', '#d2a67e', '#8f614a'][st.look] });
+      g.add(npc.root); TOWN.obst.push({ x, z, r: 0.5 });
+      if (st.service === 'giant' && npc.handR) {
+        const sc = grp(npc.handR, 0, 0.08, 0.03);
+        mk(sc, geo('arena_scroll', () => new THREE.CylinderGeometry(0.06, 0.06, 0.38, 10)), tmat('#e9dfc6'), 0, 0, 0);
+      }
+      if (st.service === 'crier' && npc.handR) {
+        const bell = grp(npc.handR, 0, 0.06, 0);
+        mk(bell, geo('arena_bell', () => new THREE.ConeGeometry(0.08, 0.14, 10)), tmat('#d2aa54'), 0, 0.14, 0);
+      }
+      labY = tall ? 2.9 : 2.5;
+    } else if (st.key === 'giant') {
       npc = costumeOr({ main: '#5a4632', joints: '#3a2a1a', h: 4.4, anim: 'Idle_Loop' }, { outfit: 'Male_Peasant', tex: 'peasant', tint: '#e8d2b0', skin: '#c68a62' }); g.add(npc.root);
       if (npc.handR) { const sc = grp(npc.handR, 0, 0.1, 0.05); mk(sc, geo('g_scroll', () => new THREE.CylinderGeometry(0.07, 0.07, 0.42, 12)), tmat('#e9dfc6'), 0, 0, 0); for (const sy of [-0.23, 0.23]) mk(sc, geo('g_knob', () => new THREE.SphereGeometry(0.045, 8, 6)), tmat('#7a1f2a'), 0, sy, 0); mk(sc, geo('g_seal', () => new THREE.CylinderGeometry(0.035, 0.035, 0.02, 10)), tmat('#b0182a'), 0.07, 0, 0).rotation.z = Math.PI / 2; }
       const beard = mk((npc.bones && npc.bones.Head) || npc.root, geo('g_beard', () => new THREE.ConeGeometry(0.11, 0.25, 10)), tmat('#d9c9a8'), 0, npc.ual ? 0.0 : 0.6, 0.09); beard.rotation.x = Math.PI;
@@ -180,7 +195,7 @@ function buildMyPet() { if (WORLD.pet) TOWN.root.remove(WORLD.pet); WORLD.pet = 
 function townPresence() {
   if (!TOWN.on) { if (WORLD.lastTw) { lobbySet({ tw: null }); WORLD.lastTw = 0; } return; }
   if (G.realTime - WORLD.lastTw < 1) return; WORLD.lastTw = G.realTime;
-  lobbySet({ tw: { x: Math.round(TOWN.pos.x * 10) / 10, z: Math.round(TOWN.pos.z * 10) / 10, f: Math.round(TOWN.face * 100) / 100, l: lookLite(), g: guildTag() } });
+  lobbySet({ tw: { x: Math.round(TOWN.pos.x * 10) / 10, z: Math.round(TOWN.pos.z * 10) / 10, f: Math.round(TOWN.face * 100) / 100, mine: !!TOWN.mineOn, l: lookLite(), g: guildTag() } });
 }
 function updateOthers(dt) {
   townPresence();
@@ -191,17 +206,17 @@ function updateOthers(dt) {
     if (!O) {
       const L = tw.l || {}; const J = lookPerson({ b: L.b, t: L.t, h: L.h, c: L.c, n: L.n, o: L.o, s: L.s, d: L.d }, 1.8);
       const nm = String(p.presence.name || 'A fighter').slice(0, 20), lab = townLabel(nm, (tw.g ? `[${tw.g}] ` : '') + 'online now', '#7fb6ff'); lab.position.y = 2.35; J.root.add(lab);
-      J.root.position.set(tw.x, gy(tw.x, tw.z), tw.z); TOWN.root.add(J.root);
-      O = WORLD.others[p.peer] = { J, x: tw.x, z: tw.z, f: tw.f || 0, p, lk: JSON.stringify(tw.l || {}) };
-      TOWN.stalls.push({ V: { key: 'p:' + p.peer, name: nm, role: 'Online player', icon: '🟢' }, g: J.root, npc: null, ry: 0, x: tw.x, z: tw.z, ax: tw.x, az: tw.z, label: lab, open: () => { AU.click(); openProfile(O.p, () => { showScreen(null); refreshTouchUI(); townPrompt(); }); }, player: p.peer });
+      J.root.position.set(tw.x, tw.mine ? DEEP_MINE.y : gy(tw.x, tw.z), tw.z); TOWN.root.add(J.root);
+      O = WORLD.others[p.peer] = { J, x: tw.x, z: tw.z, mine: !!tw.mine, f: tw.f || 0, p, lk: JSON.stringify(tw.l || {}) };
+      TOWN.stalls.push({ V: { key: 'p:' + p.peer, name: nm, role: 'Online player', icon: '🟢' }, g: J.root, npc: null, ry: 0, x: tw.x, z: tw.z, ax: tw.x, az: tw.z, label: lab, mine: !!tw.mine, open: () => { AU.click(); openProfile(O.p, () => { showScreen(null); refreshTouchUI(); townPrompt(); }); }, player: p.peer });
     }
     if (O.lk !== JSON.stringify(tw.l || {})) { TOWN.root.remove(O.J.root); delete WORLD.others[p.peer]; TOWN.stalls = TOWN.stalls.filter(s2 => s2.player !== p.peer); continue; } // they changed clothes: rebuild next frame
-    O.p = p; const k = Math.min(1, dt * 4), ox = O.x, oz = O.z;
+    O.p = p; if (O.mine !== !!tw.mine) { O.x = tw.x; O.z = tw.z; O.mine = !!tw.mine; } const k = Math.min(1, dt * 4), ox = O.x, oz = O.z;
     O.x += (tw.x - O.x) * k; O.z += (tw.z - O.z) * k; O.f = tw.f || O.f;
-    O.J.root.position.set(O.x, gy(O.x, O.z), O.z); O.J.root.rotation.y = O.f;
+    O.J.root.position.set(O.x, O.mine ? DEEP_MINE.y : gy(O.x, O.z), O.z); O.J.root.rotation.y = O.f; O.J.root.visible = O.mine === !!TOWN.mineOn;
     const sp = Math.hypot(O.x - ox, O.z - oz) / Math.max(dt, 1e-3);
     if (O.J.ual) { O.J.play(sp > 3.5 ? 'Jog_Fwd_Loop' : sp > 0.3 ? 'Walk_Loop' : 'Idle_Loop', 0.25); O.J.mixer.update(dt); }
-    const S = TOWN.stalls.find(s => s.player === p.peer); if (S) { S.x = S.ax = O.x; S.z = S.az = O.z; }
+    const S = TOWN.stalls.find(s => s.player === p.peer); if (S) { S.x = S.ax = O.x; S.z = S.az = O.z; S.mine = O.mine; }
   }
   for (const id in WORLD.others) if (!seen[id]) { TOWN.root.remove(WORLD.others[id].J.root); delete WORLD.others[id]; TOWN.stalls = TOWN.stalls.filter(s => s.player !== id); }
 }
@@ -224,19 +239,24 @@ function stationRows(box, hi, rows) {
 function townGo(btn, from) { TOWN.returnTo = from; leaveTown(() => { const b = $('#' + btn); if (b) b.click(); }); }
 function openStation(key) {
   const S = STATIONS.find(s => s.key === key);
+  const service = S && S.service || key;
+  const go = btn => { if (S && S.arena) G.quickVenue = S.arena === 'dome' ? 'field' : S.arena; townGo(btn, key); };
   if (key === 'stables') { townPanel('The stables', box => stableRows(box)); return; }
   if (key === 'sergeant') { stationTrial('bailey'); return; }
   if (key === 'captain') { stationTrial('royal'); return; }
-  if (key === 'giant') townPanel('The Red Deer Rumble', box => stationRows(box, '“HO THERE, LITTLE ONE! Sign my scroll and fight in the Red Deer Rumble! Two fights, one title, all the glory!”', [
-    ['Sign up for the Rumble', 'A semi-final and a final, with repair breaks and a kit check. The big prize money is here.', 'Sign the scroll', () => townGo('btnRumble', 'giant')],
-    ['Continue the Rumble', 'Pick up where you left off.', 'Continue', () => townGo('btnContinue', 'giant'), !store.get('tourney', null)],
-    ['Rumble of the Day', 'One fight, the same for everyone today. Keep your streak going.', 'Fight today’s', () => townGo('btnDaily', 'giant')]]));
-  else if (key === 'marshal') townPanel('Enter the lists', box => stationRows(box, '“Kit checked? Straps taped? Then step into the lists. Pick your fight.”', [
-    ['Quick fight', '1v1 up to 12v12, any arena, any weapons.', 'Quick fight', () => townGo('btnQuick', 'marshal')],
-    ['Duel Ladder', 'Climb the rungs one duel at a time. Each rung pays more.', 'Duel Ladder', () => townGo('btnLadder', 'marshal')],
-    ['Training Yard', 'Learn the moves against the pells and a sparring partner.', 'Train', () => townGo('btnTrain', 'marshal')],
-    ['Gauntlet run', 'Five fights in a row. Your kit damage carries over.', 'Run it', () => townGo('btnRun', 'marshal')],
-    ['Summer season', 'Six stops around central Alberta and a league table.', 'Season', () => townGo('btnSeason', 'marshal')]]));
+  if (service === 'training') { townPanel('Coach Sigrid · Fairground Training Yard', box => stationRows(box,
+    '“Step through the practice gate. Pells first, then a sparring partner. No clock, no cards.”',
+    [['Start lessons', 'Learn movement, guard, strikes, clinch and throws in the practice list.', 'Train', () => townGo('btnTrain', key)]])); return; }
+  if (service === 'giant') townPanel(S && S.arena ? S.name + ' · ' + ARENAS.find(a => a.key === S.arena).name : 'The Red Deer Rumble', box => stationRows(box, 'Sign the scroll and enter the tournament. Two fights, one title, all the glory!', [
+    ['Sign up for the Rumble', 'A semi-final and a final, with repair breaks and a kit check. The big prize money is here.', 'Sign the scroll', () => go('btnRumble')],
+    ['Continue the Rumble', 'Pick up where you left off.', 'Continue', () => go('btnContinue'), !store.get('tourney', null)],
+    ['Rumble of the Day', 'One fight, the same for everyone today. Keep your streak going.', 'Fight today’s', () => go('btnDaily')]]));
+  else if (service === 'marshal') townPanel(S && S.arena ? S.name + ' · ' + ARENAS.find(a => a.key === S.arena).name : 'Enter the lists', box => stationRows(box, '“Kit checked? Straps taped? Then step into the lists. Pick your fight.”', [
+    ['Quick fight', '1v1 up to 12v12, any arena, any weapons.', 'Quick fight', () => go('btnQuick')],
+    ['Duel Ladder', 'Climb the rungs one duel at a time. Each rung pays more.', 'Duel Ladder', () => go('btnLadder')],
+    ['Training Yard', 'Learn the moves against the pells and a sparring partner.', 'Train', () => go('btnTrain')],
+    ['Gauntlet run', 'Five fights in a row. Your kit damage carries over.', 'Run it', () => go('btnRun')],
+    ['Summer season', 'Six stops around central Alberta and a league table.', 'Season', () => go('btnSeason')]]));
   else if (key === 'board') townPanel('Notice board', box => {
     stationRows(box, 'Notices pinned with daggers. Someone has drawn a moustache on the Wanted poster.', [
       ['Rumble of the Day', 'Today’s fight is the same for everyone.', 'Fight', () => townGo('btnDaily', 'board')],
@@ -244,13 +264,13 @@ function openStation(key) {
       ['Summer season', 'Sign veterans, tape well, top the table.', 'Season', () => townGo('btnSeason', 'board')]]);
     try { const C = challenges(); const all = [...(C.daily || []), ...(C.weekly || [])]; if (all.length) { box.append(h('h4', null, 'Challenges')); for (const c of all) box.append(h('p', { class: 'muted small' }, `${c.done ? '✓ ' : ''}${c.text || c.desc || ''}`)); } } catch (e) { }
   });
-  else if (key === 'crier') townPanel('Online', box => {
+  else if (service === 'crier') townPanel(S && S.arena ? S.name + ' · Online' : 'Online', box => {
     const n = (LOBBY.peers || []).length, inTown = Object.keys(WORLD.others).length;
     stationRows(box, `“HEAR YE! ${n ? `${n} fighter${n === 1 ? '' : 's'} online right now${inTown ? `, ${inTown} of them here in town` : ''}!` : 'Nobody else online just now, but they’ll come!'} Fight them, invite your friends, start a guild!”`, [
-      ['Play online', 'Find a match, open a lobby for up to 20, invite a friend by link.', 'Go online', () => { TOWN.returnTo = 'crier'; openOnlineHub(); }],
-      ['Find a match', 'Join an open lobby, or open one and wait.', 'Find a match', () => { TOWN.returnTo = 'crier'; findMatch(); }],
+      ['Play online', 'Find a match, open a lobby for up to 20, invite a friend by link.', 'Go online', () => { TOWN.returnTo = key; openOnlineHub(); }],
+      ['Find a match', 'Join an open lobby, or open one and wait.', 'Find a match', () => { TOWN.returnTo = key; findMatch(); }],
       ['Start a guild with friends', 'Guildmaster Osric on the west side handles guilds.', 'Show me', () => { closeVendor(); townWalkTo('guild'); }]]);
-    if (n) { box.append(h('h4', null, 'Online now')); for (const p of LOBBY.peers) box.append(h('div', { class: 'up' }, h('div', null, h('b', null, String(p.presence.name || 'A fighter').slice(0, 20)), h('div', { class: 'muted' }, `${p.presence.tw ? 'in town' : String(p.presence.st || 'online')}${p.presence.tw && p.presence.tw.g ? ` · [${p.presence.tw.g}]` : ''}`)), h('button', { class: 'btn tape small', onclick: () => openProfile(p, () => openStation('crier')) }, 'Profile'))); }
+    if (n) { box.append(h('h4', null, 'Online now')); for (const p of LOBBY.peers) box.append(h('div', { class: 'up' }, h('div', null, h('b', null, String(p.presence.name || 'A fighter').slice(0, 20)), h('div', { class: 'muted' }, `${p.presence.tw ? 'in town' : String(p.presence.st || 'online')}${p.presence.tw && p.presence.tw.g ? ` · [${p.presence.tw.g}]` : ''}`)), h('button', { class: 'btn tape small', onclick: () => openProfile(p, () => openStation(key)) }, 'Profile'))); }
   });
   else if (key === 'house') townPanel(shopState().home ? 'Your ' + HOMES[shopState().home].name.toLowerCase() : 'Your plot', box => stationRows(box, shopState().home ? 'Home sweet home. Your trophies, your skills, your record.' : 'An empty plot with your name on it. Wendell the land agent can build you a house.', [
     ['Your fighter', 'Skills, profile, progress, awards and your record.', 'Open', () => { TOWN.returnTo = 'house'; openCareer(); }],

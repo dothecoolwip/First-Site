@@ -21,7 +21,7 @@ function createFighter(spec, club, team, idx, kit, body) {
     clinch: null, graceUntil: -1, plantCd: 0, rearmT: 0, sidearmT: 0, sidearmUsed: false,
     weapon: WEAPONS[spec.weapon], shield: spec.shield ? SHIELDS[spec.shield] : null,
     kit: kit || freshKit(spec, false), oldTape: !!spec.player,
-    rec: { warnings: 0, yellows: 0, red: false }, out: false, redMatches: 0,
+    rec: { warnings: 0, yellows: 0, red: false }, out: false, redMatches: 0, armorStrikes: 0,
     ai: { target: null, next: rand(0, 0.3), strafe: chance(0.5) ? 1 : -1, guardT: 0, braceT: 0, plan: 0 },
     move: { x: 0, z: 0 }, wantFace: 0, lastCause: null, foulVictimT: -9, returnAt: -1, walkPh: rand(0, TAU), swingSide: 1, stats: { hits: 0, takedowns: 0 },
     earlyRiseT: 0, earlyWarned: false, body, helm: HELMS[spec.helm] || HELMS.pigface, lookYaw: 0, lookPitch: 0,
@@ -450,7 +450,14 @@ function resolveSwing(f, a) {
   t.gas = Math.max(0, t.gas - 0.012 * imp);
   if (!blocked) {
     const prot = zone === 'helmet' ? t.helm.prot : 1;
-    if (zone !== 'torso') wearPiece(t, zone, p * 0.0055 / prot);
+    if (zone !== 'torso') {
+      // A helmet failure is a one-time equipment event.  Once the helmet is
+      // off, a later head strike is still a legal target and knocks the
+      // unprotected fighter down, but must not drop/rebuild the head model.
+      if (zone === 'helmet' && t.kit.helmet && t.kit.helmet.failed) {
+        marshalGround(t, 'second head strike after helmet failure', 'REG 5.4.2');
+      } else wearPiece(t, zone, p * 0.0055 / prot);
+    }
     if (zone === 'helmet' && imp > 1.05) t.bell = Math.min(1, t.bell + (imp - 0.9) * 0.9 * (perk(f, 'steel.ringer') ? 1.35 : 1) * (perk(t, 'iron.neck') ? 0.6 : 1) * (1 - 0.06 * armourTier(t, 'helmet')) * (1 - pfx(t, 'bell')));
     if (zone === 'armR' && t.weapon && chance(0.045 * (0.5 + a.charge) * (sp === 'pry' ? 5 : 1) * (1 + 0.6 * perk(f, 'steel.armbreak')) * (t.up ? 1 - 0.25 * (t.up.gauntlets || 0) : 1) * (1 - pfx(t, 'disarm')))) disarm(t, sp === 'pry' ? 'pried loose with a wrench' : 'knocked loose');
     if (sp) specialHit(f, t, sp, zone, hitPos);
@@ -624,7 +631,9 @@ function failPiece(f, piece) {
   if (piece === 'haft') { if (!p.failed) { p.failed = true; if (f.isPlayer) feed('Your haft wrap is torn. Rewrap it before the next round.', 'WR 7.2.2', teamColor(f)); } return; }
   G.stats.failures++;
   if (piece === 'helmet') {
+    if (p.failed) return;
     p.failed = true; popHelmet(f);
+    if (armorStrike(f, piece)) return;
     marshalCall('Armour!', `${label(f)}: helmet off. Out of the list.`, 2);
     marshalGround(f, 'helmet strap let go, helmet off', 'REG 5.4.2');
     return;
@@ -635,6 +644,7 @@ function failPiece(f, piece) {
     if (chance(0.5)) { p.covered = true; feed(`${label(f)}: ${nm} let go, but the rest of the kit still covers it. Fight on.`, 'BR 1.3.2', teamColor(f)); return; }
   }
   p.covered = false;
+  if (armorStrike(f, piece)) return;
   marshalCall('Armour!', `${label(f)}: ${nm} failed. Grounded.`, 2); comm('armour', {}, 2); caption('strap', 'a strap snaps');
   marshalGround(f, `armour failure (${nm})`, 'BR 1.3.1');
 }
@@ -644,6 +654,23 @@ function popHelmet(f) {
   mk(J.head, geo('coif', () => new THREE.SphereGeometry(0.12, 12, 10)), MAT.gambeson, 0, 0.11, 0);
   helm.position.set(f.pos.x + rand(-1, 1), 0.12, f.pos.z + rand(-1, 1)); helm.rotation.set(rand(0, 3), rand(0, 3), 1.4);
   W3.matchRoot.add(helm); G.props.push(helm);
+}
+function armorStrike(f, piece) {
+  f.armorStrikes = (f.armorStrikes || 0) + 1;
+  if (f.armorStrikes < 3) {
+    feed(label(f) + ' has armour strike ' + f.armorStrikes + ' of 2. Repair it before returning.', 'BR 1.3.1', 'var(--card-red)');
+    return false;
+  }
+  f.out = true;
+  f.state = 'grounded';
+  marshalCall('Armour failure', label(f) + ' has three armour strikes and loses.', 3);
+  feed(label(f) + ' loses after the third armour strike.', 'REG 5.4.2', 'var(--card-red)');
+  if (G.match && G.match.duel && G.phase === 'fight') {
+    G.match.duelDQ = f.team;
+    G.match.wins[1 - f.team] = 2;
+    after(0.35, () => { if (G.phase === 'fight') endRound('duel'); });
+  }
+  return true;
 }
 
 // ---------- contact between bodies ----------

@@ -7,7 +7,8 @@ async function openPage(context, url, name) {
   const pg = await context.newPage(); await route(pg); await pg.addInitScript(installFakePeer);
   await pg.addInitScript(n => { try { localStorage.setItem('st-lobbyName', JSON.stringify(n)); } catch (e) { } }, name);
   await pg.goto(url);
-  await pg.waitForFunction(() => window.__ST && window.__ST.G.screen === 'title', null, { timeout: 90_000 });
+  // A join link can move straight from boot to the lobby before this check runs.
+  await pg.waitForFunction(() => window.__ST && window.__ST.G && window.__ST.G.screen, null, { timeout: 90_000 });
   await pg.evaluate(() => { __ST.G.renderEvery = 1e9; });
   return pg;
 }

@@ -69,7 +69,7 @@ test('someone who played before gets the creator next time they open the game', 
 test('the throne: first ever challenge bows, the next is a fight against a tougher stand-in', async ({ game, page }) => {
   await game.noRender();
   await page.locator('#btnFight').click();
-  await game.until("TOWN.on && G.hub && TOWN.people");
+  await game.until("TOWN.on && G.hub");
   // no writ: turned away
   await game.run("(townJump('throne'), townTalk(TOWN.stalls.find(s => s.V.key === 'throne')), true)");
   expect(await game.run("G.screen")).toBe(null);

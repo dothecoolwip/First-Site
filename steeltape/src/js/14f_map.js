@@ -5,16 +5,18 @@
 // ===================================================================
 const TMAP = { mini: null, miniT: 0, hits: [], view: null };
 const TMAP_PLACES = [
-  ['The list', 0, 0], ['Market', 0, 46], ['Forge yard', -46, 28], ['Training yard', -39, -40], ['Tavern', 45, 14],
-  ['Food stalls', 38, -8], ['Archery', 64, 10], ['Farm', 60, -16], ['Homes', -44, 48], ['Club camp', 46, 62], ['Graveyard', 44, -56], ['Pond', -56, 72], ['Festival gate', 0, 70]
+  ['The list', 0, 0], ['Market', 0, 46], ['Forge yard', -46, 28], ['Tavern', 45, 14],
+  ['Food stalls', 38, -8], ['Archery', 64, 10], ['Farm', 60, -16], ['Homes', -44, 48], ['Club camp', 46, 62], ['Graveyard', 44, -56], ['Pond', -56, 72], ['Festival gate', 0, 70], ['Deep Mine', -256, -42]
 ];
+function tmapSites() { return [...ARENAS, TRAINING_GROUND]; }
 function tmapMarkers() {
-  const out = [];
+  const out = tmapSites().map(A => ({ x: A.x, z: A.z, icon: A.icon, name: A.name, kind: 'arena', A, far: true }));
   for (const S of TOWN.stalls || []) {
+    if (S.mine) continue;
     if (S.player) { const O = WORLD.others && WORLD.others[S.player]; out.push({ x: O ? O.x : S.x, z: O ? O.z : S.z, icon: '', name: S.V.name, kind: 'player', S }); continue; }
     if (S.arena || (S.secret && !secretFound(S.secret.key))) continue;
     if (S.node) { out.push({ x: S.x, z: S.z, icon: '', name: S.V.name, role: S.V.role, kind: 'node', col: S.node.N.col, S }); continue; }
-    out.push({ x: S.x, z: S.z, icon: S.V.icon || '•', name: S.V.name, role: S.V.role, kind: S.station ? 'station' : 'vendor', key: S.V.key, S });
+    out.push({ x: S.x, z: S.z, icon: S.V.icon || '•', name: S.V.name, role: S.V.role, kind: S.station ? 'station' : 'vendor', key: S.V.key, far: S.V.key === 'mine:enter', S });
   }
   return out;
 }
@@ -33,6 +35,13 @@ function drawTownMap(ctx, view) {
   // the lake
   ctx.fillStyle = '#4f8fb8'; ctx.beginPath(); ctx.ellipse(X(LAKE.x), Y(LAKE.z), LAKE.rx * k, LAKE.rz * k, 0, 0, Math.PI * 2); ctx.fill();
   ctx.fillStyle = '#d8c690'; ctx.fillRect(X(LAKE.x - LAKE.rx - 14), Y(LAKE.z + 10), 16 * k, 60 * k);
+  // regional landmarks follow the same footprints as the village fields, quarry and lake docks.
+  for (const [x0, z0, ww, hh, col] of [[-270, 200, 34, 10, '#bdab55'], [-138, 196, 26, 20, '#a39a4a'], [-276, -64, 40, 44, '#a89a86']]) {
+    ctx.fillStyle = col; ctx.fillRect(X(x0), Y(z0), ww * k, hh * k);
+    ctx.strokeStyle = 'rgba(58,55,42,.5)'; ctx.lineWidth = Math.max(1, k); ctx.strokeRect(X(x0), Y(z0), ww * k, hh * k);
+  }
+  ctx.strokeStyle = '#715f43'; ctx.lineWidth = Math.max(2, 4 * k);
+  for (const [x0, z0, x1] of [[168, 20, 185], [172, 70, 186]]) { ctx.beginPath(); ctx.moveTo(X(x0), Y(z0)); ctx.lineTo(X(x1), Y(z0)); ctx.stroke(); }
   // roads
   ctx.strokeStyle = '#c2ac80'; ctx.lineCap = 'round'; ctx.lineJoin = 'round';
   for (const R of ROADS) { ctx.lineWidth = Math.max(1.5, R.w * k * 0.8); ctx.beginPath(); R.pts.forEach(([x, z], i) => i ? ctx.lineTo(X(x), Y(z)) : ctx.moveTo(X(x), Y(z))); ctx.stroke(); }
@@ -43,11 +52,10 @@ function drawTownMap(ctx, view) {
   HILL_T.forEach((T, i) => { ctx.fillStyle = ['rgba(160,150,130,.35)', 'rgba(175,162,128,.4)', 'rgba(190,172,122,.45)', 'rgba(205,186,130,.5)'][i]; ctx.beginPath(); ctx.ellipse(X(T.cx), Y(T.cz), T.rx * k, T.rz * k, 0, 0, Math.PI * 2); ctx.fill(); ctx.strokeStyle = i ? '#7d776e' : '#6d6a66'; ctx.lineWidth = Math.max(1.5, 2 * k); ctx.stroke(); });
   void wall; ctx.fillStyle = '#8a8378'; ctx.fillRect(X(HALL.x0), Y(HALL.z0), (HALL.x1 - HALL.x0) * k, (HALL.z1 - HALL.z0) * k);
   for (const Gt of TOWN.gates || []) { const open = gateOpen(Gt.key); ctx.fillStyle = open ? '#d9c49a' : '#a8342c'; ctx.beginPath(); ctx.arc(X(Gt.x), Y(Gt.z), Math.max(3, 2.4 * k), 0, Math.PI * 2); ctx.fill(); }
-  // the arenas: a live one pulses red
-  for (const A of ARENAS) {
-    if (A.key === 'hall' && k < 1.6) continue;
-    ctx.fillStyle = A.key === 'dome' ? '#cbb994' : '#d9c49a'; ctx.fillRect(X(A.x - A.bx * 0.6), Y(A.z - A.bz * 0.6), A.bx * 1.2 * k, A.bz * 1.2 * k);
-    ctx.strokeStyle = '#6b4a2a'; ctx.lineWidth = Math.max(1, k * 0.5); ctx.strokeRect(X(A.x - A.bx * 0.6), Y(A.z - A.bz * 0.6), A.bx * 1.2 * k, A.bz * 1.2 * k);
+  // The arena footprints match the actual world geometry. Their entry markers sit outside the rails.
+  for (const A of tmapSites()) {
+    ctx.fillStyle = A.indoor ? '#bdb2a0' : A.key === 'dome' ? '#cbb994' : '#d9c49a'; ctx.fillRect(X(A.x - A.bx), Y(A.z - A.bz), A.bx * 2 * k, A.bz * 2 * k);
+    ctx.strokeStyle = A.accent; ctx.lineWidth = Math.max(1.5, k); ctx.strokeRect(X(A.x - A.bx), Y(A.z - A.bz), A.bx * 2 * k, A.bz * 2 * k);
     const live = arenaLive(A);
     if (live) { const r = Math.max(6, A.bx * k) * (1 + 0.15 * Math.sin(G.realTime * 5)); ctx.strokeStyle = '#ff4b3a'; ctx.lineWidth = 2.5; ctx.beginPath(); ctx.arc(X(A.x), Y(A.z), r, 0, Math.PI * 2); ctx.stroke(); }
   }
@@ -60,8 +68,8 @@ function drawTownMap(ctx, view) {
   if (view.labels) {
     ctx.textAlign = 'center'; ctx.textBaseline = 'middle';
     const lab = (n, x, z, sz, col) => { ctx.font = `700 ${sz}px system-ui, sans-serif`; ctx.lineWidth = 3; ctx.strokeStyle = 'rgba(20,24,18,.75)'; ctx.strokeText(n, X(x), Y(z)); ctx.fillStyle = col; ctx.fillText(n, X(x), Y(z)); };
-    for (const D of DISTRICTS) if (D.key !== 'fair' || k < 2) lab(D.name, D.x, D.z - (D.key === 'bailey' ? 64 : D.key === 'ward' ? -4 : 0) - (D.key === 'fair' ? 0 : 22), k < 2 ? 13 : 15, '#f7e7b8');
-    for (const A of ARENAS) if (k >= 0.9) lab((arenaLive(A) ? '● ' : '') + A.name, A.x, A.z + A.bz * 0.6 + 7, 10, arenaLive(A) ? '#ff8a7a' : '#efe6cf');
+    if (k >= 1.5) for (const D of DISTRICTS) if (D.key !== 'fair' || k < 2) lab(D.name, D.x, D.z - (D.key === 'bailey' ? 64 : D.key === 'ward' ? -4 : 0) - (D.key === 'fair' ? 0 : 22), k < 2 ? 13 : 15, '#f7e7b8');
+    for (const A of tmapSites()) if (k >= 1.5) lab((arenaLive(A) ? '● ' : '') + A.name, A.x, A.z + A.bz + 8, 10, arenaLive(A) ? '#ff8a7a' : '#efe6cf');
     if (k >= 2) for (const [n, x, z] of TMAP_PLACES) lab(n, x, z, Math.round(clamp(k * 3.2, 10, 14)), '#f3ecd8');
   }
   // vendors, stations, other players (vendors only once you're zoomed in enough to tell them apart)
@@ -69,6 +77,17 @@ function drawTownMap(ctx, view) {
   for (const M of tmapMarkers()) {
     const px = X(M.x), py = Y(M.z);
     if (px < -20 || py < -20 || px > w + 20 || py > H + 20) continue;
+    if (M.kind === 'arena') {
+      const radius = view.round ? 7 : 12;
+      ctx.fillStyle = M.A.gate && !gateOpen(M.A.gate) ? '#6b5551' : M.A.accent;
+      ctx.strokeStyle = '#f8e6bd'; ctx.lineWidth = 2; ctx.beginPath(); ctx.arc(px, py, radius, 0, Math.PI * 2); ctx.fill(); ctx.stroke();
+      ctx.font = `${view.round ? 10 : 16}px system-ui, "Apple Color Emoji", "Segoe UI Emoji", sans-serif`; ctx.textAlign = 'center'; ctx.textBaseline = 'middle'; ctx.fillText(M.icon, px, py + 1);
+      if (view.labels && k < 1.5) {
+        const short = { dome: 'Dome', peasant: 'Millbrook', forest: 'Old Woods', beach: 'Lakeshore', castle: 'Bailey', hall: 'Great Hall', training: 'Training' }[M.A.key];
+        ctx.font = '700 11px system-ui, sans-serif'; ctx.lineWidth = 3; ctx.strokeStyle = '#20251c'; ctx.strokeText(short, px, py + 23); ctx.fillStyle = '#fff1d5'; ctx.fillText(short, px, py + 23);
+      }
+      hits.push({ px, py, M }); continue;
+    }
     if (M.kind === 'node') { if (k < 0.9 && !view.round) continue; ctx.fillStyle = M.col; ctx.strokeStyle = 'rgba(0,0,0,.6)'; ctx.lineWidth = 1; ctx.beginPath(); ctx.arc(px, py, Math.max(2.2, k * 1.1), 0, Math.PI * 2); ctx.fill(); ctx.stroke(); hits.push({ px, py, M }); continue; }
     if (M.kind === 'player') {
       ctx.fillStyle = '#36c2ff'; ctx.strokeStyle = '#0b1a22'; ctx.lineWidth = 2; ctx.beginPath(); ctx.arc(px, py, Math.max(3.5, k * 1.4), 0, Math.PI * 2); ctx.fill(); ctx.stroke();
@@ -87,6 +106,7 @@ function drawTownMap(ctx, view) {
     ctx.moveTo(px + dx * s, py + dy * s); ctx.lineTo(px - dx * s * 0.6 + dy * s * 0.6, py - dy * s * 0.6 - dx * s * 0.6); ctx.lineTo(px - dx * s * 0.25, py - dy * s * 0.25); ctx.lineTo(px - dx * s * 0.6 - dy * s * 0.6, py - dy * s * 0.6 + dx * s * 0.6); ctx.closePath(); ctx.fill(); ctx.stroke();
   }
   if (view.round) { ctx.restore(); ctx.save(); ctx.strokeStyle = 'rgba(240,230,210,.85)'; ctx.lineWidth = 2; ctx.beginPath(); ctx.arc(w / 2, H / 2, Math.min(w, H) / 2 - 1, 0, Math.PI * 2); ctx.stroke(); ctx.fillStyle = '#f3ecd8'; ctx.font = '700 10px system-ui'; ctx.textAlign = 'center'; ctx.fillText('N', w / 2, 9); }
+  else { ctx.fillStyle = 'rgba(18,31,25,.8)'; ctx.fillRect(w - 37, 8, 29, 33); ctx.font = '700 17px system-ui'; ctx.textAlign = 'center'; ctx.fillStyle = '#f7e7b8'; ctx.fillText('N', w - 22, 31); }
   ctx.restore();
   return hits;
 }
@@ -95,15 +115,23 @@ function arenaLive(A) { return !!((typeof BOUT !== 'undefined' && BOUT.on && TOW
 // the big map: drag to pan, pinch / wheel / buttons to zoom, tap a marker (or anywhere) to set a waypoint
 function townMapCanvas() {
   const wrap = h('div', { class: 'tmapwrap' }), cv = h('canvas', { class: 'tmap', 'aria-label': 'Realm map. Drag to look around, tap to set a waypoint.' });
-  const tip = h('div', { class: 'tmaptip muted small' }, 'Drag to look around, zoom with + and −. Tap a marker or any spot to set a waypoint; gold markers then lead you there.');
+  const tip = h('div', { class: 'tmaptip muted small' }, 'Choose an arena below or tap its marker. The gold trail leads to its entrance; locked gates still require their writ.');
   const V = TMAP.view = TMAP.view || { cx: TOWN.pos.x, cz: TOWN.pos.z, k: 0 };
   const zb = (t, f) => h('button', { class: 'btn tape small', onclick: e => { e.stopPropagation(); f(); draw(); } }, t);
   const bar = h('div', { class: 'tmapbar' }, zb('−', () => V.k = Math.max(V.kmin, V.k / 1.5)), zb('+', () => V.k = Math.min(9, V.k * 1.5)), zb('Me', () => { V.cx = TOWN.pos.x; V.cz = TOWN.pos.z; V.k = Math.max(V.k, 2.4); }), zb('Realm', () => { V.k = V.kmin; V.cx = 0; V.cz = -5; }));
-  wrap.append(bar, cv, tip);
+  const stops = h('div', { class: 'ups shop', 'aria-label': 'Arena destinations' });
+  for (const A of tmapSites()) {
+    const D = DISTRICTS.find(d => d.key === A.district), locked = A.gate && !gateOpen(A.gate);
+    stops.append(h('div', { class: 'up' },
+      h('div', null, h('div', { class: 'uph' }, h('b', null, `${A.icon} ${A.name}`)),
+        h('div', { class: 'muted small' }, `${D.name} · ${A.practice ? 'Lessons · ' : ''}${Math.round(Math.hypot(TOWN.pos.x - A.x, TOWN.pos.z - A.z))} m${locked ? ' · Gate locked' : ''}`)),
+      h('button', { class: 'btn tape small', onclick: () => { setWaypoint(A.entry[0], A.entry[1], A.name); V.cx = A.x; V.cz = A.z; V.k = Math.max(V.k, 2); tip.textContent = `Waypoint set: ${A.name}. Follow the gold markers to the entrance.`; draw(); } }, 'Route')));
+  }
+  wrap.append(bar, cv, tip, h('div', { class: 'tmaplegend muted small' }, '🏟️ Arena  ·  🔴 Live bout  ·  Gold trail: route  ·  Grey marker: locked gate'), stops);
   let W = 0, H = 0;
   const draw = () => {
-    W = Math.max(260, Math.min(wrap.clientWidth || 640, 760)); H = Math.round(Math.min(W * 1.05, (window.innerHeight || 700) * 0.62)); const dpr = Math.min(2, window.devicePixelRatio || 1);
-    V.kmin = Math.min(W / (TOWN_RX * 2 + 20), H / (TOWN_RZ * 2 + 20)); if (!V.k) { V.k = Math.max(V.kmin, 1.2); V.cx = TOWN.pos.x; V.cz = TOWN.pos.z; }
+    W = Math.max(260, Math.min(wrap.clientWidth || 640, 760)); H = Math.round(W * 0.9); const dpr = Math.min(2, window.devicePixelRatio || 1);
+    V.kmin = Math.min(W / (TOWN_RX * 2 + 20), H / (TOWN_RZ * 2 + 20)); if (!V.k) { V.k = V.kmin; V.cx = 0; V.cz = -5; }
     cv.width = W * dpr; cv.height = H * dpr; cv.style.width = W + 'px'; cv.style.height = H + 'px';
     const ctx = cv.getContext('2d'); ctx.setTransform(dpr, 0, 0, dpr, 0, 0);
     TMAP.hits = drawTownMap(ctx, { w: W, h: H, scale: V.k, cx: V.cx, cz: V.cz, labels: true });
@@ -123,13 +151,14 @@ function townMapCanvas() {
     AU.click();
     if (best) {
       const M = best.M;
-      if (M.kind === 'player') setWaypoint(M.x, M.z, M.name);
+      if (M.kind === 'arena') setWaypoint(M.A.entry[0], M.A.entry[1], M.name);
+      else if (M.kind === 'player') setWaypoint(M.x, M.z, M.name);
       else if (M.kind === 'node') setWaypoint(M.S.ax, M.S.az, M.name);
       else setWaypoint(M.S.ax, M.S.az, M.name);
     } else {
       const wx = V.cx + (x - W / 2) / V.k, wz = V.cz + (y - H / 2) / V.k;
-      const A = ARENAS.find(a => Math.abs(wx - a.x) < a.bx && Math.abs(wz - a.z) < a.bz);
-      if (A) setWaypoint(A.x, A.z + A.bz + 2, A.name);
+      const A = tmapSites().find(a => Math.abs(wx - a.x) < a.bx && Math.abs(wz - a.z) < a.bz);
+      if (A) setWaypoint(A.entry[0], A.entry[1], A.name);
       else if (Math.hypot(wx / TOWN_RX, wz / TOWN_RZ) < 0.98) setWaypoint(wx, wz, districtAt(wx, wz).name);
       else return;
     }
@@ -148,5 +177,6 @@ function updateMiniMap(dt) {
   const S = cv.clientWidth || 120, dpr = Math.min(2, window.devicePixelRatio || 1);
   if (cv.width !== S * dpr) { cv.width = S * dpr; cv.height = S * dpr; }
   const ctx = cv.getContext('2d'); ctx.setTransform(dpr, 0, 0, dpr, 0, 0);
-  drawTownMap(ctx, { w: S, h: S, scale: S / (TOWN.mounted ? 150 : 100), cx: TOWN.pos.x, cz: TOWN.pos.z, labels: false, round: true });
+  if (TOWN.mineOn) drawDeepMineMap(ctx, S, S, true);
+  else drawTownMap(ctx, { w: S, h: S, scale: S / (TOWN.mounted ? 150 : 100), cx: TOWN.pos.x, cz: TOWN.pos.z, labels: false, round: true });
 }

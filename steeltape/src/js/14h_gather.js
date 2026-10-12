@@ -28,6 +28,8 @@ function nodeSites() {
     for (let t = 0; t < 400 && put < n; t++) {
       const a = rnd() * TAU, r = Math.sqrt(rnd()), x = cx + Math.cos(a) * rx * r, z = cz + Math.sin(a) * rz * r;
       if (cx === 0 && cz === 10 && Math.hypot(x / FAIR_RX, z / FAIR_RZ) < 0.6) continue; // fairground nodes sit round the edge
+      if (Math.abs(x - TRAINING_GROUND.x) < TRAINING_GROUND.bx + 2 && Math.abs(z - TRAINING_GROUND.z) < TRAINING_GROUND.bz + 2) continue;
+      if (Math.hypot(x - DEEP_MINE.entrance[0], z - DEEP_MINE.entrance[1]) < 7) continue;
       if (Math.hypot(x / TOWN_RX, z / TOWN_RZ) > 0.93 || lakeIn(x, z, 3) || onRoad(x, z, 2) || navBlocked(x, z, 1.8)) continue;
       if (out.some(o => Math.hypot(o[1] - x, o[2] - z) < (o[0] === type ? 12 : 5))) continue;
       out.push([type, x, z, rnd() * TAU]); put++;
