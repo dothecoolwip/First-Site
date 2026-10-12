@@ -135,7 +135,7 @@ function townRefresh() { if (!TOWN.on) return; buildHome(); buildStatue(); navBu
 
 function enterTown(vendorKey) {
   // Legacy saves with onboarding marked complete still require a real login.
-  if (typeof onbAccountGate === 'function' && onbAccountGate()) return;
+  if (typeof onbAccountGate === 'function' && onbAccountGate(true)) return;
   AU.init(); G.hub = true; if (typeof onbStage === 'function' && onbStage() === 'tour') setTimeout(() => { if (TOWN.on && TOWN.people) tourStart(); else setTimeout(() => TOWN.on && tourStart(), 2500); }, 1200); if (typeof LOBBY !== 'undefined' && LOBBY.pending) setTimeout(showInvite, 400);
   BOUT.on = false; clearMatch(); G.attract = false; G.autopilot = false; G.tourney = null; G.paused = false; G.phase = 'town'; G.match = null;
   setHud(false); endTraining && endTraining();
