@@ -464,6 +464,8 @@ function lExitDefault() { AU.click(); if (G.onbTrain) { G.onbTrain = false; endT
 function dropPhoto() { if (!G.photo) return; try { stopReplay(); } catch (e) {} if (typeof PHOTO !== 'undefined') PHOTO.on = false; G.photo = false; $('#photo').hidden = true; $('#gl').style.filter = ''; $('#photoFrame').hidden = true; }
 function refreshDaily() { const S = dailyState(), P = dailyPlan(); $('#btnDaily').firstChild.textContent = `Daily #${P.day}`; $('#dailyBadge').hidden = !!S.done[P.key]; }
 function toTitle(opts) {
+  // Account gate must run even for old completed saves and callers using skipOnb/home.
+  if (typeof onbAccountGate === 'function' && onbAccountGate()) return;
   if (typeof onbTitle === 'function' && !(opts && opts.skipOnb) && onbStage() !== 'done' && onbStage() !== 'tour') { G.bracket = null; G.paused = false; setHud(false); G.autopilot = false; G.autoflow = false; endTraining(); if (onbTitle()) return; }
   if (G.hub && !(opts && opts.home) && typeof enterTown === 'function') { enterTown(TOWN.returnTo); return; }
   G.bracket = null; VS.names = null; refreshDaily(); if (LOBBY.pending) setTimeout(showInvite, 400);
