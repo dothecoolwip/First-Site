@@ -64,6 +64,7 @@ async function bosLoadInfo() {
   } catch (e) { }
   if (!info.name) info.name = (u.user_metadata && (u.user_metadata.full_name || u.user_metadata.name)) || (u.email || '').split('@')[0];
   BOS.info = info; bosApply();
+  if (typeof eventIdentify === 'function') eventIdentify(); // claim this device's earlier guest sessions only after verified sign-in
   if (typeof onbResumeAfterAuth === 'function') onbResumeAfterAuth();
 }
 // your BuhurtOS name becomes your fighter's name; everyone online sees the BuhurtOS tick and your real record
