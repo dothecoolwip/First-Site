@@ -16,7 +16,7 @@ test('a brand new player: test fight, then help?, then the creator, then the tou
   // the fight ends however it ends
   await game.run("(G.match.wins = [0, 2], matchEnd(), true)");
   await game.until("G.screen === 'msgScr'");
-  await expect(page.locator('#msgPanel')).toContainText('sign in with BuhurtOS');
+  await expect(page.locator('#msgPanel')).toContainText('Online play beyond the tutorial requires BuhurtOS sign-in');
   await expect(page.locator('#msgPanel')).toContainText('Your progress is saved on this device');
   await page.locator('#msgPanel .pfoot button', { hasText: 'Sign in to continue' }).click();
   // account connection is now mandatory immediately after the first tutorial fight
