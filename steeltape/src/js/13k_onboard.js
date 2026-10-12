@@ -17,9 +17,12 @@ function onbAccountGate(forceAccount) {
   // Direct entry to the town requires a linked account even if the tutorial is unfinished.
   if (location.protocol === 'file:' && window.__steeltapeTest && !window.__onboard) return false;
   if (!forceAccount && !onbAccountRequired()) return false;
+  // Offline is the one exception: keep playing from the device save, even
+  // if sign-in or the cloud cannot be reached. Require sign-in on reconnect.
+  if (typeof cloudIsOffline === 'function' && cloudIsOffline()) return false;
   if (BOS.user) {
     if (location.protocol === 'file:' && window.__steeltapeTest) return false;
-    if (typeof CLOUD !== 'undefined' && !CLOUD.ready && !CLOUD.optedOut) {
+    if (typeof CLOUD !== 'undefined' && !CLOUD.ready && !CLOUD.offline) {
       ONB.awaitingAuth = true;
       if (!CLOUD.loading && !CLOUD.holding) cloudOnAuth(BOS.user.id, true);
       if (!CLOUD.holding && !(G.screen === 'msgScr' && $('#msgPanel')?.textContent.includes('Cloud save'))) {
@@ -36,8 +39,8 @@ function onbAccountGate(forceAccount) {
   return true;
 }
 function onbResumeAfterAuth() {
-  if (!ONB.awaitingAuth || !BOS.user) return;
-  if (typeof CLOUD !== 'undefined' && !CLOUD.ready && !CLOUD.optedOut && !(location.protocol === 'file:' && window.__steeltapeTest)) return;
+  if (!ONB.awaitingAuth || (!BOS.user && !(typeof cloudIsOffline === 'function' && cloudIsOffline()))) return;
+  if (typeof CLOUD !== 'undefined' && !CLOUD.ready && !CLOUD.offline && !(location.protocol === 'file:' && window.__steeltapeTest)) return;
   ONB.awaitingAuth = false;
   toTitle();
 }
@@ -154,7 +157,7 @@ function creatorFighter() {
   clubIn.oninput = () => { P.name = clubIn.value.trim() || 'Festival Company'; P.short = P.name.slice(0, 3).toUpperCase(); saveCareer(); applyProfile(); prev(); };
   const left = h('div', { class: 'stack' },
     h('div', { class: 'row fields' }, field('Name', nameIn), field('Number', numIn)),
-    h('span', { class: 'label' }, 'Fights in'), seg([['men', 'Men’s'], ['women', 'Women’s']], () => G.category, v => { G.category = v; store.set('category', v); }),
+    h('span', { class: 'label' }, 'Division'), seg([['men', 'Adult'], ['youth', 'Kids']], () => G.category === 'youth' ? 'youth' : 'men', v => { G.category = v; store.set('category', v); }),
     h('span', { class: 'label' }, 'Height'), seg([['short', 'Short'], ['avg', 'Average'], ['tall', 'Tall']], () => lo.height, v => { lo.height = v; store.set('loadout', lo); }),
     h('span', { class: 'label' }, 'Build'), seg([['light', 'Light'], ['medium', 'Medium'], ['heavy', 'Heavy']], () => lo.build, v => { lo.build = v; store.set('loadout', lo); }),
     h('span', { class: 'label' }, 'Skin'), sw(SKIN_TONES, () => L.skin || SKIN_TONES[2], c => { L.skin = c; saveCareer(); }));
