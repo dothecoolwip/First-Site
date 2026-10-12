@@ -21,7 +21,22 @@ emb = {}
 for p in sorted((root / 'audio').glob('*.mp3')):
     f = music_small if p.name == 'music_battle.mp3' else p
     emb[p.stem] = base64.b64encode(f.read_bytes()).decode()
-ual = 'const UAL_GLB = "' + base64.b64encode((cache / 'ual.glb').read_bytes()).decode() + '";\n' if (cache / 'ual.glb').exists() else ''
+# Recover the existing public game's licensed 3D knight asset in fresh build
+# environments.  Pin the original Git commit and SHA-256 so that a source
+# rebuild never silently strips the character asset or accepts a changed blob.
+ual_file = cache / 'ual.glb'
+if not ual_file.exists():
+    import urllib.request, re, hashlib
+    prior_game = 'https://raw.githubusercontent.com/dothecoolwip/First-Site/2d7dad54fdf03bb94388577a3a505d1a28d4f9df/index.html'
+    previous_html = urllib.request.urlopen(prior_game, timeout=45).read()
+    match = re.search(rb'const UAL_GLB = "([A-Za-z0-9+/=]+)"', previous_html)
+    if not match:
+        raise RuntimeError('Existing knight asset missing from pinned source. Refusing incomplete game build.')
+    asset = base64.b64decode(match.group(1))
+    if hashlib.sha256(asset).hexdigest() != '89dad5198a31c600896feaa4f7c323225aeef40c36f051deb38018b1c503ad17':
+        raise RuntimeError('Pinned knight asset integrity check failed.')
+    ual_file.write_bytes(asset)
+ual = 'const UAL_GLB = "' + base64.b64encode(ual_file.read_bytes()).decode() + '";\n'
 sfx_b64 = 'const SFX_B64 = ' + json.dumps(emb, separators=(',', ':')) + ';\n'
 js = sfx_b64 + ual + (src / 'gltf_lib.js').read_text() + '\n' + (src / 'sfx_data.js').read_text() + '\n' + (src / 'asset_geo.js').read_text() + '\n' + (src / 'fantasy_geo.js').read_text() + '\n' + (src / 'village_geo.js').read_text() + '\n' + (src / 'kenney_geo.js').read_text() + '\n' + (src / 'pack_geo.js').read_text() + '\n' + (src / 'decor_geo.js').read_text() + '\n' + (src / 'outfit_geo.js').read_text() + '\n' + (src / 'wskin_geo.js').read_text() + '\n' + (src / 'realm_geo.js').read_text() + '\n' + (src / 'animal_geo.js').read_text() + '\n' + (src / 'castle_geo.js').read_text() + '\n' + (src / 'vfx_data.js').read_text() + '\n' + '\n'.join(p.read_text() for p in sorted((src / 'js').glob('*.js')))
 
