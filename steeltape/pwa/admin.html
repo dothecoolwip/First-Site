@@ -26,10 +26,15 @@ table{width:100%;border-collapse:collapse;font-size:.9rem}th,td{text-align:left;
 #err{color:#ff7a6a}
 
 .filters{display:flex;flex-wrap:wrap;gap:10px;align-items:center;margin:10px 0}.filters input{flex:1;min-width:180px}.filters select{flex:0 1 190px;background:#0b0e10;color:var(--ink);border:1px solid var(--line);font:inherit;padding:9px}.filters button{margin:0}.tablewrap{overflow-x:auto}#players{min-width:900px}#players tbody tr{cursor:pointer}#players tbody tr:hover{background:#292f35}.playerDetail{background:#0b0e10;border:1px solid var(--tape);padding:15px;margin:12px 0}.playerDetail b{color:var(--tape)}.info{display:flex;flex-wrap:wrap;gap:12px}.info > div{min-width:120px;flex:1}.info span{display:block;color:var(--muted);font-size:12px}.info strong{display:block;font-size:17px}.notice{padding:10px 12px;border-left:3px solid var(--tape);background:#292517;margin:14px 0}.loginhint{margin:5px 0;color:var(--muted);font-size:.8rem}.kpis{grid-template-columns:repeat(auto-fill,minmax(142px,1fr))}button:focus-visible,input:focus-visible,select:focus-visible{outline:2px solid var(--tape);outline-offset:2px}
+.back-to-game{display:inline-flex;align-items:center;gap:9px;min-height:44px;margin:0 0 16px;padding:9px 14px;background:#202931;border:1px solid #63747c;border-radius:5px;color:#fff1d1;font-weight:700;font-size:1rem;letter-spacing:.015em;text-decoration:none;transition:background .15s ease,border-color .15s ease}
+.back-to-game svg{width:19px;height:19px;flex:none;stroke:currentColor;stroke-width:2.3;fill:none;stroke-linecap:round;stroke-linejoin:round}
+.back-to-game:hover{background:#35404a;border-color:var(--tape)}
+.back-to-game:focus-visible{outline:3px solid var(--tape);outline-offset:3px}
 </style>
 </head>
 <body>
 <div class="panel">
+  <a class="back-to-game" href="/" aria-label="Back to Steel and Tape game"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="m14 5-7 7 7 7M8 12h12"/></svg>Back to Game</a>
   <h1>BUHURT: <span>Steel &amp; Tape</span> admin</h1>
   <p class="muted small">Owner command post · Complete player directory, account activity, game statistics, bug reports and feature ideas.</p>
   <div id="login">
