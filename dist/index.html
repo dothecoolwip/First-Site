@@ -1,5 +1,5 @@
 <!doctype html><html><head><meta charset="utf-8"><link rel="manifest" href="manifest.webmanifest"><meta name="theme-color" content="#0f1316"><link rel="apple-touch-icon" href="icon-192.png"><meta name="apple-mobile-web-app-capable" content="yes"><meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover"></head><body>
-<script>window.BUILD_VER="steel-tape-637fff26e2";</script><title>Buhurt: Steel &amp; Tape</title>
+<script>window.BUILD_VER="steel-tape-0238d63368";</script><title>Buhurt: Steel &amp; Tape</title>
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Barlow+Semi+Condensed:wght@400;500;600;700&family=Big+Shoulders+Display:wght@700;800;900&family=Permanent+Marker&display=swap">
@@ -8823,6 +8823,8 @@ function resolveSwing(f, a) {
     if (f.isPlayer) { toast('Miss', 'bad', a.charge > 0.5 ? 'Big swings over-commit you' : ''); ev('miss'); }
     return;
   }
+  const gap = dist2(f.pos, t.pos);
+  if (weaponBindPossible(f, t, gap)) { resolveWeaponBind(f, t, a); return; }
   const tipSpeed = (a.arc === 'O' ? 10.5 : 11.5) * (0.78 + 0.42 * a.charge) * Math.sqrt(0.5 + 0.5 * f.gas) * (0.82 + 0.22 * w.len) / Math.pow(w.mass, 0.3);
   const p = w.mass * tipSpeed;
   let imp = 0.3 * Math.sqrt(p) * f.arch.power;
@@ -8838,7 +8840,10 @@ function resolveSwing(f, a) {
   imp *= 1 - pfx(t, 'push'); // rune of iron skin
   const tp = isDown(t) ? t.groundPos : t.pos;
   const dlen = Math.hypot(tp.x - f.pos.x, tp.z - f.pos.z) || 1;
-  if (dlen < 0.55) imp *= 0.55; // too close to swing properly
+  // A long weapon needs room to accelerate. At clinch distance the haft or
+  // hilt lands, not the striking part; this is no full-power or scoring blow.
+  const leverage = swingLeverage(w, dlen);
+  imp *= leverage; a.smothered = leverage < 0.7;
   let dir = { x: (tp.x - f.pos.x) / dlen, z: (tp.z - f.pos.z) / dlen };
   if (a.arc !== 'O') { const s = a.arc === 'R2L' ? 1 : -1; const tan = { x: -dir.z * s, z: dir.x * s }; dir = vnorm({ x: dir.x + tan.x * 0.55, z: dir.z + tan.z * 0.55 }); }
   const hitPos = new THREE.Vector3(tp.x - dir.x * 0.25, 1.35, tp.z - dir.z * 0.25);
@@ -8894,7 +8899,7 @@ function resolveSwing(f, a) {
       // unprotected fighter down, but must not drop/rebuild the head model.
       if (zone === 'helmet' && t.kit.helmet && t.kit.helmet.failed) {
         marshalGround(t, 'second head strike after helmet failure', 'REG 5.4.2');
-      } else wearPiece(t, zone, p * 0.0055 / prot);
+      } else wearPiece(t, zone, p * 0.0055 * leverage / prot);
     }
     if (zone === 'helmet' && imp > 1.05) t.bell = Math.min(1, t.bell + (imp - 0.9) * 0.9 * (perk(f, 'steel.ringer') ? 1.35 : 1) * (perk(t, 'iron.neck') ? 0.6 : 1) * (1 - 0.06 * armourTier(t, 'helmet')) * (1 - pfx(t, 'bell')));
     if (zone === 'armR' && t.weapon && chance(0.045 * (0.5 + a.charge) * (sp === 'pry' ? 5 : 1) * (1 + 0.6 * perk(f, 'steel.armbreak')) * (t.up ? 1 - 0.25 * (t.up.gauntlets || 0) : 1) * (1 - pfx(t, 'disarm')))) disarm(t, sp === 'pry' ? 'pried loose with a wrench' : 'knocked loose');
@@ -8902,7 +8907,7 @@ function resolveSwing(f, a) {
   } else if (t.shield) { /* shield soaks it */ } else wearPiece(t, 'haft', 0.02);
   if (f.weapon.haft) wearPiece(f, 'haft', 0.006);
   if (f.weapon.haft && f.weapon.hands === 2 && blocked && imp > 1.0 && f.kit.haft && chance((0.012 + 0.05 * Math.max(0, 0.5 - f.kit.haft.cond)) * (1 - 0.15 * weaponTier(f)))) { f.kit.haft.failed = true; disarm(f, 'snapped at the haft'); marshalCall('Broken weapon!', `${label(f)}: haft snapped`, 2); if (f.isPlayer) toast('Your haft snapped!', 'bad', 'Tape it between rounds'); }
-  if (G.match && G.match.duel && !blocked && imp >= 0.55 && G.phase === 'fight' && !(G.mod.headhunter && zone !== 'helmet')) duelScore(f, DUEL_PTS[zone] || 1, { helmet: 'Head', torso: 'Body', armL: 'Arm', armR: 'Arm', legs: 'Leg' }[zone] || 'Hit');
+  if (G.match && G.match.duel && !blocked && !a.smothered && imp >= 0.55 && G.phase === 'fight' && !(G.mod.headhunter && zone !== 'helmet')) duelScore(f, DUEL_PTS[zone] || 1, { helmet: 'Head', torso: 'Body', armL: 'Arm', armR: 'Arm', legs: 'Leg' }[zone] || 'Hit');
   if (f.isPlayer && !blocked && MT.zones) MT.zones.push(zone);
   if (!blocked && G.match) { const ht = G.match.hitsT || (G.match.hitsT = [0, 0]); ht[sideOf(f)]++; }
   if (f.isPlayer) ev('hit', { big: !blocked && imp > 1.15, blocked, zone, arc: a.arc, weapon: w.key });
@@ -8918,6 +8923,35 @@ function resolveSwing(f, a) {
   if (CUTE.on && !blocked) t.squashT = 0.3; // foam kids squish when bonked
   netEvent(blocked ? 'b' : 'h', q3(hitPos.x), q3(hitPos.y), q3(hitPos.z), q3(imp));
   if (!blocked && imp > 1.0 && !CUTE.on) flipFx('impact', hitPos, 0.55 + imp * 0.35, 0.22, '#fff6d8', true);
+}
+
+function swingLeverage(w, distance) {
+  return clamp(distance / (0.45 + 0.6 * w.len), 0.35, 1);
+}
+
+function weaponBindPossible(f, t, distance) {
+  const other = t.action;
+  return !!(f.weapon && t.weapon && f.weapon.hands === 2 && t.weapon.hands === 2
+    && !f.clinch && !t.clinch && !t.guard && t.state === 'standing'
+    && other && other.kind === 'swing' && other.phase === 'strike' && !other.hit
+    && distance > f.radius + t.radius && distance < Math.min(reachOf(f), reachOf(t)) + 0.2
+    && facingDot(f, t) > 0.45 && facingDot(t, f) > 0.45);
+}
+
+function resolveWeaponBind(f, t, a) {
+  const other = t.action;
+  a.phase = other.phase = 'recover'; a.t = other.t = 0;
+  a.hit = other.hit = true; a.bind = other.bind = true;
+  f.bindT = t.bindT = 0.3;
+  f.gas = Math.max(0, f.gas - 0.025); t.gas = Math.max(0, t.gas - 0.025);
+  f.vel.x *= 0.55; f.vel.z *= 0.55; t.vel.x *= 0.55; t.vel.z *= 0.55;
+  G.stats.binds = (G.stats.binds || 0) + 1;
+  const pos = new THREE.Vector3((f.pos.x + t.pos.x) / 2, 1.35, (f.pos.z + t.pos.z) / 2);
+  sparks(pos, 9, 0.65); AU.block('clash', 0.8, Math.max(vol(f), vol(t)));
+  if (f.isPlayer || t.isPlayer) {
+    impactFeel('block', null, 0.7);
+    toast('Weapons bind!', 'info', 'Step, shove, or grab when the blades meet.');
+  }
 }
 
 // the Special rack's tricks
@@ -9575,9 +9609,19 @@ function think(f, prof) {
   }
   let mx = gx - f.pos.x, mz = gz - f.pos.z; const ml = Math.hypot(mx, mz);
   if (ml < 0.25) { mx = mz = 0; if (chance(0.25)) ai.strafe *= -1; } else { mx /= ml; mz /= ml; }
+  // In a duel, keep measuring and circling rather than sprinting straight
+  // into a stationary swing exchange. Reverse the circle before the rail.
+  const duelMeasure = !!(G.match && G.match.duel && !G.match.pro && !f.clinch && d < reach + 1.1);
+  if (duelMeasure) {
+    const rx = (f.pos.x - tg.pos.x) / (d || 1), rz = (f.pos.z - tg.pos.z) / (d || 1);
+    const sx = -rz * ai.strafe, sz = rx * ai.strafe;
+    if (Math.abs(f.pos.x + sx * 0.9) > LIST.W / 2 - f.radius - 0.45 || Math.abs(f.pos.z + sz * 0.9) > LIST.L / 2 - f.radius - 0.45) ai.strafe *= -1;
+    mx += -rz * ai.strafe * 0.65; mz += rx * ai.strafe * 0.65;
+    if (d < want - 0.25) { mx += rx * 0.35; mz += rz * 0.35; }
+  }
   for (const m of mates) { const ax = f.pos.x - m.pos.x, az = f.pos.z - m.pos.z; const ad = Math.hypot(ax, az); if (ad < 1.2 && ad > 0.01) { mx += ax / ad * 0.6; mz += az / ad * 0.6; } }
   const l2 = Math.hypot(mx, mz); f.move = l2 > 1 ? { x: mx / l2, z: mz / l2 } : { x: mx, z: mz };
-  f.sprint = (d > 4 && f.gas > 0.5) || (d > 1.8 && d < 4 && f.gas > 0.6 && chance(0.4));
+  f.sprint = !duelMeasure && ((d > 4 && f.gas > 0.5) || (d > 1.8 && d < 4 && f.gas > 0.6 && chance(0.4)));
   f.wantFace = angTo(f.pos, tg.pos);
   // actions
   if (f.cd > 0 || f.action || f.guard) return;
@@ -9589,11 +9633,12 @@ function think(f, prof) {
   }
   const facingOk = Math.abs(angDiff(f.facing, angTo(f.pos, tg.pos))) < 0.6;
   const lr = leanRatio(tg), side = facingDot(tg, f) < 0.35;
+  const crowdedWeapon = !!(f.weapon && swingLeverage(f.weapon, d) < 0.75);
   const opts = [['none', 0.55]];
-  if (f.weapon && d < reach + 0.1 && facingOk) opts.push(['swing', aggr * (1 + (tg.guard && !side ? -0.55 : 0.3) + (f.arch.key === 'striker' ? 0.3 : 0))]);
+  if (f.weapon && d < reach + 0.1 && facingOk) opts.push(['swing', aggr * (1 + (tg.guard && !side ? -0.55 : 0.3) + (f.arch.key === 'striker' ? 0.3 : 0)) * (crowdedWeapon ? 0.25 : 1)]);
   if (d < 1.05) opts.push(['trip', 0.15 + 2.6 * lr + (side ? 0.6 : 0) + (tg.clinch ? 1.2 : 0) + (order === 'hunt' ? 0.35 : 0) + (f.arch.key === 'grappler' || f.arch.key === 'runner' ? 0.3 : 0) - (tg.brace ? 0.8 : 0)]);
-  if (f.weapon && d < 1.15 && facingOk) opts.push(['shove', 0.2 + (tg.atRail ? 0.45 : 0) + lr * 1.2 + (f.shield ? 0.25 : 0)]);
-  if (d < 0.92 && !tg.clinch) opts.push(['grab', (f.arch.key === 'grappler' ? 0.85 : 0.08) + (f.trait === 'grappler' ? 0.45 : 0)]);
+  if (f.weapon && d < 1.15 && facingOk) opts.push(['shove', 0.2 + (tg.atRail ? 0.45 : 0) + lr * 1.2 + (f.shield ? 0.25 : 0) + (crowdedWeapon ? 0.8 : 0)]);
+  if (d < 0.92 && !tg.clinch) opts.push(['grab', (f.arch.key === 'grappler' ? 0.85 : 0.08) + (f.trait === 'grappler' ? 0.45 : 0) + (crowdedWeapon ? 0.7 : 0)]);
   if (f.trait === 'grappler') { const tr = opts.find(o => o[0] === 'trip'); if (tr) tr[1] += 0.35; }
   if (tg.atRail && engagedBy(tg, team, f) >= 1) { const sv = opts.find(o => o[0] === 'shove'); if (sv) sv[1] += 0.6; }
   if (d > 1.3 && d < 3.4 && facingOk && f.gas > 0.4) opts.push(['tackle', 0.12 + (f.arch.key === 'runner' || f.arch.key === 'heavy' ? 0.3 : 0) + (tg.atRail ? 0.35 : 0) + lr * 0.9 - (tg.brace ? 0.5 : 0) + (vlen(f.vel) > 3.5 ? 0.25 : 0)]);
@@ -13732,6 +13777,8 @@ function animateFighter(f, dt, t) {
   P['legL.x'] = Math.sin(f.walkPh) * 0.55 * wk; P['legR.x'] = -Math.sin(f.walkPh) * 0.55 * wk;
   P['kneeL.x'] = 0.12 + Math.max(0, Math.sin(f.walkPh + 1.4)) * 0.75 * wk; P['kneeR.x'] = 0.12 + Math.max(0, -Math.sin(f.walkPh + 1.4)) * 0.75 * wk;
   P['legL.z'] = f.brace ? 0.21 : 0.06; P['legR.z'] = f.brace ? -0.21 : -0.06;
+  const sideStep = clamp((f.vel.x * cF - f.vel.z * sF) / 4, -1, 1);
+  P['legL.z'] += sideStep * 0.18 * wk; P['legR.z'] += sideStep * 0.18 * wk;
   if (f.brace) { P['legL.x'] -= 0.28; P['legR.x'] += 0.32; P['kneeL.x'] += 0.38; P['kneeR.x'] += 0.38; }
   P['torso.x'] = 0.06 + 0.2 * (1 - f.gas) + 0.24 * fat + (f.brace ? 0.12 : 0) + Math.sin(t * (2 + 3 * fat) + f.id) * 0.05 * fat; P['torso.y'] = 0; P['torso.z'] = 0; // tired fighters hunch and heave
   P['head.x'] = -0.05 + 0.18 * fat; P['head.z'] = Math.sin(t * 9) * 0.22 * f.bell;
@@ -13768,6 +13815,7 @@ function animateFighter(f, dt, t) {
     if (a.kind === 'throw' && a.phase === 'recover' && a.t < 0.2) { P['torso.y'] = 0.9; P['legR.x'] = 0.8; }
   }
   if (f.clinch) { Object.assign(P, { 'shR.x': -1.3, 'shR.z': 0.35, 'elR.x': -0.75, 'shL.x': -1.3, 'shL.z': -0.35, 'elL.x': -0.75, 'torso.x': 0.42, 'shp.x': 0.42, 'shp.z': 0.0, 'shp.ry': 1.3 }); P.hipsY -= 0.05; }
+  if (f.bindT > 0) { f.bindT = Math.max(0, f.bindT - dt); Object.assign(P, { 'shR.x': -1.45, 'shR.z': 0.1, 'elR.x': -0.55, 'shL.x': -1.25, 'shL.z': -0.25, 'elL.x': -0.6, 'torso.x': 0.26 }); P.hipsY -= 0.06; rate = 24; }
   if (f.saluteT > 0) { f.saluteT -= dt; Object.assign(P, { 'shR.x': -2.95, 'shR.z': -0.15, 'elR.x': -0.15, 'wrR.x': 0.3, 'torso.x': -0.12, 'head.x': -0.25 }); rate = 16; } // weapon raised to the crowd
   if (f.plantFx > 0) { f.plantFx -= dt; Object.assign(P, { 'shR.x': -0.6, 'elR.x': -0.2, 'wrR.x': 1.5, 'shL.x': -0.7, 'elL.x': -0.3 }); }
   // stagger: the stepping leg reaches out
@@ -13995,7 +14043,7 @@ async function boot(hot) {
   if (location.hash === '#autotest') setTimeout(autotest, 300);
   window.__ST = { G, AU, buildShield, buildWeapon, W3, startTourney, quickFight, toTitle, openRepair, kitCheck, setupMatch, toTactics, beginFight, endRound, matchEnd, CLUBS, WEAPONS, setView, toast, renderKitPicker, applyLoadout, IN, FP, showScreen, weaponIcon, startCine, startTraining, startLadder, openCareer, openModes, openLadder, CAREER, setLesson, TR, unlock, togglePause, afterRound, renderHow, selectPiece, selectTape, msg, renderSheet, setHud, endTraining, setMode, PAD, navMove, focusFirst, sparks, CUTE, THREE, BREATH, setCuteDeco, flipFx, PHOTO, UAL, raiseFlags, startVersus, startFFA, startBracket, startKid, KID, openSeason, startSeasonMatch, setVenue, VS, SPLIT, NET, buildOnlineMatch, hostLobby, joinLobby, ONL, vinControl, openRun, openDaily, openBracket, showBracket, bracketResult, ffaMatchEnd, ffaLeader, ffaWinner, endKid, openPhoto, closePhoto, startReplay, stopReplay, RP, store, startRunFight, newRun, runEnd, WX, setWeather, padVin, readVersus, applyLo, myLoadout, netDropped, netLeave, showIntro, installForged, dailyPlan, openKids, openVersus, openPicks, LESSONS, rivalClub, startGrudge, startDaily, seasonState, newSeason, refreshDaily, VENUES, COMM, hitMapHtml, resetFighterForRound, DIFF, PIN, PADS, NIN, padsUpdate, seatPads, LOBBY, MM, openOnlineHub, benchDown, benchMove, REP, squirePatch, coverage, openProfile, myProfile, BOS, updateTitlePurse, ACH, progressCheck, challenges, masteryOf, S2, rankOf, counterValue, renderCareer, progressMatch, saveCareer, shopState, shopUp, tapeLeft, shopMatchEnd, shopPrizeMult, shopXpMult, swingTimes, pieceWearMult, TABARDS, refillTape, renderShop, UPGRADES, freshKit, TAPE_STOCK, enterTown, leaveTown, TOWN, openVendor, closeVendor, openTownMap, shopFx, renderVendor, VENDORS, ITEMS, itemCost, spCost, skillRoom, sponsorIncome, BOOSTS, STALL_AT, HOMES, FURNISH, pfx, squadFx, boostKit, townCollide, townRefresh, townWalkTo, townTalk, townTeardown, lookState, WORLD, guildCheck, STATIONS, townDressMe, FOLK, updateFolk, navBlocked, buildFolk, BOUT, boutStart, boutStop, boutTick, drawTownMap, updateMiniMap, costumePerson, OUTFIT, buildSkinWeapon, skinIcon, wskinList, skinFor, buildMyWeapon, wskinFamOf, GATHER, startGather, gatherSwing, stopGather, tradeState, tradeLevel, tradeGain, give, have, craft, NODES, MATS, renderTrades, TRADE_SKILLS, ARENAS, DISTRICTS, TRAVEL, setWaypoint, clearWaypoint, realmPath, callHorse, mount, dismount, ANIMAL, districtAt, realmCull, REALM_TIERS, gateOpen, townJump, stableRows, horseAvailable, peopleCull, boutArenaFor, arenaLive, bagSlots, bagState, bagRoom, secretFound, lookOwned, SECRETS, stopSpectating, startTrial, TRIALS, tierCap, gy, tierOf, HILL, hillHouses, cliffAt, gateBlocked, arenaBlocked, localPath, NAV, rampAt, ROSTER, rosterClubs, rosterLive, rosterName, liveBoutPick, aiTier, AI_TIER, guardOutcome, fighterGlow, ONB, onbStage, onbSet, openCreator, tourStart, tourEnd, TOUR_STOPS, THRONE, throneHolder, throneFight, throneBow, openThrone, sideFromDrag, VOICE };
   if (location.protocol === 'file:' && window.__steeltapeTest)
-    Object.assign(window.__ST, { penalize, failPiece, closeRepair, xpNeed, tierProf, runToRepairCorner, onbAfterAccount, onbAccountGate, onbResumeAfterAuth, leaveTarget, leaveScreen, CLOUD, bosLoadInfo, bosBoot });
+    Object.assign(window.__ST, { penalize, failPiece, closeRepair, xpNeed, tierProf, runToRepairCorner, onbAfterAccount, onbAccountGate, onbResumeAfterAuth, leaveTarget, leaveScreen, CLOUD, bosLoadInfo, bosBoot, swingLeverage, weaponBindPossible, resolveSwing, think });
 }
 
 function autotest() {
