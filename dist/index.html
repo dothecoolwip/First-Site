@@ -1,5 +1,5 @@
 <!doctype html><html><head><meta charset="utf-8"><link rel="manifest" href="manifest.webmanifest"><meta name="theme-color" content="#0f1316"><link rel="apple-touch-icon" href="icon-192.png"><meta name="apple-mobile-web-app-capable" content="yes"><meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover"></head><body>
-<script>window.BUILD_VER="steel-tape-083ba102c8";</script><title>Buhurt: Steel &amp; Tape</title>
+<script>window.BUILD_VER="steel-tape-a11f09c247";</script><title>Buhurt: Steel &amp; Tape</title>
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Barlow+Semi+Condensed:wght@400;500;600;700&family=Big+Shoulders+Display:wght@700;800;900&family=Permanent+Marker&display=swap">
@@ -12927,15 +12927,17 @@ function runToRepairCorner(done, fighter = G.player) {
   const start = { ...f.pos }, edge = LIST.W / 2 - f.radius - 0.2;
   const target = { x: clamp(zone.x, -edge, edge), z: clamp(zone.z, -LIST.L / 2 + 1, LIST.L / 2 - 1) };
   f.state = 'standing'; f.returnAt = -1; f.vel = { x: 0, z: 0 };
+  const steps = Math.max(1, Math.ceil(Math.hypot(target.x - start.x, target.z - start.z) / (3.7 * 0.055)));
   let step = 0;
   const advance = () => {
     if (G.match !== m || G.phase !== 'between') return;
-    const t = ++step / 18;
+    const old = { ...f.pos }, t = ++step / steps;
     f.pos.x = start.x + (target.x - start.x) * t;
     f.pos.z = start.z + (target.z - start.z) * t;
+    f.vel = { x: (f.pos.x - old.x) / 0.055, z: (f.pos.z - old.z) / 0.055 };
     f.facing = f.wantFace = Math.atan2(target.x - start.x, target.z - start.z);
-    if (step < 18) after(0.055, advance);
-    else done();
+    if (step < steps) after(0.055, advance);
+    else { f.vel = { x: 0, z: 0 }; done(); }
   };
   advance();
 }
