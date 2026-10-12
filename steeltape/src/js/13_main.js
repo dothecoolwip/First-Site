@@ -283,7 +283,7 @@ async function boot(hot) {
   VOICE.enabled = G.settings.voice; AU.muted = !!store.get('muted', false);
   if (AU.muted) $('#muteWave').style.display = 'none';
   try { await Promise.race([Promise.all([document.fonts.load('40px "Permanent Marker"'), document.fonts.load('900 40px "Big Shoulders Display"'), document.fonts.load('600 20px "Barlow Semi Condensed"')]), new Promise(r => setTimeout(r, 1800))]); } catch (e) { }
-  buildTextures(); initThree(); buildViewmodel(); initInput(); initBench(); initMenus(); initTown(); buildOverlays(); applyProfile(); applyGfx(true); watchContext(); applyTextSize(); initPhoto(); loadUAL(); installForged(); SPLIT.on = store.get('split', true);
+  buildTextures(); initThree(); buildViewmodel(); initInput(); initBench(); initMenus(); initTown(); buildOverlays(); applyProfile(); applyGfx(true); watchContext(); applyTextSize(); initPhoto(); loadUAL(); installForged(); SPLIT.on = store.get('split', true); boardsStartHeartbeat();
   try { window.claude && window.claude.hot && window.claude.hot.snapshot && window.claude.hot.snapshot(() => ({ tourney: G.tourney })); } catch (e) { }
   window.addEventListener('error', e => G.stats.errors.push(String(e.message)));
   toTitle();
