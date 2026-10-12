@@ -224,11 +224,12 @@ function endRound(reason) {
   if (G.phase !== 'fight') return;
   const m = G.match; G.phase = 'stopping';
   const a = m.duel ? m.pts[0] : standing(0), b = m.duel ? m.pts[1] : standing(1);
-  let winner = a > b ? 0 : b > a ? 1 : -1;
+  let winner = m.duel && m.duelDQ != null ? 1 - m.duelDQ : a > b ? 0 : b > a ? 1 : -1;
   if (m.ffa) { const wf = ffaWinner(reason); winner = -1; if (wf) { m.ffaWins[wf.team]++; G.lastDown = G.lastDown || wf; } m.ffaLast = wf; reason = reason === 'time' ? 'time' : 'ffa';
     const me = G.player || (VS.on && VS.humans && VS.humans[0]); m.wins = [me ? m.ffaWins[me.team] : 0, Math.max(0, ...G.fighters.filter(f => f !== me).map(f => m.ffaWins[f.team]))]; }
+  else if (m.duel && m.duelDQ != null) m.wins[winner] = Math.max(2, m.wins[winner]);
   else if (winner >= 0) m.wins[winner]++;
-  if (m.duel) reason = 'duel';
+  if (m.duel) reason = m.duelDQ != null ? 'dq' : 'duel';
   const time = (m.duel ? (m.overtime ? DUEL_OT : DUEL_TIME) : ROUND_TIME) - m.clock;
   m.results.push({ round: m.champion ? 'C' : m.round, winner, a, b, time, reason });
   G.stats.rounds++; G.stats.roundTimes.push(Math.round(time));
@@ -238,10 +239,10 @@ function endRound(reason) {
   if (reason === '3:1' && !G.attract) comm('ratio', {}, 3); // the round-ending takedown, slowed down
   for (const f of G.fighters) { f.action = null; f.move = { x: 0, z: 0 }; f.guard = f.brace = false; if (f.clinch) breakClinch(f); }
   if (G.attract) { after(3, () => { if (!G.attract) return; if (BOUT.on && BOUT.inSim) boutAfterRound(); else { startRound(); G.phase = 'fight'; } }); return; }
-  marshalCall('Hold! Stop fight!', reason === 'time' || reason === 'duel' ? 'Time.' : '', 3); raiseFlags(); if (reason === 'time' || reason === 'duel') AU.vo('time');
+  marshalCall('Hold! Stop fight!', reason === 'dq' ? 'Disqualification.' : reason === 'time' || reason === 'duel' ? 'Time.' : '', 3); raiseFlags(); if (reason === 'time' || reason === 'duel') AU.vo('time');
   const wname = m.ffa ? (m.ffaLast ? (m.ffaLast.isPlayer ? 'you' : m.ffaLast.name) : null) : winner < 0 ? null : winner === 0 ? CLUBS.reavers.name : CLUBS[m.opp].name;
-  after(1.7, () => marshalCall(wname ? `Round to ${wname}` : 'Round drawn', m.duel ? `${a}–${b} on points` : `${a}–${b} standing (REG 4.${reason === 'time' ? 2 : 1})`, 2));
-  after(3.4, () => { marshalCall('All rise.', '', 1); for (const f of G.fighters) if (isDown(f) && !f.out) { if (f.state === 'falling') f.state = 'grounded'; f.state = 'rising'; f.riseT = 0; } });
+  after(1.7, () => marshalCall(wname ? `Round to ${wname}` : 'Round drawn', reason === 'dq' ? 'Disqualification' : m.duel ? `${a}–${b} on points` : `${a}–${b} standing (REG 4.${reason === 'time' ? 2 : 1})`, 2));
+  after(3.4, () => { if (m.duelDQ != null) return; marshalCall('All rise.', '', 1); for (const f of G.fighters) if (isDown(f) && !f.out) { if (f.state === 'falling') f.state = 'grounded'; f.state = 'rising'; f.riseT = 0; } });
   after(5.0, afterRound);
 }
 
@@ -263,9 +264,35 @@ function afterRound() {
   $('#btnSheetNext').textContent = 'Continue';
   $('#btnSheetNext').onclick = () => {
     const failedArmour = G.player && ['helmet', 'armL', 'armR', 'legs'].some(k => G.player.kit[k].failed);
-    if (failedArmour) openRepair(30, () => { teamRepairs(); toTactics(); }, { failuresOnly: true, emergency: true });
+    if (failedArmour) runToRepairCorner(() => openRepair(30, () => { teamRepairs(); toTactics(); }, { failuresOnly: true, emergency: true, onFail: () => {
+      m.wins[1] = Math.max(2, m.wins[1]);
+      m.repairDone = true;
+      marshalCall('Repair time expired', 'Unsafe armour. You cannot return to the list.', 3);
+      matchEnd();
+    } }));
     else openRepair(Math.round(45 * mod(null, 'repair') + (G.boon && G.boon.repairAdd || 0)), () => { teamRepairs(); toTactics(); });
   };
+}
+
+function runToRepairCorner(done) {
+  const f = G.player, m = G.match, zone = W3.zones && W3.zones[0];
+  if (!f || !zone) { done(); return; }
+  showScreen(null); setHud(false);
+  marshalCall('Armour failure', 'Run to your corner. You and your squire have 30 seconds to repair it.', 2);
+  const start = { ...f.pos }, edge = LIST.W / 2 - f.radius - 0.2;
+  const target = { x: clamp(zone.x, -edge, edge), z: clamp(zone.z, -LIST.L / 2 + 1, LIST.L / 2 - 1) };
+  f.state = 'standing'; f.returnAt = -1; f.vel = { x: 0, z: 0 };
+  let step = 0;
+  const advance = () => {
+    if (G.match !== m || G.phase !== 'between') return;
+    const t = ++step / 18;
+    f.pos.x = start.x + (target.x - start.x) * t;
+    f.pos.z = start.z + (target.z - start.z) * t;
+    f.facing = f.wantFace = Math.atan2(target.x - start.x, target.z - start.z);
+    if (step < 18) after(0.055, advance);
+    else done();
+  };
+  advance();
 }
 
 function teamRepairs() { // your club patches its own kit; they stick to legal cloth tape
@@ -277,7 +304,7 @@ function teamRepairs() { // your club patches its own kit; they stick to legal c
 
 function renderSheet(extraTitle) {
   const m = G.match, B = CLUBS[m.opp];
-  const rows = m.results.map(r => `<tr><td>${r.round}</td><td class="hand">${r.winner < 0 ? 'draw' : r.winner === 0 ? CLUBS.reavers.name : B.name}</td><td>${r.a}–${r.b}</td><td>${fmtClock(r.time)}</td><td>${r.reason === 'duel' ? 'More points (duel rules)' : r.reason === 'time' ? 'Time, more standing (REG 4.2)' : 'Outnumbered 3 to 1 (REG 4.1)'}</td></tr>`).join('');
+  const rows = m.results.map(r => `<tr><td>${r.round}</td><td class="hand">${r.winner < 0 ? 'draw' : r.winner === 0 ? CLUBS.reavers.name : B.name}</td><td>${r.a}–${r.b}</td><td>${fmtClock(r.time)}</td><td>${r.reason === 'dq' ? 'Disqualification' : r.reason === 'duel' ? 'More points (duel rules)' : r.reason === 'time' ? 'Time, more standing (REG 4.2)' : 'Outnumbered 3 to 1 (REG 4.1)'}</td></tr>`).join('');
   const cards = m.cards.length ? m.cards.map(c => `<tr><td>${c.round}</td><td>${c.who}</td><td>${cardIcon(c.card) || ''}${c.card}</td><td>${c.text}</td><td>${c.cite}</td></tr>`).join('') : '<tr><td colspan="5">None recorded.</td></tr>';
   const green = G.tourney ? Object.keys(G.tourney.green) : [];
   $('#sheet').innerHTML = `

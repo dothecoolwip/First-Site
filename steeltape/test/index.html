@@ -9056,22 +9056,25 @@ function failPiece(f, piece) {
     if (armorStrike(f, piece)) return;
     marshalCall('Armour!', `${label(f)}: helmet off. Out of the list.`, 2);
     marshalGround(f, 'helmet strap let go, helmet off', 'REG 5.4.2');
+    f.returnAt = -1; // A duel knockdown must not stand up while the helmet is missing.
     return;
   }
   const nm = PIECE_NAMES[piece].toLowerCase();
   if (!p.failed) {
     p.failed = true;
-    if (chance(0.5)) { p.covered = true; feed(`${label(f)}: ${nm} let go, but the rest of the kit still covers it. Fight on.`, 'BR 1.3.2', teamColor(f)); return; }
   }
   p.covered = false;
   if (armorStrike(f, piece)) return;
   marshalCall('Armour!', `${label(f)}: ${nm} failed. Grounded.`, 2); comm('armour', {}, 2); caption('strap', 'a strap snaps');
   marshalGround(f, `armour failure (${nm})`, 'BR 1.3.1');
+  f.returnAt = -1;
 }
 function popHelmet(f) {
   const J = f.model; const helm = new THREE.Group();
-  [...J.head.children].forEach(c => { if (c !== J.helmBand) { J.head.remove(c); helm.add(c); } });
-  mk(J.head, geo('coif', () => new THREE.SphereGeometry(0.12, 12, 10)), MAT.gambeson, 0, 0.11, 0);
+  // The head group also contains face and hair meshes. Only the helmet shell falls.
+  [...J.head.children].forEach(c => { if (c !== J.helmBand) J.head.remove(c); });
+  mk(J.head, geo('coif', () => new THREE.SphereGeometry(0.12, 12, 10)), MAT.gambeson, 0, 0.11, 0).scale.setScalar(J.cute ? 1.4 : 1);
+  mk(helm, geo('fallen_helmet', () => new THREE.SphereGeometry(0.14, 14, 10, 0, TAU, 0, Math.PI * 0.68)), J.cute ? J.strap : MAT.steel, 0, 0.08, 0);
   helm.position.set(f.pos.x + rand(-1, 1), 0.12, f.pos.z + rand(-1, 1)); helm.rotation.set(rand(0, 3), rand(0, 3), 1.4);
   W3.matchRoot.add(helm); G.props.push(helm);
 }
@@ -9083,6 +9086,7 @@ function armorStrike(f, piece) {
   }
   f.out = true;
   f.state = 'grounded';
+  f.returnAt = -1;
   marshalCall('Armour failure', label(f) + ' has three armour strikes and loses.', 3);
   feed(label(f) + ' loses after the third armour strike.', 'REG 5.4.2', 'var(--card-red)');
   if (G.match && G.match.duel && G.phase === 'fight') {
@@ -9361,6 +9365,8 @@ function penalize(f, text, cite, straightYellow) {
       // cannot recover and win on points.
       G.match.duelDQ = f.team;
       G.match.wins[1 - f.team] = 2;
+      f.out = true;
+      f.returnAt = -1;
       after(0.35, () => { if (G.phase === 'fight') endRound('duel'); });
     }
     if (f.isPlayer) after(0.3, () => setStatus('Red card. You sit out the rest of this match and the next (REG 6.3.3).', 'var(--card-red)', 5));
@@ -10908,7 +10914,7 @@ function updateStatsStrip() {
 }
 
 // ---------- the repair bench: rip, wrap, smooth (BR 2.1.5, BR 2.3, WR 7.2.2) ----------
-const REP = { piece: null, tape: null, roll: 'black', step: null, timer: 45, ripT: 0, wraps: [], sloppy: 0, side: 0, wrinkles: [], smoothT: 0, q: {}, ptr: null, active: false, onDone: null, log: [], squire: 1, pop: null, lastSec: 99, trail: [], forcedPiece: null, failuresOnly: false, emergency: false };
+const REP = { piece: null, tape: null, roll: 'black', step: null, timer: 45, ripT: 0, wraps: [], sloppy: 0, side: 0, wrinkles: [], smoothT: 0, q: {}, ptr: null, active: false, onDone: null, onFail: null, log: [], squire: 1, pop: null, lastSec: 99, trail: [], forcedPiece: null, failuresOnly: false, emergency: false };
 const PIECE_SHORT = { helmet: ['Helmet', '⛑️'], armL: ['Left arm', '💪'], armR: ['Right arm', '💪'], legs: ['Legs', '🦵'], haft: ['Haft', '🪓'] };
 const ZONE = { a: 0.36, b: 0.64 }; // the tear, as a fraction of the bench width
 const BAND = { top: 0.42, bot: 0.6 };
@@ -10917,7 +10923,7 @@ function openRepair(seconds, onDone, options) {
   options = options || {};
   if (!options.emergency && CAREER.skills && CAREER.skills['show.tape']) seconds += 15; // Tape artist
   if (!options.emergency && typeof shopFx === 'function') seconds += shopFx('repairSec'); // good scissors
-  Object.assign(REP, { piece: null, tape: null, step: null, timer: seconds, active: true, onDone, wraps: [], wrinkles: [], squire: 1 + (G.boon && G.boon.squire ? 1 : 0) + (typeof shopState === 'function' ? shopState().squires : 0), pop: null, lastSec: 99, trail: [], forcedPiece: options.forcedPiece || null, failuresOnly: !!options.failuresOnly, emergency: !!options.emergency });
+  Object.assign(REP, { piece: null, tape: null, step: null, timer: seconds, active: true, onDone, onFail: options.onFail || null, wraps: [], wrinkles: [], squire: 1 + (G.boon && G.boon.squire ? 1 : 0) + (typeof shopState === 'function' ? shopState().squires : 0), pop: null, lastSec: 99, trail: [], forcedPiece: options.forcedPiece || null, failuresOnly: !!options.failuresOnly, emergency: !!options.emergency });
   REP.roll = REP.roll && TAPES[REP.roll] && TAPES[REP.roll].legal && tapeLeft(REP.roll) > 0 ? REP.roll : (['black', 'grey', 'white', 'pro', 'kevlar'].find(x => tapeLeft(x) > 0) || 'black');
   renderKitList(); renderDrawer(); setSteps(null);
   const worst = worstPiece();
@@ -11103,15 +11109,18 @@ function updateRepair(dt) {
 }
 function closeRepair() {
   if (!REP.active) return;
-  if (REP.emergency && G.player.kit.helmet.failed && REP.timer > 0) {
-    $('#benchMsg').textContent = 'The helmet is not fixed yet. Keep working until the 30-second repair window ends.';
+  const unfixed = REP.emergency && G.player && ['helmet', 'armL', 'armR', 'legs'].filter(k => G.player.kit[k].failed);
+  if (unfixed && unfixed.length && REP.timer > 0) {
+    $('#benchMsg').textContent = `Repair ${unfixed.map(k => PIECE_SHORT[k][0].toLowerCase()).join(', ')} before returning to the list.`;
     return;
   }
   if (REP.step === 'wrap') { REP.q.wrap = coverage() * 0.8; REP.step = 'smooth'; REP.wrinkles = [{ x: 0.5, gone: false }]; }
   if (REP.step === 'smooth') finishSmooth();
   if (REP.step === 'rip') { REP.step = null; setSteps(null); }
   REP.active = false;
-  const cb = REP.onDone; REP.onDone = null; if (cb) cb();
+  const cb = unfixed && unfixed.length ? (REP.onFail || REP.onDone) : REP.onDone;
+  REP.onDone = REP.onFail = null;
+  if (cb) cb();
 }
 
 function drawBench() {
@@ -12766,11 +12775,12 @@ function endRound(reason) {
   if (G.phase !== 'fight') return;
   const m = G.match; G.phase = 'stopping';
   const a = m.duel ? m.pts[0] : standing(0), b = m.duel ? m.pts[1] : standing(1);
-  let winner = a > b ? 0 : b > a ? 1 : -1;
+  let winner = m.duel && m.duelDQ != null ? 1 - m.duelDQ : a > b ? 0 : b > a ? 1 : -1;
   if (m.ffa) { const wf = ffaWinner(reason); winner = -1; if (wf) { m.ffaWins[wf.team]++; G.lastDown = G.lastDown || wf; } m.ffaLast = wf; reason = reason === 'time' ? 'time' : 'ffa';
     const me = G.player || (VS.on && VS.humans && VS.humans[0]); m.wins = [me ? m.ffaWins[me.team] : 0, Math.max(0, ...G.fighters.filter(f => f !== me).map(f => m.ffaWins[f.team]))]; }
+  else if (m.duel && m.duelDQ != null) m.wins[winner] = Math.max(2, m.wins[winner]);
   else if (winner >= 0) m.wins[winner]++;
-  if (m.duel) reason = 'duel';
+  if (m.duel) reason = m.duelDQ != null ? 'dq' : 'duel';
   const time = (m.duel ? (m.overtime ? DUEL_OT : DUEL_TIME) : ROUND_TIME) - m.clock;
   m.results.push({ round: m.champion ? 'C' : m.round, winner, a, b, time, reason });
   G.stats.rounds++; G.stats.roundTimes.push(Math.round(time));
@@ -12780,10 +12790,10 @@ function endRound(reason) {
   if (reason === '3:1' && !G.attract) comm('ratio', {}, 3); // the round-ending takedown, slowed down
   for (const f of G.fighters) { f.action = null; f.move = { x: 0, z: 0 }; f.guard = f.brace = false; if (f.clinch) breakClinch(f); }
   if (G.attract) { after(3, () => { if (!G.attract) return; if (BOUT.on && BOUT.inSim) boutAfterRound(); else { startRound(); G.phase = 'fight'; } }); return; }
-  marshalCall('Hold! Stop fight!', reason === 'time' || reason === 'duel' ? 'Time.' : '', 3); raiseFlags(); if (reason === 'time' || reason === 'duel') AU.vo('time');
+  marshalCall('Hold! Stop fight!', reason === 'dq' ? 'Disqualification.' : reason === 'time' || reason === 'duel' ? 'Time.' : '', 3); raiseFlags(); if (reason === 'time' || reason === 'duel') AU.vo('time');
   const wname = m.ffa ? (m.ffaLast ? (m.ffaLast.isPlayer ? 'you' : m.ffaLast.name) : null) : winner < 0 ? null : winner === 0 ? CLUBS.reavers.name : CLUBS[m.opp].name;
-  after(1.7, () => marshalCall(wname ? `Round to ${wname}` : 'Round drawn', m.duel ? `${a}–${b} on points` : `${a}–${b} standing (REG 4.${reason === 'time' ? 2 : 1})`, 2));
-  after(3.4, () => { marshalCall('All rise.', '', 1); for (const f of G.fighters) if (isDown(f) && !f.out) { if (f.state === 'falling') f.state = 'grounded'; f.state = 'rising'; f.riseT = 0; } });
+  after(1.7, () => marshalCall(wname ? `Round to ${wname}` : 'Round drawn', reason === 'dq' ? 'Disqualification' : m.duel ? `${a}–${b} on points` : `${a}–${b} standing (REG 4.${reason === 'time' ? 2 : 1})`, 2));
+  after(3.4, () => { if (m.duelDQ != null) return; marshalCall('All rise.', '', 1); for (const f of G.fighters) if (isDown(f) && !f.out) { if (f.state === 'falling') f.state = 'grounded'; f.state = 'rising'; f.riseT = 0; } });
   after(5.0, afterRound);
 }
 
@@ -12805,9 +12815,35 @@ function afterRound() {
   $('#btnSheetNext').textContent = 'Continue';
   $('#btnSheetNext').onclick = () => {
     const failedArmour = G.player && ['helmet', 'armL', 'armR', 'legs'].some(k => G.player.kit[k].failed);
-    if (failedArmour) openRepair(30, () => { teamRepairs(); toTactics(); }, { failuresOnly: true, emergency: true });
+    if (failedArmour) runToRepairCorner(() => openRepair(30, () => { teamRepairs(); toTactics(); }, { failuresOnly: true, emergency: true, onFail: () => {
+      m.wins[1] = Math.max(2, m.wins[1]);
+      m.repairDone = true;
+      marshalCall('Repair time expired', 'Unsafe armour. You cannot return to the list.', 3);
+      matchEnd();
+    } }));
     else openRepair(Math.round(45 * mod(null, 'repair') + (G.boon && G.boon.repairAdd || 0)), () => { teamRepairs(); toTactics(); });
   };
+}
+
+function runToRepairCorner(done) {
+  const f = G.player, m = G.match, zone = W3.zones && W3.zones[0];
+  if (!f || !zone) { done(); return; }
+  showScreen(null); setHud(false);
+  marshalCall('Armour failure', 'Run to your corner. You and your squire have 30 seconds to repair it.', 2);
+  const start = { ...f.pos }, edge = LIST.W / 2 - f.radius - 0.2;
+  const target = { x: clamp(zone.x, -edge, edge), z: clamp(zone.z, -LIST.L / 2 + 1, LIST.L / 2 - 1) };
+  f.state = 'standing'; f.returnAt = -1; f.vel = { x: 0, z: 0 };
+  let step = 0;
+  const advance = () => {
+    if (G.match !== m || G.phase !== 'between') return;
+    const t = ++step / 18;
+    f.pos.x = start.x + (target.x - start.x) * t;
+    f.pos.z = start.z + (target.z - start.z) * t;
+    f.facing = f.wantFace = Math.atan2(target.x - start.x, target.z - start.z);
+    if (step < 18) after(0.055, advance);
+    else done();
+  };
+  advance();
 }
 
 function teamRepairs() { // your club patches its own kit; they stick to legal cloth tape
@@ -12819,7 +12855,7 @@ function teamRepairs() { // your club patches its own kit; they stick to legal c
 
 function renderSheet(extraTitle) {
   const m = G.match, B = CLUBS[m.opp];
-  const rows = m.results.map(r => `<tr><td>${r.round}</td><td class="hand">${r.winner < 0 ? 'draw' : r.winner === 0 ? CLUBS.reavers.name : B.name}</td><td>${r.a}–${r.b}</td><td>${fmtClock(r.time)}</td><td>${r.reason === 'duel' ? 'More points (duel rules)' : r.reason === 'time' ? 'Time, more standing (REG 4.2)' : 'Outnumbered 3 to 1 (REG 4.1)'}</td></tr>`).join('');
+  const rows = m.results.map(r => `<tr><td>${r.round}</td><td class="hand">${r.winner < 0 ? 'draw' : r.winner === 0 ? CLUBS.reavers.name : B.name}</td><td>${r.a}–${r.b}</td><td>${fmtClock(r.time)}</td><td>${r.reason === 'dq' ? 'Disqualification' : r.reason === 'duel' ? 'More points (duel rules)' : r.reason === 'time' ? 'Time, more standing (REG 4.2)' : 'Outnumbered 3 to 1 (REG 4.1)'}</td></tr>`).join('');
   const cards = m.cards.length ? m.cards.map(c => `<tr><td>${c.round}</td><td>${c.who}</td><td>${cardIcon(c.card) || ''}${c.card}</td><td>${c.text}</td><td>${c.cite}</td></tr>`).join('') : '<tr><td colspan="5">None recorded.</td></tr>';
   const green = G.tourney ? Object.keys(G.tourney.green) : [];
   $('#sheet').innerHTML = `
@@ -13935,6 +13971,8 @@ async function boot(hot) {
   requestAnimationFrame(frame);
   if (location.hash === '#autotest') setTimeout(autotest, 300);
   window.__ST = { G, AU, buildShield, buildWeapon, W3, startTourney, quickFight, toTitle, openRepair, kitCheck, setupMatch, toTactics, beginFight, endRound, matchEnd, CLUBS, WEAPONS, setView, toast, renderKitPicker, applyLoadout, IN, FP, showScreen, weaponIcon, startCine, startTraining, startLadder, openCareer, openModes, openLadder, CAREER, setLesson, TR, unlock, togglePause, afterRound, renderHow, selectPiece, selectTape, msg, renderSheet, setHud, endTraining, setMode, PAD, navMove, focusFirst, sparks, CUTE, THREE, BREATH, setCuteDeco, flipFx, PHOTO, UAL, raiseFlags, startVersus, startFFA, startBracket, startKid, KID, openSeason, startSeasonMatch, setVenue, VS, SPLIT, NET, buildOnlineMatch, hostLobby, joinLobby, ONL, vinControl, openRun, openDaily, openBracket, showBracket, bracketResult, ffaMatchEnd, ffaLeader, ffaWinner, endKid, openPhoto, closePhoto, startReplay, stopReplay, RP, store, startRunFight, newRun, runEnd, WX, setWeather, padVin, readVersus, applyLo, myLoadout, netDropped, netLeave, showIntro, installForged, dailyPlan, openKids, openVersus, openPicks, LESSONS, rivalClub, startGrudge, startDaily, seasonState, newSeason, refreshDaily, VENUES, COMM, hitMapHtml, resetFighterForRound, DIFF, PIN, PADS, NIN, padsUpdate, seatPads, LOBBY, MM, openOnlineHub, benchDown, benchMove, REP, squirePatch, coverage, openProfile, myProfile, BOS, updateTitlePurse, ACH, progressCheck, challenges, masteryOf, S2, rankOf, counterValue, renderCareer, progressMatch, saveCareer, shopState, shopUp, tapeLeft, shopMatchEnd, shopPrizeMult, shopXpMult, swingTimes, pieceWearMult, TABARDS, refillTape, renderShop, UPGRADES, freshKit, TAPE_STOCK, enterTown, leaveTown, TOWN, openVendor, closeVendor, openTownMap, shopFx, renderVendor, VENDORS, ITEMS, itemCost, spCost, skillRoom, sponsorIncome, BOOSTS, STALL_AT, HOMES, FURNISH, pfx, squadFx, boostKit, townCollide, townRefresh, townWalkTo, townTalk, townTeardown, lookState, WORLD, guildCheck, STATIONS, townDressMe, FOLK, updateFolk, navBlocked, buildFolk, BOUT, boutStart, boutStop, boutTick, drawTownMap, updateMiniMap, costumePerson, OUTFIT, buildSkinWeapon, skinIcon, wskinList, skinFor, buildMyWeapon, wskinFamOf, GATHER, startGather, gatherSwing, stopGather, tradeState, tradeLevel, tradeGain, give, have, craft, NODES, MATS, renderTrades, TRADE_SKILLS, ARENAS, DISTRICTS, TRAVEL, setWaypoint, clearWaypoint, realmPath, callHorse, mount, dismount, ANIMAL, districtAt, realmCull, REALM_TIERS, gateOpen, townJump, stableRows, horseAvailable, peopleCull, boutArenaFor, arenaLive, bagSlots, bagState, bagRoom, secretFound, lookOwned, SECRETS, stopSpectating, startTrial, TRIALS, tierCap, gy, tierOf, HILL, hillHouses, cliffAt, gateBlocked, arenaBlocked, localPath, NAV, rampAt, ROSTER, rosterClubs, rosterLive, rosterName, liveBoutPick, aiTier, AI_TIER, guardOutcome, fighterGlow, ONB, onbStage, onbSet, openCreator, tourStart, tourEnd, TOUR_STOPS, THRONE, throneHolder, throneFight, throneBow, openThrone, sideFromDrag, VOICE };
+  if (location.protocol === 'file:' && window.__steeltapeTest)
+    Object.assign(window.__ST, { penalize, failPiece, closeRepair, xpNeed, tierProf, runToRepairCorner });
 }
 
 function autotest() {

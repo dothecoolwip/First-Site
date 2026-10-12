@@ -636,22 +636,25 @@ function failPiece(f, piece) {
     if (armorStrike(f, piece)) return;
     marshalCall('Armour!', `${label(f)}: helmet off. Out of the list.`, 2);
     marshalGround(f, 'helmet strap let go, helmet off', 'REG 5.4.2');
+    f.returnAt = -1; // A duel knockdown must not stand up while the helmet is missing.
     return;
   }
   const nm = PIECE_NAMES[piece].toLowerCase();
   if (!p.failed) {
     p.failed = true;
-    if (chance(0.5)) { p.covered = true; feed(`${label(f)}: ${nm} let go, but the rest of the kit still covers it. Fight on.`, 'BR 1.3.2', teamColor(f)); return; }
   }
   p.covered = false;
   if (armorStrike(f, piece)) return;
   marshalCall('Armour!', `${label(f)}: ${nm} failed. Grounded.`, 2); comm('armour', {}, 2); caption('strap', 'a strap snaps');
   marshalGround(f, `armour failure (${nm})`, 'BR 1.3.1');
+  f.returnAt = -1;
 }
 function popHelmet(f) {
   const J = f.model; const helm = new THREE.Group();
-  [...J.head.children].forEach(c => { if (c !== J.helmBand) { J.head.remove(c); helm.add(c); } });
-  mk(J.head, geo('coif', () => new THREE.SphereGeometry(0.12, 12, 10)), MAT.gambeson, 0, 0.11, 0);
+  // The head group also contains face and hair meshes. Only the helmet shell falls.
+  [...J.head.children].forEach(c => { if (c !== J.helmBand) J.head.remove(c); });
+  mk(J.head, geo('coif', () => new THREE.SphereGeometry(0.12, 12, 10)), MAT.gambeson, 0, 0.11, 0).scale.setScalar(J.cute ? 1.4 : 1);
+  mk(helm, geo('fallen_helmet', () => new THREE.SphereGeometry(0.14, 14, 10, 0, TAU, 0, Math.PI * 0.68)), J.cute ? J.strap : MAT.steel, 0, 0.08, 0);
   helm.position.set(f.pos.x + rand(-1, 1), 0.12, f.pos.z + rand(-1, 1)); helm.rotation.set(rand(0, 3), rand(0, 3), 1.4);
   W3.matchRoot.add(helm); G.props.push(helm);
 }
@@ -663,6 +666,7 @@ function armorStrike(f, piece) {
   }
   f.out = true;
   f.state = 'grounded';
+  f.returnAt = -1;
   marshalCall('Armour failure', label(f) + ' has three armour strikes and loses.', 3);
   feed(label(f) + ' loses after the third armour strike.', 'REG 5.4.2', 'var(--card-red)');
   if (G.match && G.match.duel && G.phase === 'fight') {

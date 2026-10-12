@@ -1,5 +1,5 @@
 // ---------- the repair bench: rip, wrap, smooth (BR 2.1.5, BR 2.3, WR 7.2.2) ----------
-const REP = { piece: null, tape: null, roll: 'black', step: null, timer: 45, ripT: 0, wraps: [], sloppy: 0, side: 0, wrinkles: [], smoothT: 0, q: {}, ptr: null, active: false, onDone: null, log: [], squire: 1, pop: null, lastSec: 99, trail: [], forcedPiece: null, failuresOnly: false, emergency: false };
+const REP = { piece: null, tape: null, roll: 'black', step: null, timer: 45, ripT: 0, wraps: [], sloppy: 0, side: 0, wrinkles: [], smoothT: 0, q: {}, ptr: null, active: false, onDone: null, onFail: null, log: [], squire: 1, pop: null, lastSec: 99, trail: [], forcedPiece: null, failuresOnly: false, emergency: false };
 const PIECE_SHORT = { helmet: ['Helmet', '⛑️'], armL: ['Left arm', '💪'], armR: ['Right arm', '💪'], legs: ['Legs', '🦵'], haft: ['Haft', '🪓'] };
 const ZONE = { a: 0.36, b: 0.64 }; // the tear, as a fraction of the bench width
 const BAND = { top: 0.42, bot: 0.6 };
@@ -8,7 +8,7 @@ function openRepair(seconds, onDone, options) {
   options = options || {};
   if (!options.emergency && CAREER.skills && CAREER.skills['show.tape']) seconds += 15; // Tape artist
   if (!options.emergency && typeof shopFx === 'function') seconds += shopFx('repairSec'); // good scissors
-  Object.assign(REP, { piece: null, tape: null, step: null, timer: seconds, active: true, onDone, wraps: [], wrinkles: [], squire: 1 + (G.boon && G.boon.squire ? 1 : 0) + (typeof shopState === 'function' ? shopState().squires : 0), pop: null, lastSec: 99, trail: [], forcedPiece: options.forcedPiece || null, failuresOnly: !!options.failuresOnly, emergency: !!options.emergency });
+  Object.assign(REP, { piece: null, tape: null, step: null, timer: seconds, active: true, onDone, onFail: options.onFail || null, wraps: [], wrinkles: [], squire: 1 + (G.boon && G.boon.squire ? 1 : 0) + (typeof shopState === 'function' ? shopState().squires : 0), pop: null, lastSec: 99, trail: [], forcedPiece: options.forcedPiece || null, failuresOnly: !!options.failuresOnly, emergency: !!options.emergency });
   REP.roll = REP.roll && TAPES[REP.roll] && TAPES[REP.roll].legal && tapeLeft(REP.roll) > 0 ? REP.roll : (['black', 'grey', 'white', 'pro', 'kevlar'].find(x => tapeLeft(x) > 0) || 'black');
   renderKitList(); renderDrawer(); setSteps(null);
   const worst = worstPiece();
@@ -194,15 +194,18 @@ function updateRepair(dt) {
 }
 function closeRepair() {
   if (!REP.active) return;
-  if (REP.emergency && G.player.kit.helmet.failed && REP.timer > 0) {
-    $('#benchMsg').textContent = 'The helmet is not fixed yet. Keep working until the 30-second repair window ends.';
+  const unfixed = REP.emergency && G.player && ['helmet', 'armL', 'armR', 'legs'].filter(k => G.player.kit[k].failed);
+  if (unfixed && unfixed.length && REP.timer > 0) {
+    $('#benchMsg').textContent = `Repair ${unfixed.map(k => PIECE_SHORT[k][0].toLowerCase()).join(', ')} before returning to the list.`;
     return;
   }
   if (REP.step === 'wrap') { REP.q.wrap = coverage() * 0.8; REP.step = 'smooth'; REP.wrinkles = [{ x: 0.5, gone: false }]; }
   if (REP.step === 'smooth') finishSmooth();
   if (REP.step === 'rip') { REP.step = null; setSteps(null); }
   REP.active = false;
-  const cb = REP.onDone; REP.onDone = null; if (cb) cb();
+  const cb = unfixed && unfixed.length ? (REP.onFail || REP.onDone) : REP.onDone;
+  REP.onDone = REP.onFail = null;
+  if (cb) cb();
 }
 
 function drawBench() {
