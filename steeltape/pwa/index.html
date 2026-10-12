@@ -1,5 +1,5 @@
 <!doctype html><html><head><meta charset="utf-8"><link rel="manifest" href="manifest.webmanifest"><meta name="theme-color" content="#0f1316"><link rel="apple-touch-icon" href="icon-192.png"><meta name="apple-mobile-web-app-capable" content="yes"><meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover"></head><body>
-<script>window.BUILD_VER="steel-tape-153f852f66";</script><title>Buhurt: Steel &amp; Tape</title>
+<script>window.BUILD_VER="steel-tape-2ea24e2c54";</script><title>Buhurt: Steel &amp; Tape</title>
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Barlow+Semi+Condensed:wght@400;500;600;700&family=Big+Shoulders+Display:wght@700;800;900&family=Permanent+Marker&display=swap">
@@ -15310,7 +15310,7 @@ function buildTown() {
   for (const [x, z] of [[-RX - 9, -10], [-RX - 10, 4], [-RX - 9, 16], [RX + 9, -14], [RX + 10, 2], [RX + 9, 15], [-8, -RZ - 10], [9, -RZ - 10]]) TOWN.obst.push({ x, z, r: 2.7 });
   for (const V of VENDORS) if (!V.custom) buildStall(V);
   buildSpecialVendors(); buildWorld(); buildSpawnBoards(); navBuild(); buildGatherNodes(TOWN.root); buildSecrets(TOWN.root); navBuild(); realmCells();
-  buildHome(); buildStatue(); buildAvatar(); buildMyPet(); buildWaypoint(); buildAnimals(); buildArenaSeats(); navBuild();
+  buildHome(); buildStatue(); buildAvatar(); buildMyPet(); buildWaypoint(); buildAnimals(); buildArenaSeats(); buildDeepMine(); navBuild();
 }
 // the field venue's own cottages and tree ring would sit in the middle of the festival: hide them in town
 function venueExtras(on) { for (const o of (W3.venueExtras || [])) o.visible = on; if (on) townCrowd(true); }
@@ -15340,6 +15340,7 @@ function enterTown(vendorKey) {
 // leave without going anywhere (a match is starting)
 function townTeardown() {
   if (!TOWN.on) return; boutStop(); GATHER.on = null; TOWN.busy = false; { const ge = $('#gather'); if (ge) ge.hidden = true; }
+  TOWN.mineOn = false;
   if (TOWN.light) { W3.sun.intensity = TOWN.light.sun; W3.hemi.intensity = TOWN.light.hemi; TOWN.light = null; }
   realmView(false);
   TOWN.on = false; G.phase = ''; document.body.classList.remove('intown'); venueExtras(true); $('#townHud').hidden = true; $('#townPrompt').hidden = true;
@@ -15350,6 +15351,7 @@ function townTeardown() {
 function leaveTown(next) {
   if (!TOWN.on) { if (next) next(); return; }
   boutStop(); GATHER.on = null; TOWN.busy = false; { const ge = $('#gather'); if (ge) ge.hidden = true; }
+  TOWN.mineOn = false;
   if (TOWN.light) { W3.sun.intensity = TOWN.light.sun; W3.hemi.intensity = TOWN.light.hemi; TOWN.light = null; }
   realmView(false);
   try { lobbySet({ tw: null }); WORLD.lastTw = 0; } catch (e) { }
@@ -15364,7 +15366,7 @@ function townHudUpdate() { const p = $('#townPurse'); if (p) p.textContent = fmt
 // walking, camera, who you're next to
 function updateTown(dt) {
   if (!TOWN.on) return; updateMiniMap(dt);
-  if (!TOWN.people && typeof UAL !== 'undefined' && UAL.ready) { const keep = { ...TOWN.pos }; buildTown(); TOWN.pos = keep; }
+  if (!TOWN.people && !TOWN.mineOn && typeof UAL !== 'undefined' && UAL.ready) { const keep = { ...TOWN.pos }; buildTown(); TOWN.pos = keep; }
   updateGather(dt);
   const walking = !G.screen && !G.paused && !TOWN.busy;
   const k = IN.keys;
@@ -15396,12 +15398,13 @@ function updateTown(dt) {
   if (walking && TOWN.keyPrev !== undefined) { if (k.KeyH && !TOWN.keyPrev.h) callHorse(); if (k.KeyR && !TOWN.keyPrev.r && TOWN.wp) { TRAVEL.auto = !TRAVEL.auto; compassHud(); } }
   TOWN.keyPrev = { h: !!k.KeyH, r: !!k.KeyR };
   if (J && !TOWN.mounted) {
-    J.root.position.set(TOWN.pos.x, gy(TOWN.pos.x, TOWN.pos.z), TOWN.pos.z); J.root.rotation.y = TOWN.face;
+    J.root.position.set(TOWN.pos.x, mineGroundY(TOWN.pos.x, TOWN.pos.z), TOWN.pos.z); J.root.rotation.y = TOWN.face;
     if (J.ual) { J.play(sp > 3.5 ? 'Jog_Fwd_Loop' : sp > 0.3 ? 'Walk_Loop' : 'Idle_Loop', 0.2); J.mixer.update(dt); }
   }
   // the nearest vendor within reach turns to you and talks
   let best = null, bd = 2.8;
   for (const S of TOWN.stalls) {
+    if (!!S.mine !== !!TOWN.mineOn) continue;
     const d = Math.hypot(S.ax - TOWN.pos.x, S.az - TOWN.pos.z); if (d < bd) { bd = d; best = S; }
     const N = S.npc; if (N && N.ual) { const talk = S === TOWN.near || S.V.key === TOWN.vendor; N.play(talk ? 'Idle_Talking_Loop' : 'Idle_Loop', 0.4); if (N.root.visible) N.mixer.update(dt); }
     const dd = Math.hypot(S.x - TOWN.pos.x, S.z - TOWN.pos.z); S.label.visible = dd < 30 && !(S.node && S.node.until);
@@ -15421,6 +15424,7 @@ function updateTown(dt) {
 function townTalk(S) { if (S.open) S.open(); else openVendor(S.V.key); }
 function townCollide() {
   const P = TOWN.pos, r = 0.42;
+  if (TOWN.mineOn) { mineCollide(P, r); return; }
   for (let it = 0; it < 2; it++) {
     const A = arenaBlocked(P.x, P.z, r);
     if (A) { // push out of the list along the shortest way (you watch from the rope or the stands)
@@ -15440,8 +15444,9 @@ function updateTownCamera(dt) {
   if (TOWN.peek > 0) { TOWN.peek -= dt; cam.position.set(-104, 2.4, -200); cam.lookAt(-60, 3, -190); if (TOWN.peek <= 0) TOWN.cam = null; return; }
   const aspect = window.innerWidth / window.innerHeight, dist = TOWN.dist * (aspect < 0.8 ? 1.3 : 1);
   const tx = TOWN.pos.x, tz = TOWN.pos.z, cp = Math.cos(TOWN.pitch);
-  const gY = gy(tx, tz), cxp = tx + Math.sin(TOWN.yaw) * cp * dist, czp = tz + Math.cos(TOWN.yaw) * cp * dist;
-  let want = new THREE.Vector3(cxp, Math.max(gY, gy(cxp, czp)) + 1.4 + Math.sin(TOWN.pitch) * dist, czp);
+  const gY = mineGroundY(tx, tz), cxp = tx + Math.sin(TOWN.yaw) * cp * dist, czp = tz + Math.cos(TOWN.yaw) * cp * dist;
+  let want = new THREE.Vector3(cxp, Math.max(gY, mineGroundY(cxp, czp)) + 1.4 + Math.sin(TOWN.pitch) * dist, czp);
+  if (TOWN.mineOn) { const M = DEEP_MINE; want.set(clamp(want.x, M.x - M.halfX + 2, M.x + M.halfX - 2), Math.min(want.y, M.y + 5.8), clamp(want.z, M.z - M.halfZ + 2, M.z + M.halfZ - 2)); }
   const look = new THREE.Vector3(tx, gY + 1.35, tz);
   if (!TOWN.cam) { TOWN.cam = want.clone(); TOWN.look = look.clone(); }
   const kk = 1 - Math.exp(-8 * dt); TOWN.cam.lerp(want, kk); TOWN.look.lerp(look, kk);
@@ -15466,6 +15471,7 @@ function openVendor(key) {
 function closeVendor() { TOWN.vendor = null; TOWN.actPrev = true; showScreen(null); townHudUpdate(); townPrompt(); refreshTouchUI(); }
 // the realm map: waypoints (no teleporting), and a way home
 function openTownMap() {
+  if (TOWN.mineOn) { openDeepMineMap(); return; }
   AU.click(); TOWN.vendor = null;
   const box = $('#townShopBody'); box.innerHTML = '';
   $('#townShopHead').innerHTML = '';
@@ -15473,7 +15479,7 @@ function openTownMap() {
   box.append(townMapCanvas());
   box.append(h('p', { class: 'muted small' }, 'Other places are below. Nothing teleports: walk, or hire a horse at the stables.'));
   const list = h('div', { class: 'ups shop' }); box.append(list);
-  const rows = TOWN.stalls.filter(s => !s.player && !s.node && !s.arena && (!s.secret || secretFound(s.secret.key))).map(S => ({ icon: S.V.icon, name: S.V.name, role: S.V.role, x: S.ax, z: S.az, blurb: S.station ? '' : vendorBlurb(S.V.key) + ' ' }));
+  const rows = TOWN.stalls.filter(s => !s.mine && !s.player && !s.node && !s.arena && (!s.secret || secretFound(s.secret.key))).map(S => ({ icon: S.V.icon, name: S.V.name, role: S.V.role, x: S.ax, z: S.az, blurb: S.station ? '' : vendorBlurb(S.V.key) + ' ' }));
   for (const r of rows) r.d = Math.hypot(r.x - TOWN.pos.x, r.z - TOWN.pos.z);
   rows.sort((a, b) => a.d - b.d);
   for (const r of rows) {
@@ -15698,7 +15704,7 @@ function buildMyPet() { if (WORLD.pet) TOWN.root.remove(WORLD.pet); WORLD.pet = 
 function townPresence() {
   if (!TOWN.on) { if (WORLD.lastTw) { lobbySet({ tw: null }); WORLD.lastTw = 0; } return; }
   if (G.realTime - WORLD.lastTw < 1) return; WORLD.lastTw = G.realTime;
-  lobbySet({ tw: { x: Math.round(TOWN.pos.x * 10) / 10, z: Math.round(TOWN.pos.z * 10) / 10, f: Math.round(TOWN.face * 100) / 100, l: lookLite(), g: guildTag() } });
+  lobbySet({ tw: { x: Math.round(TOWN.pos.x * 10) / 10, z: Math.round(TOWN.pos.z * 10) / 10, f: Math.round(TOWN.face * 100) / 100, mine: !!TOWN.mineOn, l: lookLite(), g: guildTag() } });
 }
 function updateOthers(dt) {
   townPresence();
@@ -15709,17 +15715,17 @@ function updateOthers(dt) {
     if (!O) {
       const L = tw.l || {}; const J = lookPerson({ b: L.b, t: L.t, h: L.h, c: L.c, n: L.n, o: L.o, s: L.s, d: L.d }, 1.8);
       const nm = String(p.presence.name || 'A fighter').slice(0, 20), lab = townLabel(nm, (tw.g ? `[${tw.g}] ` : '') + 'online now', '#7fb6ff'); lab.position.y = 2.35; J.root.add(lab);
-      J.root.position.set(tw.x, gy(tw.x, tw.z), tw.z); TOWN.root.add(J.root);
-      O = WORLD.others[p.peer] = { J, x: tw.x, z: tw.z, f: tw.f || 0, p, lk: JSON.stringify(tw.l || {}) };
-      TOWN.stalls.push({ V: { key: 'p:' + p.peer, name: nm, role: 'Online player', icon: '🟢' }, g: J.root, npc: null, ry: 0, x: tw.x, z: tw.z, ax: tw.x, az: tw.z, label: lab, open: () => { AU.click(); openProfile(O.p, () => { showScreen(null); refreshTouchUI(); townPrompt(); }); }, player: p.peer });
+      J.root.position.set(tw.x, tw.mine ? DEEP_MINE.y : gy(tw.x, tw.z), tw.z); TOWN.root.add(J.root);
+      O = WORLD.others[p.peer] = { J, x: tw.x, z: tw.z, mine: !!tw.mine, f: tw.f || 0, p, lk: JSON.stringify(tw.l || {}) };
+      TOWN.stalls.push({ V: { key: 'p:' + p.peer, name: nm, role: 'Online player', icon: '🟢' }, g: J.root, npc: null, ry: 0, x: tw.x, z: tw.z, ax: tw.x, az: tw.z, label: lab, mine: !!tw.mine, open: () => { AU.click(); openProfile(O.p, () => { showScreen(null); refreshTouchUI(); townPrompt(); }); }, player: p.peer });
     }
     if (O.lk !== JSON.stringify(tw.l || {})) { TOWN.root.remove(O.J.root); delete WORLD.others[p.peer]; TOWN.stalls = TOWN.stalls.filter(s2 => s2.player !== p.peer); continue; } // they changed clothes: rebuild next frame
-    O.p = p; const k = Math.min(1, dt * 4), ox = O.x, oz = O.z;
+    O.p = p; if (O.mine !== !!tw.mine) { O.x = tw.x; O.z = tw.z; O.mine = !!tw.mine; } const k = Math.min(1, dt * 4), ox = O.x, oz = O.z;
     O.x += (tw.x - O.x) * k; O.z += (tw.z - O.z) * k; O.f = tw.f || O.f;
-    O.J.root.position.set(O.x, gy(O.x, O.z), O.z); O.J.root.rotation.y = O.f;
+    O.J.root.position.set(O.x, O.mine ? DEEP_MINE.y : gy(O.x, O.z), O.z); O.J.root.rotation.y = O.f; O.J.root.visible = O.mine === !!TOWN.mineOn;
     const sp = Math.hypot(O.x - ox, O.z - oz) / Math.max(dt, 1e-3);
     if (O.J.ual) { O.J.play(sp > 3.5 ? 'Jog_Fwd_Loop' : sp > 0.3 ? 'Walk_Loop' : 'Idle_Loop', 0.25); O.J.mixer.update(dt); }
-    const S = TOWN.stalls.find(s => s.player === p.peer); if (S) { S.x = S.ax = O.x; S.z = S.az = O.z; }
+    const S = TOWN.stalls.find(s => s.player === p.peer); if (S) { S.x = S.ax = O.x; S.z = S.az = O.z; S.mine = O.mine; }
   }
   for (const id in WORLD.others) if (!seen[id]) { TOWN.root.remove(WORLD.others[id].J.root); delete WORLD.others[id]; TOWN.stalls = TOWN.stalls.filter(s => s.player !== id); }
 }
@@ -16292,16 +16298,17 @@ function boutHud() {
 const TMAP = { mini: null, miniT: 0, hits: [], view: null };
 const TMAP_PLACES = [
   ['The list', 0, 0], ['Market', 0, 46], ['Forge yard', -46, 28], ['Tavern', 45, 14],
-  ['Food stalls', 38, -8], ['Archery', 64, 10], ['Farm', 60, -16], ['Homes', -44, 48], ['Club camp', 46, 62], ['Graveyard', 44, -56], ['Pond', -56, 72], ['Festival gate', 0, 70]
+  ['Food stalls', 38, -8], ['Archery', 64, 10], ['Farm', 60, -16], ['Homes', -44, 48], ['Club camp', 46, 62], ['Graveyard', 44, -56], ['Pond', -56, 72], ['Festival gate', 0, 70], ['Deep Mine', -256, -42]
 ];
 function tmapSites() { return [...ARENAS, TRAINING_GROUND]; }
 function tmapMarkers() {
   const out = tmapSites().map(A => ({ x: A.x, z: A.z, icon: A.icon, name: A.name, kind: 'arena', A, far: true }));
   for (const S of TOWN.stalls || []) {
+    if (S.mine) continue;
     if (S.player) { const O = WORLD.others && WORLD.others[S.player]; out.push({ x: O ? O.x : S.x, z: O ? O.z : S.z, icon: '', name: S.V.name, kind: 'player', S }); continue; }
     if (S.arena || (S.secret && !secretFound(S.secret.key))) continue;
     if (S.node) { out.push({ x: S.x, z: S.z, icon: '', name: S.V.name, role: S.V.role, kind: 'node', col: S.node.N.col, S }); continue; }
-    out.push({ x: S.x, z: S.z, icon: S.V.icon || '•', name: S.V.name, role: S.V.role, kind: S.station ? 'station' : 'vendor', key: S.V.key, S });
+    out.push({ x: S.x, z: S.z, icon: S.V.icon || '•', name: S.V.name, role: S.V.role, kind: S.station ? 'station' : 'vendor', key: S.V.key, far: S.V.key === 'mine:enter', S });
   }
   return out;
 }
@@ -16462,7 +16469,8 @@ function updateMiniMap(dt) {
   const S = cv.clientWidth || 120, dpr = Math.min(2, window.devicePixelRatio || 1);
   if (cv.width !== S * dpr) { cv.width = S * dpr; cv.height = S * dpr; }
   const ctx = cv.getContext('2d'); ctx.setTransform(dpr, 0, 0, dpr, 0, 0);
-  drawTownMap(ctx, { w: S, h: S, scale: S / (TOWN.mounted ? 150 : 100), cx: TOWN.pos.x, cz: TOWN.pos.z, labels: false, round: true });
+  if (TOWN.mineOn) drawDeepMineMap(ctx, S, S, true);
+  else drawTownMap(ctx, { w: S, h: S, scale: S / (TOWN.mounted ? 150 : 100), cx: TOWN.pos.x, cz: TOWN.pos.z, labels: false, round: true });
 }
 
 // ===================================================================
@@ -16659,6 +16667,7 @@ function nodeSites() {
       const a = rnd() * TAU, r = Math.sqrt(rnd()), x = cx + Math.cos(a) * rx * r, z = cz + Math.sin(a) * rz * r;
       if (cx === 0 && cz === 10 && Math.hypot(x / FAIR_RX, z / FAIR_RZ) < 0.6) continue; // fairground nodes sit round the edge
       if (Math.abs(x - TRAINING_GROUND.x) < TRAINING_GROUND.bx + 2 && Math.abs(z - TRAINING_GROUND.z) < TRAINING_GROUND.bz + 2) continue;
+      if (Math.hypot(x - DEEP_MINE.entrance[0], z - DEEP_MINE.entrance[1]) < 7) continue;
       if (Math.hypot(x / TOWN_RX, z / TOWN_RZ) > 0.93 || lakeIn(x, z, 3) || onRoad(x, z, 2) || navBlocked(x, z, 1.8)) continue;
       if (out.some(o => Math.hypot(o[1] - x, o[2] - z) < (o[0] === type ? 12 : 5))) continue;
       out.push([type, x, z, rnd() * TAU]); put++;
@@ -17528,6 +17537,7 @@ function animalMake(kind, cb, tint) {
 const ANIMAL = { list: [] };
 function horseAvailable() { return !!(TOWN.horseRent || shopState().owned.horse); }
 function callHorse() {
+  if (TOWN.mineOn) { toastMenu('Your horse must wait above ground. Take the lift to call it.'); return; }
   if (!horseAvailable()) { toastMenu('No horse. Hire one from Edda at the stables just outside the festival gate.'); return; }
   if (TOWN.horse) { if (TOWN.mounted) dismount(); else if (Math.hypot(TOWN.horse.x - TOWN.pos.x, TOWN.horse.z - TOWN.pos.z) < 3.5) mount(); else { TOWN.horse.come = true; toastMenu('You whistle. Your horse trots over.'); } return; }
   animalMake('Horse', A => {
@@ -17541,6 +17551,8 @@ function mount() { if (!TOWN.horse) return; TOWN.mounted = true; unlock('rider',
 function dismount() { if (!TOWN.horse) return; TOWN.mounted = false; const s = TOWN.face + Math.PI / 2; TOWN.pos.x += Math.sin(s) * 1.4; TOWN.pos.z += Math.cos(s) * 1.4; townCollide(); horseHud(); }
 function updateHorse(dt) {
   const H = TOWN.horse; if (!H) { horseHud(); return; }
+  if (TOWN.mineOn) { H.A.root.visible = false; horseHud(); return; }
+  H.A.root.visible = true;
   if (TOWN.mounted) { H.x = TOWN.pos.x; H.z = TOWN.pos.z; H.face = TOWN.face; H.come = false; }
   else if (H.come) {
     const dx = TOWN.pos.x - H.x, dz = TOWN.pos.z - H.z, d = Math.hypot(dx, dz);
@@ -17554,7 +17566,7 @@ function updateHorse(dt) {
 }
 function horseHud() {
   const b = $('#townHorse'); if (!b) return;
-  const ok = horseAvailable() && !G.screen; b.hidden = !ok; if (!ok) return;
+  const ok = horseAvailable() && !TOWN.mineOn && !G.screen; b.hidden = !ok; if (!ok) return;
   const near = TOWN.horse && Math.hypot(TOWN.horse.x - TOWN.pos.x, TOWN.horse.z - TOWN.pos.z) < 3.5;
   b.textContent = TOWN.mounted ? '🐴 Dismount' : near ? '🐴 Mount' : '🐴 Whistle';
 }
@@ -18277,6 +18289,128 @@ function boardsStartHeartbeat() {
   };
   BOARDS.heartbeat = setInterval(beat, 35000);
   document.addEventListener('visibilitychange', () => { if (!document.hidden) beat(); });
+}
+
+// The Old Woods Deep Mine: a separate, enclosed floor beneath the quarry.
+// Surface and mine share map coordinates but never share interaction or collision layers.
+const DEEP_MINE = { x: -256, z: -46, y: -25, halfX: 29, halfZ: 29, entrance: [-256, -42], entry: [-256, -23], exit: [-256, -20] };
+
+function mineGroundY(x, z) { return TOWN.mineOn ? DEEP_MINE.y : gy(x, z); }
+function mineCollide(P, r) {
+  const M = DEEP_MINE;
+  P.x = clamp(P.x, M.x - M.halfX + r, M.x + M.halfX - r);
+  P.z = clamp(P.z, M.z - M.halfZ + r, M.z + M.halfZ - r);
+  for (const o of TOWN.mineObst || []) {
+    const dx = P.x - o.x, dz = P.z - o.z, d = Math.hypot(dx, dz), m = o.r + r;
+    if (d < m) { P.x = o.x + (d > 0.0001 ? dx / d : 1) * m; P.z = o.z + (d > 0.0001 ? dz / d : 0) * m; }
+  }
+}
+function mineChange(on) {
+  if (!TOWN.on || !TOWN.mine || TOWN.mineOn === on) return;
+  if (GATHER.on) stopGather(false);
+  clearWaypoint(); TOWN.spec = null; TOWN.mounted = false; if (on && TOWN.horse) TOWN.horse.come = false; TOWN.mineOn = on;
+  TOWN.mine.visible = on; TOWN.pos = on ? { x: DEEP_MINE.entry[0], z: DEEP_MINE.entry[1] } : { x: DEEP_MINE.entrance[0], z: DEEP_MINE.entrance[1] + 4 };
+  TOWN.yaw = 0; TOWN.face = on ? Math.PI : 0; TOWN.cam = null; TOWN.near = null; TOWN.district = null;
+  if (TOWN.me) TOWN.me.root.position.set(TOWN.pos.x, mineGroundY(TOWN.pos.x, TOWN.pos.z), TOWN.pos.z);
+  if (WORLD.pet) WORLD.pet.visible = !on;
+  if (TOWN.mineLight) { W3.sun.intensity = on ? 0.12 : TOWN.mineLight.sun; W3.hemi.intensity = on ? 0.35 : TOWN.mineLight.hemi; }
+  if (W3.scene.fog && TOWN.mineFog) { W3.scene.fog.near = on ? 9 : TOWN.mineFog.near; W3.scene.fog.far = on ? 65 : TOWN.mineFog.far; }
+  toastMenu(on ? 'Old Woods Deep Mine. Follow the lanterns; the lift is behind you.' : 'Back at the Old Woods quarry.');
+  townPrompt();
+}
+function minePortal(R, x, z, underground) {
+  const y = underground ? DEEP_MINE.y : gy(x, z), g = new THREE.Group(); g.position.set(x, y, z); R.add(g);
+  const wood = tmat('#5c3820'), iron = tmat('#383c40', { metalness: 0.55 }), amber = tmat('#ffb34a', { emissive: '#ff7a24', emissiveIntensity: 1.6 });
+  for (const sx of [-1.8, 1.8]) mk(g, geo('mine_post', () => new THREE.BoxGeometry(0.32, 3.7, 0.38)), wood, sx, 1.85, 0);
+  mk(g, geo('mine_lintel', () => new THREE.BoxGeometry(4.1, 0.4, 0.5)), wood, 0, 3.65, 0);
+  mk(g, geo('mine_dark', () => new THREE.PlaneGeometry(3.2, 3.3)), lmat({ color: '#0b1015', side: THREE.DoubleSide }), 0, 1.7, -0.13, false);
+  for (const sx of [-2.4, 2.4]) { kpiece(g, 'mk_Torch_Metal', sx, 1.7, 0.55, 0, 0.8); mk(g, geo('mine_flame', () => new THREE.ConeGeometry(0.12, 0.35, 8)), amber, sx, 2.7, 0.55); }
+  kpiece(g, 'rt_pulley_crate', 3.4, 0, 1.5, 0.4, 0.8); kpiece(g, 'mk_Chain_Coil', -3, 0, 1, 0, 0.8);
+  const lab = townLabel(underground ? 'Surface lift' : 'Deep Mine', underground ? 'Return to daylight' : 'Old Woods quarry', '#d8984d'); lab.position.set(0, 4.4, 0.3); g.add(lab);
+  const V = { key: underground ? 'mine:exit' : 'mine:enter', name: underground ? 'Surface lift' : 'Old Woods Deep Mine', role: underground ? 'Return to surface' : 'Mine entrance', icon: '⛏️' };
+  TOWN.stalls.push({ V, g, x, z, ax: x, az: z + 2.5, ry: 0, label: lab, mine: underground, open: () => mineChange(!underground), verb: underground ? 'Ride the lift' : 'Descend' });
+  if (!underground) TOWN.obst.push({ x: x - 2.3, z, r: 0.6 }, { x: x + 2.3, z, r: 0.6 });
+  return g;
+}
+function buildDeepMine() {
+  const M = DEEP_MINE, R = new THREE.Group(); TOWN.root.add(R); TOWN.mine = R; TOWN.mineOn = false; TOWN.mineObst = [];
+  TOWN.mineLight = { sun: W3.sun.intensity, hemi: W3.hemi.intensity };
+  TOWN.mineFog = W3.scene.fog ? { near: W3.scene.fog.near, far: W3.scene.fog.far } : null;
+  const stone = lmat({ color: '#4c4a48', roughness: 1, flatShading: true }), roof = lmat({ color: '#272c31', roughness: 1, side: THREE.DoubleSide });
+  const floor = mk(R, new THREE.BoxGeometry(60, 0.7, 60), stone, M.x, M.y - 0.35, M.z, false); floor.receiveShadow = true;
+  mk(R, new THREE.BoxGeometry(60, 0.8, 60), roof, M.x, M.y + 6.9, M.z, false);
+  for (const sx of [-1, 1]) mk(R, new THREE.BoxGeometry(1.5, 7, 60), stone, M.x + sx * 29.8, M.y + 3.3, M.z, false);
+  for (const sz of [-1, 1]) mk(R, new THREE.BoxGeometry(60, 7, 1.5), stone, M.x, M.y + 3.3, M.z + sz * 29.8, false);
+  // Layered pack-rock silhouettes hide the straight cave shell and make each chamber distinct.
+  const rnd = seeded('old-woods-deep-mine');
+  for (let i = 0; i < 80; i++) {
+    const a = i / 80 * TAU, side = i % 4, x = M.x + (side === 0 ? -28 : side === 1 ? 28 : -27 + rnd() * 54), z = M.z + (side === 2 ? -28 : side === 3 ? 28 : -27 + rnd() * 54);
+    kpiece(R, i % 3 ? 'fy_rock_medium_4' : 'fy_rock_big_3', x, M.y, z, a, 1.1 + rnd() * 1.4);
+  }
+  for (const [dx, dz] of [[-17, -8], [17, -7], [-13, 10], [13, 10]]) {
+    kpiece(R, 'fy_rock_big_pillar', M.x + dx, M.y, M.z + dz, rnd() * TAU, 1.6);
+    TOWN.mineObst.push({ x: M.x + dx, z: M.z + dz, r: 1.8 });
+  }
+  // The timber-supported haulage line leads from the lift to a flooded crystal grotto.
+  const timber = tmat('#765035'), rail = tmat('#605b55', { metalness: 0.45 });
+  for (let z = 15; z >= -18; z -= 7) {
+    for (const sx of [-3.8, 3.8]) mk(R, geo('mine_support', () => new THREE.BoxGeometry(0.35, 5.4, 0.35)), timber, M.x + sx, M.y + 2.7, M.z + z);
+    mk(R, geo('mine_beam', () => new THREE.BoxGeometry(8.1, 0.4, 0.45)), timber, M.x, M.y + 5.45, M.z + z);
+  }
+  for (const sx of [-0.8, 0.8]) mk(R, geo('mine_rail', () => new THREE.BoxGeometry(0.1, 0.05, 43)), rail, M.x + sx, M.y + 0.07, M.z - 1, false);
+  for (let z = 19; z >= -21; z -= 1.6) mk(R, geo('mine_tie', () => new THREE.BoxGeometry(2.4, 0.13, 0.32)), timber, M.x, M.y + 0.05, M.z + z, false);
+  kpiece(R, 'rt_pulley_crate', M.x - 7, M.y, M.z + 14, 0.4, 1.4);
+  for (const [dx, dz, ry] of [[-10, 12, 0.4], [-12, 14, 1.1], [12, 12, 0.8], [20, 13, 0]]) kpiece(R, dx < 0 ? 'mk_Crate_Wooden' : 'mk_Barrel', M.x + dx, M.y, M.z + dz, ry, 1.1);
+  const pool = mk(R, new THREE.CircleGeometry(10, 32), lmat({ color: '#1e6570', emissive: '#063b48', emissiveIntensity: 0.4, roughness: 0.25, side: THREE.DoubleSide }), M.x + 11, M.y + 0.025, M.z - 16, false); pool.rotation.x = -Math.PI / 2;
+  for (let i = 0; i < 13; i++) {
+    const a = i * 2.4, x = M.x + 10 + Math.cos(a) * (4 + i % 3), z = M.z - 17 + Math.sin(a) * (4 + i % 3);
+    const c = mk(R, geo('mine_crystal', () => new THREE.OctahedronGeometry(0.6, 0)), lmat({ color: i % 3 ? '#73bfd0' : '#b7f7ff', emissive: '#287b9a', emissiveIntensity: 1.2, flatShading: true }), x, M.y + 0.7, z);
+    c.scale.set(0.7 + i % 3 * 0.25, 1.8 + i % 4 * 0.5, 0.7 + i % 3 * 0.25); c.rotation.y = a;
+  }
+  for (const [dx, dz, color] of [[0, 20, '#ffb15e'], [-19, 0, '#ffa85a'], [16, -15, '#6cc9ed'], [-7, -20, '#eab376']]) {
+    const light = new THREE.PointLight(color, IS_TOUCH ? 1.2 : 1.7, 24); light.position.set(M.x + dx, M.y + 4.2, M.z + dz); R.add(light);
+    kpiece(R, 'mk_Torch_Metal', M.x + dx, M.y + 1.5, M.z + dz, 0, 0.75);
+  }
+  const sign = townLabel('Crystal Grotto', 'Deep Mine · north chamber', '#78cfe5'); sign.position.set(M.x + 13, M.y + 3.4, M.z - 22); R.add(sign);
+  minePortal(R, M.exit[0], M.exit[1], true);
+  minePortal(TOWN.root, M.entrance[0], M.entrance[1], false);
+  for (const [type, dx, dz] of [['copper', -23, 1], ['iron', -21, -13], ['coal', -24, 17], ['crystal', 20, -17], ['silver', 23, 5]]) {
+    const N = NODES[type], x = M.x + dx, z = M.z + dz, g = new THREE.Group(); g.position.set(x, M.y, z); R.add(g);
+    kpiece(g, 'fy_rock_medium_4', 0, 0, 0, rnd() * TAU, 1.3);
+    const fruit = new THREE.Group(); g.add(fruit);
+    const mat = lmat({ color: N.col, emissive: type === 'crystal' ? '#287b9a' : '#131313', emissiveIntensity: type === 'crystal' ? 1 : 0.15, flatShading: true });
+    for (let i = 0; i < 7; i++) { const a = i * TAU / 7; const c = mk(fruit, geo('mine_ore', () => new THREE.OctahedronGeometry(0.22)), mat, Math.cos(a) * 0.6, 0.5 + (i % 3) * 0.23, Math.sin(a) * 0.6); if (type === 'crystal') c.scale.y = 2; }
+    const lab = townLabel(N.name, `⛏️ Mining ${N.lvl}`, N.col); lab.position.y = 2.9; g.add(lab);
+    const node = { id: 'deep:' + type, type, N, g, fruit, x, z, ax: x + 1.8, az: z + 1.4, until: 0, lab, mine: true };
+    GATHER.nodes.push(node);
+    TOWN.stalls.push({ V: { key: 'n:deep:' + type, name: N.name, role: `Mining ${N.lvl}`, icon: '⛏️' }, g, x, z, ax: node.ax, az: node.az, label: lab, node, mine: true, open: () => startGather(node), verb: 'Mine' });
+    TOWN.mineObst.push({ x, z, r: 1 });
+  }
+  R.visible = false;
+}
+
+function drawDeepMineMap(ctx, w, h, round) {
+  const M = DEEP_MINE, k = Math.min(w, h) / 70, X = x => w / 2 + (x - M.x) * k, Y = z => h / 2 + (z - M.z) * k;
+  ctx.save(); ctx.fillStyle = '#171c20'; ctx.fillRect(0, 0, w, h);
+  if (round) { ctx.beginPath(); ctx.arc(w / 2, h / 2, w / 2 - 2, 0, TAU); ctx.clip(); }
+  ctx.fillStyle = '#4a4844'; ctx.fillRect(X(M.x - 29), Y(M.z - 29), 58 * k, 58 * k);
+  ctx.fillStyle = '#766c58'; ctx.fillRect(X(M.x - 4), Y(M.z - 25), 8 * k, 50 * k);
+  ctx.fillStyle = '#265e68'; ctx.beginPath(); ctx.arc(X(M.x + 11), Y(M.z - 16), 10 * k, 0, TAU); ctx.fill();
+  ctx.fillStyle = '#b7f3ff'; for (let i = 0; i < 8; i++) { const a = i * TAU / 8; ctx.beginPath(); ctx.arc(X(M.x + 10 + Math.cos(a) * 5), Y(M.z - 17 + Math.sin(a) * 5), 2.5, 0, TAU); ctx.fill(); }
+  for (const n of GATHER.nodes.filter(n => n.mine)) { ctx.fillStyle = n.N.col; ctx.beginPath(); ctx.arc(X(n.x), Y(n.z), 4, 0, TAU); ctx.fill(); }
+  ctx.font = `bold ${w < 300 ? 10 : 12}px system-ui`; ctx.textAlign = 'center'; ctx.fillStyle = '#f0dbb1';
+  if (!round) { if (w >= 300) ctx.fillText('OLD WOODS DEEP MINE', w / 2, 22); ctx.fillText('CRYSTAL GROTTO', X(M.x + 12), Y(M.z - 25)); ctx.fillText('HAULAGE', X(M.x - 16), Y(M.z + 16)); ctx.fillText('SURFACE LIFT', X(M.x), Y(M.z + 26)); }
+  ctx.fillStyle = '#ff4a43'; ctx.beginPath(); ctx.arc(X(TOWN.pos.x), Y(TOWN.pos.z), 5, 0, TAU); ctx.fill();
+  ctx.restore();
+}
+function openDeepMineMap() {
+  townPanel('Old Woods Deep Mine', box => {
+    const cv = h('canvas', { 'aria-label': 'Map of the Old Woods Deep Mine' }); box.append(cv);
+    const size = Math.max(220, Math.min(500, window.innerWidth - 75, window.innerHeight - 170)); cv.width = size; cv.height = size; cv.style.width = '100%'; cv.style.maxWidth = size + 'px';
+    drawDeepMineMap(cv.getContext('2d'), size, size, false);
+    box.append(h('p', { class: 'muted' }, 'The lift is at the south end. Ore seams line the west wall; the crystal grotto lies northeast. Mining still requires the right skill and pick.'),
+      h('button', { class: 'btn primary flagtape', onclick: () => { closeVendor(); mineChange(false); } }, 'Ride the lift to the surface'));
+  });
 }
 
 })();

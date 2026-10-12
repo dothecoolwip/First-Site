@@ -6,16 +6,17 @@
 const TMAP = { mini: null, miniT: 0, hits: [], view: null };
 const TMAP_PLACES = [
   ['The list', 0, 0], ['Market', 0, 46], ['Forge yard', -46, 28], ['Tavern', 45, 14],
-  ['Food stalls', 38, -8], ['Archery', 64, 10], ['Farm', 60, -16], ['Homes', -44, 48], ['Club camp', 46, 62], ['Graveyard', 44, -56], ['Pond', -56, 72], ['Festival gate', 0, 70]
+  ['Food stalls', 38, -8], ['Archery', 64, 10], ['Farm', 60, -16], ['Homes', -44, 48], ['Club camp', 46, 62], ['Graveyard', 44, -56], ['Pond', -56, 72], ['Festival gate', 0, 70], ['Deep Mine', -256, -42]
 ];
 function tmapSites() { return [...ARENAS, TRAINING_GROUND]; }
 function tmapMarkers() {
   const out = tmapSites().map(A => ({ x: A.x, z: A.z, icon: A.icon, name: A.name, kind: 'arena', A, far: true }));
   for (const S of TOWN.stalls || []) {
+    if (S.mine) continue;
     if (S.player) { const O = WORLD.others && WORLD.others[S.player]; out.push({ x: O ? O.x : S.x, z: O ? O.z : S.z, icon: '', name: S.V.name, kind: 'player', S }); continue; }
     if (S.arena || (S.secret && !secretFound(S.secret.key))) continue;
     if (S.node) { out.push({ x: S.x, z: S.z, icon: '', name: S.V.name, role: S.V.role, kind: 'node', col: S.node.N.col, S }); continue; }
-    out.push({ x: S.x, z: S.z, icon: S.V.icon || '•', name: S.V.name, role: S.V.role, kind: S.station ? 'station' : 'vendor', key: S.V.key, S });
+    out.push({ x: S.x, z: S.z, icon: S.V.icon || '•', name: S.V.name, role: S.V.role, kind: S.station ? 'station' : 'vendor', key: S.V.key, far: S.V.key === 'mine:enter', S });
   }
   return out;
 }
@@ -176,5 +177,6 @@ function updateMiniMap(dt) {
   const S = cv.clientWidth || 120, dpr = Math.min(2, window.devicePixelRatio || 1);
   if (cv.width !== S * dpr) { cv.width = S * dpr; cv.height = S * dpr; }
   const ctx = cv.getContext('2d'); ctx.setTransform(dpr, 0, 0, dpr, 0, 0);
-  drawTownMap(ctx, { w: S, h: S, scale: S / (TOWN.mounted ? 150 : 100), cx: TOWN.pos.x, cz: TOWN.pos.z, labels: false, round: true });
+  if (TOWN.mineOn) drawDeepMineMap(ctx, S, S, true);
+  else drawTownMap(ctx, { w: S, h: S, scale: S / (TOWN.mounted ? 150 : 100), cx: TOWN.pos.x, cz: TOWN.pos.z, labels: false, round: true });
 }

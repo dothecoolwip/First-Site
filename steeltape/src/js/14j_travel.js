@@ -246,6 +246,7 @@ function animalMake(kind, cb, tint) {
 const ANIMAL = { list: [] };
 function horseAvailable() { return !!(TOWN.horseRent || shopState().owned.horse); }
 function callHorse() {
+  if (TOWN.mineOn) { toastMenu('Your horse must wait above ground. Take the lift to call it.'); return; }
   if (!horseAvailable()) { toastMenu('No horse. Hire one from Edda at the stables just outside the festival gate.'); return; }
   if (TOWN.horse) { if (TOWN.mounted) dismount(); else if (Math.hypot(TOWN.horse.x - TOWN.pos.x, TOWN.horse.z - TOWN.pos.z) < 3.5) mount(); else { TOWN.horse.come = true; toastMenu('You whistle. Your horse trots over.'); } return; }
   animalMake('Horse', A => {
@@ -259,6 +260,8 @@ function mount() { if (!TOWN.horse) return; TOWN.mounted = true; unlock('rider',
 function dismount() { if (!TOWN.horse) return; TOWN.mounted = false; const s = TOWN.face + Math.PI / 2; TOWN.pos.x += Math.sin(s) * 1.4; TOWN.pos.z += Math.cos(s) * 1.4; townCollide(); horseHud(); }
 function updateHorse(dt) {
   const H = TOWN.horse; if (!H) { horseHud(); return; }
+  if (TOWN.mineOn) { H.A.root.visible = false; horseHud(); return; }
+  H.A.root.visible = true;
   if (TOWN.mounted) { H.x = TOWN.pos.x; H.z = TOWN.pos.z; H.face = TOWN.face; H.come = false; }
   else if (H.come) {
     const dx = TOWN.pos.x - H.x, dz = TOWN.pos.z - H.z, d = Math.hypot(dx, dz);
@@ -272,7 +275,7 @@ function updateHorse(dt) {
 }
 function horseHud() {
   const b = $('#townHorse'); if (!b) return;
-  const ok = horseAvailable() && !G.screen; b.hidden = !ok; if (!ok) return;
+  const ok = horseAvailable() && !TOWN.mineOn && !G.screen; b.hidden = !ok; if (!ok) return;
   const near = TOWN.horse && Math.hypot(TOWN.horse.x - TOWN.pos.x, TOWN.horse.z - TOWN.pos.z) < 3.5;
   b.textContent = TOWN.mounted ? '🐴 Dismount' : near ? '🐴 Mount' : '🐴 Whistle';
 }

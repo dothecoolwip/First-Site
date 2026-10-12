@@ -14,12 +14,21 @@ test(`two players in town see each other walk about (${via}), and the list alway
   await page.waitForTimeout(2500); // the lobby starts 1.5 s after the title
   for (const pg of [page, b]) await pg.evaluate(() => document.getElementById('btnFight').click());
   for (const pg of [page, b]) await pg.waitForFunction(() => __ST.TOWN.on && __ST.G.phase === 'town', null, { timeout: 60_000 });
+  for (const pg of [page, b]) await pg.evaluate(() => { __ST.G.renderEvery = 1e9; });
   // Dad walks to the fountain; Kid should see him there
   await page.evaluate(() => { __ST.TOWN.pos = { x: 4, z: 44 }; });
   await b.waitForFunction(() => { const o = Object.values(__ST.WORLD.others); return o.length === 1 && Math.hypot(o[0].x - 4, o[0].z - 44) < 1.5; }, null, { timeout: 60_000 });
   await page.waitForFunction(() => Object.keys(__ST.WORLD.others).length === 1, null, { timeout: 60_000 });
   // he's on Kid's map and talkable
   expect(await b.evaluate(() => __ST.TOWN.stalls.some(s => s.player && s.V.role === 'Online player'))).toBe(true);
+  // Mine presence is a separate floor: players only see and talk to people on their own level.
+  await page.evaluate(() => __ST.TOWN.stalls.find(s => s.V.key === 'mine:enter').open());
+  await b.waitForFunction(() => { const o = Object.values(__ST.WORLD.others)[0]; return o && o.mine && o.J.root.position.y === -25 && !o.J.root.visible && __ST.TOWN.stalls.some(s => s.player && s.mine); }, null, { timeout: 60_000 });
+  await b.evaluate(() => __ST.TOWN.stalls.find(s => s.V.key === 'mine:enter').open());
+  await b.waitForFunction(() => { const o = Object.values(__ST.WORLD.others)[0]; return o && o.J.root.visible; }, null, { timeout: 60_000 });
+  await page.evaluate(() => __ST.TOWN.stalls.find(s => s.V.key === 'mine:exit').open());
+  await b.waitForFunction(() => { const o = Object.values(__ST.WORLD.others)[0]; return o && !o.mine && !o.J.root.visible; }, null, { timeout: 60_000 });
+  await b.evaluate(() => __ST.TOWN.stalls.find(s => s.V.key === 'mine:exit').open());
   // when Dad leaves town for a fight, he disappears from Kid's town
   await page.evaluate(() => __ST.leaveTown(() => {}));
   await b.waitForFunction(() => Object.keys(__ST.WORLD.others).length === 0, null, { timeout: 60_000 });

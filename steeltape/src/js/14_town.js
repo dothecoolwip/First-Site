@@ -127,7 +127,7 @@ function buildTown() {
   for (const [x, z] of [[-RX - 9, -10], [-RX - 10, 4], [-RX - 9, 16], [RX + 9, -14], [RX + 10, 2], [RX + 9, 15], [-8, -RZ - 10], [9, -RZ - 10]]) TOWN.obst.push({ x, z, r: 2.7 });
   for (const V of VENDORS) if (!V.custom) buildStall(V);
   buildSpecialVendors(); buildWorld(); buildSpawnBoards(); navBuild(); buildGatherNodes(TOWN.root); buildSecrets(TOWN.root); navBuild(); realmCells();
-  buildHome(); buildStatue(); buildAvatar(); buildMyPet(); buildWaypoint(); buildAnimals(); buildArenaSeats(); navBuild();
+  buildHome(); buildStatue(); buildAvatar(); buildMyPet(); buildWaypoint(); buildAnimals(); buildArenaSeats(); buildDeepMine(); navBuild();
 }
 // the field venue's own cottages and tree ring would sit in the middle of the festival: hide them in town
 function venueExtras(on) { for (const o of (W3.venueExtras || [])) o.visible = on; if (on) townCrowd(true); }
@@ -157,6 +157,7 @@ function enterTown(vendorKey) {
 // leave without going anywhere (a match is starting)
 function townTeardown() {
   if (!TOWN.on) return; boutStop(); GATHER.on = null; TOWN.busy = false; { const ge = $('#gather'); if (ge) ge.hidden = true; }
+  TOWN.mineOn = false;
   if (TOWN.light) { W3.sun.intensity = TOWN.light.sun; W3.hemi.intensity = TOWN.light.hemi; TOWN.light = null; }
   realmView(false);
   TOWN.on = false; G.phase = ''; document.body.classList.remove('intown'); venueExtras(true); $('#townHud').hidden = true; $('#townPrompt').hidden = true;
@@ -167,6 +168,7 @@ function townTeardown() {
 function leaveTown(next) {
   if (!TOWN.on) { if (next) next(); return; }
   boutStop(); GATHER.on = null; TOWN.busy = false; { const ge = $('#gather'); if (ge) ge.hidden = true; }
+  TOWN.mineOn = false;
   if (TOWN.light) { W3.sun.intensity = TOWN.light.sun; W3.hemi.intensity = TOWN.light.hemi; TOWN.light = null; }
   realmView(false);
   try { lobbySet({ tw: null }); WORLD.lastTw = 0; } catch (e) { }
@@ -181,7 +183,7 @@ function townHudUpdate() { const p = $('#townPurse'); if (p) p.textContent = fmt
 // walking, camera, who you're next to
 function updateTown(dt) {
   if (!TOWN.on) return; updateMiniMap(dt);
-  if (!TOWN.people && typeof UAL !== 'undefined' && UAL.ready) { const keep = { ...TOWN.pos }; buildTown(); TOWN.pos = keep; }
+  if (!TOWN.people && !TOWN.mineOn && typeof UAL !== 'undefined' && UAL.ready) { const keep = { ...TOWN.pos }; buildTown(); TOWN.pos = keep; }
   updateGather(dt);
   const walking = !G.screen && !G.paused && !TOWN.busy;
   const k = IN.keys;
@@ -213,12 +215,13 @@ function updateTown(dt) {
   if (walking && TOWN.keyPrev !== undefined) { if (k.KeyH && !TOWN.keyPrev.h) callHorse(); if (k.KeyR && !TOWN.keyPrev.r && TOWN.wp) { TRAVEL.auto = !TRAVEL.auto; compassHud(); } }
   TOWN.keyPrev = { h: !!k.KeyH, r: !!k.KeyR };
   if (J && !TOWN.mounted) {
-    J.root.position.set(TOWN.pos.x, gy(TOWN.pos.x, TOWN.pos.z), TOWN.pos.z); J.root.rotation.y = TOWN.face;
+    J.root.position.set(TOWN.pos.x, mineGroundY(TOWN.pos.x, TOWN.pos.z), TOWN.pos.z); J.root.rotation.y = TOWN.face;
     if (J.ual) { J.play(sp > 3.5 ? 'Jog_Fwd_Loop' : sp > 0.3 ? 'Walk_Loop' : 'Idle_Loop', 0.2); J.mixer.update(dt); }
   }
   // the nearest vendor within reach turns to you and talks
   let best = null, bd = 2.8;
   for (const S of TOWN.stalls) {
+    if (!!S.mine !== !!TOWN.mineOn) continue;
     const d = Math.hypot(S.ax - TOWN.pos.x, S.az - TOWN.pos.z); if (d < bd) { bd = d; best = S; }
     const N = S.npc; if (N && N.ual) { const talk = S === TOWN.near || S.V.key === TOWN.vendor; N.play(talk ? 'Idle_Talking_Loop' : 'Idle_Loop', 0.4); if (N.root.visible) N.mixer.update(dt); }
     const dd = Math.hypot(S.x - TOWN.pos.x, S.z - TOWN.pos.z); S.label.visible = dd < 30 && !(S.node && S.node.until);
@@ -238,6 +241,7 @@ function updateTown(dt) {
 function townTalk(S) { if (S.open) S.open(); else openVendor(S.V.key); }
 function townCollide() {
   const P = TOWN.pos, r = 0.42;
+  if (TOWN.mineOn) { mineCollide(P, r); return; }
   for (let it = 0; it < 2; it++) {
     const A = arenaBlocked(P.x, P.z, r);
     if (A) { // push out of the list along the shortest way (you watch from the rope or the stands)
@@ -257,8 +261,9 @@ function updateTownCamera(dt) {
   if (TOWN.peek > 0) { TOWN.peek -= dt; cam.position.set(-104, 2.4, -200); cam.lookAt(-60, 3, -190); if (TOWN.peek <= 0) TOWN.cam = null; return; }
   const aspect = window.innerWidth / window.innerHeight, dist = TOWN.dist * (aspect < 0.8 ? 1.3 : 1);
   const tx = TOWN.pos.x, tz = TOWN.pos.z, cp = Math.cos(TOWN.pitch);
-  const gY = gy(tx, tz), cxp = tx + Math.sin(TOWN.yaw) * cp * dist, czp = tz + Math.cos(TOWN.yaw) * cp * dist;
-  let want = new THREE.Vector3(cxp, Math.max(gY, gy(cxp, czp)) + 1.4 + Math.sin(TOWN.pitch) * dist, czp);
+  const gY = mineGroundY(tx, tz), cxp = tx + Math.sin(TOWN.yaw) * cp * dist, czp = tz + Math.cos(TOWN.yaw) * cp * dist;
+  let want = new THREE.Vector3(cxp, Math.max(gY, mineGroundY(cxp, czp)) + 1.4 + Math.sin(TOWN.pitch) * dist, czp);
+  if (TOWN.mineOn) { const M = DEEP_MINE; want.set(clamp(want.x, M.x - M.halfX + 2, M.x + M.halfX - 2), Math.min(want.y, M.y + 5.8), clamp(want.z, M.z - M.halfZ + 2, M.z + M.halfZ - 2)); }
   const look = new THREE.Vector3(tx, gY + 1.35, tz);
   if (!TOWN.cam) { TOWN.cam = want.clone(); TOWN.look = look.clone(); }
   const kk = 1 - Math.exp(-8 * dt); TOWN.cam.lerp(want, kk); TOWN.look.lerp(look, kk);
@@ -283,6 +288,7 @@ function openVendor(key) {
 function closeVendor() { TOWN.vendor = null; TOWN.actPrev = true; showScreen(null); townHudUpdate(); townPrompt(); refreshTouchUI(); }
 // the realm map: waypoints (no teleporting), and a way home
 function openTownMap() {
+  if (TOWN.mineOn) { openDeepMineMap(); return; }
   AU.click(); TOWN.vendor = null;
   const box = $('#townShopBody'); box.innerHTML = '';
   $('#townShopHead').innerHTML = '';
@@ -290,7 +296,7 @@ function openTownMap() {
   box.append(townMapCanvas());
   box.append(h('p', { class: 'muted small' }, 'Other places are below. Nothing teleports: walk, or hire a horse at the stables.'));
   const list = h('div', { class: 'ups shop' }); box.append(list);
-  const rows = TOWN.stalls.filter(s => !s.player && !s.node && !s.arena && (!s.secret || secretFound(s.secret.key))).map(S => ({ icon: S.V.icon, name: S.V.name, role: S.V.role, x: S.ax, z: S.az, blurb: S.station ? '' : vendorBlurb(S.V.key) + ' ' }));
+  const rows = TOWN.stalls.filter(s => !s.mine && !s.player && !s.node && !s.arena && (!s.secret || secretFound(s.secret.key))).map(S => ({ icon: S.V.icon, name: S.V.name, role: S.V.role, x: S.ax, z: S.az, blurb: S.station ? '' : vendorBlurb(S.V.key) + ' ' }));
   for (const r of rows) r.d = Math.hypot(r.x - TOWN.pos.x, r.z - TOWN.pos.z);
   rows.sort((a, b) => a.d - b.d);
   for (const r of rows) {

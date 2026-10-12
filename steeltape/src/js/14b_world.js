@@ -195,7 +195,7 @@ function buildMyPet() { if (WORLD.pet) TOWN.root.remove(WORLD.pet); WORLD.pet = 
 function townPresence() {
   if (!TOWN.on) { if (WORLD.lastTw) { lobbySet({ tw: null }); WORLD.lastTw = 0; } return; }
   if (G.realTime - WORLD.lastTw < 1) return; WORLD.lastTw = G.realTime;
-  lobbySet({ tw: { x: Math.round(TOWN.pos.x * 10) / 10, z: Math.round(TOWN.pos.z * 10) / 10, f: Math.round(TOWN.face * 100) / 100, l: lookLite(), g: guildTag() } });
+  lobbySet({ tw: { x: Math.round(TOWN.pos.x * 10) / 10, z: Math.round(TOWN.pos.z * 10) / 10, f: Math.round(TOWN.face * 100) / 100, mine: !!TOWN.mineOn, l: lookLite(), g: guildTag() } });
 }
 function updateOthers(dt) {
   townPresence();
@@ -206,17 +206,17 @@ function updateOthers(dt) {
     if (!O) {
       const L = tw.l || {}; const J = lookPerson({ b: L.b, t: L.t, h: L.h, c: L.c, n: L.n, o: L.o, s: L.s, d: L.d }, 1.8);
       const nm = String(p.presence.name || 'A fighter').slice(0, 20), lab = townLabel(nm, (tw.g ? `[${tw.g}] ` : '') + 'online now', '#7fb6ff'); lab.position.y = 2.35; J.root.add(lab);
-      J.root.position.set(tw.x, gy(tw.x, tw.z), tw.z); TOWN.root.add(J.root);
-      O = WORLD.others[p.peer] = { J, x: tw.x, z: tw.z, f: tw.f || 0, p, lk: JSON.stringify(tw.l || {}) };
-      TOWN.stalls.push({ V: { key: 'p:' + p.peer, name: nm, role: 'Online player', icon: '🟢' }, g: J.root, npc: null, ry: 0, x: tw.x, z: tw.z, ax: tw.x, az: tw.z, label: lab, open: () => { AU.click(); openProfile(O.p, () => { showScreen(null); refreshTouchUI(); townPrompt(); }); }, player: p.peer });
+      J.root.position.set(tw.x, tw.mine ? DEEP_MINE.y : gy(tw.x, tw.z), tw.z); TOWN.root.add(J.root);
+      O = WORLD.others[p.peer] = { J, x: tw.x, z: tw.z, mine: !!tw.mine, f: tw.f || 0, p, lk: JSON.stringify(tw.l || {}) };
+      TOWN.stalls.push({ V: { key: 'p:' + p.peer, name: nm, role: 'Online player', icon: '🟢' }, g: J.root, npc: null, ry: 0, x: tw.x, z: tw.z, ax: tw.x, az: tw.z, label: lab, mine: !!tw.mine, open: () => { AU.click(); openProfile(O.p, () => { showScreen(null); refreshTouchUI(); townPrompt(); }); }, player: p.peer });
     }
     if (O.lk !== JSON.stringify(tw.l || {})) { TOWN.root.remove(O.J.root); delete WORLD.others[p.peer]; TOWN.stalls = TOWN.stalls.filter(s2 => s2.player !== p.peer); continue; } // they changed clothes: rebuild next frame
-    O.p = p; const k = Math.min(1, dt * 4), ox = O.x, oz = O.z;
+    O.p = p; if (O.mine !== !!tw.mine) { O.x = tw.x; O.z = tw.z; O.mine = !!tw.mine; } const k = Math.min(1, dt * 4), ox = O.x, oz = O.z;
     O.x += (tw.x - O.x) * k; O.z += (tw.z - O.z) * k; O.f = tw.f || O.f;
-    O.J.root.position.set(O.x, gy(O.x, O.z), O.z); O.J.root.rotation.y = O.f;
+    O.J.root.position.set(O.x, O.mine ? DEEP_MINE.y : gy(O.x, O.z), O.z); O.J.root.rotation.y = O.f; O.J.root.visible = O.mine === !!TOWN.mineOn;
     const sp = Math.hypot(O.x - ox, O.z - oz) / Math.max(dt, 1e-3);
     if (O.J.ual) { O.J.play(sp > 3.5 ? 'Jog_Fwd_Loop' : sp > 0.3 ? 'Walk_Loop' : 'Idle_Loop', 0.25); O.J.mixer.update(dt); }
-    const S = TOWN.stalls.find(s => s.player === p.peer); if (S) { S.x = S.ax = O.x; S.z = S.az = O.z; }
+    const S = TOWN.stalls.find(s => s.player === p.peer); if (S) { S.x = S.ax = O.x; S.z = S.az = O.z; S.mine = O.mine; }
   }
   for (const id in WORLD.others) if (!seen[id]) { TOWN.root.remove(WORLD.others[id].J.root); delete WORLD.others[id]; TOWN.stalls = TOWN.stalls.filter(s => s.player !== id); }
 }
