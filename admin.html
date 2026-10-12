@@ -128,7 +128,7 @@ async function load() {
   if (!session) { $('#login').hidden = false; $('#app').hidden = true; return; }
   const r = await fetch(URL_ + '/functions/v1/steeltape-admin', { headers: { Authorization: 'Bearer ' + session.access_token, apikey: KEY } });
   const d = await r.json().catch(() => ({}));
-  if (!r.ok) { $('#err').textContent = d.error === 'not an admin' ? 'This account isn’t the owner.' : 'Couldn’t load: ' + (d.error || r.status); await sb.auth.signOut(); return; }
+  if (!r.ok) { $('#login').hidden = false; $('#app').hidden = true; $('#err').textContent = d.error === 'not an admin' ? 'This account isn’t the owner. Sign out and use the owner account.' : 'Couldn’t load: ' + (d.error || r.status) + '. If you just signed in, refresh this page.'; return; }
   $('#login').hidden = true; $('#app').hidden = false; $('#who').textContent = d.email;
   const P = d.players || [], S = d.stats || {};
   allTrackedPlayers = P;
@@ -163,7 +163,7 @@ async function load() {
 }
 $('#signin').onclick = async () => { $('#err').textContent = ''; const { error } = await sb.auth.signInWithPassword({ email: $('#email').value.trim(), password: $('#pass').value }); if (error) { $('#err').textContent = error.message; return; } load(); };
 $('#google').onclick = () => sb.auth.signInWithOAuth({ provider: 'google', options: { redirectTo: location.origin + location.pathname } });
-$('#signout').onclick = async () => { await sb.auth.signOut(); load(); };
+$('#signout').onclick = async () => { await sb.auth.signOut(); $('#err').textContent = ''; load(); };
 $('#refresh').onclick = load;
 sb.auth.onAuthStateChange(() => { setTimeout(() => load().catch(e => { $('#err').textContent = String(e); }), 0); });
 load();
