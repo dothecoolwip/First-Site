@@ -120,7 +120,7 @@ function renderLobbyParts() {
   for (const t of [0, 1]) set.append(step(`Bots, ${t ? 'Wardens' : 'Reavers'}`, C.bots[t], 0, C.n - C.h[t], v => { const b = ONL.L.bots.slice(); b[t] = v; ONL.L.bots = b; hostSync(); lobbyRefresh(); }));
   const seg = (label, opts, cur, fn) => { const s = h('div', { class: 'seg small' }); for (const [v, n] of opts) s.append(h('button', { 'aria-pressed': String(cur === v), onclick: () => { AU.click(); fn(v); } }, n)); return h('div', { class: 'setrow' }, h('span', null, label), s); };
   set.append(seg('Arena', Object.values(VENUES).map(V => [V.key, V.name]), L.venue, v => { ONL.L.venue = v; hostSync(); lobbyRefresh(); }));
-  set.append(seg('Division', [['men', 'Men'], ['women', 'Women'], ['youth', 'Youth']], L.cat, v => { ONL.L.cat = v; hostSync(); lobbyRefresh(); }));
+  set.append(seg('Division', [['men', 'Adult'], ['youth', 'Kids']], L.cat === 'youth' ? 'youth' : 'men', v => { ONL.L.cat = v; hostSync(); lobbyRefresh(); }));
   set.append(seg('Find a match', [['1', 'Open to anyone'], ['0', 'Friends only']], L.open ? '1' : '0', v => { setLobbyOpen(v === '1'); lobbyRefresh(); }));
   renderLobbyInvite();
 }
