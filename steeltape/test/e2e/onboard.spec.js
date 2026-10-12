@@ -53,7 +53,7 @@ test('a completed legacy save cannot enter the town after signout and retains it
   await game.run('(enterTown(), true)');
   expect(await game.run('!TOWN.on')).toBe(true);
   // Mock a verified account for the isolated, no-network browser suite.
-  await game.run("(BOS.user = { id: 'verified-test-uid' }, CLOUD.ready = true, onbResumeAfterAuth(), true)");
+  await game.run("(BOS.user = { id: 'verified-test-uid' }, onbResumeAfterAuth(), true)");
   await game.until("G.screen === 'title'");
   expect(await game.run('CAREER.purse === 1013 && CAREER.upgrades.harness === 2 && CAREER.stats.matches === 8')).toBe(true);
 });
