@@ -1,0 +1,42 @@
+name: Publish Steel and Tape scoreboards
+on:
+  push:
+    branches: [source]
+    paths:
+      - 'steeltape/src/js/14p_boards.js'
+      - 'steeltape/src/js/14_town.js'
+      - 'steeltape/src/js/13_main.js'
+      - 'steeltape/scripts/publish_boards.py'
+      - '.github/workflows/publish-steeltape-boards.yml'
+  workflow_dispatch:
+permissions:
+  contents: write
+jobs:
+  publish:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Check out editable game source
+        uses: actions/checkout@v4
+        with:
+          ref: source
+          path: source
+      - name: Check out production bundle
+        uses: actions/checkout@v4
+        with:
+          ref: main
+          path: publish
+      - name: Verify and patch the existing production game
+        run: |
+          python3 source/steeltape/scripts/publish_boards.py source/steeltape/src/js/14p_boards.js publish/index.html publish/sw.js
+      - name: Commit and publish only the game and service worker
+        working-directory: publish
+        run: |
+          git config user.name "steel-and-tape-builder"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          git add index.html sw.js
+          if git diff --cached --quiet; then
+            echo "No new scoreboard changes"
+          else
+            git commit -m "Publish live spawn leaderboards and online board"
+            git push origin HEAD:main
+          fi
