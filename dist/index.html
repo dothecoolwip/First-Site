@@ -1,5 +1,5 @@
 <!doctype html><html><head><meta charset="utf-8"><link rel="manifest" href="manifest.webmanifest"><meta name="theme-color" content="#0f1316"><link rel="apple-touch-icon" href="icon-192.png"><meta name="apple-mobile-web-app-capable" content="yes"><meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover"></head><body>
-<script>window.BUILD_VER="steel-tape-spectate13";</script><title>Buhurt: Steel &amp; Tape</title>
+<script>window.BUILD_VER="steel-tape-ec53a7edfe";</script><title>Buhurt: Steel &amp; Tape</title>
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Barlow+Semi+Condensed:wght@400;500;600;700&family=Big+Shoulders+Display:wght@700;800;900&family=Permanent+Marker&display=swap">
@@ -14269,7 +14269,7 @@ async function boot(hot) {
   if (location.hash === '#autotest') setTimeout(autotest, 300);
   window.__ST = { G, AU, buildShield, buildWeapon, W3, startTourney, quickFight, toTitle, openRepair, kitCheck, setupMatch, toTactics, beginFight, endRound, matchEnd, CLUBS, WEAPONS, setView, toast, renderKitPicker, applyLoadout, IN, FP, showScreen, weaponIcon, startCine, startTraining, startLadder, openCareer, openModes, openLadder, CAREER, setLesson, TR, unlock, togglePause, afterRound, renderHow, selectPiece, selectTape, msg, renderSheet, setHud, endTraining, setMode, PAD, navMove, focusFirst, sparks, CUTE, THREE, BREATH, setCuteDeco, flipFx, PHOTO, UAL, raiseFlags, startVersus, startFFA, startBracket, startKid, KID, openSeason, startSeasonMatch, setVenue, VS, SPLIT, NET, buildOnlineMatch, hostLobby, joinLobby, ONL, vinControl, openRun, openDaily, openBracket, showBracket, bracketResult, ffaMatchEnd, ffaLeader, ffaWinner, endKid, openPhoto, closePhoto, startReplay, stopReplay, RP, store, startRunFight, newRun, runEnd, WX, setWeather, padVin, readVersus, applyLo, myLoadout, netDropped, netLeave, showIntro, installForged, dailyPlan, openKids, openVersus, openPicks, LESSONS, rivalClub, startGrudge, startDaily, seasonState, newSeason, refreshDaily, VENUES, COMM, hitMapHtml, resetFighterForRound, DIFF, PIN, PADS, NIN, padsUpdate, seatPads, LOBBY, MM, openOnlineHub, benchDown, benchMove, REP, squirePatch, coverage, openProfile, myProfile, BOS, updateTitlePurse, ACH, progressCheck, challenges, masteryOf, S2, rankOf, counterValue, renderCareer, progressMatch, saveCareer, shopState, shopUp, tapeLeft, shopMatchEnd, shopPrizeMult, shopXpMult, swingTimes, pieceWearMult, TABARDS, refillTape, renderShop, UPGRADES, freshKit, TAPE_STOCK, enterTown, leaveTown, TOWN, openVendor, closeVendor, openTownMap, shopFx, renderVendor, VENDORS, ITEMS, itemCost, spCost, skillRoom, sponsorIncome, BOOSTS, STALL_AT, HOMES, FURNISH, pfx, squadFx, boostKit, townCollide, townRefresh, townWalkTo, townTalk, townTeardown, lookState, WORLD, guildCheck, STATIONS, townDressMe, FOLK, updateFolk, navBlocked, buildFolk, BOUT, boutStart, boutStop, boutTick, drawTownMap, updateMiniMap, costumePerson, OUTFIT, buildSkinWeapon, skinIcon, wskinList, skinFor, buildMyWeapon, wskinFamOf, GATHER, startGather, gatherSwing, stopGather, tradeState, tradeLevel, tradeGain, give, have, craft, NODES, MATS, renderTrades, TRADE_SKILLS, ARENAS, DISTRICTS, TRAVEL, setWaypoint, clearWaypoint, realmPath, callHorse, mount, dismount, ANIMAL, districtAt, realmCull, REALM_TIERS, gateOpen, townJump, stableRows, horseAvailable, peopleCull, boutArenaFor, arenaLive, bagSlots, bagState, bagRoom, secretFound, lookOwned, SECRETS, stopSpectating, startTrial, TRIALS, tierCap, gy, tierOf, HILL, hillHouses, cliffAt, gateBlocked, arenaBlocked, localPath, NAV, rampAt, ROSTER, rosterClubs, rosterLive, rosterName, liveBoutPick, aiTier, AI_TIER, guardOutcome, fighterGlow, ONB, onbStage, onbSet, openCreator, tourStart, tourEnd, TOUR_STOPS, THRONE, throneHolder, throneFight, throneBow, openThrone, sideFromDrag, VOICE };
   if (location.protocol === 'file:' && window.__steeltapeTest)
-    Object.assign(window.__ST, { penalize, failPiece, closeRepair, xpNeed, tierProf, runToRepairCorner, onbAfterAccount, onbAccountGate, onbResumeAfterAuth, leaveTarget, leaveScreen, CLOUD, bosLoadInfo, bosBoot, swingLeverage, weaponBindPossible, resolveSwing, sweptSwingTarget, updateAction, think, LIBRARY, LIBRARY_DATA, WEAPON_VARIANTS, playerWeaponDef, libraryModel, libraryThumb });
+    Object.assign(window.__ST, { penalize, failPiece, closeRepair, xpNeed, tierProf, runToRepairCorner, onbAfterAccount, onbAccountGate, onbResumeAfterAuth, leaveTarget, leaveScreen, CLOUD, bosLoadInfo, bosBoot, swingLeverage, weaponBindPossible, resolveSwing, sweptSwingTarget, updateAction, think, updateTownCamera, LIBRARY, LIBRARY_DATA, WEAPON_VARIANTS, playerWeaponDef, libraryModel, libraryThumb });
 }
 
 function autotest() {
@@ -16454,13 +16454,13 @@ function b64(s, T) { const bin = atob(s), u = new Uint8Array(bin.length); for (l
 function kpiece(parent, key, x, y, z, ry = 0, s = 1) {
   const pk = (typeof PACK_GEO !== 'undefined' && PACK_GEO[key]) || (typeof DECOR_GEO !== 'undefined' && DECOR_GEO[key]) || (typeof REALM_GEO !== 'undefined' && REALM_GEO[key]) || (typeof CASTLE_GEO !== 'undefined' && CASTLE_GEO[key]);
   if (pk) { // Slavic World / PolygonSight models: one mesh with vertex colours
-    const g = new THREE.Group(); g.position.set(x, y, z); g.rotation.y = ry; g.scale.setScalar(s); parent.add(g);
+    const g = new THREE.Group(); g.position.set(x, y, z); g.rotation.y = ry; g.scale.setScalar(s); g.userData.assetKey = key; parent.add(g);
     const gg = geo('pack:' + key, () => { const b = new THREE.BufferGeometry(); const P = b64(pk.p, Int16Array), F = new Float32Array(P.length); for (let i = 0; i < P.length; i++) F[i] = P[i] / 1000; b.setAttribute('position', new THREE.BufferAttribute(F, 3)); const C8 = b64(pk.c, Uint8Array), CF = new Float32Array(C8.length); for (let i = 0; i < C8.length; i++) CF[i] = SRGB_LIN[C8[i]]; b.setAttribute('color', new THREE.BufferAttribute(CF, 3)); b.setIndex(new THREE.BufferAttribute(b64(pk.i, pk.b ? Uint32Array : Uint16Array), 1)); b.computeVertexNormals(); b.computeBoundingSphere(); return b; });
     PMAT.m = PMAT.m || lmat({ vertexColors: true, roughness: 0.9, flatShading: true });
     const me = new THREE.Mesh(gg, PMAT.m); me.castShadow = SHADOWS; me.receiveShadow = true; g.add(me); return g;
   }
   const src = typeof KENNEY_GEO !== 'undefined' && KENNEY_GEO[key]; if (!src) return null;
-  const g = new THREE.Group(); g.position.set(x, y, z); g.rotation.y = ry; g.scale.setScalar(s); parent.add(g);
+  const g = new THREE.Group(); g.position.set(x, y, z); g.rotation.y = ry; g.scale.setScalar(s); g.userData.assetKey = key; parent.add(g);
   src.mats.forEach((m, i) => {
     const gg = geo('ken:' + key + i, () => { const b = new THREE.BufferGeometry(); b.setAttribute('position', new THREE.Float32BufferAttribute(m.v.map(q => q / 1000), 3)); b.setIndex(m.i); const nb = b.toNonIndexed(); nb.computeVertexNormals(); return nb; });
     const me = new THREE.Mesh(gg, kmat(m)); me.castShadow = SHADOWS && m.a >= 1; me.receiveShadow = true; g.add(me);
@@ -17040,12 +17040,12 @@ function pd(N, P) { return Math.hypot(N.x - P.x, N.z - P.z); }
 // Everything that blocks you goes into TOWN.obst (circles); flora is scattered only outside the planned areas.
 const FEST_RESERVED = [ // [x0, x1, z0, z1] kept clear of random trees and rocks
   [-18, 18, 22, 72], [-31, 31, -108, -57], [-7, 7, -64, -22], [-53, -26, -13, 33], [23, 53, -12, 32], [27, 64, 38, 74],
-  [-72, -44, -76, -35],
+  [-72, -44, -76, -35], [-70, -42, 65, 86],
   [33, 58, -68, -42], [-51, -27, -42, -18], [-52, -32, 44, 64], [-75, -54, 34, 70], [55, 72, 0, 20], [52, 80, -40, -2], [-33, -18, 26, 48], [-30, -18, -52, -40], [-86, -52, -60, -12]
 ];
 function festReserved(x, z, pad = 0) { return FEST_RESERVED.some(([a, b, c, d]) => x > a - pad && x < b + pad && z > c - pad && z < d + pad); }
 function buildFestival(R) {
-  const O = TOWN.obst, add = (key, x, z, ry, s, r) => { const p = kpiece(R, key, x, 0, z, ry || 0, s || 1); if (r) O.push({ x, z, r }); return p; };
+  const O = TOWN.obst, add = (key, x, z, ry, s, r) => { const p = kpiece(R, key, x, gy(x, z), z, ry || 0, s || 1); if (r) O.push({ x, z, r }); return p; };
   const line = (x0, z0, x1, z1, r, gap) => { const L = Math.hypot(x1 - x0, z1 - z0), n = Math.max(1, Math.round(L / (r * 1.4))); for (let i = 0; i <= n; i++) { const t = i / n, x = x0 + (x1 - x0) * t, z = z0 + (z1 - z0) * t; if (gap && gap(x, z)) continue; O.push({ x, z, r }); } };
   TOWN.mapRects = [];
   const ground = (x0, x1, z0, z1, col, tex) => {
@@ -17056,7 +17056,7 @@ function buildFestival(R) {
     const pos = geo.attributes.position;
     for (let i = 0; i < pos.count; i++) pos.setY(i, gy(cx + pos.getX(i), cz + pos.getZ(i)) + 0.025);
     pos.needsUpdate = true; geo.computeVertexNormals();
-    const g = mk(R, geo, lmat({ map: tex === false ? null : venueTex('dirt'), color: col, roughness: 1, side: THREE.DoubleSide }), cx, 0, cz, false);
+    const g = mk(R, geo, lmat({ map: tex === false ? null : venueTex(tex || 'path'), alphaMap: realmEdgeMask('patch'), transparent: true, depthWrite: false, color: col, roughness: 1, side: THREE.DoubleSide }), cx, 0, cz, false);
     g.receiveShadow = true; return g;
   };
   const sign = (text, col, x, y, z, ry, s) => { const sg = townSign(text, col); sg.position.set(x, y, z); sg.rotation.y = ry || 0; if (s) sg.scale.setScalar(s); R.add(sg); return sg; };
@@ -17065,34 +17065,33 @@ function buildFestival(R) {
   // ---- the world heightfield replaces the old featureless grass plane
   buildRealmTerrain(R);
   // ---- paths and squares
-  ground(-17, -5, 37, 52, '#b9a37c'); ground(-4.5, 4.5, -66, -24, '#b4a07a'); ground(-52, -28, -12, 31, '#b2a07a'); ground(25, 51, -10, 30, '#b9a37c');
-  ground(-50, -28, -40, -20, '#a89068'); ground(29, 61, 40, 72, '#a8956c');
+  ground(-17, -5, 37, 52, '#d2bea0'); ground(-4.5, 4.5, -66, -24, '#cbbb9f'); ground(-52, -28, -12, 31, '#c5b192'); ground(25, 51, -10, 30, '#c8b79a');
+  ground(-50, -28, -40, -20, '#bea989'); ground(29, 61, 40, 72, '#c2b193');
   // Downloaded CC0 details fill the crafts, food, training, and woodland edges.
   const librarySolid = { Anvil: 0.45, WeaponStand: 0.55, Barrel_Apples: 0.5, Crate_Wooden: 0.45,
     Stall_Empty: 1.4, Stall_Cart_Empty: 1.2, Barrel: 0.5,
     Workbench: 0.8, Dummy: 0.4, Table_Large: 1.2, Bookcase_2: 0.65,
     CommonTree_1: 1.1, Pine_1: 1.1, Rock_Medium_1: 0.7 };
   for (const [key, x, z, height, yaw] of [
-    ['Anvil', -43, 24, 0.9, 0], ['WeaponStand', -43, 20, 1.4, 0.6],
+    ['Anvil', -51, 27.5, 0.9, 0], ['WeaponStand', -48.5, 16.5, 1.4, 0.6],
     ['Barrel_Apples', 41, 24, 0.95, 0], ['FarmCrate_Carrot', 45, 47, 0.65, 0.3],
     ['Crate_Wooden', -47, 7, 0.75, 0.2], ['Bag', -16, 54, 0.55, 0],
     ['Bush_Common_Flowers', 76, 34, 1.1, 0], ['Fern_1', -77, -6, 0.8, 0.4],
     ['CommonTree_1', 80, -27, 6.5, 0.7], ['Pine_1', -81, -33, 7.2, 0.4],
     ['Workbench', -49, 29, 1.1, 0.3], ['Shield_Wooden', -48, 18, 0.8, 0.2],
     ['Dummy', -63, -65, 1.7, 0], ['Table_Large', 48, 20, 1.1, 0.4],
-    ['Chair_1', 50, 18, 0.9, 0.6], ['Bookcase_2', -30, -43, 2.1, 0],
+    ['Chair_1', 50, 18, 0.9, 0.6],
     ['Bush_Common', -82, 28, 1.2, 0.3], ['Grass_Common_Short', 73, -19, 0.5, 0],
-    ['Rock_Medium_1', -79, 15, 1.3, 0.5], ['RockPath_Round_Small_1', 70, 32, 0.5, 0],
+    ['Rock_Medium_1', -79, 15, 1.3, 0.5],
     ['Stall_Empty', -20, 58, 2.4, 0.2], ['Stall_Cart_Empty', 20, 59, 2.2, -0.2],
     ['FarmCrate_Apple', -18, 53, 0.7, 0], ['Barrel', 18, 53, 0.95, 0],
-    ['Lantern_Wall', -48, 12, 0.8, 0.3],
-  ]) { const prop = libraryPlace(R, key, x, z, height, yaw); if (key === 'Lantern_Wall') prop.position.y += 1.7; if (librarySolid[key]) O.push({ x, z, r: librarySolid[key] }); }
+  ]) { libraryPlace(R, key, x, z, height, yaw); if (librarySolid[key]) O.push({ x, z, r: librarySolid[key] }); }
   // ---- the festival gate at the south end of main street
   for (const sx of [-7, 7]) { add('cs_tower_mid', sx, 69, 0, 0.9, 2.6); const t = add('cs_tower_top_1', sx, 69, 0, 0.9, 0); if (t) t.position.y = 3.6; const b = add(sx < 0 ? 'bannerRed' : 'bannerGreen', sx, 66.6, 0, 2.6, 0); if (b) b.position.y = 0.4; }
   for (const sx of [-4.6, 4.6]) mk(R, geo('fest_gpole', () => new THREE.CylinderGeometry(0.1, 0.12, 6.4, 8)), tmat('#4a3422'), sx, 3.2, 68.6);
   sign('BUHURT FESTIVAL', '#6d1b28', 0, 5.7, 68.7, Math.PI, 3.2); sign('BUHURT FESTIVAL', '#6d1b28', 0, 5.7, 68.5, 0, 3.2);
   // ---- main street: a clear processional route; furnishings belong to its side plaza and stalls
-  for (const z of [30, 38, 46, 54, 62]) for (const sx of [-16.6, 16.6]) add('lantern', sx, z, 0, 2, 0.3);
+  for (const z of [30, 42, 54, 66]) for (const sx of [-16.6, 16.6]) add('ps_lamp', sx, z, 0, 1, 0.3);
   add('fountainRoundDetail', -11, 44, 0, 2.3, 2.4);
   for (const [x, z, k] of [[-3.4, 24.4, 'bannerRed'], [3.4, 24.4, 'bannerGreen'], [-5, 66, 'bannerGreen'], [5, 66, 'bannerRed']]) add(k, x, z, 0, 2.2, 0.35);
   add('cartHigh', -15, 64.5, 0.5, 2, 1.4); add('cart', 14.5, 63.5, -0.4, 2, 1.3);
@@ -17104,13 +17103,13 @@ function buildFestival(R) {
   add('ps_anvil', -42.4, 27, 0.4, 1.4, 0.5); add('ps_sharpener', -40.6, 28.8, 1.1, 1, 0.8); add('slv_barrel', -40, 15.6, 0, 1.2, 0.5);
   add('dp_weapon_rack', -42.6, 11, Math.PI / 2, 1, 0.6); add('dp_shield', -42.4, 7.8, Math.PI / 2, 1, 0.4); add('bf_crate', -44, 13, 0.6, 0.8, 0.5);
   add('dp_stocks', -31.4, -8, 0.3, 1, 0.8); add('dp_x_stocks', -31.2, 4.6, -0.3, 1, 0.8); add('dp_treasure_chest', -41.8, 1.4, Math.PI / 2, 1, 0.6);
-  for (const z of [-10, 0, 10, 20, 30]) add('lantern', -29, z, 0, 2, 0.3);
+  for (const z of [-10, 2, 14, 26]) add('ps_lamp', -29, z, 0, 1, 0.3);
   // ---- training grounds (north-west): pells to practise on, a rack, the watchtower, the wizard's cauldron
   for (const [x, z] of [[-31, -26], [-31, -30.5], [-31, -35]]) { mk(R, geo('fest_pell', () => new THREE.CylinderGeometry(0.13, 0.15, 1.9, 8)), tmat('#8a6a42'), x, 0.95, z).castShadow = true; mk(R, geo('fest_pellb', () => new THREE.CylinderGeometry(0.2, 0.2, 0.12, 8)), tmat('#5a4430'), x, 0.06, z); O.push({ x, z, r: 0.35 }); }
   add('dp_weapon_rack', -44, -26.6, Math.PI / 2, 1, 0.6); add('dp_bench', -44, -33.4, Math.PI / 2, 1, 0.5); add('bf_armor_rack', -44, -36.6, Math.PI / 2, 1, 0.6);
   add('slv_tower', -60, -30, 0.3, 1, 4.6); add('slv_cauldron', -27.6, -43.6, 0, 2.2, 0.7); { const brew = mk(R, geo('w_brew', () => new THREE.SphereGeometry(0.32, 12, 8, 0, TAU, 0, Math.PI / 2)), tmat('#7cff6b', { emissive: '#1aa000', emissiveIntensity: 1.2 }), -27.6, 0.62, -43.6); brew.rotation.x = Math.PI; WORLD.flick.push(brew); }
   // The tutorial is a place you can enter on foot, beside the trainer rather than a disconnected menu scene.
-  arenaList(R, TRAINING_GROUND, { floor: '#b08d62', floorTex: 'dirt', post: '#70502d', rail: '#b88d53', signCol: '#a36b37', stands: false });
+  arenaList(R, TRAINING_GROUND, { floor: '#c6ad83', floorTex: 'path', post: '#70502d', rail: '#b88d53', signCol: '#a36b37', stands: false });
   for (const x of [-63, -58, -53]) {
     mk(R, geo('training_pell', () => new THREE.CylinderGeometry(0.16, 0.2, 2.2, 8)), tmat('#8a6a42'), x, 1.1, -59);
     add('mk_Dummy', x, -66, 0, 0.9, 0.45);
@@ -17129,9 +17128,9 @@ function buildFestival(R) {
   for (const [x, z] of [[30, 15.4], [31.2, 15.8]]) { const m = add('dp_ale_mug', x, z, 0, 1.4, 0); if (m) m.position.y = 0.72; } { const j = add('dp_jug', 30.6, 15.6, 0, 1.2, 0); if (j) j.position.y = 0.72; }
   add('ps_barrel', 40.6, 23.6, 0, 1.6, 0.5); add('ps_barrel', 41.4, 22.2, 1, 1.5, 0.5); add('fy_vil_beer_barrel', 41, 17, 0.6, 1, 0.7); add('fy_asia_brazier', 33.6, 27.6, 0, 1, 0.6);
   { const fl = mk(R, geo('fest_dance', () => new THREE.PlaneGeometry(6, 5)), tmat('#8a6a42'), 31, 0.03, 5, false); fl.rotation.x = -Math.PI / 2; fl.receiveShadow = true; }
-  for (const [x, z] of [[28.6, 9], [33.4, 9]]) add('lantern', x, z, 0, 2, 0.3);
-  const FOOD = [['PIES', '#7a4a12', 'stallRed'], ['MEAD', '#2c4a8c', 'stallGreen'], ['SWEETS', '#8c1f4f', 'stallRed'], ['ROAST', '#6b4e16', 'stallGreen']];
-  FOOD.forEach(([t, c, k], i) => { const x = 28 + i * 6.2, z = -6.5; add(k, x, z, 0, 2.6, 1.6); sign(t, c, x, 3.55, z + 1.25, 0, 0.9); });
+  for (const [x, z] of [[28.6, 9], [33.4, 9]]) add('ps_lamp', x, z, 0, 1, 0.3);
+  const FOOD = [['PIES', '#7a4a12'], ['MEAD', '#2c4a8c'], ['SWEETS', '#8c1f4f'], ['ROAST', '#6b4e16']];
+  FOOD.forEach(([t, c], i) => { const x = 28 + i * 6.2, z = -6.5; add('mk_Stall_Cart_Empty', x, z, 0, 1.15, 1.4); sign(t, c, x, gy(x, z) + 2.7, z + 1.25, 0, 0.8); });
   for (const [x, z] of [[62, 4], [64.5, 10], [67, 16]]) add('fy_vil_archery_target', x, z, -Math.PI / 2, 1, 0.6);
   add('fy_vil_hay_1', 56, 8, 0.3, 1, 0.7); add('fy_vil_hay_2', 56.6, 12.6, 1.1, 1, 0.6); sign('ARCHERY', '#23704a', 56.2, 1.6, 10.4, -Math.PI / 2, 0.8);
   // ---- the farm (east): barn, granary, hay, the well
@@ -17144,9 +17143,9 @@ function buildFestival(R) {
   add('ps_house1', -58, 38, face(-58, 38, 0, 30), 1, 5); add('ps_house8', -30, 78, face(-30, 78, 0, 40), 1, 3.8); add('slv_penthouse', -76, 24, face(-76, 24, 0, 0), 0.9, 4.6); add('fy_vil_house_1', -74, -8, 0.7, 1, 4.2);
   add('slv_hovel', -64, 6, 0.8, 1.2, 1.6); add('slv_bale', -62.4, 8.6, 0.3, 2.2, 0.6); add('ps_trough', -65.4, 9.2, 1.2, 1, 0.8); add('slv_loo', -22, 72, face(-22, 72, 0, 40), 1, 1.8);
   { const tw = mk(R, geo('w_mill', () => new THREE.CylinderGeometry(1.4, 1.9, 7, 12)), tmat('#cdbfa6'), -68, 3.5, 44); tw.castShadow = true; mk(R, geo('w_millroof', () => new THREE.ConeGeometry(1.9, 2.4, 12)), tmat('#a4472a'), -68, 8.2, 44); const sails = kpiece(R, 'windmill', -68, 7.2, 45.9, Math.PI / 2, 2.6); if (sails) WORLD.spin.push(sails); O.push({ x: -68, z: 44, r: 2.1 }); }
-  for (let i = 0; i < 4; i++) for (let j = 0; j < 4; j++) add('crops_cornStageD', -70 + i * 1.6, 58 + j * 1.6, 0, 1.6);
+  realmCropField(R, -71, -64, 57, 65, 5, 5, 'corn');
   for (let i = 0; i < 4; i++) for (let j = 0; j < 3; j++) add(j % 2 ? 'crop_pumpkin' : 'pumpkin', -30 + i * 1.3, 58.5 + j * 1.5, (i * 7 + j) % 6, 1.6);
-  add('nt_riverbed', -58, 72, 0, 2, 0); add('nt_riverbed', -54, 72, 0, 2, 0); for (const [x, z] of [[-57.4, 71.4], [-54.8, 72.8], [-56, 73.6]]) add('nt_lilypad', x, z, x, 1.3, 0); add('fy_asia_bridge', -56, 72, Math.PI / 2, 0.8, 0);
+  buildFairPond(R);
   add('slv_chest', -35, 50, face(-35, 50, -42, 54), 1, 0.8);
   // ---- the visiting clubs' camp (south-east): tents, a fire, banners, racks
   for (const [x, z] of [[36, 47], [44, 51], [52, 55]]) add('ps_tent', x, z, face(x, z, 45, 60), 1.3, 1.9);
@@ -17158,26 +17157,67 @@ function buildFestival(R) {
   buildRealm(R);
   // ---- the wooded perimeter stays beyond the inhabited plots, not in the walking lanes
   const rnd = seeded('festwoods');
-  for (let i = 0; i < (IS_TOUCH ? 50 : 90); i++) { const a = i / (IS_TOUCH ? 50 : 90) * TAU + rnd() * 0.05, e = 1.04 + rnd() * 0.28; if (onRoad(Math.cos(a) * FAIR_RX * e * 1.12, Math.sin(a) * FAIR_RZ * e * 1.12, 5)) continue; add(['slv_tree1', 'slv_tree2', 'slv_tree6', 'fy_pine_2', 'nt_pine', 'fy_birch_1', 'tree_pineTallB_detailed'][i % 7], Math.cos(a) * FAIR_RX * e * 1.12, Math.sin(a) * FAIR_RZ * e * 1.12, rnd() * TAU, 0.9 + rnd() * 0.5, 0); }
+  for (let i = 0; i < (IS_TOUCH ? 50 : 90); i++) { const a = i / (IS_TOUCH ? 50 : 90) * TAU + rnd() * 0.05, e = 1.04 + rnd() * 0.28; if (onRoad(Math.cos(a) * FAIR_RX * e * 1.12, Math.sin(a) * FAIR_RZ * e * 1.12, 5)) continue; add(['kf_tree_1_a', 'kf_tree_2_b', 'kf_tree_3_b', 'kf_tree_4_b'][i % 4], Math.cos(a) * FAIR_RX * e * 1.12, Math.sin(a) * FAIR_RZ * e * 1.12, rnd() * TAU, 1 + rnd() * 0.25, 0); }
   // ---- flora scattered where nothing is planned
-  const kinds = [['treeHighRound', 2.6, 1], ['tree', 2.8, 1], ['tree_oak_dark', 2.4, 1], ['nt_oak', 1, 1], ['nt_pine', 1, 1], ['nt_birch', 1, 1], ['plant_bushLarge', 2, 0.7], ['nt_bush', 1.3, 0.6], ['nt_fern', 1.3, 0], ['nt_flowers', 1.6, 0], ['flower_yellowC', 2, 0], ['nt_grass', 2, 0], ['fy_grass_tuft', 1, 0]];
+  const kinds = [['kf_tree_1_a', 1.1, 1], ['kf_tree_2_b', 1, 1], ['kf_tree_3_b', 1, 1], ['kf_bush_3_a', 1.4, 0.6], ['kf_bush_4_a', 1.2, 0.6], ['kf_grass_1_a', 1.4, 0], ['kf_rock_1_e', 1, 0.7]];
   const fr = seeded('festflora'); let placed = 0;
   for (let tries = 0; tries < 2000 && placed < (IS_TOUCH ? 55 : 100); tries++) {
     const a = fr() * TAU, rr = 75 + fr() * 25, x = Math.cos(a) * rr, z = Math.sin(a) * rr * 1.06;
     if (Math.hypot(x / FAIR_RX, z / FAIR_RZ) > 1.02) continue;
     if (arenaBlocked(x, z, 3)) continue;
-    if (festReserved(x, z, 1.5) || onRoad(x, z, 4)) continue;
+    if (festReserved(x, z, 1.5) || Math.hypot(x + 56, z - 72) < 22 || onRoad(x, z, 4)) continue;
     if (O.some(o => Math.hypot(o.x - x, o.z - z) < o.r + 2.2)) continue;
     if (Object.values(STALL_AT).some(([sx, sz]) => Math.hypot(sx - x, sz - z) < 6)) continue;
     const [k, s, r] = kinds[Math.floor(fr() * kinds.length)]; add(k, x, z, fr() * TAU, s * (0.85 + fr() * 0.3), r); placed++;
   }
+  // The pond is a small destination; keep its immediate sightline free of
+  // random canopy trees from the country scatter and the fairground ring.
+  for (const o of R.children.slice()) {
+    if (!/tree|birch|pine|oak/i.test(o.userData.assetKey || '') || Math.hypot(o.position.x + 56, o.position.z - 72) >= 16) continue;
+    R.remove(o);
+    const i = O.findIndex(c => Math.abs(c.x - o.position.x) < 0.01 && Math.abs(c.z - o.position.z) < 0.01);
+    if (i >= 0) O.splice(i, 1);
+  }
+}
+function buildFairPond(R) {
+  const cx = -56, cz = 72;
+  const oval = (rx, rz, lift, mat) => {
+    const g = new THREE.CircleGeometry(1, 48); g.rotateX(-Math.PI / 2);
+    const p = g.attributes.position;
+    for (let i = 0; i < p.count; i++) { const u = p.getX(i), v = p.getZ(i), a = Math.atan2(v, u), wobble = 1 + 0.065 * Math.sin(3 * a + 0.4) + 0.035 * Math.sin(7 * a - 0.8); const x = cx + u * rx * wobble, z = cz + v * rz * wobble; p.setXYZ(i, x, gy(x, z) + lift, z); }
+    p.needsUpdate = true; g.computeVertexNormals();
+    const m = mk(R, g, mat, 0, 0, 0, false); m.receiveShadow = true; return m;
+  };
+  oval(6.1, 4.1, 0.035, lmat({ color: '#594f3a', roughness: 1, side: THREE.DoubleSide }));
+  oval(5.0, 3.05, 0.052, lmat({ color: '#294f56', roughness: 0.82, metalness: 0, side: THREE.DoubleSide }));
+  const wood = tmat('#38291d'), edge = tmat('#281e18');
+  for (let i = -8; i <= 8; i++) {
+    const x = cx + i * 0.75;
+    const plank = mk(R, geo('pond_plank', () => new THREE.BoxGeometry(0.72, 0.13, 2.35)), i % 4 ? wood : edge, x, gy(x, cz) + 0.24, cz);
+    plank.castShadow = SHADOWS;
+  }
+  for (const sz of [-1, 1]) {
+    for (const dx of [-5.7, -2.9, 0, 2.9, 5.7]) {
+      const x = cx + dx, z = cz + sz * 1.17;
+      mk(R, geo('pond_post', () => new THREE.BoxGeometry(0.13, 1.05, 0.13)), edge, x, gy(x, z) + 0.67, z);
+    }
+    const rail = mk(R, new THREE.BoxGeometry(12.1, 0.11, 0.12), wood, cx, gy(cx, cz + sz * 1.17) + 1.1, cz + sz * 1.17); rail.castShadow = SHADOWS;
+  }
+  realmReeds(R, Array.from({ length: 14 }, (_, i) => { const a = i / 14 * TAU; return [cx + Math.cos(a) * 5.3, cz + Math.sin(a) * 3.35]; }).filter(([x, z]) => Math.abs(z - cz) > 1.5));
+  for (const [x, z] of [[-61.5, 68.7], [-51.4, 68.6], [-59.4, 76]]) kpiece(R, 'kf_rock_1_e', x, gy(x, z), z, x, 0.6);
 }
 // the graveyard: iron fence with a gate on the east side, stones, a crypt, tombs, candles, fire baskets, spooky decorations
 const GRAVE = { x: 44, z: -56 };
 function buildGraveyard(R, add) {
   const gx = GRAVE.x, gz = GRAVE.z, flame = (x, y, z, col) => { const f = mk(R, geo('w_fb', () => new THREE.ConeGeometry(0.22, 0.5, 8)), tmat(col, { emissive: col === '#7dffb0' ? '#00c46a' : '#ffa020', emissiveIntensity: 1.8 }), x, y, z); WORLD.flick.push(f); };
-  for (let i = -3; i <= 3; i++) { add('ironFence', gx + i * 2, gz + 6, 0, 2, 0.75); add('ironFence', gx + i * 2, gz - 6, 0, 2, 0.75); }
-  for (let j = -2; j <= 2; j++) { add('ironFence', gx - 7, gz + j * 2.2, Math.PI / 2, 2, 0.8); if (j !== 0) add('ironFence', gx + 7, gz + j * 2.2, Math.PI / 2, 2, 0.8); }
+  const iron = tmat('#353b3d'), fence = (x, z, ry) => {
+    const g = new THREE.Group(); g.position.set(x, gy(x, z), z); g.rotation.y = ry; R.add(g);
+    for (const h of [0.42, 1.12]) mk(g, geo('grave_rail', () => new THREE.BoxGeometry(2.12, 0.075, 0.075)), iron, 0, h, 0);
+    for (let i = -2; i <= 2; i++) { const px = i * 0.48; mk(g, geo('grave_bar', () => new THREE.BoxGeometry(0.065, 1.4, 0.065)), iron, px, 0.75, 0); mk(g, geo('grave_tip', () => new THREE.ConeGeometry(0.09, 0.18, 4)), iron, px, 1.53, 0); }
+    TOWN.obst.push({ x, z, r: 0.72 });
+  };
+  for (let i = -3; i <= 3; i++) { fence(gx + i * 2, gz + 6, 0); fence(gx + i * 2, gz - 6, 0); }
+  for (let j = -2; j <= 2; j++) { fence(gx - 7, gz + j * 2.2, Math.PI / 2); if (j !== 0) fence(gx + 7, gz + j * 2.2, Math.PI / 2); }
   const stones = ['gravestoneCross', 'gravestoneRound', 'gravestoneDecorative', 'gravestoneBroken'];
   for (let i = 0; i < 4; i++) for (let j = 0; j < 2; j++) add(stones[(i + j) % 4], gx - 4.5 + i * 2.4, gz - 1 + j * 2.6, Math.PI, 1.8, 0.5);
   add('crypt', gx, gz - 4, Math.PI, 2.2, 2.4); add('coffin', gx + 5, gz + 2, 0.4, 1.8, 0.8); add('urn', gx - 5.5, gz + 3.5, 0, 1.8, 0.4);
@@ -17868,11 +17908,14 @@ const ROADS = [
   { name: 'north', pts: [[0, -24], [-7, -43], [4, -61], [-9, -79], [4, -98], [-5, -117], [0, -140]], w: 6 },
   { name: 'west', pts: [[-52, -2], [-74, 7], [-95, -11], [-119, -10], [-137, -30], [-162, -39], [-178, -61], [-196, -78]], w: 5 },
   { name: 'southwest', pts: [[-16, 70], [-38, 81], [-58, 101], [-87, 101], [-111, 123], [-135, 127], [-160, 140]], w: 5 },
+  { name: 'millpond-east', pts: [[-38, 81], [-47, 75], [-49.7, 72]], w: 2.8 },
+  { name: 'millpond-farm', pts: [[-62.3, 72], [-61, 64], [-61, 55], [-68, 44]], w: 2.6 },
   { name: 'east', pts: [[52, 6], [74, 17], [92, 17], [105, 36], [121, 49], [128, 58], [122, 79], [132, 100]], w: 5 },
   { name: 'woodsnorth', pts: [[-196, -78], [-190, -104], [-169, -122], [-148, -135], [-120, -150]], w: 4 },
   { name: 'lakenorth', pts: [[128, 58], [145, 38], [139, 12], [156, -11], [153, -33], [176, -60]], w: 4 },
   { name: 'south', pts: [[0, 70], [12, 92], [2, 116], [-23, 133], [-30, 160]], w: 4 },
   { name: 'millbrook-lists', pts: [[-160, 140], [-176, 134]], w: 3 },
+  { name: 'millbrook-green', pts: [[-160, 140], [-174, 128], [-184, 115], [-198, 121], [-218, 116], [-230, 106]], w: 3.2 },
   { name: 'woods-lists', pts: [[-196, -78], [-214, -74]], w: 3 },
   { name: 'shore-lists', pts: [[132, 100], [148, 103]], w: 3 },
   // A long rideable circuit through the farm valley and high forest, with meaningful shortcuts.
@@ -17915,6 +17958,69 @@ function buildRealmTerrain(R) {
   const m = mk(R, g, lmat({ map: t, vertexColors: true, roughness: 1, side: THREE.DoubleSide }), 0, 0, 0, false);
   m.receiveShadow = true; m.userData.landmark = true; TOWN.terrain = m;
 }
+// Soft borders let worked earth, clearings and tracks settle into the grass.
+// The old opaque quads made each district look like props on a dark rectangle.
+const REALM_MASKS = {};
+function realmEdgeMask(kind) {
+  if (REALM_MASKS[kind]) return REALM_MASKS[kind];
+  const size = kind === 'road' ? 64 : 128, h = kind === 'road' ? 1 : size;
+  const data = new Uint8Array(size * h * 4);
+  const smooth = v => { v = clamp(v, 0, 1); return v * v * (3 - 2 * v); };
+  for (let y = 0; y < h; y++) for (let x = 0; x < size; x++) {
+    const u = (x + 0.5) / size, v = (y + 0.5) / h;
+    const edge = kind === 'road' ? Math.min(u, 1 - u) : Math.min(u, 1 - u, v, 1 - v);
+    const wobble = kind === 'road' ? 0 : 0.013 * Math.sin(x * 0.41 + y * 0.33) * Math.sin(x * 0.17 - y * 0.62);
+    const a = Math.round(255 * smooth((edge + wobble) / (kind === 'road' ? 0.13 : 0.115)));
+    const i = (y * size + x) * 4; data[i] = data[i + 1] = data[i + 2] = a; data[i + 3] = 255;
+  }
+  const t = new THREE.DataTexture(data, size, h, THREE.RGBAFormat);
+  t.magFilter = t.minFilter = THREE.LinearFilter; t.needsUpdate = true;
+  return REALM_MASKS[kind] = t;
+}
+// Crops and reeds share a restrained palette instead of the oversized neon
+// crop props that read as loose objects from the road.
+function realmCropField(R, x0, x1, z0, z1, nx, nz, kind) {
+  const corn = kind === 'corn', n = nx * nz, cx = (x0 + x1) / 2, cz = (z0 + z1) / 2;
+  const root = new THREE.Group(); root.position.set(cx, 0, cz); R.add(root);
+  const soil = lmat({ color: '#745f43', roughness: 1, transparent: true, opacity: 0.62, side: THREE.DoubleSide, depthWrite: false });
+  for (let j = 0; j < nz; j++) {
+    const z = z0 + (j + 0.5) * (z1 - z0) / nz, half = Math.min(0.55, (z1 - z0) / nz * 0.31);
+    const pos = [], idx = [];
+    for (let i = 0; i <= nx; i++) { const x = x0 + i * (x1 - x0) / nx; for (const side of [-1, 1]) { const pz = z + side * half; pos.push(x - cx, gy(x, pz) + 0.058, pz - cz); } if (i < nx) { const k = i * 2; idx.push(k, k + 1, k + 2, k + 1, k + 3, k + 2); } }
+    const g = new THREE.BufferGeometry(); g.setAttribute('position', new THREE.Float32BufferAttribute(pos, 3)); g.setIndex(idx); g.computeVertexNormals();
+    const bed = new THREE.Mesh(g, soil); bed.frustumCulled = false; root.add(bed);
+  }
+  const stalkH = corn ? 1.45 : 0.9;
+  const stem = new THREE.InstancedMesh(new THREE.CylinderGeometry(corn ? 0.045 : 0.025, 0.04, stalkH, 5), lmat({ color: corn ? '#67783c' : '#aa965d', roughness: 1 }), n);
+  const head = new THREE.InstancedMesh(new THREE.ConeGeometry(corn ? 0.105 : 0.065, corn ? 0.33 : 0.25, 5), lmat({ color: corn ? '#bfa75e' : '#c5ae70', roughness: 1 }), n);
+  const leaves = new THREE.InstancedMesh(new THREE.BoxGeometry(corn ? 0.48 : 0.3, 0.025, 0.09), lmat({ color: corn ? '#768247' : '#a89b60', roughness: 1, side: THREE.DoubleSide }), n * 2);
+  const d = new THREE.Object3D(); let at = 0;
+  for (let i = 0; i < nx; i++) for (let j = 0; j < nz; j++) {
+    const x = x0 + (i + 0.5) * (x1 - x0) / nx, z = z0 + (j + 0.5) * (z1 - z0) / nz;
+    const y = gy(x, z), turn = (i * 2.1 + j * 1.7) % TAU;
+    d.rotation.set(0, turn, 0); d.scale.set(1, 1, 1); d.position.set(x - cx, y + stalkH / 2, z - cz); d.updateMatrix(); stem.setMatrixAt(at, d.matrix);
+    d.position.y = y + stalkH + (corn ? 0.1 : 0.07); d.updateMatrix(); head.setMatrixAt(at, d.matrix);
+    for (let k = 0; k < 2; k++) { d.position.y = y + stalkH * (k ? 0.48 : 0.67); d.rotation.set(k ? -0.27 : 0.24, turn + k * Math.PI / 2, 0); d.updateMatrix(); leaves.setMatrixAt(at * 2 + k, d.matrix); }
+    at++;
+  }
+  for (const mesh of [stem, head, leaves]) { mesh.frustumCulled = false; mesh.instanceMatrix.needsUpdate = true; root.add(mesh); }
+  return root;
+}
+function realmReeds(R, points) {
+  if (!points.length) return;
+  const cx = points.reduce((s, p) => s + p[0], 0) / points.length, cz = points.reduce((s, p) => s + p[1], 0) / points.length;
+  const root = new THREE.Group(); root.position.set(cx, 0, cz); R.add(root);
+  const n = points.length * 3, stem = new THREE.InstancedMesh(new THREE.CylinderGeometry(0.017, 0.025, 1, 4), lmat({ color: '#697b54', roughness: 1 }), n);
+  const head = new THREE.InstancedMesh(new THREE.CylinderGeometry(0.035, 0.035, 0.17, 5), lmat({ color: '#765b3f', roughness: 1 }), n);
+  const d = new THREE.Object3D(); let at = 0;
+  for (let i = 0; i < points.length; i++) for (let j = 0; j < 3; j++) {
+    const [px, pz] = points[i], x = px + Math.sin(i * 2.7 + j * 4.1) * 0.24, z = pz + Math.cos(i * 1.9 + j * 3.2) * 0.24;
+    const y = gy(x, z), h = 0.55 + ((i * 7 + j * 3) % 5) * 0.12;
+    d.rotation.set(0, 0, 0); d.scale.set(1, h, 1); d.position.set(x - cx, y + h / 2, z - cz); d.updateMatrix(); stem.setMatrixAt(at, d.matrix);
+    d.scale.set(1, 1, 1); d.position.y = y + h + 0.08; d.updateMatrix(); head.setMatrixAt(at, d.matrix); at++;
+  }
+  for (const mesh of [stem, head]) { mesh.frustumCulled = false; mesh.instanceMatrix.needsUpdate = true; root.add(mesh); }
+}
 function realmGround(R, x0, x1, z0, z1, col, tex, y) {
   const cx = (x0 + x1) / 2, cz = (z0 + z1) / 2;
   const geo = new THREE.PlaneGeometry(x1 - x0, z1 - z0, Math.ceil((x1 - x0) / 2), Math.ceil((z1 - z0) / 2));
@@ -17922,11 +18028,11 @@ function realmGround(R, x0, x1, z0, z1, col, tex, y) {
   const pos = geo.attributes.position;
   for (let i = 0; i < pos.count; i++) pos.setY(i, y != null && y > 1 ? y : gy(cx + pos.getX(i), cz + pos.getZ(i)) + (y || 0.03));
   pos.needsUpdate = true; geo.computeVertexNormals();
-  const g = mk(R, geo, lmat({ map: tex === false ? null : venueTex(tex || 'dirt'), color: col, roughness: 1, side: THREE.DoubleSide }), cx, 0, cz, false);
+  const g = mk(R, geo, lmat({ map: tex === false ? null : venueTex(tex || 'path'), alphaMap: realmEdgeMask('patch'), transparent: true, depthWrite: false, color: col, roughness: 1, side: THREE.DoubleSide }), cx, 0, cz, false);
   g.receiveShadow = true; (TOWN.mapRects = TOWN.mapRects || []).push([x0, x1, z0, z1, col]); return g;
 }
 function realmRoad(R, pts, w) {
-  const m = TMAT['road' + w] || (TMAT['road' + w] = lmat({ map: venueTex('path'), color: '#b5a079', roughness: 1, side: THREE.DoubleSide }));
+  const m = TMAT['road' + w] || (TMAT['road' + w] = (() => { const t = venueTex('path').clone(); t.repeat.set(1, 1); t.needsUpdate = true; return lmat({ map: t, alphaMap: realmEdgeMask('road'), transparent: true, depthWrite: false, color: '#b39f7f', roughness: 1, side: THREE.DoubleSide }); })());
   for (let i = 0; i < pts.length - 1; i++) {
     const [x0, z0] = pts[i], [x1, z1] = pts[i + 1], L = Math.hypot(x1 - x0, z1 - z0);
     const dx = (x1 - x0) / (L || 1), dz = (z1 - z0) / (L || 1), n = Math.max(1, Math.ceil(L / 3));
@@ -18098,11 +18204,11 @@ function buildRealm(R) {
   buildWoods(R, add, face);
   buildLake(R, add, face);
   // the open country between: meadows, lone trees, rocks, hedges, a few farmsteads in the distance
-  const meadow = [['kf_tree_1_a', 1.1, 1], ['kf_tree_3_a', 1.1, 1], ['kf_tree_4_a', 1, 1], ['nt_oak', 1.1, 1], ['kf_bush_3_a', 1.6, 0.6], ['kf_rock_1_e', 1.3, 0.8], ['kf_rock_3_a', 1.6, 0.9], ['cr_flowers_crop', 1, 0], ['kf_grass_2_a', 2, 0], ['cr_grass_1', 1, 0], ['nt_flowers', 1.6, 0], ['mushroom_red', 2.2, 0]];
+  const meadow = [['kf_tree_1_a', 1.1, 1], ['kf_tree_3_a', 1.1, 1], ['kf_tree_4_a', 1, 1], ['kf_bush_3_a', 1.4, 0.6], ['kf_rock_1_e', 1.2, 0.8], ['kf_rock_3_a', 1.3, 0.9], ['kf_grass_2_a', 1.3, 0]];
   const rings = [[0, -100, 70], [-110, 60, 60], [110, -60, 70], [100, 140, 70], [-110, -150, 50], [130, -150, 60], [-240, 20, 50], [-250, 210, 50], [200, 200, 70], [250, -140, 60], [-60, 200, 60], [60, 220, 60]];
-  rings.forEach(([x, z, r], i) => realmForest(R, x, z, r, IS_TOUCH ? 22 : 45, meadow, 'meadow' + i, (px, pz) => Math.hypot(px / FAIR_RX, pz / FAIR_RZ) < 1.12));
-  const wildTrees = [['kf_tree_1_c', 1.1, 1.1], ['kf_tree_2_d', 1, 1], ['kf_tree_4_b', 1, 1], ['nt_pine', 1, 1], ['kf_bush_4_a', 1.4, 0.5], ['nt_fern', 1.4, 0], ['nt_log', 0.9, 0.6]];
-  COUNTRY_FORESTS.forEach(([x, z, r, n], i) => realmForest(R, x, z, r, IS_TOUCH ? Math.round(n * 1.2) : Math.round(n * 1.8), wildTrees, 'countryforest' + i, (px, pz) => Math.hypot(px / FAIR_RX, pz / FAIR_RZ) < 1.15));
+  rings.forEach(([x, z, r], i) => realmForest(R, x, z, r, IS_TOUCH ? 22 : 45, meadow, 'meadow' + i, (px, pz) => Math.hypot(px / FAIR_RX, pz / FAIR_RZ) < 1.25));
+  const wildTrees = [['kf_tree_1_c', 1.1, 1.1], ['kf_tree_2_d', 1, 1], ['kf_tree_4_b', 1, 1], ['kf_bush_4_a', 1.4, 0.5], ['kf_grass_1_a', 1.2, 0], ['kf_rock_3_e', 1, 0.7]];
+  COUNTRY_FORESTS.forEach(([x, z, r, n], i) => realmForest(R, x, z, r, IS_TOUCH ? Math.round(n * 1.2) : Math.round(n * 1.8), wildTrees, 'countryforest' + i, (px, pz) => Math.hypot(px / FAIR_RX, pz / FAIR_RZ) < 1.25));
   // A hunter's fire and a weathered waystation give the northern circuit
   // places to discover without adding another copy of the festival vendors.
   realmHall(R, -224, -340, 8, 6, 3.2, 0.5, { sign: 'HUNTER’S REST', signCol: '#34583c', roof: '#48503d' });
@@ -18113,7 +18219,7 @@ function buildRealm(R) {
   add('ps_lamp', 108, -344, 0, 1, 0.3);
   // the edge of the world: a thick wood all round
   const rnd = seeded('realmedge'), N = IS_TOUCH ? 130 : 260;
-  for (let i = 0; i < N; i++) { const a = i / N * TAU + rnd() * 0.02, e = 0.97 + rnd() * 0.12; add(['kf_tree_2_c', 'kf_tree_4_b', 'kf_tree_1_c', 'tree_pineTallB_detailed', 'nt_pine', 'kf_tree_2_d'][i % 6], Math.cos(a) * TOWN_RX * e, Math.sin(a) * TOWN_RZ * e, rnd() * TAU, 1 + rnd() * 0.6, 0); }
+  for (let i = 0; i < N; i++) { const a = i / N * TAU + rnd() * 0.02, e = 0.97 + rnd() * 0.12; add(['kf_tree_2_c', 'kf_tree_4_b', 'kf_tree_1_c', 'kf_tree_2_d'][i % 4], Math.cos(a) * TOWN_RX * e, Math.sin(a) * TOWN_RZ * e, rnd() * TAU, 1 + rnd() * 0.35, 0); }
   // a few far farmsteads (Kenney retro pieces) to fill the horizon
   for (const [x, z, ry] of [[250, 190, 0.6], [-260, 230, 2.2], [260, -200, 1.1], [-270, -230, 0.3]]) { realmHall(R, x, z, 7, 5, 3, ry, { roof: '#6b4a2a' }); add('fb_silo', x + 7, z - 4, ry, 0.8, 2); }
 }
@@ -18193,7 +18299,7 @@ function buildGreatHall(R0, add) {
 // ---- Millbrook: the village, its farm and fields, the Peasants' arena
 function buildVillage(R, add, face) {
   const cx = -180, cz = 135;
-  realmGround(R, cx - 24, cx + 24, cz - 30, cz - 6, '#b9a37c'); // the green
+  realmGround(R, cx - 24, cx + 24, cz - 30, cz - 6, '#d2bea0'); // the green
   add('fb_well', cx, cz - 18, 0, 1.2, 1.2);
   const homes = [[-210, 100], [-196, 96], [-160, 98], [-146, 108], [-214, 122], [-216, 140], [-150, 128], [-140, 145], [-204, 170], [-150, 175]];
   homes.forEach(([x, z], i) => { if (typeof cottage === 'function' && typeof VILLAGE_GEO !== 'undefined' && i % 3 !== 2) { cottage(R, x, z, face(x, z, cx, cz - 18), 'mill' + i); TOWN.obst.push({ x, z, r: 3.6 }); } else realmHall(R, x, z, 7, 6, 3.4, face(x, z, cx, cz - 18), { roof: ['#7a3a2a', '#6b5a3a', '#5a4a3a'][i % 3] }); });
@@ -18203,11 +18309,11 @@ function buildVillage(R, add, face) {
   add('fb_windmill', -120, 186, -0.6, 1.1, 3); add('fb_watertower', -116, 160, 0, 1, 1.6);
   for (let i = 0; i < 8; i++) add('fb_fence', -270 + i * 6, 210, 0, 1, 0);
   for (let i = 0; i < 6; i++) add('fb_fence2', -276, 174 + i * 6, Math.PI / 2, 1, 0);
-  realmGround(R, -270, -236, 200, 210, '#8a7a4a', 'dirt', 0.03);
-  for (let i = 0; i < 16; i++) for (let j = 0; j < 4; j++) add('cr_wheat_crop', -268 + i * 2, 201.5 + j * 2.4, (i * 3 + j) % 6, 2.2);
-  realmGround(R, -138, -112, 196, 216, '#7a6a3a', 'dirt', 0.03);
-  for (let i = 0; i < 12; i++) for (let j = 0; j < 9; j++) add(j % 3 ? 'crops_cornStageD' : 'cr_corn_crop', -136 + i * 2.2, 198 + j * 2.1, 0, j % 3 ? 1.6 : 3);
-  for (let i = 0; i < 6; i++) for (let j = 0; j < 4; j++) add(j % 2 ? 'cr_pumpkin_crop' : 'pumpkin', -196 + i * 2, 196 + j * 2, (i + j) % 6, j % 2 ? 1.4 : 1.6);
+  realmGround(R, -270, -236, 200, 210, '#b6a17b', 'path', 0.03);
+  realmCropField(R, -268, -238, 200.5, 209, 16, 5, 'wheat');
+  realmGround(R, -138, -112, 196, 216, '#b8a27d', 'path', 0.03);
+  realmCropField(R, -136, -114, 198, 214, 12, 9, 'corn');
+  for (let i = 0; i < 6; i++) for (let j = 0; j < 4; j++) add('pumpkin', -196 + i * 2, 196 + j * 2, (i + j) % 6, 1.4);
   for (let i = 0; i < 5; i++) add('cr_lettuce_crop', -160 + i * 1.6, 196, 0, 1.6); for (let i = 0; i < 5; i++) add('cr_carrot_crop', -160 + i * 1.6, 199, 0, 1.6);
   // market corner: a stall cart, crates, barrels
   add('mk_Stall_Cart_Empty', -168, 112, 0.3, 1.2, 1.6); add('mk_FarmCrate_Apple', -165, 115, 0, 1.4, 0.4); add('mk_FarmCrate_Carrot', -171, 115.5, 0.4, 1.4, 0.4); add('mk_Barrel_Apples', -164, 110, 0, 1.2, 0.5);
@@ -18217,10 +18323,16 @@ function buildVillage(R, add, face) {
   // villagers standing about (cheap posed figures)
   for (const [k, x, z, ry] of [['po_male_standing_waving', -186, 120, 0.3], ['po_female_pickingup', -198, 200, 1.2], ['po_male_pickingup', -142, 205, -0.6], ['po_female_standing', -172, 128, 2.6], ['po_male_sitting_cheering', ARENAS[1].x - 14.2, ARENAS[1].z - 2, Math.PI / 2], ['po_female_sitting_cheering', ARENAS[1].x + 14.2, ARENAS[1].z + 4, -Math.PI / 2], ['po_male_lookingup', ARENAS[1].x - 4, ARENAS[1].z + 21, Math.PI]]) add(k, x, z, ry, 1, 0.4);
   // a millpond and a stream
-  { const w = mk(R, new THREE.CircleGeometry(9, 28), lmat({ color: '#4f8fb8', roughness: 0.15, metalness: 0.1, transparent: true, opacity: 0.88 }), -230, 0.05, 96, false); w.rotation.x = -Math.PI / 2; w.scale.y = 0.7; TOWN.obst.push({ x: -230, z: 96, r: 7.5 }); }
-  for (let i = 0; i < 8; i++) add('cr_rice_crop', -238 + Math.cos(i) * 9, 96 + Math.sin(i) * 6.5, i, 2);
+  { const bank = mk(R, new THREE.CircleGeometry(10, 32), lmat({ color: '#665942', roughness: 1 }), -230, gy(-230, 96) + 0.025, 96, false); bank.rotation.x = -Math.PI / 2; bank.scale.y = 0.72;
+    const w = mk(R, new THREE.CircleGeometry(8.7, 32), lmat({ color: '#294f5b', roughness: 0.82, metalness: 0 }), -230, gy(-230, 96) + 0.045, 96, false); w.rotation.x = -Math.PI / 2; w.scale.y = 0.7; TOWN.obst.push({ x: -230, z: 96, r: 5.5 }); }
+  { const timber = tmat('#382a1d'), post = tmat('#271f17');
+    for (let i = 0; i < 9; i++) { const z = 104 - i * 0.72; mk(R, geo('millpond_dock_plank', () => new THREE.BoxGeometry(2.5, 0.13, 0.68)), timber, -230, gy(-230, 96) + 0.23, z); }
+    for (const x of [-231.2, -228.8]) for (const z of [103.7, 100.5, 98.1]) mk(R, geo('millpond_dock_post', () => new THREE.BoxGeometry(0.13, 1.1, 0.13)), post, x, gy(-230, 96) + 0.22, z);
+  }
+  realmReeds(R, Array.from({ length: 15 }, (_, i) => { const a = i / 15 * TAU; return [-230 + Math.cos(a) * 9.1, 96 + Math.sin(a) * 6.4]; }));
+  for (const [x, z] of [[-240, 95], [-224, 90], [-225, 102]]) add('kf_rock_1_e', x, z, x, 0.6, 0.4);
   // trees round the village
-  realmForest(R, cx, cz, 95, IS_TOUCH ? 30 : 60, [['kf_tree_1_a', 1.1, 1], ['kf_tree_3_b', 1, 1], ['cr_apple_crop', 1, 1], ['kf_bush_3_a', 1.6, 0.6], ['kf_tree_2_b', 1, 1]], 'village', (x, z) => Math.hypot(x - cx, z - cz) < 70 && !(z > 196 || x < -244));
+  realmForest(R, cx, cz, 95, IS_TOUCH ? 30 : 60, [['kf_tree_1_a', 1.1, 1], ['kf_tree_3_b', 1, 1], ['kf_tree_1_b', 1, 1], ['kf_bush_3_a', 1.6, 0.6], ['kf_tree_2_b', 1, 1]], 'village', (x, z) => Math.hypot(x - cx, z - cz) < 70 && !(z > 196 || x < -244));
 }
 // ---- the Old Woods: dense KayKit forest, a glade with the Forest arena, the quarry, a charcoal burners' camp, a hunter's lodge
 function buildWoods(R, add, face) {
@@ -18244,18 +18356,28 @@ function buildWoods(R, add, face) {
 // ---- Mirror Lake: water, a sandy shore with the Beach arena, jetties, a boathouse, reeds, cliffs on the far side
 function buildLake(R, add, face) {
   const L = LAKE;
-  { const w = mk(R, new THREE.CircleGeometry(1, 48), lmat({ color: '#3f7fae', roughness: 0.12, metalness: 0.15, transparent: true, opacity: 0.9 }), L.x, 0.06, L.z, false); w.rotation.x = -Math.PI / 2; w.scale.set(L.rx, L.rz, 1); TOWN.lake = w; }
+  { const w = mk(R, new THREE.CircleGeometry(1, 48), lmat({ color: '#315967', roughness: 0.75, metalness: 0 }), L.x, 0.06, L.z, false); w.rotation.x = -Math.PI / 2; w.scale.set(L.rx, L.rz, 1); TOWN.lake = w; }
   { const s = mk(R, new THREE.CircleGeometry(1, 48), lmat({ map: venueTex('dirt'), color: '#e8d6a0', roughness: 1 }), L.x, 0.03, L.z, false); s.rotation.x = -Math.PI / 2; s.scale.set(L.rx + 12, L.rz + 14, 1); }
-  realmGround(R, 128, 168, 52, 104, '#e2cf96', 'dirt', 0.035);
-  arenaList(R, ARENAS[3], { floor: '#efdca4', bench: '#a08a6a', post: '#8a7a6a', rail: '#b0a080', signCol: '#1f4a6b' });
+  realmGround(R, 128, 168, 52, 104, '#e0d0a9', 'path', 0.035);
+  arenaList(R, ARENAS[3], { floor: '#e8d7ad', floorTex: 'path', bench: '#a08a6a', post: '#8a7a6a', rail: '#b0a080', signCol: '#1f4a6b' });
   for (let i = 0; i < 6; i++) add('nt_log', ARENAS[3].x - 15 + i * 6, ARENAS[3].z - 21, 0.1 * i, 1.2, 0.6);
   // jetties and the boathouse on the west shore
-  const jetty = (x, z, n, ry) => { for (let i = 0; i < n; i++) { const p = kpiece(R, 'rt_dock_side', x + Math.sin(ry) * i * 3, 0, z + Math.cos(ry) * i * 3, ry, 3); if (p) p.position.y = -0.4; } };
+  const jetty = (x, z, n, ry) => {
+    const g = new THREE.Group(); g.position.set(x, 0, z); g.rotation.y = ry; R.add(g);
+    const plank = tmat('#382a1d'), post = tmat('#271f17');
+    for (let i = 0; i < n * 4; i++) {
+      const p = mk(g, geo('lake_dock_plank', () => new THREE.BoxGeometry(2.7, 0.14, 0.68)), i % 6 ? plank : post, 0, 0.3, i * 0.75);
+      p.castShadow = SHADOWS;
+    }
+    for (let i = 0; i <= n * 3; i += 3) for (const sx of [-1.18, 1.18]) {
+      mk(g, geo('lake_dock_post', () => new THREE.BoxGeometry(0.17, 1.5, 0.17)), post, sx, -0.26, i);
+    }
+  };
   jetty(168, 20, 6, Math.PI / 2); jetty(172, 70, 5, Math.PI / 2 - 0.3);
   realmHall(R, 156, 6, 9, 7, 3.6, Math.PI / 2, { sign: 'BOATHOUSE', signCol: '#1f4a6b', roof: '#3a4a5a' });
   for (const [x, z] of [[184, 22], [188, 70]]) add('rt_barrels', x, z, 0, 3, 0);
   // reeds and lily pads round the edge
-  for (let i = 0; i < (IS_TOUCH ? 30 : 60); i++) { const a = i / 60 * TAU * (IS_TOUCH ? 2 : 1), x = L.x + Math.cos(a) * (L.rx + 1.5), z = L.z + Math.sin(a) * (L.rz + 1.5); if (x < 176 && Math.abs(z - 45) < 35) continue; add('cr_rice_crop', x, z, a, 2.2); }
+  { const reeds = []; const N = IS_TOUCH ? 30 : 60; for (let i = 0; i < N; i++) { const a = i / N * TAU, x = L.x + Math.cos(a) * (L.rx + 1.5), z = L.z + Math.sin(a) * (L.rz + 1.5); if (x < 176 && Math.abs(z - 45) < 35) continue; reeds.push([x, z]); } realmReeds(R, reeds); }
   for (let i = 0; i < 14; i++) add('nt_lilypad', L.x - 30 + Math.cos(i * 2.1) * 18, L.z + Math.sin(i * 1.7) * 40, i, 1.6, 0);
   // the cliffs on the far (east) shore, where crystal and silver show in the rock
   for (let i = 0; i < 9; i++) { const a = -1.2 + i * 0.3, x = L.x + Math.cos(a) * (L.rx + 22), z = L.z + Math.sin(a) * (L.rz + 18); add(i % 2 ? 'fy_rock_big_1' : 'fy_rock_big_3', x, z, a, 1.5 + (i % 3) * 0.2, 3.4); }
