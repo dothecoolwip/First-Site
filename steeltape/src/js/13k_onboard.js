@@ -79,8 +79,8 @@ function onbAfterFight(m, won, withPurse) {
   onbSet('help'); { const el = $('#onbHints'); if (el) el.hidden = true; }
   if (typeof cloudPrepareGuestLink === 'function' && !BOS.user) cloudPrepareGuestLink();
   msg('your first fight', won ? 'You won it' : 'Lost that one',
-    withPurse(`<p>${won ? 'Not bad at all for a first go.' : 'Everyone loses their first. The steel is heavy and the lungs are small.'}</p><p>Your progress is saved on this device. To go beyond the tutorial, sign in with BuhurtOS and link your save.</p>`),
-    [['Sign in to continue', () => { if (!onbAccountGate()) onbHelp(); }, true]]);
+    withPurse(`<p>${won ? 'Not bad at all for a first go.' : 'Everyone loses their first. The steel is heavy and the lungs are small.'}</p><p>Your progress is saved on this device. Online play beyond the tutorial requires BuhurtOS sign-in. If you're offline, you can keep playing and connect when you're back online.</p>`),
+    [[(typeof cloudIsOffline === 'function' && cloudIsOffline()) ? 'Continue offline' : 'Sign in to continue', () => { if (!onbAccountGate()) onbHelp(); }, true]]);
 }
 function onbHelp() {
   if (onbAccountGate()) return;
