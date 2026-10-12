@@ -252,7 +252,7 @@ function updateTownCamera(dt) {
   const cam = W3.camera, wantFov = TOWN.spec ? 42 : 55; if (cam.near !== 0.15 || Math.abs(cam.fov - wantFov) > 0.1) { cam.near = 0.15; cam.fov = wantFov; cam.updateProjectionMatrix(); }
   if (ONB.tour && tourTick(dt)) return;
   if (TOWN.spec) { specCamera(dt); return; }
-  if (TOWN.peek > 0) { TOWN.peek -= dt; cam.position.set(BAILEY.x0 + 2, 2.4 + gy(-100, -196), -196); cam.lookAt(-80, 2 + gy(-80, -205), -205); if (TOWN.peek <= 0) TOWN.cam = null; return; }
+  if (TOWN.peek > 0) { TOWN.peek -= dt; cam.position.set(-104, 2.4, -200); cam.lookAt(-60, 3, -190); if (TOWN.peek <= 0) TOWN.cam = null; return; }
   const aspect = window.innerWidth / window.innerHeight, dist = TOWN.dist * (aspect < 0.8 ? 1.3 : 1);
   const tx = TOWN.pos.x, tz = TOWN.pos.z, cp = Math.cos(TOWN.pitch);
   const gY = gy(tx, tz), cxp = tx + Math.sin(TOWN.yaw) * cp * dist, czp = tz + Math.cos(TOWN.yaw) * cp * dist;

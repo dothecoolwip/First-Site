@@ -7250,6 +7250,11 @@ function venueTex(kind) {
     speckle(x, 512, 512, 40, ['#6f5c43', '#7f6a4e'], 20, 70);
     for (let i = 0; i < 70; i++) { x.strokeStyle = 'rgba(70,55,35,.1)'; x.lineWidth = rand(1, 3); x.beginPath(); const px = rand(0, 512), py = rand(0, 512); x.moveTo(px, py); x.lineTo(px + rand(-18, 18), py + rand(-18, 18)); x.stroke(); } // boot scuffs
     VTEX[kind] = texFrom(c, [4, 6]);
+  } else if (kind === 'whitestone') { // dressed white stone: the castle hill
+    x.fillStyle = '#bdb6a9'; x.fillRect(0, 0, 512, 512);
+    for (let r = 0; r < 8; r++) for (let k = 0; k < 6; k++) { const w = 512 / 6, hgt = 512 / 8, ox = (r % 2) * w / 2; const g = rand(214, 238) | 0; x.fillStyle = `rgb(${g},${g - 3},${g - 10})`; x.fillRect(k * w + ox + 2, r * hgt + 2, w - 4, hgt - 4); x.fillRect(k * w + ox - 512 + 2, r * hgt + 2, w - 4, hgt - 4); }
+    speckle(x, 512, 512, 2500, ['#cfc8ba', '#f2ede4', '#e0d9cc'], 0.5, 2);
+    VTEX[kind] = texFrom(c, [10, 14]);
   } else if (kind === 'stone') {
     x.fillStyle = '#5a5c5e'; x.fillRect(0, 0, 512, 512);
     for (let r = 0; r < 8; r++) for (let k = 0; k < 6; k++) { const w = 512 / 6, hgt = 512 / 8, ox = (r % 2) * w / 2; const g = rand(70, 110) | 0; x.fillStyle = `rgb(${g},${g + 2},${g + 5})`; x.fillRect(k * w + ox + 2, r * hgt + 2, w - 4, hgt - 4); x.fillRect(k * w + ox - 512 + 2, r * hgt + 2, w - 4, hgt - 4); }
@@ -13799,7 +13804,7 @@ async function boot(hot) {
   toTitle();
   requestAnimationFrame(frame);
   if (location.hash === '#autotest') setTimeout(autotest, 300);
-  window.__ST = { G, AU, buildShield, buildWeapon, W3, startTourney, quickFight, toTitle, openRepair, kitCheck, setupMatch, toTactics, beginFight, endRound, matchEnd, CLUBS, WEAPONS, setView, toast, renderKitPicker, applyLoadout, IN, FP, showScreen, weaponIcon, startCine, startTraining, startLadder, openCareer, openModes, openLadder, CAREER, setLesson, TR, unlock, togglePause, afterRound, renderHow, selectPiece, selectTape, msg, renderSheet, setHud, endTraining, setMode, PAD, navMove, focusFirst, sparks, CUTE, THREE, BREATH, setCuteDeco, flipFx, PHOTO, UAL, raiseFlags, startVersus, startFFA, startBracket, startKid, KID, openSeason, startSeasonMatch, setVenue, VS, SPLIT, NET, buildOnlineMatch, hostLobby, joinLobby, ONL, vinControl, openRun, openDaily, openBracket, showBracket, bracketResult, ffaMatchEnd, ffaLeader, ffaWinner, endKid, openPhoto, closePhoto, startReplay, stopReplay, RP, store, startRunFight, newRun, runEnd, WX, setWeather, padVin, readVersus, applyLo, myLoadout, netDropped, netLeave, showIntro, installForged, dailyPlan, openKids, openVersus, openPicks, LESSONS, rivalClub, startGrudge, startDaily, seasonState, newSeason, refreshDaily, VENUES, COMM, hitMapHtml, resetFighterForRound, DIFF, PIN, PADS, NIN, padsUpdate, seatPads, LOBBY, MM, openOnlineHub, benchDown, benchMove, REP, squirePatch, coverage, openProfile, myProfile, BOS, updateTitlePurse, ACH, progressCheck, challenges, masteryOf, S2, rankOf, counterValue, renderCareer, progressMatch, saveCareer, shopState, shopUp, tapeLeft, shopMatchEnd, shopPrizeMult, shopXpMult, swingTimes, pieceWearMult, TABARDS, refillTape, renderShop, UPGRADES, freshKit, TAPE_STOCK, enterTown, leaveTown, TOWN, openVendor, closeVendor, openTownMap, shopFx, renderVendor, VENDORS, ITEMS, itemCost, spCost, skillRoom, sponsorIncome, BOOSTS, STALL_AT, HOMES, FURNISH, pfx, squadFx, boostKit, townCollide, townRefresh, townWalkTo, townTalk, townTeardown, lookState, WORLD, guildCheck, STATIONS, townDressMe, FOLK, updateFolk, navBlocked, buildFolk, BOUT, boutStart, boutStop, boutTick, drawTownMap, updateMiniMap, costumePerson, OUTFIT, buildSkinWeapon, skinIcon, wskinList, skinFor, buildMyWeapon, wskinFamOf, GATHER, startGather, gatherSwing, stopGather, tradeState, tradeLevel, tradeGain, give, have, craft, NODES, MATS, renderTrades, TRADE_SKILLS, ARENAS, DISTRICTS, TRAVEL, setWaypoint, clearWaypoint, realmPath, callHorse, mount, dismount, ANIMAL, districtAt, realmCull, REALM_TIERS, gateOpen, townJump, stableRows, horseAvailable, peopleCull, boutArenaFor, arenaLive, bagSlots, bagState, bagRoom, secretFound, lookOwned, SECRETS, stopSpectating, startTrial, TRIALS, tierCap, ROSTER, rosterClubs, rosterLive, rosterName, liveBoutPick, aiTier, AI_TIER, guardOutcome, fighterGlow, ONB, onbStage, onbSet, openCreator, tourStart, tourEnd, TOUR_STOPS, THRONE, throneHolder, throneFight, throneBow, openThrone, sideFromDrag, VOICE };
+  window.__ST = { G, AU, buildShield, buildWeapon, W3, startTourney, quickFight, toTitle, openRepair, kitCheck, setupMatch, toTactics, beginFight, endRound, matchEnd, CLUBS, WEAPONS, setView, toast, renderKitPicker, applyLoadout, IN, FP, showScreen, weaponIcon, startCine, startTraining, startLadder, openCareer, openModes, openLadder, CAREER, setLesson, TR, unlock, togglePause, afterRound, renderHow, selectPiece, selectTape, msg, renderSheet, setHud, endTraining, setMode, PAD, navMove, focusFirst, sparks, CUTE, THREE, BREATH, setCuteDeco, flipFx, PHOTO, UAL, raiseFlags, startVersus, startFFA, startBracket, startKid, KID, openSeason, startSeasonMatch, setVenue, VS, SPLIT, NET, buildOnlineMatch, hostLobby, joinLobby, ONL, vinControl, openRun, openDaily, openBracket, showBracket, bracketResult, ffaMatchEnd, ffaLeader, ffaWinner, endKid, openPhoto, closePhoto, startReplay, stopReplay, RP, store, startRunFight, newRun, runEnd, WX, setWeather, padVin, readVersus, applyLo, myLoadout, netDropped, netLeave, showIntro, installForged, dailyPlan, openKids, openVersus, openPicks, LESSONS, rivalClub, startGrudge, startDaily, seasonState, newSeason, refreshDaily, VENUES, COMM, hitMapHtml, resetFighterForRound, DIFF, PIN, PADS, NIN, padsUpdate, seatPads, LOBBY, MM, openOnlineHub, benchDown, benchMove, REP, squirePatch, coverage, openProfile, myProfile, BOS, updateTitlePurse, ACH, progressCheck, challenges, masteryOf, S2, rankOf, counterValue, renderCareer, progressMatch, saveCareer, shopState, shopUp, tapeLeft, shopMatchEnd, shopPrizeMult, shopXpMult, swingTimes, pieceWearMult, TABARDS, refillTape, renderShop, UPGRADES, freshKit, TAPE_STOCK, enterTown, leaveTown, TOWN, openVendor, closeVendor, openTownMap, shopFx, renderVendor, VENDORS, ITEMS, itemCost, spCost, skillRoom, sponsorIncome, BOOSTS, STALL_AT, HOMES, FURNISH, pfx, squadFx, boostKit, townCollide, townRefresh, townWalkTo, townTalk, townTeardown, lookState, WORLD, guildCheck, STATIONS, townDressMe, FOLK, updateFolk, navBlocked, buildFolk, BOUT, boutStart, boutStop, boutTick, drawTownMap, updateMiniMap, costumePerson, OUTFIT, buildSkinWeapon, skinIcon, wskinList, skinFor, buildMyWeapon, wskinFamOf, GATHER, startGather, gatherSwing, stopGather, tradeState, tradeLevel, tradeGain, give, have, craft, NODES, MATS, renderTrades, TRADE_SKILLS, ARENAS, DISTRICTS, TRAVEL, setWaypoint, clearWaypoint, realmPath, callHorse, mount, dismount, ANIMAL, districtAt, realmCull, REALM_TIERS, gateOpen, townJump, stableRows, horseAvailable, peopleCull, boutArenaFor, arenaLive, bagSlots, bagState, bagRoom, secretFound, lookOwned, SECRETS, stopSpectating, startTrial, TRIALS, tierCap, gy, tierOf, HILL, hillHouses, cliffAt, gateBlocked, arenaBlocked, localPath, NAV, rampAt, ROSTER, rosterClubs, rosterLive, rosterName, liveBoutPick, aiTier, AI_TIER, guardOutcome, fighterGlow, ONB, onbStage, onbSet, openCreator, tourStart, tourEnd, TOUR_STOPS, THRONE, throneHolder, throneFight, throneBow, openThrone, sideFromDrag, VOICE };
 }
 
 function autotest() {
@@ -15320,7 +15325,7 @@ function updateTownCamera(dt) {
   const cam = W3.camera, wantFov = TOWN.spec ? 42 : 55; if (cam.near !== 0.15 || Math.abs(cam.fov - wantFov) > 0.1) { cam.near = 0.15; cam.fov = wantFov; cam.updateProjectionMatrix(); }
   if (ONB.tour && tourTick(dt)) return;
   if (TOWN.spec) { specCamera(dt); return; }
-  if (TOWN.peek > 0) { TOWN.peek -= dt; cam.position.set(BAILEY.x0 + 2, 2.4 + gy(-100, -196), -196); cam.lookAt(-80, 2 + gy(-80, -205), -205); if (TOWN.peek <= 0) TOWN.cam = null; return; }
+  if (TOWN.peek > 0) { TOWN.peek -= dt; cam.position.set(-104, 2.4, -200); cam.lookAt(-60, 3, -190); if (TOWN.peek <= 0) TOWN.cam = null; return; }
   const aspect = window.innerWidth / window.innerHeight, dist = TOWN.dist * (aspect < 0.8 ? 1.3 : 1);
   const tx = TOWN.pos.x, tz = TOWN.pos.z, cp = Math.cos(TOWN.pitch);
   const gY = gy(tx, tz), cxp = tx + Math.sin(TOWN.yaw) * cp * dist, czp = tz + Math.cos(TOWN.yaw) * cp * dist;
@@ -15757,7 +15762,7 @@ function navBuild() {
 }
 // a terrace edge: the ground within r drops or rises by more than a step (ramps are gentle, cliffs are not)
 function cliffAt(x, z, r) {
-  if (typeof gy !== 'function' || z > BAILEY.z1 + 2 || x < BAILEY.x0 - 2 || x > BAILEY.x1 + 2) return false;
+  if (typeof gy !== 'function' || hillNd(HILL_T[0], x, z) > 1.04) return false;
   const y = gy(x, z), d = r + 0.6;
   return Math.abs(gy(x + d, z) - y) > 1.2 || Math.abs(gy(x - d, z) - y) > 1.2 || Math.abs(gy(x, z + d) - y) > 1.2 || Math.abs(gy(x, z - d) - y) > 1.2;
 }
@@ -15843,7 +15848,7 @@ const FOLK_ROLES = {
   gardener: { garden: 3, water: 1, fire: 0.5, walk: 'Walk_Loop', spd: [1, 1.1] },
   guard: { patrol: 1, walk: 'Walk_Formal_Loop', spd: [1.1, 1.1] }
 };
-const GUARD_PATH = [[-20, -160], [20, -160], [40, -190], [20, -205], [-20, -205], [-40, -190]]; // round the outer bailey yard
+const GUARD_PATH = [[-14, -150], [14, -150], [30, -165], [14, -176], [-14, -176], [-30, -165]]; // round the outer bailey yard
 function buildFolk() {
   FOLK.people = [];
   if (typeof UAL === 'undefined' || !UAL.ready) return;
@@ -16178,9 +16183,8 @@ function drawTownMap(ctx, view) {
   for (const [x0, x1, z0, z1, col] of TOWN.mapRects || []) { ctx.fillStyle = col || '#b9a37c'; ctx.fillRect(X(x0), Y(z0), (x1 - x0) * k, (z1 - z0) * k); }
   // the castle: the outer curtain, the inner ward, the Great Hall
   const wall = (B, col, lw) => { ctx.strokeStyle = col; ctx.lineWidth = Math.max(2, lw * k); ctx.strokeRect(X(B.x0), Y(B.z0), (B.x1 - B.x0) * k, (B.z1 - B.z0) * k); };
-  ctx.fillStyle = 'rgba(160,150,130,.35)'; ctx.fillRect(X(BAILEY.x0), Y(BAILEY.z0), (BAILEY.x1 - BAILEY.x0) * k, (BAILEY.z1 - BAILEY.z0) * k);
-  ctx.fillStyle = 'rgba(190,170,120,.35)'; ctx.fillRect(X(WARD.x0), Y(WARD.z0), (WARD.x1 - WARD.x0) * k, (WARD.z1 - WARD.z0) * k);
-  wall(BAILEY, '#6d6a66', 2.4); wall(WARD, '#7d776e', 2); ctx.fillStyle = '#8a8378'; ctx.fillRect(X(HALL.x0), Y(HALL.z0), (HALL.x1 - HALL.x0) * k, (HALL.z1 - HALL.z0) * k);
+  HILL_T.forEach((T, i) => { ctx.fillStyle = ['rgba(160,150,130,.35)', 'rgba(175,162,128,.4)', 'rgba(190,172,122,.45)', 'rgba(205,186,130,.5)'][i]; ctx.beginPath(); ctx.ellipse(X(T.cx), Y(T.cz), T.rx * k, T.rz * k, 0, 0, Math.PI * 2); ctx.fill(); ctx.strokeStyle = i ? '#7d776e' : '#6d6a66'; ctx.lineWidth = Math.max(1.5, 2 * k); ctx.stroke(); });
+  void wall; ctx.fillStyle = '#8a8378'; ctx.fillRect(X(HALL.x0), Y(HALL.z0), (HALL.x1 - HALL.x0) * k, (HALL.z1 - HALL.z0) * k);
   for (const Gt of TOWN.gates || []) { const open = gateOpen(Gt.key); ctx.fillStyle = open ? '#d9c49a' : '#a8342c'; ctx.beginPath(); ctx.arc(X(Gt.x), Y(Gt.z), Math.max(3, 2.4 * k), 0, Math.PI * 2); ctx.fill(); }
   // the arenas: a live one pulses red
   for (const A of ARENAS) {
@@ -16621,9 +16625,10 @@ function updateGather(dt) {
 // You walk (or ride) everywhere; nothing teleports. Roads and signposts link the districts.
 // ===================================================================
 const FAIR_RX = 92, FAIR_RZ = 98; // the old town: the fairground is this big
-const BAILEY = { x0: -114, x1: 114, z0: -306, z1: -150 };
-const WARD = { x0: -54, x1: 54, z0: -294, z1: -210 };
-const HALL = { x0: -19, x1: 19, z0: -286, z1: -238 };
+// the castle hill's bounding boxes (the real shape is in 14o_hill.js: HILL.tiers); HALL is the Great Hall on the citadel
+const BAILEY = { x0: -116, x1: 116, z0: -312, z1: -140 };
+const WARD = { x0: -50, x1: 50, z0: -306, z1: -206 };
+const HALL = { x0: -19, x1: 19, z0: -288, z1: -240 };
 const LAKE = { x: 222, z: 40, rx: 56, rz: 82 };
 const DISTRICTS = [
   { key: 'fair', name: 'The Fairground', x: 0, z: 12, r: 100 },
@@ -16639,25 +16644,22 @@ const ARENAS = [
   { key: 'peasant', name: 'Peasants’ Arena', x: -176, z: 158, bx: 13, bz: 18, district: 'village' },
   { key: 'forest', name: 'Forest Arena', x: -214, z: -104, bx: 13, bz: 18, district: 'woods' },
   { key: 'beach', name: 'Beach Arena', x: 148, z: 78, bx: 13, bz: 18, district: 'lake' },
-  { key: 'castle', name: 'Castle Arena', x: 78, z: -215, bx: 14, bz: 19, district: 'bailey', gate: 'bailey' },
-  { key: 'hall', name: 'The Great Hall', x: 0, z: -262, bx: 12, bz: 17, district: 'ward', gate: 'royal', indoor: true }
+  { key: 'castle', name: 'Castle Arena', x: -74, z: -204, bx: 14, bz: 19, district: 'bailey', gate: 'bailey' },
+  { key: 'hall', name: 'The Great Hall', x: 0, z: -264, bx: 12, bz: 15, district: 'ward', gate: 'royal', indoor: true }
 ];
 const ROADS = [
-  { name: 'north', pts: [[0, -24], [0, -150], [0, -172], [0, -192], [0, -200], [0, -210], [0, -226], [0, -238]], w: 6 },
-  { name: 'terrace', pts: [[-90, -200], [0, -200], [60, -200], [60, -250], [72, -272]], w: 4 },
+  { name: 'north', pts: [[0, -24], [0, -140]], w: 6 },
   { name: 'west', pts: [[-52, -2], [-100, -16], [-150, -44], [-196, -78]], w: 5 },
   { name: 'southwest', pts: [[-16, 70], [-62, 96], [-118, 122], [-160, 140]], w: 5 },
   { name: 'east', pts: [[52, 6], [96, 26], [128, 58], [126, 84], [132, 100]], w: 5 },
   { name: 'woodsnorth', pts: [[-196, -78], [-170, -130], [-120, -150]], w: 4 },
   { name: 'lakenorth', pts: [[128, 58], [150, -10], [176, -60]], w: 4 },
-  { name: 'south', pts: [[0, 70], [0, 120], [-30, 160]], w: 4 },
-  { name: 'bailey', pts: [[-90, -170], [90, -170]], w: 5 }
+  { name: 'south', pts: [[0, 70], [0, 120], [-30, 160]], w: 4 }
 ];
 function arenaBlocked(x, z, r) { for (const A of ARENAS) if (Math.abs(x - A.x) < A.bx + r && Math.abs(z - A.z) < A.bz + r) return A; return null; }
 function lakeIn(x, z, pad = 0) { const dx = (x - LAKE.x) / (LAKE.rx + pad), dz = (z - LAKE.z) / (LAKE.rz + pad); return dx * dx + dz * dz < 1; }
 function districtAt(x, z) {
-  if (x > WARD.x0 && x < WARD.x1 && z > WARD.z0 && z < WARD.z1) return DISTRICTS[5];
-  if (x > BAILEY.x0 && x < BAILEY.x1 && z > BAILEY.z0 && z < BAILEY.z1) return DISTRICTS[4];
+  { const k = tierOf(x, z); if (k >= 3) return DISTRICTS[5]; if (k) return DISTRICTS[4]; }
   let best = null, bd = 1e9; for (const D of DISTRICTS.slice(0, 4)) { const d = Math.hypot(x - D.x, z - D.z) / D.r; if (d < bd) { bd = d; best = D; } }
   return bd < 1.25 ? best : { key: 'wild', name: 'The Open Country' };
 }
@@ -16720,16 +16722,18 @@ function castleTower(R, x, z, h, flagCol) {
   TOWN.obst.push({ x, z, r: 3.4 });
 }
 // the gate: a gatehouse, two towers, banners and torches; the gate itself is a gate obstacle that opens with the writ
-function castleGate(R, x, z, key, label, Y) {
-  Y = Y || 0;
-  kpiece(R, 'cs_gate_2x4_doorway', x, Y, z, Math.PI / 2, 1.5);
-  for (const sx of [-3.6, 3.6]) { const b = kpiece(R, 'dp_banner_large', x + sx, 0, z + 0.9, 0, 1.4); if (b) b.position.y = Y + 1.6; }
-  for (const sx of [-2.8, 2.8]) { const f = mk(R, geo('w_wtf', () => new THREE.ConeGeometry(0.08, 0.22, 8)), tmat('#ffb02e', { emissive: '#ff6a00', emissiveIntensity: 1.6 }), x + sx, Y + 3.7, z + 0.8); WORLD.flick.push(f); kpiece(R, 'mk_Torch_Metal', x + sx, Y + 2.6, z + 0.75, Math.PI, 1.4); }
+function castleGate(R, x, z, key, label, Y, ry) {
+  Y = Y || 0; ry = ry || 0; const g = new THREE.Group(); g.position.set(x, Y, z); g.rotation.y = ry; R.add(g);
+  kpiece(g, 'cs_gate_2x4_doorway', 0, 0, 0, Math.PI / 2, 1.5);
+  for (const sx of [-3.6, 3.6]) kpiece(g, 'dp_banner_large', sx, 1.6, 0.9, 0, 1.4);
+  for (const sx of [-2.8, 2.8]) { const f = mk(g, geo('w_wtf', () => new THREE.ConeGeometry(0.08, 0.22, 8)), tmat('#ffb02e', { emissive: '#ff6a00', emissiveIntensity: 1.6 }), sx, 3.7, 0.8); WORLD.flick.push(f); kpiece(g, 'mk_Torch_Metal', sx, 2.6, 0.75, Math.PI, 1.4); }
   // the portcullis: drawn while you lack the writ
-  const port = new THREE.Group(); port.position.set(x, Y, z + 0.2); R.add(port); const iron = tmat('#3a3d40', { metalness: 0.7, roughness: 0.5 });
-  for (let i = -2; i <= 2; i++) mk(port, geo('rlm_pbar', () => new THREE.BoxGeometry(0.12, 4.2, 0.12)), iron, i * 0.95, 2.1, 0);
-  for (let j = 0; j < 4; j++) mk(port, geo('rlm_pbar2', () => new THREE.BoxGeometry(4.6, 0.12, 0.12)), iron, 0, 0.6 + j * 1.1, 0);
-  const G = { key, label, x, z: z + 0.2, port, r: 2.6 }; (TOWN.gates = TOWN.gates || []).push(G); return G;
+  const port = new THREE.Group(); port.position.set(0, 0, 0.2); g.add(port); const iron = tmat('#3a3d40', { metalness: 0.7, roughness: 0.5 });
+  for (let i = -2; i <= 2; i++) mk(port, geo('rlm_pbar', () => new THREE.BoxGeometry(0.12, 3.6, 0.12)), iron, i * 0.95, 1.8, 0);
+  for (let j = 0; j < 4; j++) mk(port, geo('rlm_pbar2', () => new THREE.BoxGeometry(4.6, 0.12, 0.12)), iron, 0, 0.5 + j * 0.95, 0);
+  // the gatehouse walls either side of the opening (so nobody slips past the portcullis)
+  for (const sx of [-4, 4]) TOWN.obst.push({ x: x + Math.cos(ry) * sx, z: z - Math.sin(ry) * sx, r: 1.5 });
+  const G = { key, label, x: x + Math.sin(ry) * 0.2, z: z + Math.cos(ry) * 0.2, port, r: 2.6 }; (TOWN.gates = TOWN.gates || []).push(G); return G;
 }
 // a list for one of the outer arenas: fence, rope, posts, stands on the long sides, a scoreboard and torches
 function arenaList(R, A, o) {
@@ -16793,6 +16797,7 @@ function signpost(R, x, z, ry, lines) {
 // ---- the whole realm
 function buildRealm(R) {
   TOWN.gates = []; TOWN.mapRoads = []; TOWN.realmBoards = {};
+  if (!ROADS.some(r => r.name === 'street')) ROADS.push(...hillRoads());
   const O = TOWN.obst, add = (key, x, z, ry, s, r) => { const p = kpiece(R, key, x, gy(x, z), z, ry || 0, s || 1); if (r) O.push({ x, z, r }); return p; };
   const face = (x, z, tx, tz) => Math.atan2(tx - x, tz - z);
   // roads, then signposts where they leave the fairground
@@ -16801,7 +16806,7 @@ function buildRealm(R) {
   signpost(R, -56, 4, -Math.PI / 2, [['THE OLD WOODS', -Math.PI / 2], ['FAIRGROUND', Math.PI / 2]]);
   signpost(R, 56, 10, Math.PI / 2, [['MIRROR LAKE', Math.PI / 2], ['FAIRGROUND', -Math.PI / 2]]);
   signpost(R, -22, 74, 0, [['MILLBROOK', -2.2], ['FAIRGROUND', 0.9]]);
-  signpost(R, 6, -144, 0, [['OUTER BAILEY', 0], ['FAIRGROUND', Math.PI]]);
+  signpost(R, 6, -126, 0, [['OUTER BAILEY', 0], ['FAIRGROUND', Math.PI]]);
   signpost(R, -192, -70, 0, [['QUARRY', -1.6], ['FOREST ARENA', 2.8], ['CASTLE', 0.6]]);
   signpost(R, 134, 62, 0, [['BEACH ARENA', 1.2], ['CLIFFS', 0]]);
   for (const Rd of ROADS) for (let i = 1; i < Rd.pts.length - 1; i += 1) { const [x, z] = Rd.pts[i]; if (Math.hypot(x, z) > 110) { add('ps_lamp', x + Rd.w / 2 + 1, z, 0, 1, 0.3); } }
@@ -16823,39 +16828,46 @@ function buildRealm(R) {
 // ---- the castle: the outer bailey (tier 2) and the inner ward with the Great Hall (tier 3)
 function buildRealmCastle(R, add, face) {
   buildCastleHill(R, add);
-  // ---- the outer bailey: a working castle yard
-  realmHall(R, -80, -180, 18, 9, 5, Math.PI / 2, { sign: 'ARMOURY', signCol: '#3d4a57', tower: true });
-  realmHall(R, -80, -215, 16, 9, 4.5, Math.PI / 2, { sign: 'MASTER SMITH', signCol: '#7a2b1c' });
-  { add('bf_furnace', -71, -222, Math.PI / 2, 1.2, 1.6); add('mk_Anvil', -71.5, -212, Math.PI / 2, 1.3, 0.6); add('mk_Whetstone', -72, -207, 0, 1, 0.6); add('mk_WeaponStand', -71.4, -229, Math.PI / 2, 1, 0.8); }
-  realmHall(R, -80, -255, 20, 10, 6, Math.PI / 2, { sign: 'BARRACKS', signCol: '#26344d' });
-  realmHall(R, -38, -296, 16, 10, 4, 0, { sign: 'STABLES', signCol: '#6b4e16', flat: true });
-  realmHall(R, 88, -278, 14, 22, 7, -Math.PI / 2, { sign: 'CHAPEL', signCol: '#4a3a6a', allStone: true, tower: true, roof: '#4a4e52' });
-  realmHall(R, 30, -296, 18, 9, 4.5, 0, { sign: 'GUILD HALL', signCol: '#6d1b28' });
-  // the training yard with pells and archery in the north-west of the bailey
-  for (let i = 0; i < 5; i++) { const x = -48 + i * 4, z = -178; mk(R, geo('fest_pell', () => new THREE.CylinderGeometry(0.13, 0.15, 1.9, 8)), tmat('#8a6a42'), x, 0.95 + gy(x, z), z).castShadow = true; O_push(x, z, 0.35); }
-  add('mk_Dummy', -30, -185, 0.3, 1, 0.5); add('mk_Dummy', -26, -186, -0.2, 1, 0.5); add('mk_WeaponStand', -52, -186, 0.2, 1, 0.8);
-  for (const [x, z] of [[-62, -178], [-58, -181], [-64, -184]]) add('fy_vil_archery_target', x, z, 0, 1.2, 0.6);
-  // courtyard life: well, carts, crates, a feast table, stacked barrels, banners
-  add('fb_well', 22, -180, 0, 1.2, 1.2); add('mk_Stall_Cart_Empty', 40, -168, -0.3, 1.2, 1.6); add('mk_Crate_Wooden', 44, -172, 0.2, 1.2, 0.6); add('mk_Barrel', 46, -170, 0, 1.2, 0.5); add('mk_Barrel_Holder', -60, -165, 0, 1.2, 1);
-  add('mk_Table_Large', 18, -240, 0, 1.2, 1.4); add('mk_Bench', 18, -238.6, 0, 1, 0); add('mk_Bench', 18, -241.4, 0, 1, 0); add('mk_Chalice', 18, -240, 0, 2.4, 0);
-  for (const [x, z] of [[-14, -160], [14, -160], [-14, -200], [14, -200]]) { const b = add('mk_Banner_1', x, z, 0, 1.4, 0.4); add('mk_Banner_1_Cloth', x, z, 0, 1.4, 0); }
-  for (const z of [-165, -185, -205]) for (const sx of [-5, 5]) add('ps_lamp', sx, z, 0, 1, 0.3);
+  // ---- tier 1, the yard inside the curtain wall: the street up the middle, the arena west, the training yard and armoury east
+  add('kb_market', 16, -150, 0.3, 5, 4); add('fb_well', -14, -152, 0, 1.2, 1.2);
+  for (const z of [-148, -160, -172]) for (const sx of [-6, 6]) { add('mk_Banner_1', sx, z, 0, 1.4, 0.4); add('mk_Banner_1_Cloth', sx, z, 0, 1.4, 0); }
+  for (const z of [-154, -166, -178]) for (const sx of [-5, 5]) add('ps_lamp', sx, z, 0, 1, 0.3);
+  realmHall(R, 80, -200, 18, 9, 5, -Math.PI / 2, { sign: 'ARMOURY', signCol: '#3d4a57', tower: true });
+  for (let i = 0; i < 5; i++) { const x = 24 + i * 4, z = -158; mk(R, geo('fest_pell', () => new THREE.CylinderGeometry(0.13, 0.15, 1.9, 8)), tmat('#8a6a42'), x, 0.95 + gy(x, z), z).castShadow = true; O_push(x, z, 0.35); }
+  add('mk_Dummy', 40, -166, 0.3, 1, 0.5); add('mk_Dummy', 44, -167, -0.2, 1, 0.5); add('mk_WeaponStand', 22, -166, 0.2, 1, 0.8);
+  for (const [x, z] of [[30, -174], [36, -176], [42, -178]]) add('fy_vil_archery_target', x, z, 0, 1.2, 0.6);
+  add('mk_Stall_Cart_Empty', 56, -160, -0.3, 1.2, 1.6); add('mk_Crate_Wooden', 60, -164, 0.2, 1.2, 0.6); add('mk_Barrel', 62, -162, 0, 1.2, 0.5);
   // the Castle arena: stone floor, wooden stands
   arenaList(R, ARENAS[4], { floor: '#b8ae9e', floorTex: 'dirt', bench: '#6a5a4a', signCol: '#26344d' });
-  // the mine shaft in the north-east corner (gold and silver live here)
-  realmGround(R, 60, 108, -302, -262, '#8e8478', 'dirt', 0.03 + gy(80, -280));
-  add('fy_rock_big_1', 104, -296, 0.6, 1.4, 3); add('fy_rock_big_3', 96, -300, 1.4, 1.3, 3); add('rt_pulley_crate', 70, -266, 0, 3, 0.8); add('mk_Chain_Coil', 74, -268, 0, 1.2, 0);
-  { const sg = townSign('MINE SHAFT', '#5a4a3a'); sg.position.set(64, 3 + gy(64, -262), -262); R.add(sg); }
-  // ---- the inner ward: gardens, the treasury, the Great Hall
-  for (const [x, z] of [[-38, -228], [38, -228], [-38, -280], [38, -280]]) { add('fountainRoundDetail', x, z, 0, 1.6, 1.8); }
-  for (let i = 0; i < 8; i++) { add('kf_bush_3_a', -44 + i * 2, -236, 0, 1.8, 0.5); add('kf_bush_3_a', 30 + i * 2, -236, 0, 1.8, 0.5); }
-  for (const sx of [-1, 1]) for (const z of [-222, -232]) { add('cr_flowers_crop', sx * 30, z, 0, 1.2, 0); add('cr_flowers_crop', sx * 40, z, 1, 1.2, 0); }
-  realmHall(R, 40, -262, 12, 14, 5, -Math.PI / 2, { sign: 'TREASURY', signCol: '#8a6a12', allStone: true, roof: '#5a4a2a' });
-  add('rp_chest_ingots', 32, -256, 0.3, 1.2, 0.8); add('rp_gold_ingots', 32, -260, 0, 1.2, 0.4);
-  realmHall(R, -40, -262, 12, 14, 5, Math.PI / 2, { sign: 'ROYAL TAILOR', signCol: '#5b2a86' });
+  // the flanks of the yard: the chapel, the guild hall and the stables east; the barracks and the mine shaft west
+  realmHall(R, 90, -240, 14, 22, 7, 0, { sign: 'CHAPEL', signCol: '#4a3a6a', allStone: true, tower: true, roof: '#4a4e52' });
+  realmHall(R, 76, -235, 18, 9, 4.5, -Math.PI / 2, { sign: 'GUILD HALL', signCol: '#6d1b28' });
+  realmHall(R, 86, -258, 16, 10, 4, 0, { sign: 'STABLES', signCol: '#6b4e16', flat: true });
+  realmHall(R, -84, -244, 20, 10, 6, Math.PI / 2, { sign: 'BARRACKS', signCol: '#26344d' });
+  add('mk_Barrel_Holder', -76, -256, 0, 1.2, 1); add('mk_WeaponStand', -76, -232, 0.2, 1, 0.8);
+  realmGround(R, -82, -68, -270, -250, '#8e8478', 'dirt', 0.03 + gy(-75, -260));
+  add('fy_rock_big_1', -78, -266, 0.6, 1.4, 3); add('fy_rock_big_3', -72, -268, 1.4, 1.3, 3); add('rt_pulley_crate', -70, -254, 0, 3, 0.8); add('mk_Chain_Coil', -68, -256, 0, 1.2, 0);
+  { const sg = townSign('MINE SHAFT', '#5a4a3a'); sg.position.set(-75, 3 + gy(-75, -249), -249); R.add(sg); }
+  // ---- tier 2, the lower terrace: the master smith west, a market square and a feast east
+  { const T2 = HILL_T[1], P = (r, th) => hillPolar(T2, r, th); // the smith stands along the terrace's curve, its door toward the cliff side
+    realmHall(R, ...P(55, -1.0), 14, 8, 4.5, -1.0 + Math.PI, { sign: 'MASTER SMITH', signCol: '#7a2b1c' });
+    add('bf_furnace', ...P(55, -0.83), -0.83 + Math.PI, 1.2, 1.6); add('mk_Anvil', ...P(50.5, -1.05), -1.05, 1.3, 0.6); add('mk_Whetstone', ...P(50.5, -1.1), 0, 1, 0.6); }
+  add('fountainRoundDetail', 46, -212, 0, 1.6, 1.8);
+  add('mk_Table_Large', 48, -224, 0, 1.2, 1.4); add('mk_Bench', 48, -222.6, 0, 1, 0); add('mk_Bench', 48, -225.4, 0, 1, 0); add('mk_Chalice', 48, -224, 0, 2.4, 0);
+  add('mk_Stall_Cart_Empty', 40, -208, 0.6, 1.2, 1.6); add('mk_Barrel_Apples', 44, -206, 0, 1.2, 0.5);
+  // ---- tier 3, the King's Court: gardens either side of the gate
+  for (const [x, z] of [[30, -226], [42, -240]]) add('fountainRoundDetail', x, z, 0, 1.6, 1.8);
+  for (let i = 0; i < 6; i++) add('kf_bush_3_a', 22 + i * 2, -225, 0, 1.8, 0.5);
+  for (const [x, z] of [[36, -232], [26, -236], [36, -250], [40, -256]]) { add('cr_flowers_crop', x, z, 0, 1.2, 0); add('cr_flowers_crop', x + 2, z + 1, 1, 1.2, 0); }
+  // ---- tier 4, the citadel: the treasury and the royal tailor flank the Great Hall's forecourt
+  realmHall(R, 25, -262, 10, 12, 5, 0, { sign: 'TREASURY', signCol: '#8a6a12', allStone: true, roof: '#5a4a2a' });
+  add('rp_chest_ingots', 20, -258, 0.3, 1.2, 0.8);
+  realmHall(R, -25, -262, 10, 12, 5, 0, { sign: 'ROYAL TAILOR', signCol: '#5b2a86' });
   landmark(R, () => buildGreatHall(R, add));
-  // the king's guard and court in the ward (static figures; the walking guards are townsfolk)
-  for (const [k, x, z, ry] of [['po_male_standing', -6, -236, 0], ['po_male_standing', 6, -236, 0], ['po_female_standing_hips', -24, -246, 0.8], ['po_male_standing_hips', 24, -250, -0.6], ['po_female_lookingup', -16, -270, 0.4]]) { const p = add(k, x, z, ry, 1, 0.4); if (p) p.traverse(o => { if (o.isMesh) o.material = TMAT.court || (TMAT.court = lmat({ vertexColors: true, roughness: 0.9, flatShading: true, color: '#c8b8ff' })); }); }
+  // the king's guard and court in the forecourt (static figures; the walking guards are townsfolk)
+  for (const [k, x, z, ry] of [['po_male_standing', -6, -238, 0], ['po_male_standing', 6, -238, 0], ['po_female_standing_hips', -12, -236, 0.8], ['po_male_standing_hips', 12, -236, -0.6]]) { const p = add(k, x, z, ry, 1, 0.4); if (p) p.traverse(o => { if (o.isMesh) o.material = TMAT.court || (TMAT.court = lmat({ vertexColors: true, roughness: 0.9, flatShading: true, color: '#c8b8ff' })); }); }
+  // and the town itself: houses packed along every wall and cliff
+  TOWN.hillHouses = hillHouses(R, add);
 }
 function O_push(x, z, r) { TOWN.obst.push({ x, z, r }); }
 // whatever fn adds to R stays visible from afar (castle walls, towers, the dome, the hall)
@@ -16864,7 +16876,7 @@ function landmark(R, fn) { const n0 = R.children.length; fn(); for (let i = n0; 
 function buildGreatHall(R0, add) {
   const H = HALL, w = H.x1 - H.x0, d = H.z1 - H.z0, cx = (H.x0 + H.x1) / 2, cz = (H.z0 + H.z1) / 2, ht = 11, Y = gy(cx, cz);
   const R = new THREE.Group(); R.position.y = Y; R0.add(R); R.userData.landmark = true;
-  const stone = tmat('#8f8a82'), dark = tmat('#4a4640'), win = tmat('#ffcf6a', { emissive: '#c07010', emissiveIntensity: 0.9 });
+  const stone = TMAT.ghstone || (TMAT.ghstone = lmat({ map: venueTex('whitestone'), color: '#e6e1d6', roughness: 0.9 })), dark = tmat('#4a4640'), win = tmat('#ffcf6a', { emissive: '#c07010', emissiveIntensity: 0.9 });
   const wall = (x, z, len, rot) => { const m = mk(R, new THREE.BoxGeometry(len, ht, 1.2), stone, x, ht / 2, z); m.rotation.y = rot; return m; };
   wall(cx, H.z0, w, 0); wall(H.x0, cz, d, Math.PI / 2); wall(H.x1, cz, d, Math.PI / 2);
   for (const sx of [-1, 1]) wall(cx + sx * (w / 4 + 1.6), H.z1, w / 2 - 3.2, 0); // door gap in the middle of the south wall
@@ -17037,7 +17049,7 @@ function gateOpen(key) { return realmHasWrit(key); }
 function realmHasWrit(key) { const w = (CAREER.writs = CAREER.writs || {}); return !!w[key]; }
 function realmGateCollide(P, r) {
   for (const G of TOWN.gates || []) {
-    const open = gateOpen(G.key); if (G.port) G.port.position.y += ((open ? 4.4 : 0) - G.port.position.y) * 0.1;
+    const open = gateOpen(G.key); if (G.port) G.port.position.y += ((open ? 3.0 : 0) - G.port.position.y) * 0.1;
     if (open) continue;
     const dx = P.x - G.x, dz = P.z - G.z, d = Math.hypot(dx, dz), m = G.r + r;
     if (d < m) { if (d < 1e-4) { P.z = G.z + m; } else { P.x = G.x + dx / d * m; P.z = G.z + dz / d * m; } if (!TOWN.gateMsgT || window.performance.now() - TOWN.gateMsgT > 4000) { TOWN.gateMsgT = window.performance.now(); gateRefused(G); } }
@@ -17183,7 +17195,7 @@ function nearestRoad(x, z) {
   for (let a = 0; a < ROADNET.nodes.length; a++) for (const [b, , local] of ROADNET.adj[a]) {
     if (b < a || local) continue;
     const [x0, z0] = ROADNET.nodes[a], [x1, z1] = ROADNET.nodes[b], dx = x1 - x0, dz = z1 - z0, L2 = dx * dx + dz * dz || 1e-6;
-    const t = clamp(((x - x0) * dx + (z - z0) * dz) / L2, 0, 1), px = x0 + dx * t, pz = z0 + dz * t, d = Math.hypot(x - px, z - pz);
+    const t = clamp(((x - x0) * dx + (z - z0) * dz) / L2, 0, 1), px = x0 + dx * t, pz = z0 + dz * t, d = Math.hypot(x - px, z - pz) + Math.abs(gy(px, pz) - gy(x, z)) * 12; // a road on another terrace is further than it looks
     if (!best || d < best.d) best = { x: px, z: pz, d, a, b, ta: Math.hypot(px - x0, pz - z0), tb: Math.hypot(px - x1, pz - z1) };
   }
   return best;
@@ -17377,8 +17389,8 @@ VENDORS.push(
   { key: 'rtailor', as: 'herald', tier: 3, name: 'Master Fennick', role: 'Royal tailor', col: '#5b2a86', awn: '#7a3aa6', hi: 'Silk, velvet, cloth of gold. One does not dress for court; one dresses AT it.', icon: '🧵' }
 );
 for (const V of VENDORS) VENDOR_BY[V.key] = V;
-Object.assign(STALL_AT, { msmith: [-71, -215], marmour: [-71, -180], mtrainer: [-71, -255], rsmith: [31, -256], rarmour: [31, -268], rtailor: [-31, -262] });
-Object.assign(STALL_FACE, { msmith: Math.PI / 2, marmour: Math.PI / 2, mtrainer: Math.PI / 2, rsmith: -Math.PI / 2, rarmour: -Math.PI / 2, rtailor: Math.PI / 2 });
+Object.assign(STALL_AT, { msmith: [-40, -216], marmour: [71, -200], mtrainer: [-75, -244], rsmith: [21, -253], rarmour: [28, -253], rtailor: [-25, -253] });
+Object.assign(STALL_FACE, { msmith: 2.21, marmour: -Math.PI / 2, mtrainer: Math.PI / 2, rsmith: 0, rarmour: 0, rtailor: 0 });
 Object.assign(VENDOR_FIT, { msmith: 'Female_Peasant', marmour: 'Male_Ranger', mtrainer: 'Male_Ranger', rsmith: 'Male_Peasant', rarmour: 'Female_Ranger', rtailor: 'Male_Ranger' });
 // how far up a bar of `max` a vendor of this tier will take you
 function tierCap(max, tier) { return tier >= 3 ? max : tier === 2 ? Math.max(1, Math.round(max * 0.8)) : Math.max(1, Math.round(max * 0.6)); }
@@ -17399,8 +17411,8 @@ function applyVendorTier(box, tier) {
 }
 // ---- the gatekeepers: Sergeant Brask outside the bailey gate, the Captain of the King's Guard by the Castle arena
 STATIONS.push(
-  { key: 'sergeant', name: 'Sergeant Brask', role: 'Bailey gate', icon: '🛡️', at: [6.5, -145], knight: true },
-  { key: 'captain', name: 'Captain Isolde', role: 'The King’s Guard', icon: '👑', at: [70, -181], knight: true }
+  { key: 'sergeant', name: 'Sergeant Brask', role: 'Bailey gate', icon: '🛡️', at: [6.5, -132], knight: true },
+  { key: 'captain', name: 'Captain Isolde', role: 'The King’s Guard', icon: '👑', at: [-12, -199], knight: true }
 );
 CLUBS.sergeant = { key: 'sergeant', name: 'Bailey Garrison', full: 'The Bailey Garrison', short: 'GAR', tabard: '#26344d', trim: '#c9b48a', charge: 'chief', flag: '#3b93ff',
   roster: [{ num: 15, name: 'Sgt. Brask', arch: 'heavy', weapon: 'mace', shield: 'heater', helm: 'greathelm', prof: { react: 0.28, aggr: 1.0, guard: 0.6, cancel: 0.9 }, stab: 1.1, keep: true }] };
@@ -17522,11 +17534,11 @@ function arenaNews(A) { if (A.live && A.liveText) return A.liveText; if (TOWN.bo
 // ===================================================================
 const SECRETS = [
   { key: 'hermit', name: 'The hermit’s cave', x: -286, z: -40, hint: 'Behind the quarry, where the rocks lean together, someone used to live.', look: ['hat', 'hermit'], loot: { gold_ore: 2 }, verb: 'Search the cave' },
-  { key: 'crypt', name: 'The chapel crypt', x: 101, z: -280, hint: 'A lever behind the bailey chapel. Nobody’s pulled it in years.', look: ['hat', 'crypt'], loot: { silver_ore: 2 }, verb: 'Pull the old lever', gate: 'bailey' },
+  { key: 'crypt', name: 'The chapel crypt', x: 90, z: -254, hint: 'A lever behind the bailey chapel. Nobody’s pulled it in years.', look: ['hat', 'crypt'], loot: { silver_ore: 2 }, verb: 'Pull the old lever', gate: 'bailey' },
   { key: 'lookout', name: 'The treetop lookout', x: -238, z: -122, hint: 'Deep in the Old Woods a ladder goes up into one particular tree.', look: ['cape', 'ranger'], loot: { hickory: 3 }, verb: 'Climb the hidden ladder' },
   { key: 'boat', name: 'The sunken boat', x: 226, z: 128, hint: 'At the far end of Mirror Lake, half in the reeds, an old boat rots.', look: ['hand', 'driftwood'], loot: { oak: 3 }, verb: 'Search the wreck' },
-  { key: 'cellar', name: 'The king’s wine cellar', x: -47, z: -289, hint: 'In the King’s Court, behind the kitchen, steps go down to the cellar.', look: ['hand', 'goblet'], look2: ['cape', 'courtier'], loot: {}, item: 'royal_seal', verb: 'Go down to the cellar', gate: 'royal' },
-  { key: 'smuggler', name: 'The smugglers’ grate', x: -117, z: -196, hint: 'Smugglers once ran a tunnel from Millbrook’s mill to a grate in the bailey’s west wall.', look: ['hat', 'smuggler'], loot: {}, item: 'map_scrap', verb: 'Peer through the grate', peek: true }
+  { key: 'cellar', name: 'The king’s wine cellar', x: -16, z: -290, hint: 'On the citadel, behind the Great Hall, steps go down to the cellar.', look: ['hand', 'goblet'], look2: ['cape', 'courtier'], loot: {}, item: 'royal_seal', verb: 'Go down to the cellar', gate: 'royal' },
+  { key: 'smuggler', name: 'The smugglers’ grate', x: -113, z: -200, hint: 'Smugglers once ran a tunnel from Millbrook’s mill to a grate in the bailey’s west wall.', look: ['hat', 'smuggler'], loot: {}, item: 'map_scrap', verb: 'Peer through the grate', peek: true }
 ];
 LOOKS.hat.push(['hermit', 'Hermit’s hood', 0, 'hidden'], ['crypt', 'Crypt knight helm', 0, 'hidden'], ['smuggler', 'Smuggler’s mask', 0, 'hidden']);
 LOOKS.cape.push(['ranger', 'Ranger’s cloak', 0, 'hidden'], ['courtier', 'Courtier’s mantle', 0, 'hidden']);
@@ -17540,7 +17552,7 @@ function buildSecrets(R) {
   { const m = mk(R, new THREE.PlaneGeometry(2.2, 2.4), lmat({ color: '#0a0806' }), -286, 1.2, -42.6); m.rotation.y = 0; }
   add('dp_candle_big', -285, -40.6, 0, 1.2); add('mk_Chest_Wood', -287.4, -41.2, 0.3, 0.9);
   // crypt lever behind the chapel
-  add('mk_Chain_Coil', 101, -281, 0, 0.9); { const lv = mk(R, geo('sc_lever', () => new THREE.BoxGeometry(0.08, 0.9, 0.08)), tmat('#3a3d40', { metalness: 0.7 }), 101, 0.9 + gy(101, -279.6), -279.6); lv.rotation.z = 0.5; }
+  add('mk_Chain_Coil', 90, -255.4, 0, 0.9); { const lv = mk(R, geo('sc_lever', () => new THREE.BoxGeometry(0.08, 0.9, 0.08)), tmat('#3a3d40', { metalness: 0.7 }), 90, 0.9 + gy(90, -253.6), -253.6); lv.rotation.z = 0.5; }
   // lookout: a tall trunk, a ladder, a platform
   { const tr = mk(R, geo('sc_trunk', () => new THREE.CylinderGeometry(0.5, 0.7, 9, 8)), tmat('#5a3b24'), -238, 4.5, -123.4); tr.castShadow = true; TOWN.obst.push({ x: -238, z: -123.4, r: 0.8 }); }
   for (let i = 0; i < 12; i++) mk(R, geo('sc_rung', () => new THREE.BoxGeometry(0.6, 0.05, 0.05)), tmat('#7a5a36'), -238, 0.4 + i * 0.55, -122.7);
@@ -17550,9 +17562,9 @@ function buildSecrets(R) {
   { const hull = mk(R, geo('sc_hull', () => new THREE.SphereGeometry(1.4, 10, 6, 0, TAU, 0, Math.PI / 2)), tmat('#5a4630'), 226, 0.1, 128); hull.scale.set(1, 0.5, 2.4); hull.rotation.x = Math.PI + 0.25; TOWN.obst.push({ x: 226, z: 128, r: 1.8 }); }
   for (let i = 0; i < 10; i++) add('cr_grass_1', 222 + (i % 5) * 2, 124 + Math.floor(i / 5) * 6, i, 1.6);
   // cellar steps in the ward
-  mk(R, geo('sc_hatch', () => new THREE.BoxGeometry(1.8, 0.08, 1.4)), tmat('#4a3422'), -47, 0.05 + gy(-47, -289), -289); add('mk_Barrel', -49, -290, 0, 1); add('mk_Barrel', -45, -290.5, 0.4, 1);
+  mk(R, geo('sc_hatch', () => new THREE.BoxGeometry(1.8, 0.08, 1.4)), tmat('#4a3422'), -16, 0.05 + gy(-16, -290), -290); add('mk_Barrel', -18, -291, 0, 1); add('mk_Barrel', -14, -291.5, 0.4, 1);
   // the smugglers' grate low in the bailey's west wall (and a hint scrawled by the mill)
-  mk(R, geo('sc_grate', () => new THREE.BoxGeometry(0.1, 0.9, 1.4)), tmat('#2a2d30', { metalness: 0.8 }), BAILEY.x0 - 1.3, 0.5, -196);
+  mk(R, geo('sc_grate', () => new THREE.BoxGeometry(0.1, 0.9, 1.4)), tmat('#2a2d30', { metalness: 0.8 }), -110.6, 0.5, -200).rotation.y = 0.3;
   for (const S of SECRETS) {
     const lab = new THREE.Object3D();
     TOWN.stalls.push({ V: { key: 's:' + S.key, name: S.name, role: 'Hidden place', icon: '✨' }, g: lab, npc: null, ry: 0, x: S.x, z: S.z, ax: S.x, az: S.z, label: lab, secret: S, open: () => findSecret(S), verb: S.verb });
@@ -17576,7 +17588,7 @@ function findSecret(S) {
 }
 // the grate: a look into the bailey from outside, a few seconds long (uses the spectator camera)
 function secretPeek() {
-  const A = { name: 'The Outer Bailey', x: -80, z: -200, indoor: false };
+  const A = { name: 'The Outer Bailey', x: -74, z: -200, indoor: false };
   TOWN.peek = 3.5; TOWN.peekAt = A;
 }
 function renderSecrets(box) {
@@ -17679,39 +17691,57 @@ async function throneEnd(m, won, withPurse) {
 }
 
 // ===================================================================
-// Castle Hill: the castle is a white-stone hill-city in three terraces. Nothing here is flat any more:
-//   L0 (y 0)   the forecourt inside the bailey gate, with a grand ramp up the middle
-//   L1 (y 5)   the Outer Bailey: the lower town on a terrace, walled, with the Castle arena, the halls, the mine
-//   L2 (y 10)  the King's Court: the upper ward behind its own wall and ramp, gardens, the Great Hall, the keep above it
+// Castle Hill: the castle is a white-stone hill-city in four stacked terraces, each ringed by its own wall, climbed by
+// ramps that hug the cliff of the terrace above. The back of the hill is sheer (the terraces stack tight there);
+// the front opens into wide yards. Nothing here is flat:
+//   tier 1 (y 0)   the Outer Bailey yard inside the curtain wall: the arena, the armoury, the training yard, the lower town
+//   tier 2 (y 6)   the lower terrace: the master smith, the market, houses
+//   tier 3 (y 12)  the King's Court behind the Royal gate: gardens, houses
+//   tier 4 (y 18)  the citadel: the Great Hall, the treasury, the royal tailor, the keep above it all
 // gy(x, z) is the ground height anywhere in the realm (0 outside the castle); everything that stands on the ground asks it.
 // Walls and towers are the Kenney Castle Kit (ck_*), the houses and the keep are KayKit's Medieval Builder (kb_*).
 // ===================================================================
-const HILL = { L1: 5, L2: 10, rampA: [-172, -192], rampB: [-212, -226], rampW: 7 };
-function gy(x, z) {
-  const B = BAILEY, W = WARD;
-  if (x < B.x0 || x > B.x1 || z < B.z0 || z > B.z1) return 0;
-  if (x > W.x0 && x < W.x1 && z < W.z1) { // the ward: a ramp just inside the royal gate, then the upper terrace
-    if (z > HILL.rampB[1]) return Math.abs(x) <= HILL.rampW ? HILL.L1 + (HILL.L2 - HILL.L1) * clamp((HILL.rampB[0] - z) / (HILL.rampB[0] - HILL.rampB[1]), 0, 1) : HILL.L1;
-    return HILL.L2;
+const HILL = {
+  tiers: [ // tier 1 is an ellipse at ground; the rest are circles. h = the floor height
+    { cx: 0, cz: -226, rx: 116, rz: 86, h: 0 },
+    { cx: 0, cz: -246, rx: 65, rz: 65, h: 6 },
+    { cx: 0, cz: -258, rx: 52, rz: 52, h: 12 },
+    { cx: 0, cz: -264, rx: 40, rz: 40, h: 18 }
+  ],
+  rampW: 9, rise: 6,
+  // ramps: from tier k up to tier k+1, hugging the cliff of tier k+1, from angle a (bottom) to b (top). Angles are from the
+  // tier's centre, 0 = south, positive = east.
+  ramps: [{ k: 1, a: 0.12, b: 0.66 }, { k: 2, a: 0.6, b: -0.06 }, { k: 3, a: -0.2, b: -1.09 }],
+  gateA: 0 // the Bailey gate is at the south of tier 1
+};
+const HILL_T = HILL.tiers, HILL_S = { wall: 5, tower: 5, house: 4.2 };
+// a point on a tier's rim at angle th (and f of the radius: 1 = the edge)
+function hillPt(T, th, f) { return [T.cx + T.rx * (f == null ? 1 : f) * Math.sin(th), T.cz + T.rz * (f == null ? 1 : f) * Math.cos(th)]; }
+// a point r metres from a tier's centre at angle th
+function hillPolar(T, r, th) { return [T.cx + r * Math.sin(th), T.cz + r * Math.cos(th)]; }
+// normalised distance from a tier's centre (1 = on the rim)
+function hillNd(T, x, z) { const dx = (x - T.cx) / T.rx, dz = (z - T.cz) / T.rz; return Math.sqrt(dx * dx + dz * dz); }
+// which tier a point is on (0 = outside the castle)
+function tierOf(x, z) { for (let k = HILL_T.length; k >= 1; k--) if (hillNd(HILL_T[k - 1], x, z) <= 1) return k; return 0; }
+// on a ramp? returns { ramp, t (0 at the bottom, 1 at the top), r, th }
+function rampAt(x, z) {
+  for (const Rp of HILL.ramps) {
+    const U = HILL_T[Rp.k], dx = x - U.cx, dz = z - U.cz, r = Math.hypot(dx, dz);
+    if (r < U.rx || r > U.rx + HILL.rampW) continue;
+    const th = Math.atan2(dx, dz), t = (th - Rp.a) / (Rp.b - Rp.a);
+    if (t < 0 || t > 1) continue;
+    return { ramp: Rp, t, r, th };
   }
-  if (z > HILL.rampA[0]) return 0; // the forecourt
-  if (z > HILL.rampA[1]) return Math.abs(x) <= HILL.rampW ? HILL.L1 * clamp((HILL.rampA[0] - z) / (HILL.rampA[0] - HILL.rampA[1]), 0, 1) : 0;
-  return HILL.L1;
+  return null;
 }
-// the slope under your feet (for leaning the camera and the horse a touch): dz of the ground per metre north
+function gy(x, z) {
+  if (z > HILL_T[0].cz + HILL_T[0].rz + 1) return 0; // south of the castle: the quick way out for the whole fairground
+  const rp = rampAt(x, z); if (rp) return HILL_T[rp.ramp.k - 1].h + HILL.rise * rp.t;
+  const k = tierOf(x, z); return k ? HILL_T[k - 1].h : 0;
+}
+// the slope under your feet (for leaning the horse a touch): dy of the ground per metre north
 function gslope(x, z) { return (gy(x, z - 0.5) - gy(x, z + 0.5)); }
 // ---- building blocks from the kits
-const HILL_S = { wall: 5, tower: 5, parapet: 2.2, house: 5 };
-// a run of Kenney wall blocks between two points at height Y, with a gap where gapAt says
-function hillWall(R, x0, z0, x1, z1, Y, o) {
-  o = o || {}; const s = o.s || HILL_S.wall, L = Math.hypot(x1 - x0, z1 - z0), n = Math.max(1, Math.round(L / s)), ang = Math.atan2(x1 - x0, z1 - z0);
-  for (let i = 0; i < n; i++) {
-    const t = (i + 0.5) / n, x = x0 + (x1 - x0) * t, z = z0 + (z1 - z0) * t;
-    if (o.gapAt && o.gapAt(x, z)) continue;
-    kpiece(R, o.key || 'ck_wall', x, Y, z, ang, s);
-    if (!o.noBlock) TOWN.obst.push({ x, z, r: s * 0.55 });
-  }
-}
 // a Kenney tower: base block, mid blocks, a roof; h = number of blocks tall
 function hillTower(R, x, z, Y, h, o) {
   o = o || {}; const s = o.s || HILL_S.tower, lift = 1.31 * s;
@@ -17720,79 +17750,138 @@ function hillTower(R, x, z, Y, h, o) {
   if (o.flag) { const fl = kpiece(R, 'ck_flag', x + s * 0.25, Y + h * lift + (o.flat ? 0.3 : 1.0) * s, z, 0, s * 0.9); if (fl && o.flagCol) fl.traverse(m => { if (m.isMesh) m.material = TMAT['hflag' + o.flagCol] || (TMAT['hflag' + o.flagCol] = lmat({ color: o.flagCol, roughness: 0.9, flatShading: true })); }); }
   TOWN.obst.push({ x, z, r: s * 0.7 }); return top;
 }
-// a low parapet along a terrace edge (narrow wall blocks), with the drop below it blocked
-function hillParapet(R, x0, z0, x1, z1, Y, gapAt) {
-  const s = HILL_S.parapet, L = Math.hypot(x1 - x0, z1 - z0), n = Math.max(1, Math.round(L / s)), ang = Math.atan2(x1 - x0, z1 - z0);
-  for (let i = 0; i < n; i++) { const t = (i + 0.5) / n, x = x0 + (x1 - x0) * t, z = z0 + (z1 - z0) * t; if (gapAt && gapAt(x, z)) continue; kpiece(R, 'ck_wall_narrow', x, Y, z, ang, s); }
-  const k = Math.max(1, Math.round(L / 1.4)); for (let i = 0; i <= k; i++) { const t = i / k, x = x0 + (x1 - x0) * t, z = z0 + (z1 - z0) * t; if (gapAt && gapAt(x, z)) continue; TOWN.obst.push({ x, z, r: 0.9 }); }
-}
-// the terrace itself: a stone top, white cliff faces on the open sides, and the ramp with its own walls
-function hillTerrace(R, x0, x1, z0, z1, Y, col) {
-  realmGround(R, x0, x1, z0, z1, col || '#cfc8bb', 'stone', Y + 0.02);
-  const face = tmat('#d9d3c6', { roughness: 0.95 }), trim = tmat('#bfb7a8');
-  const cliff = (cx, cz, len, rot) => { const m = mk(R, new THREE.BoxGeometry(len, Y, 1.2), face, cx, Y / 2, cz); m.rotation.y = rot; m.receiveShadow = true; m.userData.landmark = true; const b = mk(R, new THREE.BoxGeometry(len + 0.6, 0.5, 1.8), trim, cx, Y - 0.2, cz); b.rotation.y = rot; b.userData.landmark = true; };
-  return cliff;
-}
-function hillRamp(R, x, z0, z1, y0, y1, w) {
-  const L = z0 - z1, h = y1 - y0, len = Math.hypot(L, h), ang = Math.atan2(h, L);
-  const g = mk(R, new THREE.PlaneGeometry(w, len), lmat({ map: venueTex('stone'), color: '#c9c2b4', roughness: 1 }), x, (y0 + y1) / 2 + 0.03, (z0 + z1) / 2, false);
-  g.rotation.set(-Math.PI / 2 + ang, 0, 0); g.receiveShadow = true; g.userData.landmark = true;
-  // the ramp's side walls: a wedge each side, and the edges blocked
-  const face = tmat('#d9d3c6', { roughness: 0.95 });
-  for (const sx of [-1, 1]) {
-    const sh = new THREE.Shape(); sh.moveTo(0, 0); sh.lineTo(-L, 0); sh.lineTo(-L, h); sh.closePath();
-    const wedge = mk(R, new THREE.ExtrudeGeometry(sh, { depth: 1, bevelEnabled: false }), face, x + sx * (w / 2 + 0.5), y0, z0); wedge.rotation.y = Math.PI / 2; wedge.userData.landmark = true;
-    for (let t = 0; t <= 1.001; t += 1 / Math.round(L / 1.4)) TOWN.obst.push({ x: x + sx * (w / 2 + 0.9), z: z0 - L * t, r: 0.9 });
+// a wall of Kenney blocks along a tier's rim (just inside the edge), blocks overlapping so there are no gaps.
+// gaps: a list of [angle, halfWidth in metres]. Where the terrace below is within 7 m (the sheer back of the hill) the wall is left out.
+function hillRimWall(R, k, Y, gaps, flagCol) {
+  const T = HILL_T[k - 1], s = HILL_S.wall, f = 1 - 2.6 / Math.min(T.rx, T.rz), L = Math.PI * (1.5 * (T.rx + T.rz) - Math.sqrt(T.rx * T.rz)) * f, n = Math.round(L / (s * 0.88));
+  const below = k > 1 ? HILL_T[k - 2] : null, toweri = Math.max(5, Math.round(n / 9));
+  for (let i = 0; i < n; i++) {
+    const th = (i + 0.5) / n * TAU - Math.PI, [x, z] = hillPt(T, th, f);
+    if (gaps.some(([ga, gw]) => Math.abs(Math.atan2(Math.sin(th - ga), Math.cos(th - ga))) * T.rx < gw)) continue;
+    if (below && hillNd(below, x, z) > 1 - 7 / Math.min(below.rx, below.rz)) continue;
+    const [x2, z2] = hillPt(T, th + 0.01, f), ang = Math.atan2(x2 - x, z2 - z);
+    if (i % toweri === 0) { hillTower(R, x, z, Y, k === 1 ? 3 : 2, { flag: i % (toweri * 2) === 0, flagCol, high: k > 2 }); continue; }
+    kpiece(R, 'ck_wall', x, Y, z, ang, s);
+    TOWN.obst.push({ x, z, r: s * 0.55 });
   }
-  // every 4 m a lamp on the ramp wall
-  for (let t = 0.15; t < 1; t += 0.28) for (const sx of [-1, 1]) kpiece(R, 'ps_lamp', x + sx * (w / 2 - 0.6), y0 + h * t, z0 - L * t, 0, 1);
+}
+// the terrace top and its cliff: a disc at height Y, and a cylinder of white rock down to the terrace below
+function hillTerrace(R, k) {
+  const T = HILL_T[k - 1], Y = T.h, below = k > 1 ? HILL_T[k - 2].h : 0;
+  const top = mk(R, new THREE.CircleGeometry(1, 96), lmat({ map: venueTex(k === 1 ? 'dirt' : 'whitestone'), color: k === 1 ? '#b9b2a4' : ['#d8d2c6', '#e0dbd0', '#e8e4da'][k - 2], roughness: 1 }), T.cx, Y + 0.02, T.cz, false);
+  top.rotation.x = -Math.PI / 2; top.scale.set(T.rx, T.rz, 1); top.receiveShadow = true; top.userData.landmark = true;
+  if (k === 1) return;
+  const tex = venueTex('whitestone').clone(); tex.repeat.set(Math.round(T.rx / 2.5), 2); tex.needsUpdate = true;
+  const H = Y - below + 0.6, cyl = mk(R, new THREE.CylinderGeometry(T.rx, T.rx + 1.4, H, 128, 1, true), lmat({ map: tex, color: '#ffffff', roughness: 0.95, side: THREE.DoubleSide }), T.cx, below + H / 2 - 0.3, T.cz, false);
+  cyl.receiveShadow = true; cyl.userData.landmark = true;
+  const band = mk(R, new THREE.CylinderGeometry(T.rx + 0.15, T.rx + 0.25, 0.7, 128, 1, true), tmat('#c5bdae'), T.cx, Y - 0.35, T.cz, false); band.userData.landmark = true;
+}
+// a ramp: a curved stone slab up the cliff of tier k+1 from angle a to b, with a parapet on the drop side
+function hillRamp(R, Rp) {
+  const U = HILL_T[Rp.k], y0 = HILL_T[Rp.k - 1].h, y1 = U.h, n = 28, r0 = U.rx + 0.25, r1 = U.rx + HILL.rampW, W = HILL.rampW;
+  const pos = [], uv = [], idx = [], wpos = [], widx = [];
+  for (let i = 0; i <= n; i++) {
+    const t = i / n, th = Rp.a + (Rp.b - Rp.a) * t, y = y0 + (y1 - y0) * t + 0.04, sn = Math.sin(th), cs = Math.cos(th);
+    pos.push(U.cx + r0 * sn, y, U.cz + r0 * cs, U.cx + r1 * sn, y, U.cz + r1 * cs); uv.push(t * 10, 0, t * 10, 1);
+    if (i) { const b = (i - 1) * 2; idx.push(b, b + 1, b + 2, b + 1, b + 3, b + 2); }
+    const rw = r1 + 0.5; wpos.push(U.cx + rw * sn, y0 - 0.4, U.cz + rw * cs, U.cx + rw * sn, y + 1.15, U.cz + rw * cs);
+    if (i) { const b = (i - 1) * 2; widx.push(b, b + 2, b + 1, b + 1, b + 2, b + 3); }
+    if (i % 3 === 1 && i > 5) TOWN.obst.push({ x: U.cx + (r1 + 0.9) * sn, z: U.cz + (r1 + 0.9) * cs, r: 0.9 }); // the parapet blocks once the drop is real; the foot of the ramp stays open sideways
+    if (i % 7 === 3) kpiece(R, 'ps_lamp', U.cx + (r1 - 0.7) * sn, y, U.cz + (r1 - 0.7) * cs, 0, 1);
+  }
+  const g = new THREE.BufferGeometry(); g.setAttribute('position', new THREE.Float32BufferAttribute(pos, 3)); g.setAttribute('uv', new THREE.Float32BufferAttribute(uv, 2)); g.setIndex(idx); g.computeVertexNormals();
+  const slab = new THREE.Mesh(g, lmat({ map: venueTex('whitestone'), color: '#cfc8ba', roughness: 1, side: THREE.DoubleSide })); slab.receiveShadow = true; slab.userData.landmark = true; R.add(slab);
+  const wg = new THREE.BufferGeometry(); wg.setAttribute('position', new THREE.Float32BufferAttribute(wpos, 3)); wg.setIndex(widx); wg.computeVertexNormals();
+  const wall = new THREE.Mesh(wg, lmat({ color: '#d9d3c6', roughness: 0.95, side: THREE.DoubleSide })); wall.userData.landmark = true; R.add(wall);
+  // the top end: a short wall across the band so the ramp ends at the arch, not in thin air
+  const thE = Rp.b + Math.sign(Rp.b - Rp.a) * 4.2 / r1, sn = Math.sin(thE), cs = Math.cos(thE), ang = Math.atan2(sn, cs);
+  for (const rr of [r0 + W * 0.25, r0 + W * 0.7]) { kpiece(R, 'ck_wall', U.cx + rr * sn, y1, U.cz + rr * cs, ang, 4.2); TOWN.obst.push({ x: U.cx + rr * sn, z: U.cz + rr * cs, r: 2.3 }); }
+}
+// an open arch in a tier's wall at the top of a ramp: two towers either side and a banner
+function hillArch(R, k, th, Y) {
+  const T = HILL_T[k - 1], f = 1 - 2.6 / T.rx;
+  for (const d of [-1, 1]) { const [x, z] = hillPt(T, th + d * 7.5 / T.rx, f); hillTower(R, x, z, Y, 2, { high: true }); }
+  const [x, z] = hillPt(T, th, f); const b = kpiece(R, 'ck_flag_banner_long', x, Y, z, th, 3.2); if (b) b.position.y = Y + 1;
+}
+// houses packed along the rings: just inside each wall and against each cliff, in as many rows as the terrace has room for,
+// with a lane left open every few houses so you can get between the rows
+function hillHouses(R, add) {
+  const rnd = seeded('hill'), kinds = ['kb_house', 'kb_house', 'kb_house', 'kb_house', 'kb_barracks', 'kb_market', 'kb_lumbermill', 'kb_house', 'kb_mill', 'kb_house'];
+  // keep clear of what is built later: the vendors, the stations, the hidden places, the arenas, the roads
+  const keep = [...Object.values(STALL_AT).map(([x, z]) => ({ x, z, r: 4.5 })), ...STATIONS.map(st => ({ x: st.at[0], z: st.at[1], r: 4.5 })), ...SECRETS.map(sc => ({ x: sc.x, z: sc.z, r: 6 }))];
+  for (const Rd of ROADS) for (let i = 0; i < Rd.pts.length - 1; i++) { const [x0, z0] = Rd.pts[i], [x1, z1] = Rd.pts[i + 1], n = Math.ceil(Math.hypot(x1 - x0, z1 - z0) / 3); for (let j = 0; j <= n; j++) keep.push({ x: x0 + (x1 - x0) * j / n, z: z0 + (z1 - z0) * j / n, r: Rd.w / 2 + 0.6 }); }
+  const inArena = (x, z) => ARENAS.some(A => Math.abs(x - A.x) < A.bx + 7 && Math.abs(z - A.z) < A.bz + 3.5);
+  // the strip beside each ramp stays open: it is the only way along that terrace
+  const byRamp = (x, z) => HILL.ramps.some(Rp => { if (Rp.k === 1) return false; const U = HILL_T[Rp.k], r = Math.hypot(x - U.cx, z - U.cz), th = Math.atan2(x - U.cx, z - U.cz), lo = Math.min(Rp.a, Rp.b) - 0.7, hi = Math.max(Rp.a, Rp.b) + 0.7; return r > U.rx && r < U.rx + HILL.rampW + 9 && th > lo && th < hi; });
+  const clear = (x, z, r) => { if (inArena(x, z) || byRamp(x, z)) return false; for (const o of keep) if (Math.hypot(o.x - x, o.z - z) < r + o.r) return false; for (const o of TOWN.obst) { const d = Math.hypot(o.x - x, o.z - z); if (d < r + o.r) return false; } return true; };
+  const S = 3.4, half = 0.85 * S, step = 7.4; let made = 0;
+  for (let k = 1; k <= HILL_T.length; k++) {
+    const T = HILL_T[k - 1], rings = [];
+    for (let off = 9.5; off < Math.min(T.rx, T.rz) - 6; off += 6.4) rings.push({ T, f: 1 - off / Math.min(T.rx, T.rz) });
+    if (k < HILL_T.length) { const U = HILL_T[k]; for (let off = 5; off < 24; off += 6.4) rings.push({ U, r: U.rx + HILL.rampW + off }); }
+    for (const ring of rings) {
+      const Tc = ring.U || ring.T, L = ring.U ? TAU * ring.r : Math.PI * 1.5 * (T.rx + T.rz) * ring.f, n = Math.round(L / step);
+      for (let i = 0; i < n; i++) {
+        if (i % 6 === 5) continue; // a lane
+        const th = (i + 0.5) / n * TAU - Math.PI + (rnd() - 0.5) * 0.02;
+        const [x, z] = ring.U ? [Tc.cx + ring.r * Math.sin(th), Tc.cz + ring.r * Math.cos(th)] : hillPt(T, th, ring.f);
+        if (tierOf(x, z) !== k || rampAt(x, z) || cliffAt(x, z, half) || !clear(x, z, half + 0.4)) continue;
+        if (k === 1 && z > T.cz + T.rz - 52 && Math.abs(x) < 14) continue; // the street stays open
+        const kind = kinds[Math.floor(rnd() * kinds.length)], ry = Math.atan2(Tc.cx - x, Tc.cz - z) + (ring.U ? Math.PI : 0) + (rnd() - 0.5) * 0.3;
+        add(kind, x, z, ry, S * (0.9 + rnd() * 0.2), half); made++;
+      }
+    }
+  }
+  // then the infill: random plots in the yards wherever a house still fits (a little back from the roads, so the lanes stay)
+  const roadKeep = keep.filter(o => o.r < 4.5);
+  for (let k = 1; k <= 3; k++) {
+    const T = HILL_T[k - 1];
+    for (let i = 0, n = [520, 170, 90][k - 1]; i < n; i++) {
+      const a = rnd() * TAU, rr = Math.sqrt(rnd()) * 0.96, x = T.cx + T.rx * rr * Math.sin(a), z = T.cz + T.rz * rr * Math.cos(a);
+      if (tierOf(x, z) !== k || rampAt(x, z) || cliffAt(x, z, half) || !clear(x, z, half + 0.6)) continue;
+      if (roadKeep.some(o => Math.hypot(o.x - x, o.z - z) < o.r + half + 2.4)) continue;
+      if (k === 1 && z > T.cz + T.rz - 52 && Math.abs(x) < 14) continue;
+      const kind = kinds[Math.floor(rnd() * kinds.length)];
+      add(kind, x, z, rnd() * TAU, S * (0.85 + rnd() * 0.25), half); made++;
+    }
+  }
+  return made;
 }
 // ---- the castle, built on the hill
 function buildCastleHill(R, add) {
-  const B = BAILEY, W = WARD, Y1 = HILL.L1, Y2 = HILL.L2, flag = CAREER.club.tabard, rw = HILL.rampW;
-  // the ground: forecourt, bailey terrace, ward terrace
-  realmGround(R, B.x0, B.x1, HILL.rampA[0], B.z1, '#b9b2a4', 'dirt', 0.015);
-  realmGround(R, B.x0, B.x1, HILL.rampA[1], HILL.rampA[0], '#b9b2a4', 'dirt', 0.015);
-  const cliff1 = hillTerrace(R, B.x0, B.x1, B.z0, HILL.rampA[1], Y1, '#cfc8bb');
-  cliff1(-(rw + 1 + B.x1) / 2 + 0, HILL.rampA[1], B.x1 - rw - 1, 0); cliff1((rw + 1 + B.x1) / 2, HILL.rampA[1], B.x1 - rw - 1, 0);
-  cliff1(B.x0, (B.z0 + HILL.rampA[1]) / 2, HILL.rampA[1] - B.z0, Math.PI / 2); cliff1(B.x1, (B.z0 + HILL.rampA[1]) / 2, HILL.rampA[1] - B.z0, Math.PI / 2); cliff1(0, B.z0, B.x1 - B.x0, 0);
-  hillRamp(R, 0, HILL.rampA[0], HILL.rampA[1], 0, Y1, rw * 2);
-  const cliff2 = hillTerrace(R, W.x0, W.x1, W.z0, HILL.rampB[1], Y2, '#d8d2c5');
-  realmGround(R, W.x0, W.x1, HILL.rampB[1], W.z1, '#cfc8bb', 'stone', Y1 + 0.02);
-  cliff2(-(rw + 1 + W.x1) / 2, HILL.rampB[1], W.x1 - rw - 1, 0); cliff2((rw + 1 + W.x1) / 2, HILL.rampB[1], W.x1 - rw - 1, 0);
-  cliff2(W.x0, (W.z0 + HILL.rampB[1]) / 2, HILL.rampB[1] - W.z0, Math.PI / 2); cliff2(W.x1, (W.z0 + HILL.rampB[1]) / 2, HILL.rampB[1] - W.z0, Math.PI / 2); cliff2(0, W.z0, W.x1 - W.x0, 0);
-  hillRamp(R, 0, HILL.rampB[0], HILL.rampB[1], Y1, Y2, rw * 2);
+  const flag = CAREER.club.tabard, T1 = HILL_T[0], T3 = HILL_T[2], T4 = HILL_T[3];
+  for (let k = 1; k <= HILL_T.length; k++) hillTerrace(R, k);
+  for (const Rp of HILL.ramps) hillRamp(R, Rp);
   landmark(R, () => {
-    // the outer curtain wall on the ground, with the bailey gate in the south; it climbs the terrace at the sides
-    const gapS = (x, z) => Math.abs(x) < 7;
-    hillWall(R, B.x0, B.z1, B.x1, B.z1, 0, { gapAt: gapS });
-    hillWall(R, B.x0, B.z1, B.x0, HILL.rampA[1], 0); hillWall(R, B.x1, B.z1, B.x1, HILL.rampA[1], 0);
-    hillWall(R, B.x0, HILL.rampA[1], B.x0, B.z0, Y1); hillWall(R, B.x1, HILL.rampA[1], B.x1, B.z0, Y1);
-    hillWall(R, B.x0, B.z0, B.x1, B.z0, Y1);
-    for (const [x, z, y, h] of [[B.x0, B.z1, 0, 3], [B.x1, B.z1, 0, 3], [B.x0, HILL.rampA[1], 0, 3], [B.x1, HILL.rampA[1], 0, 3], [B.x0, -250, Y1, 2], [B.x1, -250, Y1, 2], [B.x0, B.z0, Y1, 3], [B.x1, B.z0, Y1, 3], [-60, B.z0, Y1, 2], [60, B.z0, Y1, 2]]) hillTower(R, x, z, y, h, { flag: true, flagCol: flag });
-    castleGate(R, 0, B.z1, 'bailey', 'The Outer Bailey', 0);
-    for (const sx of [-1, 1]) hillTower(R, sx * 16, B.z1, 0, 3, { high: true });
-    // the parapet along the bailey terrace edge, open at the ramp
-    hillParapet(R, B.x0 + 4, HILL.rampA[1] + 0.8, B.x1 - 4, HILL.rampA[1] + 0.8, Y1, (x) => Math.abs(x) < rw + 1.2);
-    // the inner wall round the ward on the bailey terrace, with the royal gate; parapet on the upper terrace edge
-    hillWall(R, W.x0, W.z1, W.x1, W.z1, Y1, { gapAt: gapS });
-    hillWall(R, W.x0, W.z1, W.x0, HILL.rampB[1], Y1); hillWall(R, W.x1, W.z1, W.x1, HILL.rampB[1], Y1);
-    hillWall(R, W.x0, HILL.rampB[1], W.x0, W.z0, Y2); hillWall(R, W.x1, HILL.rampB[1], W.x1, W.z0, Y2); hillWall(R, W.x0, W.z0, W.x1, W.z0, Y2);
-    for (const [x, z, y] of [[W.x0, W.z1, Y1], [W.x1, W.z1, Y1], [W.x0, HILL.rampB[1], Y1], [W.x1, HILL.rampB[1], Y1], [W.x0, W.z0, Y2], [W.x1, W.z0, Y2]]) hillTower(R, x, z, y, 3, { flag: true, high: true, flagCol: '#e3b341' });
-    castleGate(R, 0, W.z1, 'royal', 'The King’s Court', Y1);
-    for (const sx of [-1, 1]) hillTower(R, sx * 15, W.z1, Y1, 3, { high: true });
-    hillParapet(R, W.x0 + 4, HILL.rampB[1] + 0.8, W.x1 - 4, HILL.rampB[1] + 0.8, Y2, (x) => Math.abs(x) < rw + 1.2);
-    // the keep: KayKit's castle on the north strip above the Great Hall, with a tall tower beside it
-    const kp = kpiece(R, 'kb_castle', 0, Y1, -298, Math.PI, 8); if (kp) TOWN.obst.push({ x: 0, z: -298, r: 8 });
-    hillTower(R, 13, -299, Y1, 5, { high: true, flag: true, flagCol: flag }); hillTower(R, -13, -299, Y1, 4, { high: true });
+    // the curtain wall round the yard with the Bailey gate in the south, then each terrace's wall with its arch or gate
+    hillRimWall(R, 1, 0, [[HILL.gateA, 7]], flag);
+    castleGate(R, ...hillPt(T1, HILL.gateA, 1 - 2.6 / T1.rz), 'bailey', 'The Outer Bailey', 0, HILL.gateA);
+    for (const d of [-1, 1]) { const [x, z] = hillPt(T1, d * 9.5 / T1.rx, 1 - 2.6 / T1.rz); hillTower(R, x, z, 0, 3, { high: true, flag: true, flagCol: flag }); }
+    hillRimWall(R, 2, HILL_T[1].h, [[HILL.ramps[0].b, 7]], flag); hillArch(R, 2, HILL.ramps[0].b, HILL_T[1].h);
+    hillRimWall(R, 3, T3.h, [[HILL.ramps[1].b, 7]], '#e3b341');
+    castleGate(R, ...hillPt(T3, HILL.ramps[1].b, 1 - 2.6 / T3.rx), 'royal', 'The King’s Court', T3.h, HILL.ramps[1].b);
+    for (const d of [-1, 1]) { const [x, z] = hillPt(T3, HILL.ramps[1].b + d * 9.5 / T3.rx, 1 - 2.6 / T3.rx); hillTower(R, x, z, T3.h, 3, { high: true, flag: true, flagCol: '#e3b341' }); }
+    hillRimWall(R, 4, T4.h, [[HILL.ramps[2].b, 7]], '#e3b341'); hillArch(R, 4, HILL.ramps[2].b, T4.h);
+    // the keep on the citadel's north side, with its tall towers: the top of the whole hill
+    const kp = kpiece(R, 'kb_castle', T4.cx, T4.h, T4.cz - 30, Math.PI, 6); if (kp) TOWN.obst.push({ x: T4.cx, z: T4.cz - 30, r: 6.5 });
+    hillTower(R, T4.cx + 22, T4.cz - 28, T4.h, 7, { high: true, flag: true, flagCol: flag, s: 4 }); hillTower(R, T4.cx - 22, T4.cz - 28, T4.h, 6, { high: true, s: 4 });
+    hillTower(R, T4.cx, T4.cz - 33, T4.h, 9, { high: true, flag: true, flagCol: '#e3b341', s: 3.6 });
   });
-  // the lower town: KayKit houses along the bailey's edges, a market, wells, a mill
-  const houses = [[-100, -200, 0.4], [-100, -214, 0.2], [-100, -236, 0.3], [-100, -270, 0.1], [-100, -288, 0.6], [104, -200, -0.4], [104, -214, -0.2], [104, -236, -0.3], [104, -250, -0.1], [-62, -300, Math.PI], [-80, -300, Math.PI + 0.2], [60, -300, Math.PI], [78, -300, Math.PI - 0.2], [-68, -186, 0.9], [68, -186, -0.9], [-86, -160, 0.4], [86, -160, -0.4]];
-  houses.forEach(([x, z, ry], i) => { const k = i % 4 === 3 ? 'kb_barracks' : 'kb_house'; add(k, x, z, ry, HILL_S.house, 4.6); });
-  add('kb_market', 44, -186, 0.3, 5, 4); add('kb_well', -22, -200, 0, 4, 2); add('kb_mill', -98, -252, 0.8, 5, 4.6); add('kb_watchtower', 100, -268, 0, 5, 2.4);
-  for (const [x, z] of [[-30, -300], [30, -300]]) add('kb_detail_rocks', x, z, 0, 5, 0);
-  // the upper ward: fine houses and a market square
-  add('kb_house', -48, -244, 0.9, 5, 4.6); add('kb_house', 48, -244, -0.9, 5, 4.6); add('kb_market', -22, -232, 0.4, 4.5, 3.6);
+}
+// the castle's roads: the main street to the first ramp, each ramp as a few short legs (so the route follows the curve), the streets between
+function hillRoads() {
+  const out = [], T1 = HILL_T[0];
+  const ramp = (Rp, n) => { const U = HILL_T[Rp.k], r = U.rx + HILL.rampW * 0.55, pts = []; for (let i = 0; i <= n; i++) { const th = Rp.a + (Rp.b - Rp.a) * i / n; pts.push([U.cx + r * Math.sin(th), U.cz + r * Math.cos(th)]); } return pts; };
+  const r1 = ramp(HILL.ramps[0], 4), r2 = ramp(HILL.ramps[1], 4), r3 = ramp(HILL.ramps[2], 4);
+  const gate = hillPt(T1, HILL.gateA, 1), g2 = hillPt(HILL_T[1], HILL.ramps[0].b, 1 - 5 / HILL_T[1].rx), g3 = hillPt(HILL_T[2], HILL.ramps[1].b, 1 - 5 / HILL_T[2].rx), g4 = hillPt(HILL_T[3], HILL.ramps[2].b, 1 - 5 / HILL_T[3].rx);
+  const rd = (name, pts, w) => out.push({ name, pts: pts.map(([x, z]) => [+x.toFixed(1), +z.toFixed(1)]), w });
+  rd('street', [gate, [0, gate[1] - 22], [r1[0][0] - 2, r1[0][1] + 4], r1[0]], 6);
+  rd('yardW', [[0, gate[1] - 22], [-40, -170], [-70, -176], [-100, -200], [-100, -232], [-80, -250], [-72, -262]], 4);
+  rd('yardE', [[0, gate[1] - 22], [40, -170], [66, -184], [68, -206], [70, -236], [72, -258]], 4);
+  rd('ramp1', r1, 7); rd('t2', [r1[4], g2, [g2[0] - 4, g2[1] - 8], r2[0]], 5);
+  rd('ramp2', r2, 7); rd('t3', [r2[4], g3, [g3[0] - 1, g3[1] - 9], r3[0]], 5);
+  rd('ramp3', r3, 7); rd('t4', [r3[4], g4, [-24, -244], [-14, -236], [0, -236], [0, HALL.z1 + 1]], 5);
+  return out;
 }
 
 })();

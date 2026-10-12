@@ -40,9 +40,8 @@ function drawTownMap(ctx, view) {
   for (const [x0, x1, z0, z1, col] of TOWN.mapRects || []) { ctx.fillStyle = col || '#b9a37c'; ctx.fillRect(X(x0), Y(z0), (x1 - x0) * k, (z1 - z0) * k); }
   // the castle: the outer curtain, the inner ward, the Great Hall
   const wall = (B, col, lw) => { ctx.strokeStyle = col; ctx.lineWidth = Math.max(2, lw * k); ctx.strokeRect(X(B.x0), Y(B.z0), (B.x1 - B.x0) * k, (B.z1 - B.z0) * k); };
-  ctx.fillStyle = 'rgba(160,150,130,.35)'; ctx.fillRect(X(BAILEY.x0), Y(BAILEY.z0), (BAILEY.x1 - BAILEY.x0) * k, (BAILEY.z1 - BAILEY.z0) * k);
-  ctx.fillStyle = 'rgba(190,170,120,.35)'; ctx.fillRect(X(WARD.x0), Y(WARD.z0), (WARD.x1 - WARD.x0) * k, (WARD.z1 - WARD.z0) * k);
-  wall(BAILEY, '#6d6a66', 2.4); wall(WARD, '#7d776e', 2); ctx.fillStyle = '#8a8378'; ctx.fillRect(X(HALL.x0), Y(HALL.z0), (HALL.x1 - HALL.x0) * k, (HALL.z1 - HALL.z0) * k);
+  HILL_T.forEach((T, i) => { ctx.fillStyle = ['rgba(160,150,130,.35)', 'rgba(175,162,128,.4)', 'rgba(190,172,122,.45)', 'rgba(205,186,130,.5)'][i]; ctx.beginPath(); ctx.ellipse(X(T.cx), Y(T.cz), T.rx * k, T.rz * k, 0, 0, Math.PI * 2); ctx.fill(); ctx.strokeStyle = i ? '#7d776e' : '#6d6a66'; ctx.lineWidth = Math.max(1.5, 2 * k); ctx.stroke(); });
+  void wall; ctx.fillStyle = '#8a8378'; ctx.fillRect(X(HALL.x0), Y(HALL.z0), (HALL.x1 - HALL.x0) * k, (HALL.z1 - HALL.z0) * k);
   for (const Gt of TOWN.gates || []) { const open = gateOpen(Gt.key); ctx.fillStyle = open ? '#d9c49a' : '#a8342c'; ctx.beginPath(); ctx.arc(X(Gt.x), Y(Gt.z), Math.max(3, 2.4 * k), 0, Math.PI * 2); ctx.fill(); }
   // the arenas: a live one pulses red
   for (const A of ARENAS) {

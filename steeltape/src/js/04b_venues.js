@@ -19,6 +19,11 @@ function venueTex(kind) {
     speckle(x, 512, 512, 40, ['#6f5c43', '#7f6a4e'], 20, 70);
     for (let i = 0; i < 70; i++) { x.strokeStyle = 'rgba(70,55,35,.1)'; x.lineWidth = rand(1, 3); x.beginPath(); const px = rand(0, 512), py = rand(0, 512); x.moveTo(px, py); x.lineTo(px + rand(-18, 18), py + rand(-18, 18)); x.stroke(); } // boot scuffs
     VTEX[kind] = texFrom(c, [4, 6]);
+  } else if (kind === 'whitestone') { // dressed white stone: the castle hill
+    x.fillStyle = '#bdb6a9'; x.fillRect(0, 0, 512, 512);
+    for (let r = 0; r < 8; r++) for (let k = 0; k < 6; k++) { const w = 512 / 6, hgt = 512 / 8, ox = (r % 2) * w / 2; const g = rand(214, 238) | 0; x.fillStyle = `rgb(${g},${g - 3},${g - 10})`; x.fillRect(k * w + ox + 2, r * hgt + 2, w - 4, hgt - 4); x.fillRect(k * w + ox - 512 + 2, r * hgt + 2, w - 4, hgt - 4); }
+    speckle(x, 512, 512, 2500, ['#cfc8ba', '#f2ede4', '#e0d9cc'], 0.5, 2);
+    VTEX[kind] = texFrom(c, [10, 14]);
   } else if (kind === 'stone') {
     x.fillStyle = '#5a5c5e'; x.fillRect(0, 0, 512, 512);
     for (let r = 0; r < 8; r++) for (let k = 0; k < 6; k++) { const w = 512 / 6, hgt = 512 / 8, ox = (r % 2) * w / 2; const g = rand(70, 110) | 0; x.fillStyle = `rgb(${g},${g + 2},${g + 5})`; x.fillRect(k * w + ox + 2, r * hgt + 2, w - 4, hgt - 4); x.fillRect(k * w + ox - 512 + 2, r * hgt + 2, w - 4, hgt - 4); }

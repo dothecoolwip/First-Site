@@ -42,10 +42,10 @@ test('waypoints lead the way, autowalk walks it, horses gallop, gates stay shut 
   await game.run("(dismount(), clearWaypoint(), true)");
   expect(await game.run("TOWN.mounted")).toBe(false);
   // the bailey gate keeps you out without the writ
-  await game.run("(TOWN.pos = { x: 0, z: -146 }, true)");
+  await game.run("(TOWN.pos = { x: 0, z: -136 }, true)");
   await game.run("(setWaypoint(0, -170, 'Inside'), TRAVEL.auto = true, true)");
   await page.waitForTimeout(3000);
-  expect(await game.run("TOWN.pos.z > -151.5")).toBe(true);
+  expect(await game.run("TOWN.pos.z > -141")).toBe(true);
   expect(await game.run("gateOpen('bailey')")).toBe(false);
 });
 
@@ -84,7 +84,7 @@ test('tiers: fairground smiths stop part-way up the bar; Sergeant Brask duels yo
   expect(await game.run("gateOpen('bailey')")).toBe(true);
   await page.locator('#msgPanel .pfoot button', { hasText: 'Back to the realm' }).click();
   await game.until("TOWN.on && G.phase === 'town'");
-  expect(await game.run("Math.hypot(TOWN.pos.x - 6.5, TOWN.pos.z + 145) < 5")).toBe(true);
+  expect(await game.run("Math.hypot(TOWN.pos.x - 6.5, TOWN.pos.z + 132) < 5")).toBe(true);
 });
 
 test('inventory: slots, stacks and equipment; a full bag stops gathering; hidden places give free cosmetics; spectate an arena', async ({ game, page }) => {

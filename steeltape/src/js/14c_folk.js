@@ -14,7 +14,7 @@ function navBuild() {
 }
 // a terrace edge: the ground within r drops or rises by more than a step (ramps are gentle, cliffs are not)
 function cliffAt(x, z, r) {
-  if (typeof gy !== 'function' || z > BAILEY.z1 + 2 || x < BAILEY.x0 - 2 || x > BAILEY.x1 + 2) return false;
+  if (typeof gy !== 'function' || hillNd(HILL_T[0], x, z) > 1.04) return false;
   const y = gy(x, z), d = r + 0.6;
   return Math.abs(gy(x + d, z) - y) > 1.2 || Math.abs(gy(x - d, z) - y) > 1.2 || Math.abs(gy(x, z + d) - y) > 1.2 || Math.abs(gy(x, z - d) - y) > 1.2;
 }
@@ -100,7 +100,7 @@ const FOLK_ROLES = {
   gardener: { garden: 3, water: 1, fire: 0.5, walk: 'Walk_Loop', spd: [1, 1.1] },
   guard: { patrol: 1, walk: 'Walk_Formal_Loop', spd: [1.1, 1.1] }
 };
-const GUARD_PATH = [[-20, -160], [20, -160], [40, -190], [20, -205], [-20, -205], [-40, -190]]; // round the outer bailey yard
+const GUARD_PATH = [[-14, -150], [14, -150], [30, -165], [14, -176], [-14, -176], [-30, -165]]; // round the outer bailey yard
 function buildFolk() {
   FOLK.people = [];
   if (typeof UAL === 'undefined' || !UAL.ready) return;

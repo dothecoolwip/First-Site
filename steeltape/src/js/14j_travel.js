@@ -129,7 +129,7 @@ function nearestRoad(x, z) {
   for (let a = 0; a < ROADNET.nodes.length; a++) for (const [b, , local] of ROADNET.adj[a]) {
     if (b < a || local) continue;
     const [x0, z0] = ROADNET.nodes[a], [x1, z1] = ROADNET.nodes[b], dx = x1 - x0, dz = z1 - z0, L2 = dx * dx + dz * dz || 1e-6;
-    const t = clamp(((x - x0) * dx + (z - z0) * dz) / L2, 0, 1), px = x0 + dx * t, pz = z0 + dz * t, d = Math.hypot(x - px, z - pz);
+    const t = clamp(((x - x0) * dx + (z - z0) * dz) / L2, 0, 1), px = x0 + dx * t, pz = z0 + dz * t, d = Math.hypot(x - px, z - pz) + Math.abs(gy(px, pz) - gy(x, z)) * 12; // a road on another terrace is further than it looks
     if (!best || d < best.d) best = { x: px, z: pz, d, a, b, ta: Math.hypot(px - x0, pz - z0), tb: Math.hypot(px - x1, pz - z1) };
   }
   return best;

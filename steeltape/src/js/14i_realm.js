@@ -9,9 +9,10 @@
 // You walk (or ride) everywhere; nothing teleports. Roads and signposts link the districts.
 // ===================================================================
 const FAIR_RX = 92, FAIR_RZ = 98; // the old town: the fairground is this big
-const BAILEY = { x0: -114, x1: 114, z0: -306, z1: -150 };
-const WARD = { x0: -54, x1: 54, z0: -294, z1: -210 };
-const HALL = { x0: -19, x1: 19, z0: -286, z1: -238 };
+// the castle hill's bounding boxes (the real shape is in 14o_hill.js: HILL.tiers); HALL is the Great Hall on the citadel
+const BAILEY = { x0: -116, x1: 116, z0: -312, z1: -140 };
+const WARD = { x0: -50, x1: 50, z0: -306, z1: -206 };
+const HALL = { x0: -19, x1: 19, z0: -288, z1: -240 };
 const LAKE = { x: 222, z: 40, rx: 56, rz: 82 };
 const DISTRICTS = [
   { key: 'fair', name: 'The Fairground', x: 0, z: 12, r: 100 },
@@ -27,25 +28,22 @@ const ARENAS = [
   { key: 'peasant', name: 'Peasants’ Arena', x: -176, z: 158, bx: 13, bz: 18, district: 'village' },
   { key: 'forest', name: 'Forest Arena', x: -214, z: -104, bx: 13, bz: 18, district: 'woods' },
   { key: 'beach', name: 'Beach Arena', x: 148, z: 78, bx: 13, bz: 18, district: 'lake' },
-  { key: 'castle', name: 'Castle Arena', x: 78, z: -215, bx: 14, bz: 19, district: 'bailey', gate: 'bailey' },
-  { key: 'hall', name: 'The Great Hall', x: 0, z: -262, bx: 12, bz: 17, district: 'ward', gate: 'royal', indoor: true }
+  { key: 'castle', name: 'Castle Arena', x: -74, z: -204, bx: 14, bz: 19, district: 'bailey', gate: 'bailey' },
+  { key: 'hall', name: 'The Great Hall', x: 0, z: -264, bx: 12, bz: 15, district: 'ward', gate: 'royal', indoor: true }
 ];
 const ROADS = [
-  { name: 'north', pts: [[0, -24], [0, -150], [0, -172], [0, -192], [0, -200], [0, -210], [0, -226], [0, -238]], w: 6 },
-  { name: 'terrace', pts: [[-90, -200], [0, -200], [60, -200], [60, -250], [72, -272]], w: 4 },
+  { name: 'north', pts: [[0, -24], [0, -140]], w: 6 },
   { name: 'west', pts: [[-52, -2], [-100, -16], [-150, -44], [-196, -78]], w: 5 },
   { name: 'southwest', pts: [[-16, 70], [-62, 96], [-118, 122], [-160, 140]], w: 5 },
   { name: 'east', pts: [[52, 6], [96, 26], [128, 58], [126, 84], [132, 100]], w: 5 },
   { name: 'woodsnorth', pts: [[-196, -78], [-170, -130], [-120, -150]], w: 4 },
   { name: 'lakenorth', pts: [[128, 58], [150, -10], [176, -60]], w: 4 },
-  { name: 'south', pts: [[0, 70], [0, 120], [-30, 160]], w: 4 },
-  { name: 'bailey', pts: [[-90, -170], [90, -170]], w: 5 }
+  { name: 'south', pts: [[0, 70], [0, 120], [-30, 160]], w: 4 }
 ];
 function arenaBlocked(x, z, r) { for (const A of ARENAS) if (Math.abs(x - A.x) < A.bx + r && Math.abs(z - A.z) < A.bz + r) return A; return null; }
 function lakeIn(x, z, pad = 0) { const dx = (x - LAKE.x) / (LAKE.rx + pad), dz = (z - LAKE.z) / (LAKE.rz + pad); return dx * dx + dz * dz < 1; }
 function districtAt(x, z) {
-  if (x > WARD.x0 && x < WARD.x1 && z > WARD.z0 && z < WARD.z1) return DISTRICTS[5];
-  if (x > BAILEY.x0 && x < BAILEY.x1 && z > BAILEY.z0 && z < BAILEY.z1) return DISTRICTS[4];
+  { const k = tierOf(x, z); if (k >= 3) return DISTRICTS[5]; if (k) return DISTRICTS[4]; }
   let best = null, bd = 1e9; for (const D of DISTRICTS.slice(0, 4)) { const d = Math.hypot(x - D.x, z - D.z) / D.r; if (d < bd) { bd = d; best = D; } }
   return bd < 1.25 ? best : { key: 'wild', name: 'The Open Country' };
 }
@@ -108,16 +106,18 @@ function castleTower(R, x, z, h, flagCol) {
   TOWN.obst.push({ x, z, r: 3.4 });
 }
 // the gate: a gatehouse, two towers, banners and torches; the gate itself is a gate obstacle that opens with the writ
-function castleGate(R, x, z, key, label, Y) {
-  Y = Y || 0;
-  kpiece(R, 'cs_gate_2x4_doorway', x, Y, z, Math.PI / 2, 1.5);
-  for (const sx of [-3.6, 3.6]) { const b = kpiece(R, 'dp_banner_large', x + sx, 0, z + 0.9, 0, 1.4); if (b) b.position.y = Y + 1.6; }
-  for (const sx of [-2.8, 2.8]) { const f = mk(R, geo('w_wtf', () => new THREE.ConeGeometry(0.08, 0.22, 8)), tmat('#ffb02e', { emissive: '#ff6a00', emissiveIntensity: 1.6 }), x + sx, Y + 3.7, z + 0.8); WORLD.flick.push(f); kpiece(R, 'mk_Torch_Metal', x + sx, Y + 2.6, z + 0.75, Math.PI, 1.4); }
+function castleGate(R, x, z, key, label, Y, ry) {
+  Y = Y || 0; ry = ry || 0; const g = new THREE.Group(); g.position.set(x, Y, z); g.rotation.y = ry; R.add(g);
+  kpiece(g, 'cs_gate_2x4_doorway', 0, 0, 0, Math.PI / 2, 1.5);
+  for (const sx of [-3.6, 3.6]) kpiece(g, 'dp_banner_large', sx, 1.6, 0.9, 0, 1.4);
+  for (const sx of [-2.8, 2.8]) { const f = mk(g, geo('w_wtf', () => new THREE.ConeGeometry(0.08, 0.22, 8)), tmat('#ffb02e', { emissive: '#ff6a00', emissiveIntensity: 1.6 }), sx, 3.7, 0.8); WORLD.flick.push(f); kpiece(g, 'mk_Torch_Metal', sx, 2.6, 0.75, Math.PI, 1.4); }
   // the portcullis: drawn while you lack the writ
-  const port = new THREE.Group(); port.position.set(x, Y, z + 0.2); R.add(port); const iron = tmat('#3a3d40', { metalness: 0.7, roughness: 0.5 });
-  for (let i = -2; i <= 2; i++) mk(port, geo('rlm_pbar', () => new THREE.BoxGeometry(0.12, 4.2, 0.12)), iron, i * 0.95, 2.1, 0);
-  for (let j = 0; j < 4; j++) mk(port, geo('rlm_pbar2', () => new THREE.BoxGeometry(4.6, 0.12, 0.12)), iron, 0, 0.6 + j * 1.1, 0);
-  const G = { key, label, x, z: z + 0.2, port, r: 2.6 }; (TOWN.gates = TOWN.gates || []).push(G); return G;
+  const port = new THREE.Group(); port.position.set(0, 0, 0.2); g.add(port); const iron = tmat('#3a3d40', { metalness: 0.7, roughness: 0.5 });
+  for (let i = -2; i <= 2; i++) mk(port, geo('rlm_pbar', () => new THREE.BoxGeometry(0.12, 3.6, 0.12)), iron, i * 0.95, 1.8, 0);
+  for (let j = 0; j < 4; j++) mk(port, geo('rlm_pbar2', () => new THREE.BoxGeometry(4.6, 0.12, 0.12)), iron, 0, 0.5 + j * 0.95, 0);
+  // the gatehouse walls either side of the opening (so nobody slips past the portcullis)
+  for (const sx of [-4, 4]) TOWN.obst.push({ x: x + Math.cos(ry) * sx, z: z - Math.sin(ry) * sx, r: 1.5 });
+  const G = { key, label, x: x + Math.sin(ry) * 0.2, z: z + Math.cos(ry) * 0.2, port, r: 2.6 }; (TOWN.gates = TOWN.gates || []).push(G); return G;
 }
 // a list for one of the outer arenas: fence, rope, posts, stands on the long sides, a scoreboard and torches
 function arenaList(R, A, o) {
@@ -181,6 +181,7 @@ function signpost(R, x, z, ry, lines) {
 // ---- the whole realm
 function buildRealm(R) {
   TOWN.gates = []; TOWN.mapRoads = []; TOWN.realmBoards = {};
+  if (!ROADS.some(r => r.name === 'street')) ROADS.push(...hillRoads());
   const O = TOWN.obst, add = (key, x, z, ry, s, r) => { const p = kpiece(R, key, x, gy(x, z), z, ry || 0, s || 1); if (r) O.push({ x, z, r }); return p; };
   const face = (x, z, tx, tz) => Math.atan2(tx - x, tz - z);
   // roads, then signposts where they leave the fairground
@@ -189,7 +190,7 @@ function buildRealm(R) {
   signpost(R, -56, 4, -Math.PI / 2, [['THE OLD WOODS', -Math.PI / 2], ['FAIRGROUND', Math.PI / 2]]);
   signpost(R, 56, 10, Math.PI / 2, [['MIRROR LAKE', Math.PI / 2], ['FAIRGROUND', -Math.PI / 2]]);
   signpost(R, -22, 74, 0, [['MILLBROOK', -2.2], ['FAIRGROUND', 0.9]]);
-  signpost(R, 6, -144, 0, [['OUTER BAILEY', 0], ['FAIRGROUND', Math.PI]]);
+  signpost(R, 6, -126, 0, [['OUTER BAILEY', 0], ['FAIRGROUND', Math.PI]]);
   signpost(R, -192, -70, 0, [['QUARRY', -1.6], ['FOREST ARENA', 2.8], ['CASTLE', 0.6]]);
   signpost(R, 134, 62, 0, [['BEACH ARENA', 1.2], ['CLIFFS', 0]]);
   for (const Rd of ROADS) for (let i = 1; i < Rd.pts.length - 1; i += 1) { const [x, z] = Rd.pts[i]; if (Math.hypot(x, z) > 110) { add('ps_lamp', x + Rd.w / 2 + 1, z, 0, 1, 0.3); } }
@@ -211,39 +212,46 @@ function buildRealm(R) {
 // ---- the castle: the outer bailey (tier 2) and the inner ward with the Great Hall (tier 3)
 function buildRealmCastle(R, add, face) {
   buildCastleHill(R, add);
-  // ---- the outer bailey: a working castle yard
-  realmHall(R, -80, -180, 18, 9, 5, Math.PI / 2, { sign: 'ARMOURY', signCol: '#3d4a57', tower: true });
-  realmHall(R, -80, -215, 16, 9, 4.5, Math.PI / 2, { sign: 'MASTER SMITH', signCol: '#7a2b1c' });
-  { add('bf_furnace', -71, -222, Math.PI / 2, 1.2, 1.6); add('mk_Anvil', -71.5, -212, Math.PI / 2, 1.3, 0.6); add('mk_Whetstone', -72, -207, 0, 1, 0.6); add('mk_WeaponStand', -71.4, -229, Math.PI / 2, 1, 0.8); }
-  realmHall(R, -80, -255, 20, 10, 6, Math.PI / 2, { sign: 'BARRACKS', signCol: '#26344d' });
-  realmHall(R, -38, -296, 16, 10, 4, 0, { sign: 'STABLES', signCol: '#6b4e16', flat: true });
-  realmHall(R, 88, -278, 14, 22, 7, -Math.PI / 2, { sign: 'CHAPEL', signCol: '#4a3a6a', allStone: true, tower: true, roof: '#4a4e52' });
-  realmHall(R, 30, -296, 18, 9, 4.5, 0, { sign: 'GUILD HALL', signCol: '#6d1b28' });
-  // the training yard with pells and archery in the north-west of the bailey
-  for (let i = 0; i < 5; i++) { const x = -48 + i * 4, z = -178; mk(R, geo('fest_pell', () => new THREE.CylinderGeometry(0.13, 0.15, 1.9, 8)), tmat('#8a6a42'), x, 0.95 + gy(x, z), z).castShadow = true; O_push(x, z, 0.35); }
-  add('mk_Dummy', -30, -185, 0.3, 1, 0.5); add('mk_Dummy', -26, -186, -0.2, 1, 0.5); add('mk_WeaponStand', -52, -186, 0.2, 1, 0.8);
-  for (const [x, z] of [[-62, -178], [-58, -181], [-64, -184]]) add('fy_vil_archery_target', x, z, 0, 1.2, 0.6);
-  // courtyard life: well, carts, crates, a feast table, stacked barrels, banners
-  add('fb_well', 22, -180, 0, 1.2, 1.2); add('mk_Stall_Cart_Empty', 40, -168, -0.3, 1.2, 1.6); add('mk_Crate_Wooden', 44, -172, 0.2, 1.2, 0.6); add('mk_Barrel', 46, -170, 0, 1.2, 0.5); add('mk_Barrel_Holder', -60, -165, 0, 1.2, 1);
-  add('mk_Table_Large', 18, -240, 0, 1.2, 1.4); add('mk_Bench', 18, -238.6, 0, 1, 0); add('mk_Bench', 18, -241.4, 0, 1, 0); add('mk_Chalice', 18, -240, 0, 2.4, 0);
-  for (const [x, z] of [[-14, -160], [14, -160], [-14, -200], [14, -200]]) { const b = add('mk_Banner_1', x, z, 0, 1.4, 0.4); add('mk_Banner_1_Cloth', x, z, 0, 1.4, 0); }
-  for (const z of [-165, -185, -205]) for (const sx of [-5, 5]) add('ps_lamp', sx, z, 0, 1, 0.3);
+  // ---- tier 1, the yard inside the curtain wall: the street up the middle, the arena west, the training yard and armoury east
+  add('kb_market', 16, -150, 0.3, 5, 4); add('fb_well', -14, -152, 0, 1.2, 1.2);
+  for (const z of [-148, -160, -172]) for (const sx of [-6, 6]) { add('mk_Banner_1', sx, z, 0, 1.4, 0.4); add('mk_Banner_1_Cloth', sx, z, 0, 1.4, 0); }
+  for (const z of [-154, -166, -178]) for (const sx of [-5, 5]) add('ps_lamp', sx, z, 0, 1, 0.3);
+  realmHall(R, 80, -200, 18, 9, 5, -Math.PI / 2, { sign: 'ARMOURY', signCol: '#3d4a57', tower: true });
+  for (let i = 0; i < 5; i++) { const x = 24 + i * 4, z = -158; mk(R, geo('fest_pell', () => new THREE.CylinderGeometry(0.13, 0.15, 1.9, 8)), tmat('#8a6a42'), x, 0.95 + gy(x, z), z).castShadow = true; O_push(x, z, 0.35); }
+  add('mk_Dummy', 40, -166, 0.3, 1, 0.5); add('mk_Dummy', 44, -167, -0.2, 1, 0.5); add('mk_WeaponStand', 22, -166, 0.2, 1, 0.8);
+  for (const [x, z] of [[30, -174], [36, -176], [42, -178]]) add('fy_vil_archery_target', x, z, 0, 1.2, 0.6);
+  add('mk_Stall_Cart_Empty', 56, -160, -0.3, 1.2, 1.6); add('mk_Crate_Wooden', 60, -164, 0.2, 1.2, 0.6); add('mk_Barrel', 62, -162, 0, 1.2, 0.5);
   // the Castle arena: stone floor, wooden stands
   arenaList(R, ARENAS[4], { floor: '#b8ae9e', floorTex: 'dirt', bench: '#6a5a4a', signCol: '#26344d' });
-  // the mine shaft in the north-east corner (gold and silver live here)
-  realmGround(R, 60, 108, -302, -262, '#8e8478', 'dirt', 0.03 + gy(80, -280));
-  add('fy_rock_big_1', 104, -296, 0.6, 1.4, 3); add('fy_rock_big_3', 96, -300, 1.4, 1.3, 3); add('rt_pulley_crate', 70, -266, 0, 3, 0.8); add('mk_Chain_Coil', 74, -268, 0, 1.2, 0);
-  { const sg = townSign('MINE SHAFT', '#5a4a3a'); sg.position.set(64, 3 + gy(64, -262), -262); R.add(sg); }
-  // ---- the inner ward: gardens, the treasury, the Great Hall
-  for (const [x, z] of [[-38, -228], [38, -228], [-38, -280], [38, -280]]) { add('fountainRoundDetail', x, z, 0, 1.6, 1.8); }
-  for (let i = 0; i < 8; i++) { add('kf_bush_3_a', -44 + i * 2, -236, 0, 1.8, 0.5); add('kf_bush_3_a', 30 + i * 2, -236, 0, 1.8, 0.5); }
-  for (const sx of [-1, 1]) for (const z of [-222, -232]) { add('cr_flowers_crop', sx * 30, z, 0, 1.2, 0); add('cr_flowers_crop', sx * 40, z, 1, 1.2, 0); }
-  realmHall(R, 40, -262, 12, 14, 5, -Math.PI / 2, { sign: 'TREASURY', signCol: '#8a6a12', allStone: true, roof: '#5a4a2a' });
-  add('rp_chest_ingots', 32, -256, 0.3, 1.2, 0.8); add('rp_gold_ingots', 32, -260, 0, 1.2, 0.4);
-  realmHall(R, -40, -262, 12, 14, 5, Math.PI / 2, { sign: 'ROYAL TAILOR', signCol: '#5b2a86' });
+  // the flanks of the yard: the chapel, the guild hall and the stables east; the barracks and the mine shaft west
+  realmHall(R, 90, -240, 14, 22, 7, 0, { sign: 'CHAPEL', signCol: '#4a3a6a', allStone: true, tower: true, roof: '#4a4e52' });
+  realmHall(R, 76, -235, 18, 9, 4.5, -Math.PI / 2, { sign: 'GUILD HALL', signCol: '#6d1b28' });
+  realmHall(R, 86, -258, 16, 10, 4, 0, { sign: 'STABLES', signCol: '#6b4e16', flat: true });
+  realmHall(R, -84, -244, 20, 10, 6, Math.PI / 2, { sign: 'BARRACKS', signCol: '#26344d' });
+  add('mk_Barrel_Holder', -76, -256, 0, 1.2, 1); add('mk_WeaponStand', -76, -232, 0.2, 1, 0.8);
+  realmGround(R, -82, -68, -270, -250, '#8e8478', 'dirt', 0.03 + gy(-75, -260));
+  add('fy_rock_big_1', -78, -266, 0.6, 1.4, 3); add('fy_rock_big_3', -72, -268, 1.4, 1.3, 3); add('rt_pulley_crate', -70, -254, 0, 3, 0.8); add('mk_Chain_Coil', -68, -256, 0, 1.2, 0);
+  { const sg = townSign('MINE SHAFT', '#5a4a3a'); sg.position.set(-75, 3 + gy(-75, -249), -249); R.add(sg); }
+  // ---- tier 2, the lower terrace: the master smith west, a market square and a feast east
+  { const T2 = HILL_T[1], P = (r, th) => hillPolar(T2, r, th); // the smith stands along the terrace's curve, its door toward the cliff side
+    realmHall(R, ...P(55, -1.0), 14, 8, 4.5, -1.0 + Math.PI, { sign: 'MASTER SMITH', signCol: '#7a2b1c' });
+    add('bf_furnace', ...P(55, -0.83), -0.83 + Math.PI, 1.2, 1.6); add('mk_Anvil', ...P(50.5, -1.05), -1.05, 1.3, 0.6); add('mk_Whetstone', ...P(50.5, -1.1), 0, 1, 0.6); }
+  add('fountainRoundDetail', 46, -212, 0, 1.6, 1.8);
+  add('mk_Table_Large', 48, -224, 0, 1.2, 1.4); add('mk_Bench', 48, -222.6, 0, 1, 0); add('mk_Bench', 48, -225.4, 0, 1, 0); add('mk_Chalice', 48, -224, 0, 2.4, 0);
+  add('mk_Stall_Cart_Empty', 40, -208, 0.6, 1.2, 1.6); add('mk_Barrel_Apples', 44, -206, 0, 1.2, 0.5);
+  // ---- tier 3, the King's Court: gardens either side of the gate
+  for (const [x, z] of [[30, -226], [42, -240]]) add('fountainRoundDetail', x, z, 0, 1.6, 1.8);
+  for (let i = 0; i < 6; i++) add('kf_bush_3_a', 22 + i * 2, -225, 0, 1.8, 0.5);
+  for (const [x, z] of [[36, -232], [26, -236], [36, -250], [40, -256]]) { add('cr_flowers_crop', x, z, 0, 1.2, 0); add('cr_flowers_crop', x + 2, z + 1, 1, 1.2, 0); }
+  // ---- tier 4, the citadel: the treasury and the royal tailor flank the Great Hall's forecourt
+  realmHall(R, 25, -262, 10, 12, 5, 0, { sign: 'TREASURY', signCol: '#8a6a12', allStone: true, roof: '#5a4a2a' });
+  add('rp_chest_ingots', 20, -258, 0.3, 1.2, 0.8);
+  realmHall(R, -25, -262, 10, 12, 5, 0, { sign: 'ROYAL TAILOR', signCol: '#5b2a86' });
   landmark(R, () => buildGreatHall(R, add));
-  // the king's guard and court in the ward (static figures; the walking guards are townsfolk)
-  for (const [k, x, z, ry] of [['po_male_standing', -6, -236, 0], ['po_male_standing', 6, -236, 0], ['po_female_standing_hips', -24, -246, 0.8], ['po_male_standing_hips', 24, -250, -0.6], ['po_female_lookingup', -16, -270, 0.4]]) { const p = add(k, x, z, ry, 1, 0.4); if (p) p.traverse(o => { if (o.isMesh) o.material = TMAT.court || (TMAT.court = lmat({ vertexColors: true, roughness: 0.9, flatShading: true, color: '#c8b8ff' })); }); }
+  // the king's guard and court in the forecourt (static figures; the walking guards are townsfolk)
+  for (const [k, x, z, ry] of [['po_male_standing', -6, -238, 0], ['po_male_standing', 6, -238, 0], ['po_female_standing_hips', -12, -236, 0.8], ['po_male_standing_hips', 12, -236, -0.6]]) { const p = add(k, x, z, ry, 1, 0.4); if (p) p.traverse(o => { if (o.isMesh) o.material = TMAT.court || (TMAT.court = lmat({ vertexColors: true, roughness: 0.9, flatShading: true, color: '#c8b8ff' })); }); }
+  // and the town itself: houses packed along every wall and cliff
+  TOWN.hillHouses = hillHouses(R, add);
 }
 function O_push(x, z, r) { TOWN.obst.push({ x, z, r }); }
 // whatever fn adds to R stays visible from afar (castle walls, towers, the dome, the hall)
@@ -252,7 +260,7 @@ function landmark(R, fn) { const n0 = R.children.length; fn(); for (let i = n0; 
 function buildGreatHall(R0, add) {
   const H = HALL, w = H.x1 - H.x0, d = H.z1 - H.z0, cx = (H.x0 + H.x1) / 2, cz = (H.z0 + H.z1) / 2, ht = 11, Y = gy(cx, cz);
   const R = new THREE.Group(); R.position.y = Y; R0.add(R); R.userData.landmark = true;
-  const stone = tmat('#8f8a82'), dark = tmat('#4a4640'), win = tmat('#ffcf6a', { emissive: '#c07010', emissiveIntensity: 0.9 });
+  const stone = TMAT.ghstone || (TMAT.ghstone = lmat({ map: venueTex('whitestone'), color: '#e6e1d6', roughness: 0.9 })), dark = tmat('#4a4640'), win = tmat('#ffcf6a', { emissive: '#c07010', emissiveIntensity: 0.9 });
   const wall = (x, z, len, rot) => { const m = mk(R, new THREE.BoxGeometry(len, ht, 1.2), stone, x, ht / 2, z); m.rotation.y = rot; return m; };
   wall(cx, H.z0, w, 0); wall(H.x0, cz, d, Math.PI / 2); wall(H.x1, cz, d, Math.PI / 2);
   for (const sx of [-1, 1]) wall(cx + sx * (w / 4 + 1.6), H.z1, w / 2 - 3.2, 0); // door gap in the middle of the south wall
@@ -425,7 +433,7 @@ function gateOpen(key) { return realmHasWrit(key); }
 function realmHasWrit(key) { const w = (CAREER.writs = CAREER.writs || {}); return !!w[key]; }
 function realmGateCollide(P, r) {
   for (const G of TOWN.gates || []) {
-    const open = gateOpen(G.key); if (G.port) G.port.position.y += ((open ? 4.4 : 0) - G.port.position.y) * 0.1;
+    const open = gateOpen(G.key); if (G.port) G.port.position.y += ((open ? 3.0 : 0) - G.port.position.y) * 0.1;
     if (open) continue;
     const dx = P.x - G.x, dz = P.z - G.z, d = Math.hypot(dx, dz), m = G.r + r;
     if (d < m) { if (d < 1e-4) { P.z = G.z + m; } else { P.x = G.x + dx / d * m; P.z = G.z + dz / d * m; } if (!TOWN.gateMsgT || window.performance.now() - TOWN.gateMsgT > 4000) { TOWN.gateMsgT = window.performance.now(); gateRefused(G); } }

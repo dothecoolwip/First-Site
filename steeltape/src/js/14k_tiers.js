@@ -15,8 +15,8 @@ VENDORS.push(
   { key: 'rtailor', as: 'herald', tier: 3, name: 'Master Fennick', role: 'Royal tailor', col: '#5b2a86', awn: '#7a3aa6', hi: 'Silk, velvet, cloth of gold. One does not dress for court; one dresses AT it.', icon: '🧵' }
 );
 for (const V of VENDORS) VENDOR_BY[V.key] = V;
-Object.assign(STALL_AT, { msmith: [-71, -215], marmour: [-71, -180], mtrainer: [-71, -255], rsmith: [31, -256], rarmour: [31, -268], rtailor: [-31, -262] });
-Object.assign(STALL_FACE, { msmith: Math.PI / 2, marmour: Math.PI / 2, mtrainer: Math.PI / 2, rsmith: -Math.PI / 2, rarmour: -Math.PI / 2, rtailor: Math.PI / 2 });
+Object.assign(STALL_AT, { msmith: [-40, -216], marmour: [71, -200], mtrainer: [-75, -244], rsmith: [21, -253], rarmour: [28, -253], rtailor: [-25, -253] });
+Object.assign(STALL_FACE, { msmith: 2.21, marmour: -Math.PI / 2, mtrainer: Math.PI / 2, rsmith: 0, rarmour: 0, rtailor: 0 });
 Object.assign(VENDOR_FIT, { msmith: 'Female_Peasant', marmour: 'Male_Ranger', mtrainer: 'Male_Ranger', rsmith: 'Male_Peasant', rarmour: 'Female_Ranger', rtailor: 'Male_Ranger' });
 // how far up a bar of `max` a vendor of this tier will take you
 function tierCap(max, tier) { return tier >= 3 ? max : tier === 2 ? Math.max(1, Math.round(max * 0.8)) : Math.max(1, Math.round(max * 0.6)); }
@@ -37,8 +37,8 @@ function applyVendorTier(box, tier) {
 }
 // ---- the gatekeepers: Sergeant Brask outside the bailey gate, the Captain of the King's Guard by the Castle arena
 STATIONS.push(
-  { key: 'sergeant', name: 'Sergeant Brask', role: 'Bailey gate', icon: '🛡️', at: [6.5, -145], knight: true },
-  { key: 'captain', name: 'Captain Isolde', role: 'The King’s Guard', icon: '👑', at: [70, -181], knight: true }
+  { key: 'sergeant', name: 'Sergeant Brask', role: 'Bailey gate', icon: '🛡️', at: [6.5, -132], knight: true },
+  { key: 'captain', name: 'Captain Isolde', role: 'The King’s Guard', icon: '👑', at: [-12, -199], knight: true }
 );
 CLUBS.sergeant = { key: 'sergeant', name: 'Bailey Garrison', full: 'The Bailey Garrison', short: 'GAR', tabard: '#26344d', trim: '#c9b48a', charge: 'chief', flag: '#3b93ff',
   roster: [{ num: 15, name: 'Sgt. Brask', arch: 'heavy', weapon: 'mace', shield: 'heater', helm: 'greathelm', prof: { react: 0.28, aggr: 1.0, guard: 0.6, cancel: 0.9 }, stab: 1.1, keep: true }] };
