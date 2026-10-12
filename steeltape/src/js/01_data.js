@@ -73,9 +73,9 @@ const HELMS = {
 };
 const HELM_ORDER = ['greathelm', 'pigface', 'klapp', 'cross', 'grill', 'sallet', 'barbute', 'kettle'];
 const CATEGORIES = {
-  men:   { key: 'men',   name: "Men's",   h: [1.68, 1.98], b: [0.92, 1.28], body: 82 },
-  women: { key: 'women', name: "Women's", h: [1.55, 1.83], b: [0.86, 1.2],  body: 66 },
-  youth: { key: 'youth', name: 'Youth',   h: [1.18, 1.52], b: [0.86, 1.1],  body: 38 }, // kid-size: foam kit, rubber weapons
+  men:   { key: 'men',   name: "Adult",   h: [1.68, 1.98], b: [0.92, 1.28], body: 82 },
+  women: { key: 'women', name: "Adult", h: [1.55, 1.83], b: [0.86, 1.2],  body: 66 },
+  youth: { key: 'youth', name: 'Kids',   h: [1.18, 1.52], b: [0.86, 1.1],  body: 38 }, // kid-size: foam kit, rubber weapons
 };
 const NAMES = {
   men: ['Dale', 'Hutch', 'Nolan', 'Marcus', 'Brandt', 'Tremblay', 'Okafor', 'Lindqvist', 'Gauthier', 'Rourke', 'Haldane', 'Szabo', 'Ferreira', 'Kowalczyk', 'Arjun', 'Wes', 'Gord', 'Luc', 'Rafael', 'Desmond', 'Kenji', 'Tomasz', 'Ibrahim', 'Cormac', 'Viktor', 'Ezra', 'Bastien', 'Rhys', 'Mateo', 'Stellan'],
