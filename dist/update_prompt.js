@@ -1,7 +1,7 @@
 // Small, non-blocking update notice for the hosted/PWA game.
 (() => {
   const current = String(window.BUILD_VER || '');
-  if (!current) return;
+  if (!current || location.protocol === 'file:') return;
 
   const style = document.createElement('style');
   style.textContent = `

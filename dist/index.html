@@ -1,5 +1,5 @@
 <!doctype html><html><head><meta charset="utf-8"><link rel="manifest" href="manifest.webmanifest"><meta name="theme-color" content="#0f1316"><link rel="apple-touch-icon" href="icon-192.png"><meta name="apple-mobile-web-app-capable" content="yes"><meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover"></head><body>
-<script>window.BUILD_VER="steel-tape-update-notice-20261012";</script><title>Buhurt: Steel &amp; Tape</title>
+<script>window.BUILD_VER="steel-tape-capes-20261012b";</script><title>Buhurt: Steel &amp; Tape</title>
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Barlow+Semi+Condensed:wght@400;500;600;700&family=Big+Shoulders+Display:wght@700;800;900&family=Permanent+Marker&display=swap">
@@ -37486,14 +37486,7 @@ function dress(J, L) {
   else if (L.h === 'smuggler') { mk(hat, geo('w_mask', () => new THREE.CylinderGeometry(0.118, 0.118, 0.05, 16, 1, true)), tmat('#111214'), 0, -0.06, 0).material.side = THREE.DoubleSide; }
   else if (L.h === 'pumpkin') { const p = kpiece(hat, 'pumpkinCarved', 0, -0.15, 0, 0, 0.55); if (p) p.traverse(o => { if (o.isMesh && /orange|pumpkin/i.test(o.material.name || '')) o.material = tmat('#ff7a1a', { emissive: '#7a2a00' }); }); }
   if (L.f === 'workboots' && J.bones) { const leather = new THREE.MeshStandardMaterial({ map: librarySurface('boot_leather'), color: '#9b8268', roughness: 0.95 }); for (const key of ['foot_l', 'foot_r']) { const foot = J.bones[key]; if (!foot) continue; const boot = mk(foot, geo('w_workboot', () => new THREE.BoxGeometry(0.15, 0.15, 0.29)), leather, 0, 0.02, 0.06); boot.castShadow = SHADOWS; } }
-  // cape: hung from the shoulders, sways a little
-  if (L.c && L.c !== 'none') {
-    const col = L.c === 'royal' ? '#9b111e' : L.c === 'shadow' ? '#111214' : L.c === 'shroud' ? '#e8f4ff' : L.c === 'ranger' ? '#2f5a2a' : L.c === 'courtier' ? '#5b2a86' : L.b;
-    const cp = new THREE.Group(); cp.position.set(0, 1.42, -0.16); J.root.add(cp);
-    const cm = lmat({ color: col, roughness: 0.9, side: THREE.DoubleSide, transparent: L.c === 'shroud', opacity: L.c === 'shroud' ? 0.55 : 1, emissive: L.c === 'shroud' ? '#2a4a6a' : '#000000' });
-    const cape = mk(cp, geo('w_cape', () => { const g2 = new THREE.PlaneGeometry(0.42, 0.8, 1, 4); const pa = g2.attributes.position; for (let i = 0; i < pa.count; i++) { const y = pa.getY(i), x = pa.getX(i); pa.setX(i, x * (1 + (0.4 - y) * 0.35)); pa.setZ(i, -Math.abs(x) * 0.25); } g2.translate(0, -0.4, 0); g2.computeVertexNormals(); return g2; }), cm, 0, 0, 0); cape.rotation.x = 0.12; J.cape = cp;
-    if (L.c === 'royal') mk(cp, geo('w_ctrim', () => new THREE.BoxGeometry(0.52, 0.04, 0.02)), tmat('#e3b341', { metalness: 0.7 }), 0, -0.84, 0.05);
-  }
+  if (L.c && L.c !== 'none') capeCreate(J, L);
   // in your hand
   const hand = J.handR; if (hand && L.n !== 'none') {
     const it = grp(hand, 0, 0.08, 0.02); J.heldItem = it;
@@ -37610,8 +37603,8 @@ function updateWorld(dt) {
   }
   updateFolk(dt);
   gameplayCannonTick(dt);
-  // your cape sways when you move; your pet follows at your heel
-  const me = TOWN.me; if (me && me.cape) me.cape.rotation.x = 0.1 + Math.min(0.5, (TOWN.speed || 0) * 0.09) + Math.sin(t * 3) * 0.03;
+  // The shoulders stay fastened while the lower cloth responds to walking and wind.
+  const me = TOWN.me; if (me && me.cape) capeAnimate(me, TOWN.speed || 0, t, dt);
   const P = WORLD.pet; if (P) {
     const back = TOWN.face + Math.PI, tx = TOWN.pos.x + Math.sin(back) * 1.2 + Math.sin(TOWN.face + Math.PI / 2) * 0.7, tz = TOWN.pos.z + Math.cos(back) * 1.2 + Math.cos(TOWN.face + Math.PI / 2) * 0.7;
     const dx = tx - P.position.x, dz = tz - P.position.z, d = Math.hypot(dx, dz), mv = d > 0.15;
@@ -37650,6 +37643,7 @@ function updateOthers(dt) {
     O.J.root.position.set(O.x, O.mine ? DEEP_MINE.y : gy(O.x, O.z), O.z); O.J.root.rotation.y = O.f; O.J.root.visible = O.mine === !!TOWN.mineOn;
     const sp = Math.hypot(O.x - ox, O.z - oz) / Math.max(dt, 1e-3);
     if (O.J.ual) { O.J.play(sp > 3.5 ? 'Jog_Fwd_Loop' : sp > 0.3 ? 'Walk_Loop' : 'Idle_Loop', 0.25); O.J.mixer.update(dt); }
+    if (O.J.cape) capeAnimate(O.J, sp, G.realTime, dt);
     const S = TOWN.stalls.find(s => s.player === p.peer); if (S) { S.x = S.ax = O.x; S.z = S.az = O.z; S.mine = O.mine; }
   }
   for (const id in WORLD.others) if (!seen[id]) { TOWN.root.remove(WORLD.others[id].J.root); delete WORLD.others[id]; TOWN.stalls = TOWN.stalls.filter(s => s.player !== id); }
@@ -37830,6 +37824,95 @@ function buildSpecialVendors() {
     const fx = Math.sin(ry), fz = Math.cos(ry);
     TOWN.stalls.push({ V, g, npc, ry, x, z, ax: x + fx * 1.4, az: z + fz * 1.4, label: lab });
   }
+}
+
+// Tailored town capes. A curved cloth surface hangs from the shoulders and only
+// its lower rows move; every wardrobe style keeps its own cut and finish.
+const CAPE_TEX = new Map();
+const CAPE_STYLE = {
+  club: { length: 1.02, width: 0.43, clasp: '#a98245' },
+  royal: { color: '#8e1829', trim: '#d9b45d', length: 1.12, width: 0.47, clasp: '#d9b45d' },
+  shadow: { color: '#24262d', trim: '#555866', length: 1.08, width: 0.44, clasp: '#737782' },
+  shroud: { color: '#d8eaf0', trim: '#9bc5d4', length: 1.17, width: 0.46, clasp: '#bad6df', opacity: 0.9, ragged: true },
+  ranger: { color: '#35583a', trim: '#9c8054', length: 0.97, width: 0.42, clasp: '#a8895a', ragged: true },
+  courtier: { color: '#56336e', trim: '#c9a86b', length: 1.05, width: 0.47, clasp: '#d3b374' }
+};
+function capeTexture(color, trim, style) {
+  const key = `${color}|${trim}|${style}`;
+  if (CAPE_TEX.has(key)) return CAPE_TEX.get(key);
+  const c = cvs(256, 256), ctx = c.getContext('2d');
+  ctx.fillStyle = color; ctx.fillRect(0, 0, 256, 256);
+  // Small threads and shaded folds give the flat-shaded world a cloth surface.
+  for (let x = 3; x < 256; x += 7) { ctx.fillStyle = 'rgba(255,255,255,.055)'; ctx.fillRect(x, 0, 1, 256); }
+  for (let y = 2; y < 256; y += 7) { ctx.fillStyle = 'rgba(0,0,0,.055)'; ctx.fillRect(0, y, 256, 1); }
+  for (const x of [57, 124, 193]) {
+    const fold = ctx.createLinearGradient(x - 24, 0, x + 24, 0);
+    fold.addColorStop(0, 'rgba(0,0,0,0)'); fold.addColorStop(0.5, 'rgba(0,0,0,.13)'); fold.addColorStop(1, 'rgba(255,255,255,.045)');
+    ctx.fillStyle = fold; ctx.fillRect(x - 24, 0, 48, 256);
+  }
+  const border = style === 'royal' || style === 'courtier' ? 6 : 3;
+  ctx.fillStyle = trim;
+  ctx.fillRect(0, 0, border, 256); ctx.fillRect(256 - border, 0, border, 256);
+  ctx.fillRect(0, 0, 256, 5); ctx.fillRect(0, 249, 256, 7);
+  ctx.fillStyle = 'rgba(0,0,0,.32)';
+  ctx.fillRect(border + 2, 0, 1, 256); ctx.fillRect(253 - border, 0, 1, 256); ctx.fillRect(0, 246, 256, 1);
+  if (style === 'royal' || style === 'courtier') {
+    ctx.fillStyle = trim;
+    for (let x = 25; x < 242; x += 36) {
+      ctx.beginPath(); ctx.moveTo(x, 224); ctx.lineTo(x + 6, 230); ctx.lineTo(x, 236); ctx.lineTo(x - 6, 230); ctx.fill();
+    }
+  }
+  const texture = new THREE.CanvasTexture(c); texture.encoding = THREE.sRGBEncoding; texture.anisotropy = 4;
+  CAPE_TEX.set(key, texture); return texture;
+}
+function capeCreate(J, L) {
+  const style = CAPE_STYLE[L.c] || CAPE_STYLE.club;
+  const color = style.color || L.b || '#5e2530', trim = style.trim || L.t || '#c3a46f';
+  const root = grp(J.root, 0, 1.52, -0.27), cols = 16, rows = 14;
+  const points = [], uv = [], indices = [];
+  for (let row = 0; row <= rows; row++) {
+    const v = row / rows, spread = 0.245 + (style.width - 0.245) * Math.pow(v, 0.8);
+    for (let col = 0; col <= cols; col++) {
+      const u = col / cols * 2 - 1;
+      const hem = row === rows ? (style.ragged ? 0.055 * Math.sin(col * 2.3) + 0.04 * Math.cos(col * 4.1) : 0.07 * u * u + 0.008 * Math.cos(u * Math.PI * 4)) : 0;
+      const neck = -0.055 * (1 - u * u) * Math.pow(1 - v, 4);
+      points.push(u * spread, -style.length * v + hem + neck,
+        -0.02 - 0.19 * v + 0.08 * u * u + 0.085 * Math.cos(u * Math.PI * 3) * Math.pow(v, 1.5));
+      uv.push(col / cols, 1 - v);
+      if (row < rows && col < cols) {
+        const a = row * (cols + 1) + col, b = a + cols + 1;
+        indices.push(a, b, a + 1, b, b + 1, a + 1);
+      }
+    }
+  }
+  const geometry = new THREE.BufferGeometry();
+  geometry.setAttribute('position', new THREE.Float32BufferAttribute(points, 3));
+  geometry.setAttribute('uv', new THREE.Float32BufferAttribute(uv, 2));
+  geometry.setIndex(indices); geometry.computeVertexNormals();
+  geometry.userData.capeCols = cols; geometry.userData.capeRows = rows;
+  const material = new THREE.MeshStandardMaterial({
+    map: capeTexture(color, trim, L.c), roughness: 0.96, side: THREE.DoubleSide,
+    transparent: !!style.opacity, opacity: style.opacity || 1, depthWrite: !style.opacity
+  });
+  const cloth = new THREE.Mesh(geometry, material); cloth.castShadow = SHADOWS && !style.opacity;
+  cloth.receiveShadow = true; cloth.frustumCulled = false; root.add(cloth);
+  const clasp = lmat({ color: style.clasp, metalness: L.c === 'royal' || L.c === 'courtier' ? 0.55 : 0.15, roughness: 0.55 });
+  const claspGeo = geo('cape_clasp', () => new THREE.SphereGeometry(0.032, 8, 6));
+  for (const side of [-1, 1]) mk(root, claspGeo, clasp, side * 0.225, -0.012, 0.085);
+  J.cape = { root, cloth, base: new Float32Array(points), lag: 0 };
+}
+function capeAnimate(J, speed, time, dt) {
+  const C = J.cape; if (!C) return;
+  C.lag += (Math.min(8, speed) - C.lag) * Math.min(1, dt * 5);
+  const attr = C.cloth.geometry.attributes.position, src = C.base, dst = attr.array;
+  const cols = C.cloth.geometry.userData.capeCols, rows = C.cloth.geometry.userData.capeRows;
+  for (let i = 0; i < attr.count; i++) {
+    const v = Math.floor(i / (cols + 1)) / rows, u = i % (cols + 1) / cols * 2 - 1, loose = v * v;
+    dst[i * 3] = src[i * 3] + loose * (Math.sin(time * 2.3 + v * 2) * 0.025 + Math.sin(time * 5.1 + u * 3) * 0.012);
+    dst[i * 3 + 1] = src[i * 3 + 1] + loose * (C.lag * 0.018 + Math.sin(time * 5.5 + u * 2) * 0.014);
+    dst[i * 3 + 2] = src[i * 3 + 2] - loose * (C.lag * 0.025 + Math.sin(time * 3.7 + u * 2) * 0.025);
+  }
+  attr.needsUpdate = true; C.cloth.geometry.computeVertexNormals();
 }
 
 // ---------- townsfolk who do things: sit by the fire, browse the stalls, watch the lists, chat at the fountain, fetch water,
@@ -39155,7 +39238,7 @@ function arenaRope(R, A) {
   side(A.x - rx, A.z - rz, A.x + rx, A.z - rz);
   side(A.x + rx, A.z - rz, A.x + rx, A.z + rz);
   if (A.practice) {
-    // Keep the tutorial walk-in gate clear while enclosing its remaining edge.
+    // Match the practice list's walk-in gate; all four sides still have rope.
     side(A.x + rx, A.z + rz, A.x + 2.5, A.z + rz);
     side(A.x - 2.5, A.z + rz, A.x - rx, A.z + rz);
   } else side(A.x + rx, A.z + rz, A.x - rx, A.z + rz);
