@@ -52,10 +52,10 @@ table{width:100%;border-collapse:collapse;font-size:.9rem}th,td{text-align:left;
     <h2>Reports and ideas</h2>
     <div id="reports"></div>
     <h2>Every tracked player</h2>
-    <p class="muted small">Signed-in gamers and guest browsers, with all-time activity. Select a row for details.</p>
+    <p class="muted small">Signed-in gamers and guest browsers, with all-time activity. Select a row for details. Playtime is measured from this tracking update onward; earlier hours cannot be recovered reliably.</p>
     <div class="filters"><input id="playerSearch" type="search" placeholder="Search player name"><select id="playerFilter" aria-label="Filter players"><option value="all">All players</option><option value="account">BuhurtOS players</option><option value="guest">Guest browsers</option><option value="today">Active today</option><option value="week">Active this week</option><option value="inactive">Inactive 30+ days</option></select><button type="button" id="exportCsv" class="alt">Export CSV</button></div>
     <p id="playerCount" class="muted small"></p><div class="playerDetail" id="playerDetail" hidden></div>
-    <div class="tablewrap"><table id="players"><thead><tr><th>Name</th><th>Account</th><th>First played</th><th>Last active</th><th>Sessions</th><th>Matches</th><th>Wins</th><th>Losses*</th><th>Level</th><th>Device</th></tr></thead><tbody></tbody></table></div>
+    <div class="tablewrap"><table id="players"><thead><tr><th>Name</th><th>Account</th><th>Total playtime</th><th>First played</th><th>Last active</th><th>Sessions</th><th>Matches</th><th>Wins</th><th>Losses*</th><th>Level</th><th>Device</th></tr></thead><tbody></tbody></table></div>
     <p class="muted small">*Losses are estimated as matches minus wins; recorded draws are not distinguished yet.</p>
     <h2>Matches by mode</h2>
     <table id="modes"><thead><tr><th>Mode</th><th>Played</th><th>Won by players</th></tr></thead><tbody></tbody></table>
@@ -87,6 +87,12 @@ const activeWithin = (t, days) => Boolean(t && !Number.isNaN(Date.parse(t)) && D
 const safeDate = t => t && !Number.isNaN(Date.parse(t)) ? new Date(t).toLocaleDateString() : 'Unknown';
 const safeAgo = t => t && !Number.isNaN(Date.parse(t)) ? ago(t) : 'Unknown';
 const num = value => Number(value || 0);
+function duration(seconds) {
+  if (seconds == null || !Number.isFinite(Number(seconds))) return '—';
+  const totalMinutes = Math.floor(Math.max(0,Number(seconds)) / 60);
+  const hours = Math.floor(totalMinutes / 60);
+  return hours ? hours.toLocaleString() + 'h ' + (totalMinutes % 60) + 'm' : totalMinutes + 'm';
+}
 function playerRows() {
   const term = ($('#playerSearch').value || '').trim().toLowerCase(), filter = $('#playerFilter').value;
   return allTrackedPlayers.filter(p => {
@@ -103,6 +109,7 @@ function showPlayer(p) {
   const details = $('#playerDetail'); details.hidden = false;
   const list = [
     ['Account', p.uid ? 'BuhurtOS' : 'Guest browser'],
+    ['Total playtime', p.uid ? duration(p.playSeconds) : 'Not linked'],
     ['First played', safeDate(p.first)],
     ['Last active', safeAgo(p.last)],
     ['Account created', safeDate(p.created)],
@@ -124,17 +131,17 @@ function renderPlayerRows() {
   const tbody = $('#players tbody'); tbody.textContent = '';
   for (const p of P) {
     const tr = document.createElement('tr'); tr.tabIndex = 0; tr.setAttribute('aria-label', 'Player ' + (p.name || 'Visitor'));
-    const entries = [p.name || 'Visitor',p.uid?'BuhurtOS':'Guest',safeDate(p.first),safeAgo(p.last),num(p.sessions),num(p.matches),num(p.wins),Math.max(0,num(p.matches)-num(p.wins)),p.level==null?'–':p.level,dev(p.ua)||'Unknown'];
+    const entries = [p.name || 'Visitor',p.uid?'BuhurtOS':'Guest',p.uid ? duration(p.playSeconds) : '—',safeDate(p.first),safeAgo(p.last),num(p.sessions),num(p.matches),num(p.wins),Math.max(0,num(p.matches)-num(p.wins)),p.level==null?'–':p.level,dev(p.ua)||'Unknown'];
     for (const v of entries) { const td = document.createElement('td'); td.textContent = String(v); tr.append(td); }
     tr.onclick=()=>showPlayer(p); tr.onkeydown=e=>{if(e.key==='Enter')showPlayer(p)};
     tbody.append(tr);
   }
-  if (!P.length) { const tr=document.createElement('tr'), td=document.createElement('td'); td.colSpan=10;td.textContent=allTrackedPlayers.length?'No players match this search.':'No tracked players yet.';tr.append(td);tbody.append(tr); }
+  if (!P.length) { const tr=document.createElement('tr'), td=document.createElement('td'); td.colSpan=11;td.textContent=allTrackedPlayers.length?'No players match this search.':'No tracked players yet.';tr.append(td);tbody.append(tr); }
 }
 $('#playerSearch').oninput = renderPlayerRows;
 $('#playerFilter').onchange = renderPlayerRows;
 $('#exportCsv').onclick = () => {
-  const rows = [['Name','Account','First played','Last active','Sessions','Matches','Wins','Matches less wins','Level','Device']].concat(playerRows().map(p=>[p.name||'Visitor',p.uid?'BuhurtOS':'Guest',p.first||'',p.last||'',num(p.sessions),num(p.matches),num(p.wins),Math.max(0,num(p.matches)-num(p.wins)),p.level??'',dev(p.ua)||'']));
+  const rows = [['Name','Account','Total time played (seconds)','Total time played','First played','Last active','Sessions','Matches','Wins','Matches less wins','Level','Device']].concat(playerRows().map(p=>[p.name||'Visitor',p.uid?'BuhurtOS':'Guest',p.uid ? (p.playSeconds ?? 0) : '',p.uid ? duration(p.playSeconds) : '',p.first||'',p.last||'',num(p.sessions),num(p.matches),num(p.wins),Math.max(0,num(p.matches)-num(p.wins)),p.level??'',dev(p.ua)||'']));
   const csv=rows.map(row=>row.map(value=>'"'+String(value??'').replace(/"/g,'""')+'"').join(',')).join('\r\n');
   const blob=URL.createObjectURL(new Blob([csv],{type:'text/csv;charset=utf-8'}));
   const link=document.createElement('a');link.href=blob;link.download='steel-tape-players.csv';link.click();setTimeout(()=>URL.revokeObjectURL(blob),1500);
@@ -161,6 +168,7 @@ async function load() {
     [S.online, 'Active in last 5 min'],
     [S.active24h, 'Active in 24 hours'],
     [S.active7d, 'Active in 7 days'],
+    [duration(S.allTimePlaySeconds), 'Tracked playtime total'],
     [S.allTimeSessions, 'Game sessions all time'],
     [S.allTimeMatches, 'Matches all time'],
     [S.allTimeWins, 'Wins all time'],
