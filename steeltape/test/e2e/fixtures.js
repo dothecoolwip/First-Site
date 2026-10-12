@@ -55,6 +55,7 @@ const test = base.test.extend({
     page.on('console', m => { if (m.type() === 'error' && !/GPU stall|WebGL|404|net::/.test(m.text())) g.errors.push('[console] ' + m.text()); });
     await route(page);
     await page.addInitScript(() => {
+      window.__steeltapeTest = true; // file:// only, never bypasses hosted sign-in
       try { localStorage.clear(); if (!window.__onboard) localStorage.setItem('st-career', JSON.stringify({ onboard: 'done' })); } catch (e) {}
       // virtual controllers: tests put pads in window.__pads; getGamepads hands them to the game like a browser would
       window.__pads = [];
