@@ -68,7 +68,7 @@ Edge functions (all deployed with `verify_jwt=false`, CORS open, use service rol
 6. **Difficulty tuning**: measure real win rates with the `match` events (admin page shows per-mode win rates) and adjust `AI_TIER` in `06b_fight2.js` / `DIFF` in `01_data.js`.
 7. **Performance on phones**: the page is 16.5 MB; realm draw calls ~300–1500 depending on where you stand. Ideas: lazy-load `realm_geo.js`/`animal_geo.js`, lower cull distance on touch (already 115 m), fewer folk.
 8. Flaky two-tab tests (§2). Tour captions assume English. The `peasant`/`forest`/`beach`/`hall` venues reuse `buildVenueField/Castle` and could use the new packs.
-9. The owner wants every step announced in Discord as a patch note (see §3/§4) and the realm plan (`PLAN-realm.md`, also saved in the claude.ai project as `claude/realm-plan.md`) kept current.
+9. The owner wants every step announced in Discord as a patch note **in both servers**: the default run posts to BuhurtOS #patch-notes; then fire `{action:'post', guild:'reavers', channel:'buhurt-steel-and-tape'}` for the Red Deer Reavers (both skip notes already there) (see §3/§4) and the realm plan (`PLAN-realm.md`, also saved in the claude.ai project as `claude/realm-plan.md`) kept current.
 
 ## 7. Conventions the owner cares about
 
