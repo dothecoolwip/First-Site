@@ -1,5 +1,5 @@
 <!doctype html><html><head><meta charset="utf-8"><link rel="manifest" href="manifest.webmanifest"><meta name="theme-color" content="#0f1316"><link rel="apple-touch-icon" href="icon-192.png"><meta name="apple-mobile-web-app-capable" content="yes"><meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover"></head><body>
-<script>window.BUILD_VER="steel-tape-boards-20261011a";</script><title>Buhurt: Steel &amp; Tape</title>
+<script>window.BUILD_VER="steel-tape-0f4330c309";</script><title>Buhurt: Steel &amp; Tape</title>
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Barlow+Semi+Condensed:wght@400;500;600;700&family=Big+Shoulders+Display:wght@700;800;900&family=Permanent+Marker&display=swap">
@@ -16479,7 +16479,7 @@ const NODE_ZONES = [
   // Mirror Lake: herbs on the shore, ore in the cliffs
   ['herb', 200, 40, 75, 100, 4], ['flax', 150, 0, 25, 30, 2], ['berry', 160, -30, 30, 30, 2], ['copper', 262, -40, 22, 34, 2], ['iron', 262, -40, 22, 34, 2], ['coal', 262, 100, 22, 30, 2],
   // the Outer Bailey: the mine shaft (silver, gold, crystal) and the castle orchard
-  ['silver', 84, -282, 20, 14, 3], ['gold', 84, -282, 20, 14, 2], ['crystal', 84, -282, 20, 14, 2], ['iron', 84, -282, 20, 14, 2], ['coal', 84, -282, 20, 14, 1], ['oak', -84, -280, 20, 18, 2], ['herb', -84, -262, 20, 12, 2]
+  ['silver', -75, -260, 8, 10, 3], ['gold', -75, -260, 8, 10, 2], ['crystal', -75, -260, 8, 10, 2], ['iron', -75, -260, 8, 10, 2], ['coal', -75, -260, 8, 10, 1], ['oak', 88, -272, 14, 10, 2], ['herb', 30, -232, 14, 8, 2]
 ];
 function nodeSites() {
   const rnd = seeded('realm-nodes-v1'), out = [];
@@ -18056,6 +18056,7 @@ function boardsStartHeartbeat() {
   BOARDS.heartbeat = setInterval(beat, 35000);
   document.addEventListener('visibilitychange', () => { if (!document.hidden) beat(); });
 }
+
 
 
 })();
