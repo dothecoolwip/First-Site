@@ -4,6 +4,21 @@
 const CLOUD = { uid:null, revision:0, ready:false, holding:false, loading:null, busy:false, timer:null, lastHash:'', optedOut:false, offline:false, applying:false };
 const CLOUD_META = 'steeltape-cloud-link-v1';
 const CLOUD_BACKUP = 'steeltape-local-backup-v1-';
+const CLOUD_OFFLINE_DIRTY = 'steeltape-offline-dirty-v1';
+function cloudOfflineDirty(uid) {
+  try {return JSON.parse(localStorage.getItem(CLOUD_OFFLINE_DIRTY) || 'null')?.uid === uid;}
+  catch(e) {return false;}
+}
+function cloudMarkOfflineChange() {
+  if (!CLOUD.offline && !cloudIsOffline()) return;
+  const uid = CLOUD.uid || cloudReadMeta()?.uid;
+  if (!uid) return;
+  try {localStorage.setItem(CLOUD_OFFLINE_DIRTY, JSON.stringify({uid,at:new Date().toISOString()}));}
+  catch(e) {console.warn('Offline sync marker unavailable',e);}
+}
+function cloudClearOfflineDirty(uid) {
+  if (cloudOfflineDirty(uid)) localStorage.removeItem(CLOUD_OFFLINE_DIRTY);
+}
 
 const CLOUD_GUEST_BACKUP = 'steeltape-unlinked-guest-save-v1-';
 function cloudPrepareGuestLink() {
@@ -157,6 +172,7 @@ function cloudReady(uid,revision,snapshot) {
   // If the acknowledgement cannot be persisted locally, don't pretend this
   // device is synced: the next session must compare its save explicitly.
   cloudWriteMeta(uid,Number(revision),hash);
+  cloudClearOfflineDirty(uid);
   CLOUD.revision=Number(revision);CLOUD.lastHash=hash;CLOUD.ready=true;CLOUD.holding=false;CLOUD.optedOut=false;CLOUD.offline=false;
   if(typeof onbResumeAfterAuth==='function')setTimeout(onbResumeAfterAuth,0);
 }
@@ -176,6 +192,7 @@ function cloudRestore(uid,revision,remoteSnapshot) {
     for(const key of oldKeys) if(!(key in remoteSnapshot))localStorage.removeItem(key);
     for(const [key,value] of Object.entries(remoteSnapshot)) localStorage.setItem(key,JSON.stringify(value));
     cloudWriteMeta(uid,revision,cloudHash(remoteSnapshot));
+    cloudClearOfflineDirty(uid);
   } catch(error) {
     // Restore the pre-migration device save if local writes fail.
     for(const key of Object.keys(remoteSnapshot))if(!(key in local))localStorage.removeItem(key);
@@ -198,6 +215,7 @@ async function cloudCommit(uid,expected,snapshot) {
 function cloudProblem(uid,error) {
   if(CLOUD.uid!==uid)return;
   CLOUD.ready=false;CLOUD.holding=false;CLOUD.offline=true;CLOUD.optedOut=true;
+  cloudMarkOfflineChange();
   console.warn('Steel & Tape cloud unavailable; keeping the device save', error);
   try { if (typeof toastMenu === 'function') toastMenu('Playing offline. Progress is saved on this device until cloud sync reconnects.'); } catch(e) {}
   if(typeof onbResumeAfterAuth==='function')setTimeout(onbResumeAfterAuth,0);
@@ -230,7 +248,7 @@ async function cloudStart(uid,retry) {
   // An offline edit is allowed to become the cloud save ONLY when nobody
   // changed the cloud since this device's last confirmed revision.
   if(meta && meta.uid===uid && Number(meta.revision)===Number(remote.revision)
-      && meta.hash!==localHash) {
+      && cloudOfflineDirty(uid) && meta.hash!==localHash) {
     const ok=await cloudCommit(uid,remote.revision,local);
     if(!ok)return cloudStart(uid,true);
     return;
@@ -273,8 +291,8 @@ async function cloudFlush() {
   finally{CLOUD.busy=false;if(CLOUD.uid===uid&&CLOUD.ready&&cloudHash(cloudSnapshot())!==CLOUD.lastHash)cloudSchedule();}
 }
 const cloudOriginalSet=store.set.bind(store),cloudOriginalDel=store.del.bind(store);
-store.set=function(k,v){cloudOriginalSet(k,v);cloudSchedule();};
-store.del=function(k){cloudOriginalDel(k);cloudSchedule();};
+store.set=function(k,v){cloudOriginalSet(k,v);cloudMarkOfflineChange();cloudSchedule();};
+store.del=function(k){cloudOriginalDel(k);cloudMarkOfflineChange();cloudSchedule();};
 setInterval(()=>{if(CLOUD.ready)cloudFlush();else if(CLOUD.uid&&CLOUD.offline&&!cloudIsOffline()&&!CLOUD.loading)cloudOnAuth(CLOUD.uid,true);},25000);
 window.addEventListener('offline',()=>{
   if(CLOUD.uid) cloudProblem(CLOUD.uid,new Error('Internet disconnected'));
