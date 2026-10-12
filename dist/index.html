@@ -1,5 +1,5 @@
 <!doctype html><html><head><meta charset="utf-8"><link rel="manifest" href="manifest.webmanifest"><meta name="theme-color" content="#0f1316"><link rel="apple-touch-icon" href="icon-192.png"><meta name="apple-mobile-web-app-capable" content="yes"><meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover"></head><body>
-<script>window.BUILD_VER="steel-tape-4d755ec9a5";</script><title>Buhurt: Steel &amp; Tape</title>
+<script>window.BUILD_VER="steel-tape-test-admin-4b298c40b9";</script><title>Buhurt: Steel &amp; Tape</title>
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Barlow+Semi+Condensed:wght@400;500;600;700&family=Big+Shoulders+Display:wght@700;800;900&family=Permanent+Marker&display=swap">
@@ -843,6 +843,7 @@ body:not(.split) #pips:not([hidden]) ~ #statstrip{top:calc(var(--st) + 78px)}
 #townHud{position:absolute;inset:0;pointer-events:none;z-index:14} /* above the touch layer so Map, Leave and the talk bubble get the tap */
 #townHud .townbar{position:absolute;top:calc(10px + env(safe-area-inset-top));right:12px;left:12px;display:flex;gap:8px;align-items:center;justify-content:flex-end;pointer-events:none}
 #townHud .townbar > *{pointer-events:auto}
+#townAdmin:not([hidden]){position:fixed;top:calc(68px + env(safe-area-inset-top));right:12px;z-index:3}
 #townHud .tpurse{margin-right:auto;background:rgba(12,14,16,.78);padding:6px 12px;display:flex;flex-direction:column;line-height:1}
 #townHud .tpurse b{color:var(--marshal);font-size:1.3rem}
 #townHud .tpurse small{color:#c9c2b2;font-size:.7rem;text-transform:uppercase;letter-spacing:.08em}
@@ -1371,7 +1372,7 @@ body:not(.split) #pips:not([hidden]) ~ #statstrip{top:calc(var(--st) + 78px)}
   <!-- TOWN: walk around, talk to vendors -->
   <div id="townHud" hidden>
     <div class="townbar"><span class="tpurse"><b id="townPurse" class="num">$0</b><small>purse</small></span>
-      <button class="btn tape small" id="townBag" aria-label="Inventory">🎒</button><button class="btn tape small" id="townMap">Map</button><button class="btn tape small" id="townLeave">Leave town</button></div>
+      <button class="btn tape small" id="townAdmin" hidden>Test tools</button><button class="btn tape small" id="townBag" aria-label="Inventory">🎒</button><button class="btn tape small" id="townMap">Map</button><button class="btn tape small" id="townLeave">Leave town</button></div>
     <div class="townwp" id="townWp" hidden></div>
     <div class="townbout" id="townBout" hidden></div>
     <div class="townspec" id="townSpec" hidden></div>
@@ -11441,7 +11442,10 @@ const CAREER_DEFAULT = () => ({
   ladder: { rung: 0 }, trained: false
 });
 const CAREER = (() => { const d = CAREER_DEFAULT(), s = store.get('career', null); if (!s) return d; return { ...d, ...s, club: { ...d.club, ...(s.club || {}) }, upgrades: { ...d.upgrades, ...(s.upgrades || {}) }, stats: { ...d.stats, ...(s.stats || {}) }, ladder: { ...d.ladder, ...(s.ladder || {}) }, ach: s.ach || {} }; })();
-function saveCareer() { store.set('career', CAREER); }
+function saveCareer() {
+  if (typeof testAdminApply === 'function' && typeof BOS !== 'undefined' && BOS.testAdmin) testAdminApply(false);
+  store.set('career', CAREER);
+}
 
 const UPGRADES = [
   { key: 'harness', name: 'Spring-steel harness', desc: 'Lighter plates. +3% speed per level.' },
@@ -11833,7 +11837,8 @@ function gainXP(amount, why) {
   if (G.autopilot || G.attract || amount <= 0) return; skillsState();
   amount = Math.round(amount * (1 + 0.15 * ((CAREER.skills['show.scout']) || 0)) * shopXpMult());
   CAREER.xp += amount; MT.xp = (MT.xp || 0) + amount;
-  while (CAREER.xp >= xpNeed(CAREER.level)) { CAREER.xp -= xpNeed(CAREER.level); CAREER.level++; CAREER.sp++; levelUp(); }
+  while (CAREER.level < 100 && CAREER.xp >= xpNeed(CAREER.level)) { CAREER.xp -= xpNeed(CAREER.level); CAREER.level++; CAREER.sp++; levelUp(); }
+  if (CAREER.level >= 100) CAREER.xp = 0;
 }
 function levelUp() { const cash = 25 * CAREER.level; CAREER.purse += cash; CAREER.stats.earned += cash; const rk = CAREER.level % 5 === 1 && CAREER.level > 1 ? ` New rank: ${rankOf(CAREER.level)}!` : ''; if (typeof applyCosmeticUnlocks === 'function') applyCosmeticUnlocks(); ACHQ.push({ name: `Level ${CAREER.level}`, desc: `Skill point and $${cash} earned.${rk}`, kicker: 'Level up' }); if (!ACHQ.busy) showAch(); AU.cheer(1.1); updateTitlePurse(); }
 EV_LISTENERS.push((type, d) => {
@@ -14300,7 +14305,7 @@ async function boot(hot) {
   if (location.hash === '#autotest') setTimeout(autotest, 300);
   window.__ST = { G, AU, buildShield, buildWeapon, W3, startTourney, quickFight, toTitle, openRepair, kitCheck, setupMatch, toTactics, beginFight, endRound, matchEnd, CLUBS, WEAPONS, setView, toast, renderKitPicker, applyLoadout, IN, FP, showScreen, weaponIcon, startCine, startTraining, startLadder, openCareer, openModes, openLadder, CAREER, setLesson, TR, unlock, togglePause, afterRound, renderHow, selectPiece, selectTape, msg, renderSheet, setHud, endTraining, setMode, PAD, navMove, focusFirst, sparks, CUTE, THREE, BREATH, setCuteDeco, flipFx, PHOTO, UAL, raiseFlags, startVersus, startFFA, startBracket, startKid, KID, openSeason, startSeasonMatch, setVenue, VS, SPLIT, NET, buildOnlineMatch, hostLobby, joinLobby, ONL, vinControl, openRun, openDaily, openBracket, showBracket, bracketResult, ffaMatchEnd, ffaLeader, ffaWinner, endKid, openPhoto, closePhoto, startReplay, stopReplay, RP, store, startRunFight, newRun, runEnd, WX, setWeather, padVin, readVersus, applyLo, myLoadout, netDropped, netLeave, showIntro, installForged, dailyPlan, openKids, openVersus, openPicks, LESSONS, rivalClub, startGrudge, startDaily, seasonState, newSeason, refreshDaily, VENUES, COMM, hitMapHtml, resetFighterForRound, DIFF, PIN, PADS, NIN, padsUpdate, seatPads, LOBBY, MM, openOnlineHub, benchDown, benchMove, REP, squirePatch, coverage, openProfile, myProfile, BOS, updateTitlePurse, ACH, progressCheck, challenges, masteryOf, S2, rankOf, counterValue, renderCareer, progressMatch, saveCareer, shopState, shopUp, tapeLeft, shopMatchEnd, shopPrizeMult, shopXpMult, swingTimes, pieceWearMult, TABARDS, refillTape, renderShop, UPGRADES, freshKit, TAPE_STOCK, enterTown, leaveTown, TOWN, openVendor, closeVendor, openTownMap, shopFx, renderVendor, VENDORS, ITEMS, itemCost, spCost, skillRoom, sponsorIncome, BOOSTS, STALL_AT, HOMES, FURNISH, pfx, squadFx, boostKit, townCollide, townRefresh, townWalkTo, townTalk, townTeardown, lookState, WORLD, guildCheck, STATIONS, townDressMe, FOLK, updateFolk, navBlocked, buildFolk, BOUT, boutStart, boutStop, boutTick, drawTownMap, updateMiniMap, costumePerson, OUTFIT, buildSkinWeapon, skinIcon, wskinList, skinFor, buildMyWeapon, wskinFamOf, GATHER, startGather, gatherSwing, stopGather, tradeState, tradeLevel, tradeGain, give, have, craft, NODES, MATS, renderTrades, TRADE_SKILLS, ARENAS, DISTRICTS, TRAVEL, setWaypoint, clearWaypoint, realmPath, callHorse, mount, dismount, ANIMAL, districtAt, realmCull, REALM_TIERS, gateOpen, townJump, stableRows, horseAvailable, peopleCull, boutArenaFor, arenaLive, bagSlots, bagState, bagRoom, secretFound, lookOwned, SECRETS, stopSpectating, startTrial, TRIALS, tierCap, gy, tierOf, HILL, hillHouses, cliffAt, gateBlocked, arenaBlocked, localPath, NAV, rampAt, ROSTER, rosterClubs, rosterLive, rosterName, liveBoutPick, aiTier, AI_TIER, guardOutcome, fighterGlow, ONB, onbStage, onbSet, openCreator, tourStart, tourEnd, TOUR_STOPS, THRONE, throneHolder, throneFight, throneBow, openThrone, sideFromDrag, VOICE };
   if (location.protocol === 'file:' && window.__steeltapeTest)
-    Object.assign(window.__ST, { penalize, failPiece, closeRepair, xpNeed, tierProf, runToRepairCorner, onbAfterAccount, onbAccountGate, onbResumeAfterAuth, leaveTarget, leaveScreen, CLOUD, bosLoadInfo, bosBoot, swingLeverage, weaponBindPossible, resolveSwing, sweptSwingTarget, updateAction, think, updateTownCamera, LIBRARY, LIBRARY_DATA, WEAPON_VARIANTS, playerWeaponDef, libraryModel, libraryThumb, LIST, navPushOut, townCollide, SPECT, updateArenaSeatFolk });
+    Object.assign(window.__ST, { penalize, failPiece, closeRepair, xpNeed, tierProf, runToRepairCorner, onbAfterAccount, onbAccountGate, onbResumeAfterAuth, leaveTarget, leaveScreen, CLOUD, bosLoadInfo, bosBoot, swingLeverage, weaponBindPossible, resolveSwing, sweptSwingTarget, updateAction, think, updateTownCamera, LIBRARY, LIBRARY_DATA, WEAPON_VARIANTS, playerWeaponDef, libraryModel, libraryThumb, LIST, navPushOut, townCollide, SPECT, updateArenaSeatFolk, testAdminApply, testAdminRefresh, testAdminTeleport, openTestAdmin });
 }
 
 function autotest() {
@@ -15165,7 +15170,7 @@ function netLeave() { try { NET.unsub && NET.unsub(); NET.room && NET.room.leave
 // signed-in person may read (their own fighter link; public fighter records and career stats). Nothing is written.
 const BOS_URL = 'https://mvbxlebznlgroptwwdsm.supabase.co';
 const BOS_KEY = 'sb_publishable_u76M-dggKSsdsyhUQKveJg_5fPJ5Nan';
-const BOS = { sb: null, p: null, user: null, info: null, otpEmail: '', booting: false };
+const BOS = { sb: null, p: null, user: null, info: null, testAdmin: false, otpEmail: '', booting: false };
 function loadSupabaseLib() {
   if (window.supabase && window.supabase.createClient) return Promise.resolve(window.supabase);
   if (BOS.p) return BOS.p;
@@ -15183,8 +15188,14 @@ async function bosClient() {
   BOS.sb.auth.onAuthStateChange((evt, session) => {
     const previous = BOS.user;
     BOS.user = session ? session.user : null;
+    if (previous && BOS.user && previous.id !== BOS.user.id) {
+      BOS.testAdmin = false;
+      if (typeof testAdminRefresh === 'function') testAdminRefresh();
+    }
     if (BOS.user) bosLoadInfo();
     else {
+      BOS.testAdmin = false;
+      if (typeof testAdminRefresh === 'function') testAdminRefresh();
       if (typeof cloudOnSignOut === 'function') cloudOnSignOut();
       BOS.info = null; bosApply();
       if (evt === 'SIGNED_OUT' && previous && typeof onbAccountRequired === 'function' && onbAccountRequired()) {
@@ -15218,6 +15229,15 @@ function bosBoot() {
 }
 async function bosLoadInfo() {
   const sb = BOS.sb, u = BOS.user; if (!sb || !u) return;
+  let verifiedUser = null;
+  try {
+    const verified = await sb.auth.getUser();
+    if (!verified.error) verifiedUser = verified.data && verified.data.user;
+  } catch (e) { }
+  if (verifiedUser && verifiedUser.id !== u.id) return;
+  if (verifiedUser) BOS.user = verifiedUser;
+  BOS.testAdmin = !!(verifiedUser && verifiedUser.app_metadata?.steel_tape_test_admin === true);
+  if (typeof testAdminRefresh === 'function') testAdminRefresh();
   // Load this user's complete Steel & Tape save before applying their BuhurtOS profile name.
   // Cloud saves may require an explicit conflict choice; gameplay is never silently overwritten.
   if (typeof cloudOnAuth === 'function') await cloudOnAuth(u.id);
@@ -15225,6 +15245,7 @@ async function bosLoadInfo() {
   // write the old in-memory CAREER back over it while navigation is pending.
   if (typeof CLOUD !== 'undefined' && CLOUD.applying) return;
   if (!BOS.user || BOS.user.id !== u.id) return;
+  if (BOS.testAdmin && typeof testAdminApply === 'function') testAdminApply();
   const info = { name: '', team: '', fighter: null, m: 0, w: 0, l: 0, golds: 0, podiums: 0, wins_t: 0 };
   try { const { data } = await sb.from('profiles').select('display_name').eq('id', u.id).maybeSingle(); if (data && data.display_name) info.name = data.display_name; } catch (e) { }
   try {
@@ -15239,6 +15260,7 @@ async function bosLoadInfo() {
   } catch (e) { }
   if (!info.name) info.name = (u.user_metadata && (u.user_metadata.full_name || u.user_metadata.name)) || (u.email || '').split('@')[0];
   BOS.info = info; bosApply();
+  if (typeof testAdminRefresh === 'function') testAdminRefresh();
   if (typeof eventIdentify === 'function') eventIdentify(); // claim this device's earlier guest sessions only after verified sign-in
   if (typeof onbResumeAfterAuth === 'function') onbResumeAfterAuth();
 }
@@ -16017,6 +16039,57 @@ function eventHeartbeat() {
   sendEvent('heartbeat', { level: CAREER.level || 1 });
 }
 setInterval(eventHeartbeat, 60000);
+// Steel & Tape testing powers only; BuhurtOS project administration is not granted.
+function testAdminApply(save = true) {
+  if (typeof BOS === 'undefined' || !BOS.testAdmin) return;
+  let changed = false;
+  if ((CAREER.level || 1) < 100) { CAREER.level = 100; CAREER.xp = 0; changed = true; }
+  if (!Number.isFinite(CAREER.purse) || CAREER.purse < 100000000) { CAREER.purse = 1000000000; changed = true; }
+  if (typeof skillsState === 'function') skillsState();
+  if (changed && save) {
+    if (typeof applyCosmeticUnlocks === 'function') applyCosmeticUnlocks();
+    store.set('career', CAREER);
+    if (typeof updateTitlePurse === 'function') updateTitlePurse();
+  }
+}
+function testAdminRefresh() {
+  const button = document.getElementById('townAdmin');
+  if (button) button.hidden = !BOS.testAdmin;
+  if (!BOS.testAdmin && typeof TOWN !== 'undefined') TOWN.testRunSpeed = 1;
+  if (typeof townHudUpdate === 'function') townHudUpdate();
+}
+function testAdminTeleport(stall) {
+  if (!BOS.testAdmin || !TOWN.on || !stall) return;
+  if (!!stall.mine !== !!TOWN.mineOn) return;
+  if (TOWN.spec) stopSpectating();
+  if (typeof clearWaypoint === 'function') clearWaypoint();
+  const pos = typeof freeNear === 'function' ? freeNear(stall.ax, stall.az) : [stall.ax, stall.az];
+  TOWN.pos = { x: pos[0], z: pos[1] };
+  TOWN.cam = null; TOWN.speed = 0; TOWN.winded = false; TOWN.stam = 1;
+  closeVendor();
+  toastMenu(`Teleported to ${stall.V.name}.`);
+}
+function openTestAdmin() {
+  if (!BOS.testAdmin || !TOWN.on) return;
+  townPanel('Test tools', box => {
+    box.append(h('p', { class: 'muted' }, 'Game-only testing account: level 100, unlimited purchasing power, and endless village sprinting. These powers do not change BuhurtOS permissions.'));
+    const speeds = h('div', { class: 'row townrow' });
+    for (const value of [1, 1.5, 2, 3, 5]) {
+      speeds.append(h('button', { class: 'btn tape small', onclick: () => {
+        if (!BOS.testAdmin) return;
+        TOWN.testRunSpeed = value;
+        toastMenu(`Run speed ${value}×.`);
+      } }, `${value}× speed`));
+    }
+    box.append(h('h3', null, 'Run speed'), speeds, h('h3', null, 'Teleport'));
+    const places = TOWN.stalls.filter(s => !!s.mine === !!TOWN.mineOn && !s.player && !s.node && (!s.secret || secretFound(s.secret.key)));
+    const list = h('div', { class: 'ups shop' });
+    for (const stall of places) list.append(h('div', { class: 'up' },
+      h('div', null, h('b', null, stall.V.name), h('div', { class: 'muted small' }, stall.V.role || 'Destination')),
+      h('button', { class: 'btn primary flagtape small', onclick: () => testAdminTeleport(stall) }, 'Teleport')));
+    box.append(list);
+  });
+}
 // ---------- Account playtime (tracked from this release onward) ----------
 // Count only visible, recently interacted-with gameplay. Store cumulative
 // seconds by account and tab session so offline play survives refresh/restart.
@@ -16322,7 +16395,7 @@ function leaveTown(next) {
   refreshTouchUI();
   if (next) next(); else { G.hub = false; toTitle({ home: true }); }
 }
-function townHudUpdate() { const p = $('#townPurse'); if (p) p.textContent = fmtMoney(CAREER.purse); }
+function townHudUpdate() { const p = $('#townPurse'); if (p) p.textContent = typeof BOS !== 'undefined' && BOS.testAdmin ? '∞' : fmtMoney(CAREER.purse); }
 // walking, camera, who you're next to
 function updateTown(dt) {
   if (!TOWN.on) return; updateMiniMap(dt);
@@ -16341,8 +16414,8 @@ function updateTown(dt) {
   if (isCtl() && IN.mode === 'kb' && walking) { mx = (k.KeyD || k.ArrowRight ? 1 : 0) - (k.KeyA || k.ArrowLeft ? 1 : 0); my = (k.KeyW || k.ArrowUp ? 1 : 0) - (k.KeyS || k.ArrowDown ? 1 : 0); }
   const m = Math.min(1, Math.hypot(mx, my)), sy = Math.sin(TOWN.yaw), cy = Math.cos(TOWN.yaw);
   let vx = 0, vz = 0;
-  const sprint = (PIN.sprint || k.ShiftLeft || k.ShiftRight || m > 0.95 && IN.mode === 'pad' && my > 0.9) && !(TOWN.winded && !TOWN.mounted);
-  const base = TOWN.mounted ? (sprint ? 9 : 5) : (sprint ? 5.4 : 2.7);
+  const sprint = (PIN.sprint || k.ShiftLeft || k.ShiftRight || m > 0.95 && IN.mode === 'pad' && my > 0.9) && !(TOWN.winded && !TOWN.mounted && !(typeof BOS !== 'undefined' && BOS.testAdmin));
+  const base = (TOWN.mounted ? (sprint ? 9 : 5) : (sprint ? 5.4 : 2.7)) * (typeof BOS !== 'undefined' && BOS.testAdmin ? (TOWN.testRunSpeed || 1) : 1);
   if (m > 0.05 && TOWN.spec) stopSpectating();
   if (m > 0.05) {
     const spd = base * m; if (TRAVEL.auto) TRAVEL.auto = false;
@@ -16466,6 +16539,7 @@ function initTown() {
   $('#btnFight').onclick = () => { AU.init(); AU.click(); G.hub = true; enterTown(); };
   $('#townMap').onclick = () => openTownMap();
   $('#townBag').onclick = () => { if (!G.screen) townPanel('Inventory', box => renderInventory(box)); };
+  $('#townAdmin').onclick = () => { if (!G.screen && typeof openTestAdmin === 'function') openTestAdmin(); };
   $('#townMini').onclick = () => { if (!G.screen) openTownMap(); };
   $('#townHorse').onclick = e => { e.stopPropagation(); if (!G.screen) callHorse(); };
   $('#townLeave').onclick = () => { AU.click(); leaveTown(); };
@@ -18617,13 +18691,14 @@ function realmTick(dt) {
   if (TRAVEL.saved && TOWN.pos) { const o = TRAVEL.saved.sun.clone().sub(TRAVEL.saved.sunT); W3.sun.target.position.set(TOWN.pos.x, gy(TOWN.pos.x, TOWN.pos.z), TOWN.pos.z); W3.sun.position.set(TOWN.pos.x + o.x, o.y, TOWN.pos.z + o.z); W3.sun.target.updateMatrixWorld(); }
   // stamina for sprinting
   const run = TOWN.speed > 3.6 && !TOWN.mounted;
+  const testAdmin = typeof BOS !== 'undefined' && BOS.testAdmin;
   // Village travel is intentionally more forgiving than a fight. Lungs talents
   // then improve recovery and reduce the running drain on top of that baseline.
   const breath = G.player && typeof perk === 'function' ? perk(G.player, 'lungs.breath') : 0;
   const marathon = G.player && typeof perk === 'function' ? perk(G.player, 'lungs.marathon') : 0;
   const drain = 0.105 * (marathon ? 0.7 : 1);
   const recovery = 0.30 * (1 + 0.08 * breath);
-  TOWN.stam = clamp((TOWN.stam == null ? 1 : TOWN.stam) + (run ? -drain : recovery) * dt, 0, 1);
+  TOWN.stam = testAdmin ? 1 : clamp((TOWN.stam == null ? 1 : TOWN.stam) + (run ? -drain : recovery) * dt, 0, 1);
   if (TOWN.stam <= 0.01) TOWN.winded = true; if (TOWN.winded && TOWN.stam > 0.35) TOWN.winded = false;
   const sb = $('#townStam'); if (sb) { sb.hidden = TOWN.stam > 0.995; sb.firstChild.style.width = Math.round(TOWN.stam * 100) + '%'; sb.classList.toggle('low', !!TOWN.winded); }
   updateWaypoint(dt); updateHorse(dt); arenaTicker(dt);
