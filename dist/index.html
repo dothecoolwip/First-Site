@@ -1,5 +1,5 @@
 <!doctype html><html><head><meta charset="utf-8"><link rel="manifest" href="manifest.webmanifest"><meta name="theme-color" content="#0f1316"><link rel="apple-touch-icon" href="icon-192.png"><meta name="apple-mobile-web-app-capable" content="yes"><meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover"></head><body>
-<script>window.BUILD_VER="steel-tape-02e7a3c6ab";</script><title>Buhurt: Steel &amp; Tape</title>
+<script>window.BUILD_VER="steel-tape-637fff26e2";</script><title>Buhurt: Steel &amp; Tape</title>
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Barlow+Semi+Condensed:wght@400;500;600;700&family=Big+Shoulders+Display:wght@700;800;900&family=Permanent+Marker&display=swap">
@@ -35,6 +35,16 @@ html,body{height:100%}
 [hidden]{display:none!important}
 body{margin:0;background:var(--rink);color:var(--chalk);font-family:var(--body);font-size:16px;line-height:1.4;overflow:hidden;-webkit-user-select:none;user-select:none;-webkit-tap-highlight-color:transparent;-webkit-touch-callout:none}
 #app{position:fixed;inset:0;overflow:hidden;touch-action:none}
+#startup{position:fixed;inset:0;z-index:9999;display:grid;place-items:center;padding:24px;background:radial-gradient(circle at 50% 38%,#263138 0,#101619 55%,#090d0f 100%);text-align:center}
+.startup-card{width:min(360px,100%)}
+.startup-kicker{display:block;color:var(--flag);font-family:var(--display);font-weight:900;font-size:1.4rem;letter-spacing:.34em}
+.startup-card strong{display:block;margin:8px 0 28px;font-family:var(--display);font-size:clamp(3rem,14vw,5rem);font-weight:900;line-height:.95;letter-spacing:.025em}
+.startup-card strong span{display:block;color:var(--steel)}
+.startup-bar{height:5px;background:#354045;overflow:hidden;border-radius:5px}
+.startup-bar i{display:block;width:35%;height:100%;background:var(--flag);border-radius:5px;animation:startup-scan 1.35s ease-in-out infinite alternate}
+#startupStatus{min-height:1.5em;margin:16px 0 0;color:var(--steel)}
+@keyframes startup-scan{from{transform:translateX(-100%)}to{transform:translateX(290%)}}
+@media (prefers-reduced-motion:reduce){.startup-bar i{animation:none;width:100%}}
 #gl{position:absolute;inset:0;display:block}
 #gl canvas{display:block;width:100%;height:100%;outline:none}
 #visor{position:absolute;inset:0;width:100%;height:100%;pointer-events:none;z-index:5}
@@ -1021,6 +1031,14 @@ body:not(.split) #pips:not([hidden]) ~ #statstrip{top:calc(var(--st) + 78px)}
 .teamdot{width:36px;height:36px;border-radius:50%;background:var(--a);border:3px solid var(--b);display:flex;align-items:center;justify-content:center;font-weight:900;color:#fff;text-shadow:0 1px 2px #000;flex:none}
 
 </style>
+<div id="startup" role="status" aria-live="polite" aria-label="Loading Steel and Tape">
+  <div class="startup-card">
+    <span class="startup-kicker">BUHURT</span>
+    <strong>STEEL <span>&amp; TAPE</span></strong>
+    <div class="startup-bar" aria-hidden="true"><i></i></div>
+    <p id="startupStatus">Loading the arena…</p>
+  </div>
+</div>
 <div id="app">
   <div id="gl"></div>
   <canvas id="visor" hidden></canvas>
@@ -1101,7 +1119,7 @@ body:not(.split) #pips:not([hidden]) ~ #statstrip{top:calc(var(--st) + 78px)}
   </div>
 
   <!-- TITLE -->
-  <section class="screen" id="title">
+  <section class="screen" id="title" hidden>
     <div class="titlewrap">
       <div class="brand">
         <div class="kicker">Buhurt</div>
@@ -13060,14 +13078,15 @@ function refreshDaily() { const S = dailyState(), P = dailyPlan(); $('#btnDaily'
 function toTitle(opts) {
   // Account gate must run even for old completed saves and callers using skipOnb/home.
   if (typeof onbAccountGate === 'function' && onbAccountGate()) return;
-  if (typeof onbTitle === 'function' && !(opts && opts.skipOnb) && onbStage() !== 'done' && onbStage() !== 'tour') { G.bracket = null; G.paused = false; setHud(false); G.autopilot = false; G.autoflow = false; endTraining(); if (onbTitle()) return; }
-  if (G.hub && !(opts && opts.home) && typeof enterTown === 'function') { enterTown(TOWN.returnTo); return; }
+  if (typeof onbTitle === 'function' && !(opts && opts.skipOnb) && onbStage() !== 'done' && onbStage() !== 'tour') { G.bracket = null; G.paused = false; setHud(false); G.autopilot = false; G.autoflow = false; endTraining(); if (onbTitle()) { startupDone(); return; } }
+  if (G.hub && !(opts && opts.home) && typeof enterTown === 'function') { enterTown(TOWN.returnTo); startupDone(); return; }
   G.bracket = null; VS.names = null; refreshDaily(); if (LOBBY.pending) setTimeout(showInvite, 400);
   G.paused = false; setHud(false); G.autopilot = false; G.autoflow = false; AU.music(true); endTraining(); updateTitlePurse();
   $('#trainBadge').hidden = !!CAREER.trained || CAREER.stats.matches > 2;
   startAttract();
   $('#btnContinue').hidden = !store.get('tourney', null);
   showScreen('title');
+  startupDone();
 }
 function startAttract() {
   G.attract = true; G.tourney = null;
@@ -15411,7 +15430,9 @@ function liveBoutPick(A) {
 // character creator, then a skippable tour of the realm when you walk in. Anyone who played before the creator existed
 // gets the creator (and the tour) the next time they open the game.
 // ===================================================================
-const ONB = { tour: null, awaitingAuth: false, fresh: !store.get('career', null) };
+const ONB = { tour: null, awaitingAuth: false, startup: true, fresh: !store.get('career', null) };
+function startupStatus(text) { const el = $('#startupStatus'); if (el) el.textContent = text; }
+function startupDone() { if (!ONB.startup) return; ONB.startup = false; const el = $('#startup'); if (el) el.hidden = true; }
 function onbStage() {
   if (CAREER.onboard) return CAREER.onboard;
   if (CAREER.stats.matches > 0) return 'create';
@@ -15436,6 +15457,7 @@ function onbAccountGate(forceAccount) {
   if (location.protocol === 'file:' && window.__steeltapeTest && !window.__onboard) return false;
   if (BOS.booting) {
     ONB.awaitingAuth = true;
+    if (ONB.startup) { startupStatus('Checking your BuhurtOS sign-in…'); return true; }
     if (!(G.screen === 'msgScr' && $('#msgPanel')?.textContent.includes('Restoring your account'))) {
       msg('account', 'Restoring your account', '<p>Checking your BuhurtOS sign-in and saved fighter…</p>', []);
       const back = $('#msgPanel .back'); if (back) back.hidden = true;
@@ -15451,6 +15473,7 @@ function onbAccountGate(forceAccount) {
     if (typeof CLOUD !== 'undefined' && !CLOUD.ready && !CLOUD.offline) {
       ONB.awaitingAuth = true;
       if (!CLOUD.loading && !CLOUD.holding) cloudOnAuth(BOS.user.id, true);
+      if (ONB.startup) { startupStatus('Restoring your fighter and inventory…'); return true; }
       if (!CLOUD.holding && !(G.screen === 'msgScr' && $('#msgPanel')?.textContent.includes('Cloud save'))) {
         msg('link save', 'Connecting your game save', '<p>Checking your saved character and inventory before you continue. Your local progress is still on this device.</p>', []);
       }
@@ -15462,6 +15485,7 @@ function onbAccountGate(forceAccount) {
   // This backup is local and temporary. A cloud save is only linked after verified login.
   if (typeof cloudPrepareGuestLink === 'function') cloudPrepareGuestLink();
   if (!(G.screen === 'msgScr' && $('#bosEmail'))) creatorSignIn();
+  startupDone();
   return true;
 }
 function onbResumeAfterAuth() {
