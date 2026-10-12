@@ -4,6 +4,36 @@
 const CLOUD = { uid:null, revision:0, ready:false, holding:false, loading:null, busy:false, timer:null, lastHash:'', optedOut:false, applying:false };
 const CLOUD_META = 'steeltape-cloud-link-v1';
 const CLOUD_BACKUP = 'steeltape-local-backup-v1-';
+
+const CLOUD_GUEST_BACKUP = 'steeltape-unlinked-guest-save-v1-';
+function cloudPrepareGuestLink() {
+  // A name is not proof of account ownership. Before sign-in preserve the ENTIRE
+  // unlinked game save on this device, then attach it only to the authenticated UID.
+  try {
+    const snapshot = cloudSnapshot(), hash = cloudHash(snapshot);
+    if (!cloudMeaningful(snapshot)) return true;
+    const prior = [];
+    for (let i = 0; i < localStorage.length; i++) {
+      const key = localStorage.key(i);
+      if (key && key.startsWith(CLOUD_GUEST_BACKUP)) prior.push(key);
+    }
+    prior.sort();
+    if (prior.length) {
+      try {
+        const existing = JSON.parse(localStorage.getItem(prior[prior.length - 1]));
+        if (existing && existing.hash === hash) return true;
+      } catch (e) { /* make a fresh copy */ }
+    }
+    const key = CLOUD_GUEST_BACKUP + new Date().toISOString() + '-' + Math.floor(Math.random() * 10000);
+    // Write new backup FIRST; never replace the only prior backup in place.
+    localStorage.setItem(key, JSON.stringify({createdAt:new Date().toISOString(),hash,snapshot}));
+    while (prior.length > 1) localStorage.removeItem(prior.shift());
+    return true;
+  } catch (error) {
+    console.warn('Could not create additional guest backup. Existing local game data was not changed.',error);
+    return false;
+  }
+}
 function cloudReadMeta() { try { return JSON.parse(localStorage.getItem(CLOUD_META) || 'null'); } catch (e) { return null; } }
 function cloudWriteMeta(uid, revision, hash) {
   localStorage.setItem(CLOUD_META, JSON.stringify({ uid, revision, hash, at:new Date().toISOString() }));
@@ -99,6 +129,7 @@ function cloudReady(uid,revision,snapshot) {
   if(CLOUD.uid!==uid)return;
   CLOUD.revision=Number(revision);CLOUD.lastHash=cloudHash(snapshot);CLOUD.ready=true;CLOUD.holding=false;CLOUD.optedOut=false;
   cloudWriteMeta(uid,CLOUD.revision,CLOUD.lastHash);
+  if(typeof onbResumeAfterAuth==='function')setTimeout(onbResumeAfterAuth,0);
 }
 function cloudRestore(uid,revision,remoteSnapshot) {
   if(CLOUD.uid!==uid)return;
@@ -145,7 +176,7 @@ function cloudResolveChoice(uid,remote,local) {
         const ok=await cloudCommit(uid,remote.revision,cloudSnapshot());
         if(!ok){await cloudStart(uid,true);}else {try{toastMenu('This device is now backed up to the cloud.');}catch(e){}}
       }catch(e){cloudProblem(uid,e);}resolve();}},
-      {label:'Play locally for now',secondary:true,run:()=>{CLOUD.ready=false;CLOUD.holding=false;CLOUD.optedOut=true;resolve();}}
+      {label:'Play locally for now',secondary:true,run:()=>{CLOUD.ready=false;CLOUD.holding=false;CLOUD.optedOut=true;if(typeof onbResumeAfterAuth==='function')onbResumeAfterAuth();resolve();}}
     ]);
   });
 }
@@ -154,7 +185,7 @@ function cloudProblem(uid,error) {
   CLOUD.ready=false;CLOUD.holding=false;
   const explanation = 'Your device save has not been deleted or replaced.\n\n'+String(error && error.message || error)+
    '\n\nCloud backup is not active on this device. You can keep playing locally and retry after reconnecting.';
-  cloudOverlay('Cloud save needs attention',explanation,[{label:'Play locally for now',run:()=>{CLOUD.optedOut=true;}},{label:'Try again',secondary:true,run:()=>{CLOUD.optedOut=false;cloudOnAuth(uid,true);}}]);
+  cloudOverlay('Cloud save needs attention',explanation,[{label:'Play locally for now',run:()=>{CLOUD.optedOut=true;if(typeof onbResumeAfterAuth==='function')onbResumeAfterAuth();}},{label:'Try again',secondary:true,run:()=>{CLOUD.optedOut=false;cloudOnAuth(uid,true);}}]);
 }
 async function cloudStart(uid,retry) {
   if(CLOUD.uid!==uid)return;
