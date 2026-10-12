@@ -18,7 +18,23 @@ async function bosClient() {
   if (BOS.sb) return BOS.sb;
   const lib = await loadSupabaseLib();
   BOS.sb = lib.createClient(BOS_URL, BOS_KEY, { auth: { persistSession: true, autoRefreshToken: true, detectSessionInUrl: true, storageKey: 'buhurt-game-buhurtos' } });
-  BOS.sb.auth.onAuthStateChange((evt, session) => { BOS.user = session ? session.user : null; if (BOS.user) bosLoadInfo(); else { if (typeof cloudOnSignOut === 'function') cloudOnSignOut(); BOS.info = null; bosApply(); } });
+  BOS.sb.auth.onAuthStateChange((evt, session) => {
+    const previous = BOS.user;
+    BOS.user = session ? session.user : null;
+    if (BOS.user) bosLoadInfo();
+    else {
+      if (typeof cloudOnSignOut === 'function') cloudOnSignOut();
+      BOS.info = null; bosApply();
+      if (evt === 'SIGNED_OUT' && previous && typeof onbAccountRequired === 'function' && onbAccountRequired()) {
+        // No guest gameplay is allowed after tutorial, including after a logout.
+        setTimeout(() => {
+          if (BOS.user) return;
+          if (typeof TOWN !== 'undefined' && TOWN.on) leaveTown(() => toTitle({home:true}));
+          else toTitle();
+        }, 0);
+      }
+    }
+  });
   return BOS.sb;
 }
 // on start: pick up a saved sign-in (or one coming back from Google / Discord) without loading anything otherwise
@@ -48,6 +64,7 @@ async function bosLoadInfo() {
   } catch (e) { }
   if (!info.name) info.name = (u.user_metadata && (u.user_metadata.full_name || u.user_metadata.name)) || (u.email || '').split('@')[0];
   BOS.info = info; bosApply();
+  if (typeof onbResumeAfterAuth === 'function') onbResumeAfterAuth();
 }
 // your BuhurtOS name becomes your fighter's name; everyone online sees the BuhurtOS tick and your real record
 function bosApply() {
