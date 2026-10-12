@@ -60,6 +60,15 @@ table{width:100%;border-collapse:collapse;font-size:.9rem}th,td{text-align:left;
 </div>
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2.45.4/dist/umd/supabase.min.js"></script>
 <script>
+// Remove only obsolete admin HTML from Cache Storage, never the game's offline assets.
+if ('caches' in window) caches.keys().then(names => Promise.all(names.map(async name => {
+  const cache = await caches.open(name);
+  const requests = await cache.keys();
+  await Promise.all(requests.filter(request => {
+    const url = new URL(request.url);
+    return url.origin === location.origin && /^\/admin(?:[.\/-]|$)/.test(url.pathname);
+  }).map(request => cache.delete(request)));
+}))).catch(() => {});
 // Force an update of older game service workers that cached the original admin page.
 if ('serviceWorker' in navigator) navigator.serviceWorker.getRegistration().then(reg => { if (reg) return reg.update(); }).catch(() => {});
 const URL_ = 'https://mvbxlebznlgroptwwdsm.supabase.co', KEY = 'sb_publishable_u76M-dggKSsdsyhUQKveJg_5fPJ5Nan';
