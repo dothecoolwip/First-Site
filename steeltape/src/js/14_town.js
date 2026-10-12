@@ -126,7 +126,7 @@ function buildTown() {
   const RX = LIST.W / 2 + 4, RZ = LIST.L / 2 + 4;
   for (const [x, z] of [[-RX - 9, -10], [-RX - 10, 4], [-RX - 9, 16], [RX + 9, -14], [RX + 10, 2], [RX + 9, 15], [-8, -RZ - 10], [9, -RZ - 10]]) TOWN.obst.push({ x, z, r: 2.7 });
   for (const V of VENDORS) if (!V.custom) buildStall(V);
-  buildSpecialVendors(); buildWorld(); navBuild(); buildGatherNodes(TOWN.root); buildSecrets(TOWN.root); navBuild(); realmCells();
+  buildSpecialVendors(); buildWorld(); buildSpawnBoards(); navBuild(); buildGatherNodes(TOWN.root); buildSecrets(TOWN.root); navBuild(); realmCells();
   buildHome(); buildStatue(); buildAvatar(); buildMyPet(); buildWaypoint(); buildAnimals(); buildArenaSeats(); navBuild();
 }
 // the field venue's own cottages and tree ring would sit in the middle of the festival: hide them in town
@@ -232,6 +232,7 @@ function updateTown(dt) {
   TOWN.actPrev = act;
   if (walking && TOWN.frame++ % 20 === 0) townHudUpdate();
   updateWorld(dt);
+  boardTick();
 }
 function townTalk(S) { if (S.open) S.open(); else openVendor(S.V.key); }
 function townCollide() {
