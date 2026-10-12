@@ -39,15 +39,28 @@ function cloudWriteMeta(uid, revision, hash) {
   localStorage.setItem(CLOUD_META, JSON.stringify({ uid, revision, hash, at:new Date().toISOString() }));
 }
 function cloudSnapshot() {
-  // Keep the in-memory fighter authoritative even when gameplay has not called saveCareer yet.
-  try { if (typeof CAREER !== 'undefined') localStorage.setItem('st-career', JSON.stringify(CAREER)); } catch (e) { }
-  const snapshot = {};
-  for (let i=0; i<localStorage.length; i++) {
-    const key = localStorage.key(i);
-    if (!key || !key.startsWith('st-') || key.startsWith('st-cloud-')) continue;
-    try { snapshot[key] = JSON.parse(localStorage.getItem(key)); } catch (e) { }
+  // All persistent gameplay keys (including ones added in later releases) form ONE
+  // atomic versioned snapshot. Never silently omit a key that cannot be read.
+  if (typeof CAREER !== 'undefined') {
+    const career = JSON.stringify(CAREER);
+    if (!career) throw Error('Could not serialize your character; nothing was uploaded.');
+    localStorage.setItem('st-career', career);
   }
-  if (!('st-career' in snapshot)) snapshot['st-career'] = typeof CAREER !== 'undefined' ? JSON.parse(JSON.stringify(CAREER)) : {};
+  const snapshot = {};
+  const keys = [];
+  for (let i = 0; i < localStorage.length; i++) {
+    const key = localStorage.key(i);
+    if (key && key.startsWith('st-') && !key.startsWith('st-cloud-')) keys.push(key);
+  }
+  keys.sort();
+  for (const key of keys) {
+    const raw = localStorage.getItem(key);
+    if (raw === null) throw Error('A save section disappeared while preparing your backup: ' + key);
+    try { snapshot[key] = JSON.parse(raw); }
+    catch (error) { throw Error('Cannot safely back up unreadable section ' + key + '. Your local data was preserved.'); }
+  }
+  if (!snapshot['st-career'] || typeof snapshot['st-career'] !== 'object' || Array.isArray(snapshot['st-career']))
+    throw Error('The character save is missing or invalid. Nothing was uploaded.');
   return snapshot;
 }
 function cloudCanonical(value) {
@@ -79,10 +92,21 @@ function cloudMeaningful(snapshot) {
     if (c.ach && Object.keys(c.ach).length) return true;
     if (c.stats && Object.values(c.stats).some(value => Number(value) > 0)) return true;
     if (c.upgrades && Object.values(c.upgrades).some(value => Number(value) > 0)) return true;
-    for (const k of ['shop','trades','bag','skills','s2','items','gear','records','looks','housing','owned','inventory','furnish','smith']) {
-      if (c[k] && typeof c[k] === 'object' && Object.keys(c[k]).length) return true;
+    // Shop and smith default objects are populated on a brand-new device: their
+    // mere presence is NOT evidence of actual player progress.
+    const shop = c.shop || {};
+    if (Number(shop.spent || 0) > 0 ||
+        ['wq','aq','owned','boost','lv'].some(key =>
+          shop[key] && Object.values(shop[key]).some(value => value !== 0 && value !== false && value != null)) ||
+        ['squires','hall','yard','home','spBought'].some(key => Number(shop[key] || 0) > 0)) return true;
+    if (c.smith && c.smith.forged) return true;
+    for (const k of ['trades','bag','skills','s2','items','gear','records','looks','housing','owned','inventory','furnish']) {
+      if (c[k] && typeof c[k] === 'object' &&
+          Object.values(c[k]).some(value => typeof value === 'object'
+            ? value && Object.keys(value).length > 0
+            : value !== 0 && value !== false && value != null && value !== '')) return true;
     }
-    if (c.onboard && c.onboard !== 'start' && c.onboard !== 'new') return true;
+    if (c.onboard && !['fight','start','new'].includes(c.onboard)) return true;
   }
   const harmless = new Set(['st-career','st-muted','st-settings3','st-split','st-loadout','st-category','st-onlineKit','st-onlineL','st-quickMods','st-couchPicks','st-bracketNames','st-bosRoster','st-lobbyName']);
   return Object.keys(snapshot).some(k => !harmless.has(k));
@@ -96,9 +120,10 @@ function cloudBackup(uid, snapshot) {
   const existing = [];
   for (let i=0;i<localStorage.length;i++) { const key=localStorage.key(i);if(key && key.startsWith(prefix))existing.push(key); }
   existing.sort();
-  while(existing.length>=3) localStorage.removeItem(existing.shift());
   const key = prefix + new Date().toISOString() + '-' + Math.floor(Math.random()*10000);
+  // Never delete an earlier backup before successfully writing the replacement.
   localStorage.setItem(key, JSON.stringify({createdAt:new Date().toISOString(),account:uid,snapshot}));
+  while(existing.length>=2) localStorage.removeItem(existing.shift());
   return key;
 }
 function cloudOverlay(title, description, actions) {
@@ -127,8 +152,11 @@ async function cloudRpc(name,args) {
 }
 function cloudReady(uid,revision,snapshot) {
   if(CLOUD.uid!==uid)return;
-  CLOUD.revision=Number(revision);CLOUD.lastHash=cloudHash(snapshot);CLOUD.ready=true;CLOUD.holding=false;CLOUD.optedOut=false;
-  cloudWriteMeta(uid,CLOUD.revision,CLOUD.lastHash);
+  const hash = cloudHash(snapshot);
+  // If the acknowledgement cannot be persisted locally, don't pretend this
+  // device is synced: the next session must compare its save explicitly.
+  cloudWriteMeta(uid,Number(revision),hash);
+  CLOUD.revision=Number(revision);CLOUD.lastHash=hash;CLOUD.ready=true;CLOUD.holding=false;CLOUD.optedOut=false;
   if(typeof onbResumeAfterAuth==='function')setTimeout(onbResumeAfterAuth,0);
 }
 function cloudRestore(uid,revision,remoteSnapshot) {
