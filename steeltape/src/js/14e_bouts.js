@@ -10,7 +10,7 @@ function boutPick() {
   const two = arr => { const a = pick(arr); let b = pick(arr), g = 0; while (b === a && g++ < 20) b = pick(arr); return [a, b]; };
   const cat = pick(['men', 'men', 'women']), small = BOUT_TOUCH(), r = Math.random();
   BOUT.n++;
-  if (r < 0.34 && lad.length > 1) { const [a, b] = two(lad); return { mode: 1, clubA: a, opp: b, category: cat, label: (cat === 'women' ? "Women's" : "Men's") + ' duel' }; }
+  if (r < 0.34 && lad.length > 1) { const [a, b] = two(lad); return { mode: 1, clubA: a, opp: b, category: cat, label: 'Adult duel' }; }
   const bosK = typeof rosterClubKeys === 'function' ? rosterClubKeys(3) : [];
   const [a, b] = bosK.length >= 2 && Math.random() < 0.7 ? two(bosK) : two(teams);
   if (r < 0.52) return { mode: 2, clubA: a, opp: b, category: cat, label: '2 v 2' };
