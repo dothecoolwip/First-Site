@@ -1,5 +1,5 @@
 <!doctype html><html><head><meta charset="utf-8"><link rel="manifest" href="manifest.webmanifest"><meta name="theme-color" content="#0f1316"><link rel="apple-touch-icon" href="icon-192.png"><meta name="apple-mobile-web-app-capable" content="yes"><meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover"></head><body>
-<script>window.BUILD_VER="steel-tape-0238d63368";</script><title>Buhurt: Steel &amp; Tape</title>
+<script>window.BUILD_VER="steel-tape-575dccad41";</script><title>Buhurt: Steel &amp; Tape</title>
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Barlow+Semi+Condensed:wght@400;500;600;700&family=Big+Shoulders+Display:wght@700;800;900&family=Permanent+Marker&display=swap">
@@ -8724,7 +8724,7 @@ function playerLunge(f, kind, t) {
   f.vel.x = d.x * v; f.vel.z = d.z * v; f.dashT = 0.13;
 }
 function updateAction(f, dt) {
-  const a = f.action; if (!a) return; a.t += dt;
+  const a = f.action; if (!a) return; const previousT = a.t; a.t += dt;
   if (a.kind === 'swing') {
     const T = swingTimes(f);
     if (a.phase === 'windup') {
@@ -8740,8 +8740,14 @@ function updateAction(f, dt) {
         if (a.charge > 0.3 && chance(f.isPlayer ? 0.6 : 0.2)) AU.grunt(f.isPlayer ? 0.7 : vol(f) * 0.4);
       }
     } else if (a.phase === 'strike') {
-      if (!a.hit && a.t >= T.strike * 0.55) { a.hit = true; resolveSwing(f, a); }
-      if (a.t >= T.strike) { a.phase = 'recover'; a.t = 0; }
+      if (!a.hit && G.match && G.match.duel && !CUTE.on) {
+        const target = sweptSwingTarget(f, a, clamp(previousT / T.strike, 0, 1), clamp(a.t / T.strike, 0, 1));
+        if (target) { a.hit = true; resolveSwing(f, a, target); }
+      } else if (!a.hit && a.t >= T.strike * 0.55) { a.hit = true; resolveSwing(f, a); }
+      if (a.t >= T.strike && a.phase === 'strike') {
+        if (!a.hit) { a.hit = true; resolveSwing(f, a, null); }
+        a.phase = 'recover'; a.t = 0;
+      }
     } else if (a.t >= T.rec * (a.whiff ? 1.35 : 1)) { f.action = null; f.cd = 0.04; }
     return;
   }
@@ -8814,10 +8820,37 @@ function findTarget(f, range, cone, includeDown) {
   return best;
 }
 
-function resolveSwing(f, a) {
+// Duels trace the striking part of the weapon through its actual arc. A
+// target has to intersect the sweep; being merely nearby is not enough.
+function sweptSwingTarget(f, a, from, to) {
+  if (!f.weapon) return null;
+  const reach = 0.6 + f.weapon.len * 0.92 + f.reachB + 0.1 * perk(f, 'steel.reaper');
+  const steps = Math.max(1, Math.ceil((to - from) / 0.035));
+  for (let i = 0; i <= steps; i++) {
+    const p = from + (to - from) * i / steps;
+    if (a.arc === 'O' && (p < 0.28 || p > 0.76)) continue;
+    const sweep = a.arc === 'O' ? 0 : (a.arc === 'R2L' ? 1 : -1) * (1.15 - 2.3 * p);
+    const dir = fwd(f.facing + sweep);
+    let best = null, nearest = Infinity;
+    for (const o of G.fighters) {
+      if (o === f || o.team === f.team || o.out || (!isUp(o) && !(a.arc === 'O' && isDown(o)))) continue;
+      const pos = isDown(o) ? o.groundPos : o.pos;
+      const dx = pos.x - f.pos.x, dz = pos.z - f.pos.z;
+      const along = dx * dir.x + dz * dir.z;
+      const side = Math.abs(dx * dir.z - dz * dir.x);
+      const radius = (isDown(o) ? 0.3 : o.radius) + 0.12;
+      if (along + radius < 0.35 || along - radius > reach || side > radius) continue;
+      if (along < nearest) { nearest = along; best = o; }
+    }
+    if (best) return best;
+  }
+  return null;
+}
+
+function resolveSwing(f, a, contact) {
   const w = f.weapon; if (!w) return;
   const reach = 0.6 + w.len * 0.92 + f.reachB + 0.1 * perk(f, 'steel.reaper');
-  const t = findTarget(f, reach, a.arc === 'O' ? 0.55 + 0.1 * perk(f, 'steel.overhead') : 1.25, a.arc === 'O');
+  const t = contact === undefined ? findTarget(f, reach, a.arc === 'O' ? 0.55 + 0.1 * perk(f, 'steel.overhead') : 1.25, a.arc === 'O') : contact;
   if (!t) { // whiff: over-commit
     a.whiff = true; const fw = fwd(f.facing); applyImpulse(f, fw, (0.32 + 0.4 * a.charge) * (G.player && f !== G.player && f.team !== 0 && dist2(G.player.pos, f.pos) < reach + 0.6 && perk(G.player, 'lungs.slip') ? 1.25 : 1));
     if (f.isPlayer) { toast('Miss', 'bad', a.charge > 0.5 ? 'Big swings over-commit you' : ''); ev('miss'); }
@@ -14043,7 +14076,7 @@ async function boot(hot) {
   if (location.hash === '#autotest') setTimeout(autotest, 300);
   window.__ST = { G, AU, buildShield, buildWeapon, W3, startTourney, quickFight, toTitle, openRepair, kitCheck, setupMatch, toTactics, beginFight, endRound, matchEnd, CLUBS, WEAPONS, setView, toast, renderKitPicker, applyLoadout, IN, FP, showScreen, weaponIcon, startCine, startTraining, startLadder, openCareer, openModes, openLadder, CAREER, setLesson, TR, unlock, togglePause, afterRound, renderHow, selectPiece, selectTape, msg, renderSheet, setHud, endTraining, setMode, PAD, navMove, focusFirst, sparks, CUTE, THREE, BREATH, setCuteDeco, flipFx, PHOTO, UAL, raiseFlags, startVersus, startFFA, startBracket, startKid, KID, openSeason, startSeasonMatch, setVenue, VS, SPLIT, NET, buildOnlineMatch, hostLobby, joinLobby, ONL, vinControl, openRun, openDaily, openBracket, showBracket, bracketResult, ffaMatchEnd, ffaLeader, ffaWinner, endKid, openPhoto, closePhoto, startReplay, stopReplay, RP, store, startRunFight, newRun, runEnd, WX, setWeather, padVin, readVersus, applyLo, myLoadout, netDropped, netLeave, showIntro, installForged, dailyPlan, openKids, openVersus, openPicks, LESSONS, rivalClub, startGrudge, startDaily, seasonState, newSeason, refreshDaily, VENUES, COMM, hitMapHtml, resetFighterForRound, DIFF, PIN, PADS, NIN, padsUpdate, seatPads, LOBBY, MM, openOnlineHub, benchDown, benchMove, REP, squirePatch, coverage, openProfile, myProfile, BOS, updateTitlePurse, ACH, progressCheck, challenges, masteryOf, S2, rankOf, counterValue, renderCareer, progressMatch, saveCareer, shopState, shopUp, tapeLeft, shopMatchEnd, shopPrizeMult, shopXpMult, swingTimes, pieceWearMult, TABARDS, refillTape, renderShop, UPGRADES, freshKit, TAPE_STOCK, enterTown, leaveTown, TOWN, openVendor, closeVendor, openTownMap, shopFx, renderVendor, VENDORS, ITEMS, itemCost, spCost, skillRoom, sponsorIncome, BOOSTS, STALL_AT, HOMES, FURNISH, pfx, squadFx, boostKit, townCollide, townRefresh, townWalkTo, townTalk, townTeardown, lookState, WORLD, guildCheck, STATIONS, townDressMe, FOLK, updateFolk, navBlocked, buildFolk, BOUT, boutStart, boutStop, boutTick, drawTownMap, updateMiniMap, costumePerson, OUTFIT, buildSkinWeapon, skinIcon, wskinList, skinFor, buildMyWeapon, wskinFamOf, GATHER, startGather, gatherSwing, stopGather, tradeState, tradeLevel, tradeGain, give, have, craft, NODES, MATS, renderTrades, TRADE_SKILLS, ARENAS, DISTRICTS, TRAVEL, setWaypoint, clearWaypoint, realmPath, callHorse, mount, dismount, ANIMAL, districtAt, realmCull, REALM_TIERS, gateOpen, townJump, stableRows, horseAvailable, peopleCull, boutArenaFor, arenaLive, bagSlots, bagState, bagRoom, secretFound, lookOwned, SECRETS, stopSpectating, startTrial, TRIALS, tierCap, gy, tierOf, HILL, hillHouses, cliffAt, gateBlocked, arenaBlocked, localPath, NAV, rampAt, ROSTER, rosterClubs, rosterLive, rosterName, liveBoutPick, aiTier, AI_TIER, guardOutcome, fighterGlow, ONB, onbStage, onbSet, openCreator, tourStart, tourEnd, TOUR_STOPS, THRONE, throneHolder, throneFight, throneBow, openThrone, sideFromDrag, VOICE };
   if (location.protocol === 'file:' && window.__steeltapeTest)
-    Object.assign(window.__ST, { penalize, failPiece, closeRepair, xpNeed, tierProf, runToRepairCorner, onbAfterAccount, onbAccountGate, onbResumeAfterAuth, leaveTarget, leaveScreen, CLOUD, bosLoadInfo, bosBoot, swingLeverage, weaponBindPossible, resolveSwing, think });
+    Object.assign(window.__ST, { penalize, failPiece, closeRepair, xpNeed, tierProf, runToRepairCorner, onbAfterAccount, onbAccountGate, onbResumeAfterAuth, leaveTarget, leaveScreen, CLOUD, bosLoadInfo, bosBoot, swingLeverage, weaponBindPossible, resolveSwing, sweptSwingTarget, updateAction, think });
 }
 
 function autotest() {
