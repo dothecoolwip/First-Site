@@ -1,5 +1,5 @@
 <!doctype html><html><head><meta charset="utf-8"><link rel="manifest" href="manifest.webmanifest"><meta name="theme-color" content="#0f1316"><link rel="apple-touch-icon" href="icon-192.png"><meta name="apple-mobile-web-app-capable" content="yes"><meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover"></head><body>
-<script>window.BUILD_VER="steel-tape-ff3d9f9f57";</script><title>Buhurt: Steel &amp; Tape</title>
+<script>window.BUILD_VER="steel-tape-f8c765b751";</script><title>Buhurt: Steel &amp; Tape</title>
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Barlow+Semi+Condensed:wght@400;500;600;700&family=Big+Shoulders+Display:wght@700;800;900&family=Permanent+Marker&display=swap">
@@ -15396,15 +15396,25 @@ function liveBoutPick(A) {
 // character creator, then a skippable tour of the realm when you walk in. Anyone who played before the creator existed
 // gets the creator (and the tour) the next time they open the game.
 // ===================================================================
-const ONB = { tour: null, awaitingAuth: false };
-function onbStage() { return CAREER.onboard || (CAREER.stats.matches > 0 ? 'create' : 'fight'); }
+const ONB = { tour: null, awaitingAuth: false, fresh: !store.get('career', null) };
+function onbStage() {
+  if (CAREER.onboard) return CAREER.onboard;
+  if (CAREER.stats.matches > 0) return 'create';
+  if (ONB.fresh) {
+    // A returning account can have a session on this browser but no local game save yet.
+    let session = false;
+    try { session = !!localStorage.getItem('buhurt-game-buhurtos'); } catch (e) { }
+    return BOS.user || session ? 'create' : 'choice';
+  }
+  return 'fight';
+}
 function onbSet(st) { CAREER.onboard = st; saveCareer(); }
 // Production game policy: no guest play beyond the first instructional fight.
 // Tests that run from file: explicitly opt in to their isolated mock accounts.
 function onbAccountRequired() {
   // Never allow a hosted game URL parameter to bypass sign-in.
   if (location.protocol === 'file:' && window.__steeltapeTest && !window.__onboard) return false;
-  return onbStage() !== 'fight';
+  return !['choice', 'fight'].includes(onbStage());
 }
 function onbAccountGate(forceAccount) {
   // Direct entry to the town requires a linked account even if the tutorial is unfinished.
@@ -15442,10 +15452,24 @@ function onbTitle() {
   const st = onbStage();
   if (onbAccountGate()) return true;
   if (st === 'done' || G.autoflow || location.hash === '#autotest' || G.noOnboard) return false;
+  if (st === 'choice') { onbWelcome(); return true; }
   if (st === 'fight') { onbTestFight(); return true; }
   if (st === 'help') { onbHelp(); return true; }
   if (st === 'create') { openCreator(); return true; }
   return false; // 'tour' happens in town
+}
+function onbWelcome() {
+  msg('welcome', 'Welcome to Steel & Tape', '<p>Is this your first time playing, or do you already have an account?</p><p class="muted small">New players start with a short practice fight. Returning players can sign in to restore their saved fighter and progress.</p>',
+    [['First time playing', () => { onbSet('fight'); onbTestFight(); }, true],
+      ['I have an account', () => {
+        onbSet('create');
+        openBosSignIn(() => {
+          if (BOS.user) openCreator();
+          else { onbSet('choice'); onbWelcome(); }
+        });
+      }]]);
+  // The initial choice has no previous screen; Back must not bypass it.
+  const back = $('#msgPanel .back'); if (back) back.hidden = true;
 }
 // ---- the test fight: a 5 v 5, no instructions, the buttons shown once
 function onbTestFight() {
