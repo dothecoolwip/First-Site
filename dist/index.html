@@ -1,5 +1,5 @@
 <!doctype html><html><head><meta charset="utf-8"><link rel="manifest" href="manifest.webmanifest"><meta name="theme-color" content="#0f1316"><link rel="apple-touch-icon" href="icon-192.png"><meta name="apple-mobile-web-app-capable" content="yes"><meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover"></head><body>
-<script>window.BUILD_VER="steel-tape-d88cb21334";</script><title>Buhurt: Steel &amp; Tape</title>
+<script>window.BUILD_VER="steel-tape-459ef3db6f";</script><title>Buhurt: Steel &amp; Tape</title>
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Barlow+Semi+Condensed:wght@400;500;600;700&family=Big+Shoulders+Display:wght@700;800;900&family=Permanent+Marker&display=swap">
@@ -12875,9 +12875,11 @@ function renderSheet(extraTitle) {
 function leaveTarget() {
   const m = G.match;
   if (!m || G.attract) return toTitle;
+  if (m.test) return () => { clearMatch(); G.match = null; G.phase = ''; onbSet('choice'); G.hub = false; toTitle({ home: true }); };
   if (m.ladder != null) return () => { toTitle(); openLadder(); };
   if (G.tourney || m.run || m.season || m.daily || m.rival || m.online || m.kids || m.training || m.trial || m.throne) return toTitle;
   if (m.versus) return () => { toTitle(); openVersus(); };
+  if (G.hub) return toTitle;
   return () => { toTitle(); openModes(); };
 }
 function leaveScreen() {
@@ -12947,7 +12949,7 @@ function matchEnd() {
   }
   // red cards carry into the next match (REG 6.3.3)
   if (G.tourney) for (const f of G.fighters) if (f.team === 0) { G.tourney.reds[f.spec.num] = Math.max(0, (f.redMatches || 0) - 1); }
-  if (!G.tourney) { msg('full time', won ? 'Won' : drawn ? 'Draw' : 'Lost', withPurse(), [['Rematch', () => quickFight(m.mode, m.opp, m.pro ? { pro: true } : undefined)], ['Title', toTitle, true]]); return; }
+  if (!G.tourney) { msg('full time', won ? 'Won' : drawn ? 'Draw' : 'Lost', withPurse(), [['Rematch', () => quickFight(m.mode, m.opp, m.pro ? { pro: true } : undefined)], [G.hub ? 'Return to town' : 'Title', toTitle, true]]); return; }
   const T = G.tourney; T.results.push({ stage: m.stage, won, score: `${m.wins[0]}–${m.wins[1]}` });
   const bonus = won && T.stage === 0 ? 150 : won ? 400 : m.stage === 'Final' ? 100 : 0;
   if (bonus && pay0) { pay(bonus); pay0.money += bonus; pay0.lines.push(`Rumble ${won && T.stage === 1 ? 'title' : won ? 'semi-final' : 'runner-up'} ${fmtMoney(bonus)}`); purseHtml = `<div class="paybox"><b class="num">+${fmtMoney(pay0.money)}</b><span>${pay0.lines.join(' · ')}</span><span class="muted">Purse ${fmtMoney(CAREER.purse)}. Spend it in Your fighter.</span></div>`; updateTitlePurse(); }
@@ -13974,7 +13976,7 @@ async function boot(hot) {
   if (location.hash === '#autotest') setTimeout(autotest, 300);
   window.__ST = { G, AU, buildShield, buildWeapon, W3, startTourney, quickFight, toTitle, openRepair, kitCheck, setupMatch, toTactics, beginFight, endRound, matchEnd, CLUBS, WEAPONS, setView, toast, renderKitPicker, applyLoadout, IN, FP, showScreen, weaponIcon, startCine, startTraining, startLadder, openCareer, openModes, openLadder, CAREER, setLesson, TR, unlock, togglePause, afterRound, renderHow, selectPiece, selectTape, msg, renderSheet, setHud, endTraining, setMode, PAD, navMove, focusFirst, sparks, CUTE, THREE, BREATH, setCuteDeco, flipFx, PHOTO, UAL, raiseFlags, startVersus, startFFA, startBracket, startKid, KID, openSeason, startSeasonMatch, setVenue, VS, SPLIT, NET, buildOnlineMatch, hostLobby, joinLobby, ONL, vinControl, openRun, openDaily, openBracket, showBracket, bracketResult, ffaMatchEnd, ffaLeader, ffaWinner, endKid, openPhoto, closePhoto, startReplay, stopReplay, RP, store, startRunFight, newRun, runEnd, WX, setWeather, padVin, readVersus, applyLo, myLoadout, netDropped, netLeave, showIntro, installForged, dailyPlan, openKids, openVersus, openPicks, LESSONS, rivalClub, startGrudge, startDaily, seasonState, newSeason, refreshDaily, VENUES, COMM, hitMapHtml, resetFighterForRound, DIFF, PIN, PADS, NIN, padsUpdate, seatPads, LOBBY, MM, openOnlineHub, benchDown, benchMove, REP, squirePatch, coverage, openProfile, myProfile, BOS, updateTitlePurse, ACH, progressCheck, challenges, masteryOf, S2, rankOf, counterValue, renderCareer, progressMatch, saveCareer, shopState, shopUp, tapeLeft, shopMatchEnd, shopPrizeMult, shopXpMult, swingTimes, pieceWearMult, TABARDS, refillTape, renderShop, UPGRADES, freshKit, TAPE_STOCK, enterTown, leaveTown, TOWN, openVendor, closeVendor, openTownMap, shopFx, renderVendor, VENDORS, ITEMS, itemCost, spCost, skillRoom, sponsorIncome, BOOSTS, STALL_AT, HOMES, FURNISH, pfx, squadFx, boostKit, townCollide, townRefresh, townWalkTo, townTalk, townTeardown, lookState, WORLD, guildCheck, STATIONS, townDressMe, FOLK, updateFolk, navBlocked, buildFolk, BOUT, boutStart, boutStop, boutTick, drawTownMap, updateMiniMap, costumePerson, OUTFIT, buildSkinWeapon, skinIcon, wskinList, skinFor, buildMyWeapon, wskinFamOf, GATHER, startGather, gatherSwing, stopGather, tradeState, tradeLevel, tradeGain, give, have, craft, NODES, MATS, renderTrades, TRADE_SKILLS, ARENAS, DISTRICTS, TRAVEL, setWaypoint, clearWaypoint, realmPath, callHorse, mount, dismount, ANIMAL, districtAt, realmCull, REALM_TIERS, gateOpen, townJump, stableRows, horseAvailable, peopleCull, boutArenaFor, arenaLive, bagSlots, bagState, bagRoom, secretFound, lookOwned, SECRETS, stopSpectating, startTrial, TRIALS, tierCap, gy, tierOf, HILL, hillHouses, cliffAt, gateBlocked, arenaBlocked, localPath, NAV, rampAt, ROSTER, rosterClubs, rosterLive, rosterName, liveBoutPick, aiTier, AI_TIER, guardOutcome, fighterGlow, ONB, onbStage, onbSet, openCreator, tourStart, tourEnd, TOUR_STOPS, THRONE, throneHolder, throneFight, throneBow, openThrone, sideFromDrag, VOICE };
   if (location.protocol === 'file:' && window.__steeltapeTest)
-    Object.assign(window.__ST, { penalize, failPiece, closeRepair, xpNeed, tierProf, runToRepairCorner });
+    Object.assign(window.__ST, { penalize, failPiece, closeRepair, xpNeed, tierProf, runToRepairCorner, onbAfterAccount, leaveTarget, leaveScreen, CLOUD, bosLoadInfo });
 }
 
 function autotest() {
@@ -14885,6 +14887,9 @@ async function bosLoadInfo() {
   // Load this user's complete Steel & Tape save before applying their BuhurtOS profile name.
   // Cloud saves may require an explicit conflict choice; gameplay is never silently overwritten.
   if (typeof cloudOnAuth === 'function') await cloudOnAuth(u.id);
+  // cloudRestore has written the remote save and requested a reload. Do not
+  // write the old in-memory CAREER back over it while navigation is pending.
+  if (typeof CLOUD !== 'undefined' && CLOUD.applying) return;
   if (!BOS.user || BOS.user.id !== u.id) return;
   const info = { name: '', team: '', fighter: null, m: 0, w: 0, l: 0, golds: 0, podiums: 0, wins_t: 0 };
   try { const { data } = await sb.from('profiles').select('display_name').eq('id', u.id).maybeSingle(); if (data && data.display_name) info.name = data.display_name; } catch (e) { }
@@ -14945,7 +14950,7 @@ async function bosPassword(ret) {
   const email = ($('#bosEmail').value || '').trim(), password = $('#bosPass').value || '', say = t => { const m = $('#bosMsg'); if (m) m.textContent = t; };
   if (!email || !password) { say('Type your email and password.'); return; }
   say('Signing in…');
-  try { const { data, error } = await (await bosClient()).auth.signInWithPassword({ email, password }); if (error) throw error; BOS.user = data.user; await bosLoadInfo(); toastMenu(`Signed in as ${myName()}`); ret(); }
+  try { const { data, error } = await (await bosClient()).auth.signInWithPassword({ email, password }); if (error) throw error; BOS.user = data.user; await bosLoadInfo(); if (CLOUD.applying) return; toastMenu(`Signed in as ${myName()}`); ret(); }
   catch (e) { say(/invalid/i.test(e.message || '') ? 'Wrong email or password. (Signed up with Google or Discord? Use those buttons.)' : 'Couldn’t sign in: ' + (e.message || e)); }
 }
 function openBosCode(ret) {
@@ -14954,7 +14959,7 @@ function openBosCode(ret) {
     <p class="muted small" id="bosMsg">If the email only has a link, open it on this device instead.</p>`,
     [['Sign in', async () => {
       const token = ($('#bosOtp').value || '').trim(), say = t => { $('#bosMsg').textContent = t; };
-      try { const { data, error } = await (await bosClient()).auth.verifyOtp({ email: BOS.otpEmail, token, type: 'email' }); if (error) throw error; BOS.user = data.user; await bosLoadInfo(); toastMenu(`Signed in as ${myName()}`); ret(); } catch (e) { say('That code didn’t work: ' + (e.message || e)); }
+      try { const { data, error } = await (await bosClient()).auth.verifyOtp({ email: BOS.otpEmail, token, type: 'email' }); if (error) throw error; BOS.user = data.user; await bosLoadInfo(); if (CLOUD.applying) return; toastMenu(`Signed in as ${myName()}`); ret(); } catch (e) { say('That code didn’t work: ' + (e.message || e)); }
     }, true], ['Back', () => openBosSignIn(ret)]]);
 }
 
@@ -15462,14 +15467,22 @@ function onbWelcome() {
   msg('welcome', 'Welcome to Steel & Tape', '<p>Is this your first time playing, or do you already have an account?</p><p class="muted small">New players start with a short practice fight. Returning players can sign in to restore their saved fighter and progress.</p>',
     [['First time playing', () => { onbSet('fight'); onbTestFight(); }, true],
       ['I have an account', () => {
-        onbSet('create');
         openBosSignIn(() => {
-          if (BOS.user) openCreator();
-          else { onbSet('choice'); onbWelcome(); }
+          if (BOS.user) onbAfterAccount();
+          else onbWelcome();
         });
       }]]);
   // The initial choice has no previous screen; Back must not bypass it.
   const back = $('#msgPanel .back'); if (back) back.hidden = true;
+}
+function onbAfterAccount() {
+  // Cloud restoration may replace the local career (and reload the page).
+  // Never force a returning fighter through character creation again.
+  const stage = onbStage();
+  if (stage === 'done' || stage === 'tour') { toTitle(); return; }
+  if (stage === 'choice') onbSet('create');
+  if (onbStage() === 'create') openCreator();
+  else toTitle();
 }
 // ---- the test fight: a 5 v 5, no instructions, the buttons shown once
 function onbTestFight() {
@@ -15519,12 +15532,12 @@ function creatorSignIn() {
     <label class="runcode"><span>Password</span><input id="bosPass" type="password" autocomplete="current-password"></label>
     <div class="bosalt"><button class="btn tape small" id="bosCode">Email me a code (new or existing)</button><button class="btn tape small" id="bosGoogle">Google</button><button class="btn tape small" id="bosDiscord">Discord</button></div>
     <p class="muted small" id="bosMsg"></p>`,
-    [['Sign in', () => bosPassword(openCreator), true], ['Play under my own banner', () => { creatorJoin(null, null); creatorFighter(); }]]);
+    [['Sign in', () => bosPassword(onbAfterAccount), true], ['Play under my own banner', () => { creatorJoin(null, null); creatorFighter(); }]]);
   const say = t => { const m = $('#bosMsg'); if (m) m.textContent = t; };
   $('#bosCode').onclick = async () => {
     const email = ($('#bosEmail').value || '').trim(); if (!email) { say('Type your email first.'); return; }
     say('Sending…');
-    try { const { error } = await (await bosClient()).auth.signInWithOtp({ email, options: { shouldCreateUser: true } }); if (error) throw error; BOS.otpEmail = email; openBosCode(openCreator); } catch (e) { say('Couldn’t send a code: ' + (e.message || e)); }
+    try { const { error } = await (await bosClient()).auth.signInWithOtp({ email, options: { shouldCreateUser: true } }); if (error) throw error; BOS.otpEmail = email; openBosCode(onbAfterAccount); } catch (e) { say('Couldn’t send a code: ' + (e.message || e)); }
   };
   const oauth = provider => async () => { say('Opening ' + provider + '…'); try { await (await bosClient()).auth.signInWithOAuth({ provider, options: { redirectTo: location.origin + location.pathname } }); } catch (e) { say('Couldn’t open ' + provider + ': ' + (e.message || e)); } };
   $('#bosGoogle').onclick = oauth('google'); $('#bosDiscord').onclick = oauth('discord');
