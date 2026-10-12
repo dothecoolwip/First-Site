@@ -11,7 +11,12 @@ import base64, json
 cache = root / 'build_cache'; cache.mkdir(exist_ok=True)
 music_small = cache / 'music_battle.mp3'
 if not music_small.exists():
-    subprocess.run(['ffmpeg', '-y', '-loglevel', 'error', '-i', str(root / 'audio' / 'music_battle.mp3'), '-ac', '1', '-b:a', '64k', str(music_small)], check=True)
+    import shutil
+    if shutil.which('ffmpeg'):
+        subprocess.run(['ffmpeg', '-y', '-loglevel', 'error', '-i', str(root / 'audio' / 'music_battle.mp3'), '-ac', '1', '-b:a', '64k', str(music_small)], check=True)
+    else:
+        # Preview builders may not have ffmpeg. Embed the original MP3 without changing audio.
+        music_small = root / 'audio' / 'music_battle.mp3'
 emb = {}
 for p in sorted((root / 'audio').glob('*.mp3')):
     f = music_small if p.name == 'music_battle.mp3' else p
