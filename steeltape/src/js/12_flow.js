@@ -507,7 +507,7 @@ function initMenus() {
     titleVersion.textContent = 'v0.1.0' + (/^[0-9a-f]{7,}$/i.test(build) ? ' · ' + build.slice(0, 7) : '');
   }
   const catTag = () => { const t = $('.tagline'); if (t) t.textContent = G.category === 'youth' ? 'Little knights. Foam swords. Very big helmets.' : 'Real steel. Real rules. Half of it held together with hockey tape.'; document.body.dataset.cat = G.category; };
-  $$('#catSeg button').forEach(b => { b.setAttribute('aria-pressed', String(b.dataset.cat === G.category)); b.onclick = () => { G.category = b.dataset.cat; store.set('category', G.category); $$('#catSeg button').forEach(x => x.setAttribute('aria-pressed', String(x === b))); catTag(); if (G.category === 'youth') AU.boing(0.7); else AU.click(); }; });
+  $('#catSeg button').forEach(b => { b.setAttribute('aria-pressed', String(b.dataset.cat === (G.category === 'youth' ? 'youth' : 'men'))); b.onclick = () => { G.category = b.dataset.cat; store.set('category', G.category); $('#catSeg button').forEach(x => x.setAttribute('aria-pressed', String(x === b))); catTag(); if (G.category === 'youth') AU.boing(0.7); else AU.click(); }; });
   catTag();
   $('#btnRumble').onclick = () => { AU.init(); store.del('tourney'); startTourney(); };
   $('#btnContinue').onclick = () => { AU.init(); continueTourney(); };
