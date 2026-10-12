@@ -4,6 +4,7 @@
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width,initial-scale=1">
 <meta name="robots" content="noindex,nofollow">
+<meta http-equiv="Cache-Control" content="no-store, no-cache, must-revalidate">
 <title>Steel &amp; Tape | Command Post</title>
 <link href="https://fonts.googleapis.com/css2?family=Barlow+Semi+Condensed:wght@500;700&family=Big+Shoulders+Display:wght@900&display=swap" rel="stylesheet">
 <style>
@@ -59,6 +60,8 @@ table{width:100%;border-collapse:collapse;font-size:.9rem}th,td{text-align:left;
 </div>
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2.45.4/dist/umd/supabase.min.js"></script>
 <script>
+// Force an update of older game service workers that cached the original admin page.
+if ('serviceWorker' in navigator) navigator.serviceWorker.getRegistration().then(reg => { if (reg) return reg.update(); }).catch(() => {});
 const URL_ = 'https://mvbxlebznlgroptwwdsm.supabase.co', KEY = 'sb_publishable_u76M-dggKSsdsyhUQKveJg_5fPJ5Nan';
 const sb = supabase.createClient(URL_, KEY, { auth: { persistSession: true, autoRefreshToken: true, detectSessionInUrl: true, storageKey: 'steeltape-admin' } });
 const $ = s => document.querySelector(s), esc = s => String(s == null ? '' : s).replace(/[&<>"']/g, c => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' })[c]);
@@ -128,7 +131,7 @@ async function load() {
   if (!session) { $('#login').hidden = false; $('#app').hidden = true; return; }
   const r = await fetch(URL_ + '/functions/v1/steeltape-admin', { headers: { Authorization: 'Bearer ' + session.access_token, apikey: KEY } });
   const d = await r.json().catch(() => ({}));
-  if (!r.ok) { $('#login').hidden = false; $('#app').hidden = true; $('#err').textContent = d.error === 'not an admin' ? 'This account isn’t the owner. Sign out and use the owner account.' : 'Couldn’t load: ' + (d.error || r.status) + '. If you just signed in, refresh this page.'; return; }
+  if (!r.ok) { $('#login').hidden = false; $('#app').hidden = true; $('#err').textContent = d.error === 'not an admin' ? 'This account isn’t the owner. Sign out and use the owner account.' : 'Couldn’t load statistics: ' + (d.error || r.status) + '. Your login has NOT been signed out. Refresh to retry.'; return; }
   $('#login').hidden = true; $('#app').hidden = false; $('#who').textContent = d.email;
   const P = d.players || [], S = d.stats || {};
   allTrackedPlayers = P;
