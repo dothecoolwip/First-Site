@@ -39045,7 +39045,7 @@ const ROADS = [
   { name: 'fair-main', pts: [[0, 70], [0, 58], [1, 48], [0, 38], [0, 27]], w: 9 },
   { name: 'fair-crafts', pts: [[0, 38], [-18, 38], [-31, 29], [-42, 20]], w: 5 },
   { name: 'fair-market', pts: [[0, 38], [17, 38], [29, 32], [44, 30]], w: 5 },
-  { name: 'north', pts: [[0, -24], [-7, -43], [4, -61], [-9, -79], [4, -98], [-5, -117], [0, -140]], w: 6 },
+  { name: 'north', pts: [[0, -24], [-2, -45], [-1, -67], [-4, -88], [-2, -111], [0, -140]], w: 6 },
   { name: 'west', pts: [[-42, 20], [-52, 10], [-52, -2], [-74, 7], [-95, -11], [-119, -10], [-137, -30], [-162, -39], [-178, -61], [-196, -78]], w: 5 },
   { name: 'southwest', pts: [[-16, 70], [-38, 81], [-58, 101], [-87, 101], [-111, 123], [-135, 127], [-160, 140]], w: 5 },
   { name: 'millpond-east', pts: [[-38, 81], [-47, 75], [-49.7, 72]], w: 2.8 },
@@ -39171,6 +39171,28 @@ function realmGround(R, x0, x1, z0, z1, col, tex, y) {
   pos.needsUpdate = true; geo.computeVertexNormals();
   const g = mk(R, geo, lmat({ map: tex === false ? null : venueTex(tex || 'path'), alphaMap: realmEdgeMask('patch'), transparent: true, depthWrite: false, color: col, roughness: 1, side: THREE.DoubleSide }), cx, 0, cz, false);
   g.receiveShadow = true; (TOWN.mapRects = TOWN.mapRects || []).push([x0, x1, z0, z1, col]); return g;
+}
+function roadPath(Rd) {
+  if (Rd.path) return Rd.path;
+  // Keep the hill ramps and streets exact: their edges must track walls and
+  // gates. The earth roads can turn gradually without losing their endpoints.
+  if (/^(street|yard|ramp|t[234])/.test(Rd.name) || Rd.pts.length < 3) return Rd.path = Rd.pts;
+  const pts = Rd.pts, path = [pts[0]];
+  for (let i = 1; i < pts.length - 1; i++) {
+    const prev = pts[i - 1], at = pts[i], next = pts[i + 1];
+    const ax = at[0] - prev[0], az = at[1] - prev[1], bx = next[0] - at[0], bz = next[1] - at[1];
+    const la = Math.hypot(ax, az), lb = Math.hypot(bx, bz);
+    if (la < 0.01 || lb < 0.01) { path.push(at); continue; }
+    const openCountry = /^(country|ridge|riverford|lakeside|northern)/.test(Rd.name);
+    const reach = Math.min(openCountry ? 13 : 6, la * (openCountry ? 0.3 : 0.22), lb * (openCountry ? 0.3 : 0.22));
+    const a = [at[0] - ax / la * reach, at[1] - az / la * reach];
+    const b = [at[0] + bx / lb * reach, at[1] + bz / lb * reach];
+    path.push(a);
+    for (const t of [0.25, 0.5, 0.75]) { const u = 1 - t; path.push([u * u * a[0] + 2 * u * t * at[0] + t * t * b[0], u * u * a[1] + 2 * u * t * at[1] + t * t * b[1]]); }
+    path.push(b);
+  }
+  path.push(pts[pts.length - 1]);
+  return Rd.path = path;
 }
 function realmRoad(R, pts, w) {
   const m = TMAT['road' + w] || (TMAT['road' + w] = lmat({ map: venueTex('path'), alphaMap: realmEdgeMask('road'), transparent: true, depthWrite: false, color: '#91876d', roughness: 1, side: THREE.DoubleSide }));
@@ -39357,11 +39379,11 @@ function realmForest(R, cx, cz, rad, n, kinds, seed, clear) {
   return placed;
 }
 function onRoad(x, z, pad) {
-  for (const Rd of ROADS) for (let i = 0; i < Rd.pts.length - 1; i++) {
-    const [x0, z0] = Rd.pts[i], [x1, z1] = Rd.pts[i + 1], dx = x1 - x0, dz = z1 - z0, L2 = dx * dx + dz * dz;
+  for (const Rd of ROADS) { const pts = roadPath(Rd); for (let i = 0; i < pts.length - 1; i++) {
+    const [x0, z0] = pts[i], [x1, z1] = pts[i + 1], dx = x1 - x0, dz = z1 - z0, L2 = dx * dx + dz * dz;
     const t = clamp(((x - x0) * dx + (z - z0) * dz) / L2, 0, 1), px = x0 + dx * t, pz = z0 + dz * t;
     if (Math.hypot(x - px, z - pz) < Rd.w / 2 + pad) return true;
-  }
+  } }
   return false;
 }
 function signpost(R, x, z, ry, lines) {
@@ -39377,7 +39399,7 @@ function buildRealm(R) {
   const O = TOWN.obst, add = (key, x, z, ry, s, r) => { const p = kpiece(R, key, x, gy(x, z), z, ry || 0, s || 1); if (r) O.push({ x, z, r }); return p; };
   const face = (x, z, tx, tz) => Math.atan2(tx - x, tz - z);
   // roads, then signposts where they leave the fairground
-  for (const Rd of ROADS) realmRoad(R, Rd.pts, Rd.w);
+  for (const Rd of ROADS) realmRoad(R, roadPath(Rd), Rd.w);
   signpost(R, 5, -28, 0, [['CASTLE ↑', 0], ['FAIRGROUND ↓', Math.PI]]);
   signpost(R, -56, 4, -Math.PI / 2, [['THE OLD WOODS', -Math.PI / 2], ['FAIRGROUND', Math.PI / 2]]);
   signpost(R, 56, 10, Math.PI / 2, [['MIRROR LAKE', Math.PI / 2], ['FAIRGROUND', -Math.PI / 2]]);
