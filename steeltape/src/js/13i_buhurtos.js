@@ -18,7 +18,7 @@ async function bosClient() {
   if (BOS.sb) return BOS.sb;
   const lib = await loadSupabaseLib();
   BOS.sb = lib.createClient(BOS_URL, BOS_KEY, { auth: { persistSession: true, autoRefreshToken: true, detectSessionInUrl: true, storageKey: 'buhurt-game-buhurtos' } });
-  BOS.sb.auth.onAuthStateChange((evt, session) => { BOS.user = session ? session.user : null; if (BOS.user) bosLoadInfo(); else { BOS.info = null; bosApply(); } });
+  BOS.sb.auth.onAuthStateChange((evt, session) => { BOS.user = session ? session.user : null; if (BOS.user) bosLoadInfo(); else { if (typeof cloudOnSignOut === 'function') cloudOnSignOut(); BOS.info = null; bosApply(); } });
   return BOS.sb;
 }
 // on start: pick up a saved sign-in (or one coming back from Google / Discord) without loading anything otherwise
@@ -30,6 +30,10 @@ function bosBoot() {
 }
 async function bosLoadInfo() {
   const sb = BOS.sb, u = BOS.user; if (!sb || !u) return;
+  // Load this user's complete Steel & Tape save before applying their BuhurtOS profile name.
+  // Cloud saves may require an explicit conflict choice; gameplay is never silently overwritten.
+  if (typeof cloudOnAuth === 'function') await cloudOnAuth(u.id);
+  if (!BOS.user || BOS.user.id !== u.id) return;
   const info = { name: '', team: '', fighter: null, m: 0, w: 0, l: 0, golds: 0, podiums: 0, wins_t: 0 };
   try { const { data } = await sb.from('profiles').select('display_name').eq('id', u.id).maybeSingle(); if (data && data.display_name) info.name = data.display_name; } catch (e) { }
   try {
