@@ -1,5 +1,5 @@
 <!doctype html><html><head><meta charset="utf-8"><link rel="manifest" href="manifest.webmanifest"><meta name="theme-color" content="#0f1316"><link rel="apple-touch-icon" href="icon-192.png"><meta name="apple-mobile-web-app-capable" content="yes"><meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover"></head><body>
-<script>window.BUILD_VER="steel-tape-exact-commentary-01";</script><title>Buhurt: Steel &amp; Tape</title>
+<script>window.BUILD_VER="steel-tape-2e07008fff";</script><title>Buhurt: Steel &amp; Tape</title>
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Barlow+Semi+Condensed:wght@400;500;600;700&family=Big+Shoulders+Display:wght@700;800;900&family=Permanent+Marker&display=swap">
@@ -1425,7 +1425,6 @@ body:not(.split) #pips:not([hidden]) ~ #statstrip{top:calc(var(--st) + 78px)}
 <script src="sfx_01.js"></script>
 <script src="sfx_02.js"></script>
 <script src="sfx_03.js"></script>
-<script src="sfx_commentary.js"></script>
 <script src="library_base.js"></script>
 <script src="library_icons_00.js"></script>
 <script src="library_surfaces_00.js"></script>
@@ -33152,6 +33151,7 @@ function shopState() {
 function spend(cost, what) {
   if (CAREER.purse < cost) { toastMenu(`Not enough in the purse: ${what || 'that'} costs ${fmtMoney(cost)}.`); return false; }
   CAREER.purse -= cost; const s = shopState(); s.spent += cost; const t2 = S2(); t2.spent = (t2.spent || 0) + cost; unlock('shopper', true); progressSoon();
+  if (typeof playtestAction === 'function') playtestAction('purchase', { item: what || '', cost });
   saveCareer(); updateTitlePurse(); try { AU.cheer(0.4); } catch (e) { }
   return true;
 }
@@ -35199,7 +35199,7 @@ async function boot(hot) {
   if (location.hash === '#autotest') setTimeout(autotest, 300);
   window.__ST = { GAMEPLAY, SAT, YUKA, CANNON, RAPIER, BVH, gameplayShape, gameplayShapeBlocked, gameplayGroundAt, gameplayMove, G, AU, buildShield, buildWeapon, W3, startTourney, quickFight, toTitle, openRepair, kitCheck, setupMatch, toTactics, beginFight, endRound, matchEnd, CLUBS, WEAPONS, setView, toast, renderKitPicker, applyLoadout, IN, FP, showScreen, weaponIcon, startCine, startTraining, startLadder, openCareer, openModes, openLadder, CAREER, setLesson, TR, unlock, togglePause, afterRound, renderHow, selectPiece, selectTape, msg, renderSheet, setHud, endTraining, setMode, PAD, navMove, focusFirst, sparks, CUTE, THREE, BREATH, setCuteDeco, flipFx, PHOTO, UAL, raiseFlags, startVersus, startFFA, startBracket, startKid, KID, openSeason, startSeasonMatch, setVenue, VS, SPLIT, NET, buildOnlineMatch, hostLobby, joinLobby, ONL, vinControl, openRun, openDaily, openBracket, showBracket, bracketResult, ffaMatchEnd, ffaLeader, ffaWinner, endKid, openPhoto, closePhoto, startReplay, stopReplay, RP, store, startRunFight, newRun, runEnd, WX, setWeather, padVin, readVersus, applyLo, myLoadout, netDropped, netLeave, showIntro, installForged, dailyPlan, openKids, openVersus, openPicks, LESSONS, rivalClub, startGrudge, startDaily, seasonState, newSeason, refreshDaily, VENUES, COMM, hitMapHtml, resetFighterForRound, DIFF, PIN, PADS, NIN, padsUpdate, seatPads, LOBBY, MM, openOnlineHub, benchDown, benchMove, REP, squirePatch, coverage, openProfile, myProfile, BOS, updateTitlePurse, ACH, progressCheck, challenges, masteryOf, S2, rankOf, counterValue, renderCareer, progressMatch, saveCareer, shopState, shopUp, tapeLeft, shopMatchEnd, shopPrizeMult, shopXpMult, swingTimes, pieceWearMult, TABARDS, refillTape, renderShop, UPGRADES, freshKit, TAPE_STOCK, enterTown, leaveTown, TOWN, openVendor, closeVendor, openTownMap, shopFx, renderVendor, VENDORS, ITEMS, itemCost, spCost, skillRoom, sponsorIncome, BOOSTS, STALL_AT, HOMES, FURNISH, pfx, squadFx, boostKit, townCollide, townRefresh, townWalkTo, townTalk, townTeardown, lookState, WORLD, guildCheck, STATIONS, townDressMe, FOLK, updateFolk, navBlocked, buildFolk, BOUT, boutStart, boutStop, boutTick, drawTownMap, updateMiniMap, costumePerson, OUTFIT, buildSkinWeapon, skinIcon, wskinList, skinFor, buildMyWeapon, wskinFamOf, GATHER, startGather, gatherSwing, stopGather, tradeState, tradeLevel, tradeGain, give, have, craft, NODES, MATS, renderTrades, TRADE_SKILLS, ARENAS, DISTRICTS, TRAVEL, setWaypoint, clearWaypoint, realmPath, callHorse, mount, dismount, ANIMAL, districtAt, realmCull, REALM_TIERS, gateOpen, townJump, stableRows, horseAvailable, peopleCull, boutArenaFor, arenaLive, bagSlots, bagState, bagRoom, secretFound, lookOwned, SECRETS, stopSpectating, startTrial, TRIALS, tierCap, gy, tierOf, HILL, hillHouses, cliffAt, gateBlocked, arenaBlocked, localPath, NAV, rampAt, ROSTER, rosterClubs, rosterLive, rosterName, liveBoutPick, aiTier, AI_TIER, guardOutcome, fighterGlow, ONB, onbStage, onbSet, openCreator, tourStart, tourEnd, TOUR_STOPS, THRONE, throneHolder, throneFight, throneBow, openThrone, sideFromDrag, VOICE };
   if (location.protocol === 'file:' && window.__steeltapeTest)
-    Object.assign(window.__ST, { penalize, failPiece, closeRepair, xpNeed, tierProf, runToRepairCorner, onbAfterAccount, onbAccountGate, onbResumeAfterAuth, leaveTarget, leaveScreen, CLOUD, bosLoadInfo, bosBoot, swingLeverage, weaponBindPossible, resolveSwing, sweptSwingTarget, updateAction, think, updateTownCamera, LIBRARY, LIBRARY_DATA, WEAPON_VARIANTS, playerWeaponDef, libraryModel, libraryThumb, LIST, navPushOut, townCollide, SPECT, updateArenaSeatFolk, testAdminApply, testAdminRefresh, testAdminTeleport, openTestAdmin, gameplayShapePush, gameplayCannonTick, gameplayFolkDirection, arenaRope, gateRefused, stationTrial, commClipName, COMM_AUDIO, SFX_FILES });
+    Object.assign(window.__ST, { penalize, failPiece, closeRepair, xpNeed, tierProf, runToRepairCorner, onbAfterAccount, onbAccountGate, onbResumeAfterAuth, leaveTarget, leaveScreen, CLOUD, bosLoadInfo, bosBoot, swingLeverage, weaponBindPossible, resolveSwing, sweptSwingTarget, updateAction, think, updateTownCamera, LIBRARY, LIBRARY_DATA, WEAPON_VARIANTS, playerWeaponDef, libraryModel, libraryThumb, LIST, navPushOut, townCollide, SPECT, updateArenaSeatFolk, testAdminApply, testAdminRefresh, testAdminTeleport, openTestAdmin, PLAYTEST, playtestStart, playtestStop, playtestTick, playtestAction, playtestFlush, playtestCapture, gameplayShapePush, gameplayCannonTick, gameplayFolkDirection, arenaRope, gateRefused, stationTrial, commClipName, COMM_AUDIO, SFX_FILES });
 }
 
 function autotest() {
@@ -36084,11 +36084,13 @@ async function bosClient() {
     BOS.user = session ? session.user : null;
     if (previous && BOS.user && previous.id !== BOS.user.id) {
       BOS.testAdmin = false;
+      if (typeof playtestAuthReset === 'function') playtestAuthReset();
       if (typeof testAdminRefresh === 'function') testAdminRefresh();
     }
     if (BOS.user) bosLoadInfo();
     else {
       BOS.testAdmin = false;
+      if (typeof playtestAuthReset === 'function') playtestAuthReset();
       if (typeof testAdminRefresh === 'function') testAdminRefresh();
       if (typeof cloudOnSignOut === 'function') cloudOnSignOut();
       BOS.info = null; bosApply();
@@ -36134,6 +36136,7 @@ async function bosLoadInfo() {
   if (verifiedUser && verifiedUser.id !== u.id) return;
   if (verifiedUser) BOS.user = verifiedUser;
   BOS.testAdmin = !!(verifiedUser && verifiedUser.app_metadata?.steel_tape_test_admin === true);
+  if (BOS.testAdmin && typeof playtestResume === 'function') playtestResume();
   // Do not leave a verified test administrator at the local save's old level
   // while cloud reconciliation is still awaiting a network response.
   if (BOS.testAdmin && typeof testAdminApply === 'function') testAdminApply();
@@ -36555,6 +36558,7 @@ function testAdminTeleport(stall) {
   const pos = typeof freeNear === 'function' ? freeNear(stall.ax, stall.az) : [stall.ax, stall.az];
   TOWN.pos = { x: pos[0], z: pos[1] };
   TOWN.cam = null; TOWN.speed = 0; TOWN.winded = false; TOWN.stam = 1;
+  if (typeof playtestAction === 'function') playtestAction('teleport', { destination: stall.V.name });
   closeVendor();
   toastMenu(`Teleported to ${stall.V.name}.`);
 }
@@ -36562,6 +36566,12 @@ function openTestAdmin() {
   if (!BOS.testAdmin || !TOWN.on) return;
   townPanel('Test tools', box => {
     box.append(h('p', { class: 'muted' }, 'Game-only testing account: level 100, unlimited purchasing power, and endless village sprinting. These powers do not change BuhurtOS permissions.'));
+    const recorderStatus = h('p', { class: 'muted small' }, playtestStatus());
+    const recorder = h('div', { class: 'row townrow' });
+    recorder.append(h('button', { class: 'btn primary flagtape small', onclick: () => playtestCapture() }, 'Take screenshot & note'));
+    recorder.append(h('button', { class: 'btn tape small', onclick: async () => { if (PLAYTEST.id) await playtestStop(); else { PLAYTEST.stopped = false; await playtestStart(); } recorderStatus.textContent = playtestStatus(); } }, PLAYTEST.id ? 'Stop recording' : 'Start recording'));
+    recorder.append(h('button', { class: 'btn tape small', onclick: () => { playtestFlush(); recorderStatus.textContent = playtestStatus(); } }, 'Sync now'));
+    box.append(h('h3', null, 'Playtest recorder'), h('p', { class: 'muted small' }, 'Records your route every quarter second while moving, plus interactions. Screenshots and notes appear in the owner command post.'), recorderStatus, recorder);
     const speeds = h('div', { class: 'row townrow' });
     for (const value of [1, 1.5, 2, 3, 5]) {
       speeds.append(h('button', { class: 'btn tape small', onclick: () => {
@@ -36579,6 +36589,136 @@ function openTestAdmin() {
     box.append(list);
   });
 }
+
+// Super-admin playtest recorder. Samples the actual resolved position after collision.
+const PLAYTEST = { id: null, starting: false, saving: false, stopped: false, pending: [], lastPoint: null, lastAt: 0, retryAt: 0, error: '', count: 0 };
+const PLAYTEST_QUEUE_PREFIX = 'steeltape-playtest-queue:';
+function playtestPersist() {
+  if (!BOS.user?.id) return;
+  try { localStorage.setItem(PLAYTEST_QUEUE_PREFIX + BOS.user.id, JSON.stringify({ id: PLAYTEST.id, pending: PLAYTEST.pending, count: PLAYTEST.count, stopped: PLAYTEST.stopped })); }
+  catch (e) { PLAYTEST.error = 'Browser storage is full; keep this tab open until sync completes'; }
+}
+function playtestResume() {
+  if (!BOS.testAdmin || !BOS.user?.id || PLAYTEST.id) return;
+  try {
+    const saved = JSON.parse(localStorage.getItem(PLAYTEST_QUEUE_PREFIX + BOS.user.id) || 'null');
+    if (!saved || !saved.id || !Array.isArray(saved.pending)) return;
+    PLAYTEST.id = saved.id; PLAYTEST.pending = saved.pending.filter(e => e.owner_id === BOS.user.id && e.session_id === saved.id);
+    PLAYTEST.count = Number(saved.count) || 0; PLAYTEST.stopped = !!saved.stopped;
+    if (PLAYTEST.pending.length) playtestFlush();
+  } catch (e) { }
+}
+function playtestPlace() {
+  if (typeof TOWN === 'undefined' || !TOWN.on || !TOWN.pos) return { x: null, z: null, facing: null, zone: '' };
+  return { x: +TOWN.pos.x.toFixed(3), z: +TOWN.pos.z.toFixed(3), facing: +TOWN.face.toFixed(3), zone: TOWN.mineOn ? 'Deep mine' : (TOWN.district || 'Realm') };
+}
+function playtestStatus() {
+  return PLAYTEST.starting ? 'Starting recorder…' : PLAYTEST.error ? `Sync issue: ${PLAYTEST.error} · ${PLAYTEST.pending.length} points waiting` : PLAYTEST.id ? `Recording · ${PLAYTEST.count} points · ${PLAYTEST.pending.length} waiting to sync` : PLAYTEST.stopped ? 'Stopped for this visit' : 'Ready to record';
+}
+function playtestEntry(kind, detail) {
+  if (!BOS.testAdmin || !PLAYTEST.id || (PLAYTEST.stopped && kind !== 'stop')) return;
+  PLAYTEST.pending.push({ session_id: PLAYTEST.id, owner_id: BOS.user.id, at: new Date().toISOString(), kind, ...playtestPlace(), detail: detail || {} });
+  PLAYTEST.count++;
+  playtestPersist();
+  if (PLAYTEST.pending.length >= 30) playtestFlush();
+}
+function playtestAction(kind, detail) { playtestEntry(kind, detail); }
+function playtestAuthReset() {
+  PLAYTEST.id = null; PLAYTEST.pending = []; PLAYTEST.lastPoint = null;
+  PLAYTEST.starting = false; PLAYTEST.saving = false; PLAYTEST.stopped = false;
+  PLAYTEST.error = ''; PLAYTEST.count = 0;
+}
+async function playtestStart() {
+  if (!BOS.testAdmin || !BOS.user?.id || PLAYTEST.id || PLAYTEST.starting || !TOWN.on) return;
+  PLAYTEST.starting = true; PLAYTEST.error = '';
+  try {
+    const sb = await bosClient();
+    const { data, error } = await sb.from('steeltape_playtest_sessions').insert({ owner_id: BOS.user.id, build_version: window.BUILD_VER || '', device: navigator.userAgent.slice(0, 300) }).select('id').single();
+    if (error) throw error;
+    PLAYTEST.id = data.id; PLAYTEST.stopped = false; PLAYTEST.count = 0; PLAYTEST.lastPoint = null;
+    playtestPersist();
+    playtestEntry('start', { mode: TOWN.mineOn ? 'mine' : 'realm' });
+    playtestFlush();
+  } catch (e) { PLAYTEST.error = e.message || String(e); PLAYTEST.retryAt = Date.now() + 10000; }
+  finally { PLAYTEST.starting = false; }
+}
+async function playtestFlush() {
+  if (!BOS.testAdmin || !PLAYTEST.id || PLAYTEST.saving || !PLAYTEST.pending.length || Date.now() < PLAYTEST.retryAt) return;
+  PLAYTEST.saving = true;
+  const batch = PLAYTEST.pending.slice(0, 100);
+  try {
+    const { error } = await (await bosClient()).from('steeltape_playtest_entries').insert(batch);
+    if (error) throw error;
+    PLAYTEST.pending.splice(0, batch.length); PLAYTEST.error = '';
+    playtestPersist();
+    PLAYTEST.retryAt = 0;
+  } catch (e) { PLAYTEST.error = e.message || String(e); PLAYTEST.retryAt = Date.now() + 10000; }
+  finally { PLAYTEST.saving = false; }
+  if (PLAYTEST.pending.length && !PLAYTEST.error) setTimeout(playtestFlush, 0);
+}
+function playtestTick() {
+  if (!BOS.testAdmin || !TOWN.on) return;
+  if (PLAYTEST.stopped) return;
+  if (!PLAYTEST.id) { if (!PLAYTEST.stopped && !PLAYTEST.starting && Date.now() >= PLAYTEST.retryAt) playtestStart(); return; }
+  const now = Date.now(), p = playtestPlace();
+  if (now - PLAYTEST.lastAt < 250) return;
+  const old = PLAYTEST.lastPoint;
+  if (!old || Math.hypot(p.x - old.x, p.z - old.z) >= 0.25 || p.zone !== old.zone || now - PLAYTEST.lastAt >= 5000) {
+    playtestEntry('position', { mounted: !!TOWN.mounted, sprinting: TOWN.speed > 4, autoWalk: !!TRAVEL.auto });
+    PLAYTEST.lastPoint = p; PLAYTEST.lastAt = now;
+  }
+}
+async function playtestStop() {
+  if (!PLAYTEST.id) { PLAYTEST.stopped = true; return; }
+  if (!PLAYTEST.stopped) playtestEntry('stop');
+  PLAYTEST.stopped = true;
+  playtestPersist();
+  await playtestFlush();
+  if (PLAYTEST.pending.length) { toastMenu('Recorder has unsynced points. Stay online and retry.'); return; }
+  const { error } = await (await bosClient()).from('steeltape_playtest_sessions').update({ ended_at: new Date().toISOString() }).eq('id', PLAYTEST.id);
+  if (error) { PLAYTEST.error = error.message; toastMenu('Could not finish session. Retry when online.'); return; }
+  PLAYTEST.id = null; PLAYTEST.lastPoint = null; PLAYTEST.error = '';
+  playtestPersist();
+  toastMenu('Playtest saved.');
+}
+async function playtestCapture() {
+  if (!BOS.testAdmin || !TOWN.on) return;
+  if (!PLAYTEST.id) await playtestStart();
+  if (!PLAYTEST.id) { toastMenu('Recorder could not start. Check your connection.'); return; }
+  let blob;
+  try {
+    const renderer = W3.renderer;
+    renderer.render(W3.scene, W3.camera);
+    blob = await new Promise(resolve => renderer.domElement.toBlob(resolve, 'image/jpeg', 0.88));
+  } catch (e) { }
+  if (!blob) { toastMenu('Could not capture the game view.'); return; }
+  const position = playtestPlace(), captureAt = new Date().toISOString();
+  const previewUrl = URL.createObjectURL(blob);
+  townPanel('Screenshot note', box => {
+    const preview = h('img', { src: previewUrl, alt: 'Captured game view', style: 'width:100%;max-height:42vh;object-fit:contain;background:#111' });
+    const textarea = h('textarea', { rows: '5', maxlength: '4000', placeholder: 'What looks wrong here? What should change?' });
+    const status = h('p', { class: 'muted small' }, `X ${position.x}, Z ${position.z} · ${position.zone}`);
+    const save = h('button', { class: 'btn primary flagtape small', onclick: async () => {
+      const body = textarea.value.trim();
+      if (!body) { status.textContent = 'Write a note before saving.'; return; }
+      save.disabled = true; status.textContent = 'Uploading screenshot and note…';
+      try {
+        const sb = await bosClient(), noteId = crypto.randomUUID();
+        const path = `${BOS.user.id}/${PLAYTEST.id}/${noteId}.jpg`;
+        const uploaded = await sb.storage.from('steeltape-playtest').upload(path, blob, { contentType: 'image/jpeg', upsert: false });
+        if (uploaded.error) throw uploaded.error;
+        const { error } = await sb.from('steeltape_playtest_notes').insert({ id: noteId, session_id: PLAYTEST.id, owner_id: BOS.user.id, at: captureAt, ...position, body, screenshot_path: path });
+        if (error) throw error;
+        playtestEntry('note', { noteId });
+        URL.revokeObjectURL(previewUrl); closeVendor(); toastMenu('Screenshot and note saved to the admin panel.');
+      } catch (e) { status.textContent = 'Save failed: ' + (e.message || e) + '. Try again.'; save.disabled = false; }
+    } }, 'Save screenshot & note');
+    box.append(preview, status, textarea, save);
+  });
+}
+setInterval(playtestFlush, 5000);
+window.addEventListener('online', playtestFlush);
+window.addEventListener('pagehide', () => { if (PLAYTEST.id && PLAYTEST.pending.length) playtestFlush(); });
 
 // ===================================================================
 // BuhurtOS rosters: real teams and fighters (display names and team colours only, from the public steeltape-roster
@@ -37334,6 +37474,7 @@ function updateTown(dt) {
     const want = Math.atan2(vx, vz); let d = want - TOWN.face; d = Math.atan2(Math.sin(d), Math.cos(d)); TOWN.face += d * Math.min(1, dt * (TOWN.mounted ? 5 : 10));
   }
   townCollide();
+  if (typeof playtestTick === 'function') playtestTick();
   const J = TOWN.me, sp = Math.hypot(vx, vz); TOWN.speed = sp;
   realmTick(dt); updateAnimals(dt);
   if (walking && TOWN.keyPrev !== undefined) { if (k.KeyH && !TOWN.keyPrev.h) callHorse(); if (k.KeyR && !TOWN.keyPrev.r && TOWN.wp) { TRAVEL.auto = !TRAVEL.auto; compassHud(); } }
@@ -37361,7 +37502,7 @@ function updateTown(dt) {
   if (walking && TOWN.frame++ % 20 === 0) townHudUpdate();
   updateWorld(dt);
 }
-function townTalk(S) { if (S.open) S.open(); else openVendor(S.V.key); }
+function townTalk(S) { if (typeof playtestAction === 'function') playtestAction('interact', { target: S.V.name, role: S.V.role || '' }); if (S.open) S.open(); else openVendor(S.V.key); }
 function townPushRect(P, x, z, hx, hz, r) {
   const dx = P.x - x, dz = P.z - z, px = hx + r - Math.abs(dx), pz = hz + r - Math.abs(dz);
   if (px <= 0 || pz <= 0) return;
@@ -37409,6 +37550,7 @@ function townPrompt() {
 }
 // a vendor's counter: a screen over the town, so the controller and Back work as in every menu
 function openVendor(key) {
+  if (typeof playtestAction === 'function') playtestAction('vendor', { vendor: key });
   TOWN.vendor = key; AU.click();
   const V = VENDOR_BY[key], box = $('#townShopBody');
   $('#townShopHead').innerHTML = '';
@@ -37679,6 +37821,7 @@ function updateOthers(dt) {
 }
 // ---- what the gate folk say and offer
 function townPanel(title, fill) {
+  if (typeof playtestAction === 'function' && title !== 'Test tools' && title !== 'Screenshot note') playtestAction('panel', { title });
   AU.click(); TOWN.vendor = null;
   const box = $('#townShopBody'); box.innerHTML = '';
   $('#townShopHead').innerHTML = '';
@@ -37693,7 +37836,7 @@ function stationRows(box, hi, rows) {
   return list;
 }
 // leave town and press one of the (hidden) title buttons: every mode keeps working exactly as before
-function townGo(btn, from) { TOWN.returnTo = from; leaveTown(() => { const b = $('#' + btn); if (b) b.click(); }); }
+function townGo(btn, from) { if (typeof playtestAction === 'function') playtestAction('leave_for_mode', { button: btn, station: from || '' }); TOWN.returnTo = from; leaveTown(() => { const b = $('#' + btn); if (b) b.click(); }); }
 function openStation(key) {
   const S = STATIONS.find(s => s.key === key);
   const service = S && S.service || key;
@@ -38945,6 +39088,7 @@ function finishGather() {
   let n = N.n[0] + Math.floor(Math.random() * (N.n[1] - N.n[0] + 1)); if (avg < 0.4) n = Math.max(1, n - 1); if (perfect) n++; if (Math.random() < Math.min(0.5, L / 100 + tier * 0.08)) n++;
   const xp = N.xp * (0.55 + 0.45 * avg) * (1 + 0.06 * tier) * (perfect ? 1.25 : 1);
   n = give(N.mat, n); node.until = G.realTime + N.respawn; node.fruit.visible = false; if (node.g.userData.stump) node.g.userData.stump.visible = true; node.lab.visible = false;
+  if (typeof playtestAction === 'function') playtestAction('gather', { material: N.mat, amount: n, skill: N.skill, quality: +avg.toFixed(2) });
   toast(`+${n} ${MATS[N.mat].name}`, perfect ? 'big' : 'good', perfect ? 'Three clean swings!' : avg >= 0.6 ? 'Good work.' : 'Sloppy, but it counts.');
   setTimeout(() => tradeGain(N.skill, xp), 500);
   stopGather(true);
@@ -39791,6 +39935,7 @@ function freeNear(x, z) {
 }
 function setWaypoint(x, z, label) {
   [x, z] = freeNear(x, z);
+  if (typeof playtestAction === 'function') playtestAction('waypoint', { x, z, label: label || 'Waypoint' });
   TOWN.wp = { x, z, label: label || 'Waypoint' }; AU.click && AU.click();
   travelPlan();
   toastMenu(`Waypoint: ${TOWN.wp.label}. Follow the gold markers${IS_TOUCH ? ', or tap Walk there' : ' (R walks you there)'}.`);
@@ -40001,8 +40146,8 @@ function callHorse() {
     toastMenu('You whistle. Your horse trots over.');
   }, shopState().owned.horse === 'white' ? '#ffffff' : null);
 }
-function mount() { if (!TOWN.horse) return; TOWN.mounted = true; unlock('rider', true); TOWN.pos.x = TOWN.horse.x; TOWN.pos.z = TOWN.horse.z; TOWN.face = TOWN.horse.face; AU.click && AU.click(); horseHud(); }
-function dismount() { if (!TOWN.horse) return; TOWN.mounted = false; const s = TOWN.face + Math.PI / 2; TOWN.pos.x += Math.sin(s) * 1.4; TOWN.pos.z += Math.cos(s) * 1.4; townCollide(); horseHud(); }
+function mount() { if (!TOWN.horse) return; TOWN.mounted = true; unlock('rider', true); TOWN.pos.x = TOWN.horse.x; TOWN.pos.z = TOWN.horse.z; TOWN.face = TOWN.horse.face; if (typeof playtestAction === 'function') playtestAction('mount'); AU.click && AU.click(); horseHud(); }
+function dismount() { if (!TOWN.horse) return; TOWN.mounted = false; const s = TOWN.face + Math.PI / 2; TOWN.pos.x += Math.sin(s) * 1.4; TOWN.pos.z += Math.cos(s) * 1.4; townCollide(); if (typeof playtestAction === 'function') playtestAction('dismount'); horseHud(); }
 function updateHorse(dt) {
   const H = TOWN.horse; if (!H) { horseHud(); return; }
   if (TOWN.mineOn) { H.A.root.visible = false; horseHud(); return; }
@@ -40991,6 +41136,7 @@ function mineChange(on, tunnel) {
   TOWN.mine.visible = on;
   TOWN.pos = on ? { x: portal ? portal.entry[0] : DEEP_MINE.entry[0], z: portal ? portal.entry[1] : DEEP_MINE.entry[1] }
     : { x: portal ? portal.x : DEEP_MINE.entrance[0], z: portal ? portal.z + 3 : DEEP_MINE.entrance[1] + 4 };
+  if (typeof playtestAction === 'function') playtestAction(on ? 'enter_mine' : 'leave_mine', { tunnel: tunnel || '' });
   TOWN.yaw = 0; TOWN.face = on ? Math.PI : 0; TOWN.cam = null; TOWN.near = null; TOWN.district = null;
   if (TOWN.me) TOWN.me.root.position.set(TOWN.pos.x, mineGroundY(TOWN.pos.x, TOWN.pos.z), TOWN.pos.z);
   if (WORLD.pet) WORLD.pet.visible = !on;
