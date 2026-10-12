@@ -43,19 +43,19 @@ test('a brand new player: test fight, then help?, then the creator, then the tou
 test('a completed legacy save cannot enter the town after signout and retains its progress', async ({ game, page }) => {
   await page.addInitScript(() => {
     window.__onboard = true; // real gate, not the normal isolated fixture's bypass
-    try { localStorage.setItem('st-career', JSON.stringify({ onboard: 'done', purse: 1013, level: 12, stats: { matches: 8, wins: 4 } })); } catch (e) {}
+    try { localStorage.setItem('st-career', JSON.stringify({ onboard: 'done', purse: 1013, upgrades: { harness: 2 }, stats: { matches: 8, wins: 4 } })); } catch (e) {}
   });
   await page.reload();
   await page.waitForFunction(() => window.__ST && window.__ST.G && window.__ST.G.screen === 'msgScr', null, {timeout:60000});
   await expect(page.locator('#msgPanel')).toContainText('Sign in with BuhurtOS');
-  expect(await game.run('CAREER.purse === 1013 && CAREER.level === 12')).toBe(true);
+  expect(await game.run('CAREER.purse === 1013 && CAREER.upgrades.harness === 2 && CAREER.stats.matches === 8')).toBe(true);
   // Even a direct call to enterTown must not open the realm without a verified session.
   await game.run('(enterTown(), true)');
   expect(await game.run('!TOWN.on')).toBe(true);
   // Mock a verified account for the isolated, no-network browser suite.
   await game.run("(BOS.user = { id: 'verified-test-uid' }, CLOUD.ready = true, onbResumeAfterAuth(), true)");
   await game.until("G.screen === 'title'");
-  expect(await game.run('CAREER.purse === 1013 && CAREER.level === 12')).toBe(true);
+  expect(await game.run('CAREER.purse === 1013 && CAREER.upgrades.harness === 2 && CAREER.stats.matches === 8')).toBe(true);
 });
 
 test('someone who played before gets the creator next time they open the game', async ({ game, page }) => {
