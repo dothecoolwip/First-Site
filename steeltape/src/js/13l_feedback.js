@@ -24,12 +24,114 @@ async function sendEvent(kind, data) {
 function eventIdentify() {
   if (!BOS.user) return;
   sendEvent('identify', { level: CAREER.level || 1, matches: (CAREER.stats || {}).matches || 0 });
+  // Send any offline sessions waiting on this account's successful authentication.
+  eventPlaySync();
 }
 function eventHeartbeat() {
   if (document.hidden || !G || G.autopilot || location.hash === '#autotest') return;
   sendEvent('heartbeat', { level: CAREER.level || 1 });
 }
 setInterval(eventHeartbeat, 60000);
+// ---------- Account playtime (tracked from this release onward) ----------
+// Count only visible, recently interacted-with gameplay. Store cumulative
+// seconds by account and tab session so offline play survives refresh/restart.
+// The backend uses a JWT and an idempotent session counter; it never trusts a
+// client-supplied account id.
+const PLAYTIME_PREFIX = 'steeltape-active-time-v1:';
+let PLAYTIME_PREVIOUS = performance.now();
+let PLAYTIME_LAST_INPUT = performance.now();
+let PLAYTIME_SENDING = false;
+let PLAYTIME_LAST_SEND = 0;
+const PLAYTIME_TABS = {};
+function eventPlayUID() {
+  if (BOS.user && BOS.user.id) return BOS.user.id;
+  // An account linked on this device can keep playing while disconnected.
+  if (navigator.onLine === false) {
+    try {
+      const meta = JSON.parse(localStorage.getItem('steeltape-cloud-link-v1') || 'null');
+      return typeof meta?.uid === 'string' ? meta.uid : null;
+    } catch (e) { }
+  }
+  return null;
+}
+function eventPlayTab(uid) {
+  if (PLAYTIME_TABS[uid]) return PLAYTIME_TABS[uid];
+  const tabKey = PLAYTIME_PREFIX + 'tab:' + uid;
+  let tab = null;
+  try { tab = sessionStorage.getItem(tabKey); } catch(e) {}
+  if (!tab || !/^[0-9a-f]{8}-[0-9a-f]{4}-[1-8][0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$/i.test(tab)) {
+    tab = crypto.randomUUID();
+    try { sessionStorage.setItem(tabKey,tab); } catch(e) {}
+  }
+  PLAYTIME_TABS[uid] = tab;
+  return tab;
+}
+function eventPlayEntry(uid,session) {
+  const key = PLAYTIME_PREFIX + uid + ':' + session;
+  try {
+    const prior = JSON.parse(localStorage.getItem(key) || 'null');
+    if (prior && prior.uid === uid && prior.session === session
+        && Number.isFinite(prior.seconds) && prior.seconds >= 0) return prior;
+  } catch(e) {}
+  return {uid,session,seconds:0,acked:0,updated:Date.now()};
+}
+function eventPlayTick() {
+  const now = performance.now(), gap = Math.max(0,now - PLAYTIME_PREVIOUS);
+  PLAYTIME_PREVIOUS = now;
+  const uid = eventPlayUID();
+  if (!uid || document.hidden || G.autoflow || location.protocol === 'file:'
+      || location.hash === '#autotest' || now - PLAYTIME_LAST_INPUT > 120000
+      || gap <= 0 || gap > 15000) return;
+  const session = eventPlayTab(uid), entry = eventPlayEntry(uid,session);
+  // Bound a single clock tick to avoid counting sleep / background time.
+  entry.seconds = Math.min(2592000, entry.seconds + Math.min(gap,10000)/1000);
+  entry.updated = Date.now();
+  try { localStorage.setItem(PLAYTIME_PREFIX + uid + ':' + session, JSON.stringify(entry)); }
+  catch(e) { console.warn('Could not store offline playtime on this device'); }
+}
+async function eventPlaySync() {
+  if (PLAYTIME_SENDING || !BOS.user?.id || navigator.onLine === false
+      || location.protocol === 'file:' || location.hash === '#autotest') return;
+  const uid = BOS.user.id;
+  PLAYTIME_SENDING = true;
+  try {
+    const keys = [];
+    for (let i=0; i<localStorage.length; i++) {
+      const k=localStorage.key(i);
+      if (k && k.startsWith(PLAYTIME_PREFIX + uid + ':')) keys.push(k);
+    }
+    // Never transfer an entry across accounts. Process older offline time first.
+    for (const key of keys.slice(0,120)) {
+      let entry;try {entry = JSON.parse(localStorage.getItem(key)||'null');}catch(e){continue;}
+      if (!entry || entry.uid !== uid || !entry.session) continue;
+      const whole = Math.floor(entry.seconds || 0);
+      if (whole <= Math.floor(entry.acked || 0)) {
+        if (Date.now() - (entry.updated || 0) > 7*86400000) localStorage.removeItem(key);
+        continue;
+      }
+      const ok = await sendEvent('playtime', { session:entry.session, seconds:whole });
+      if (!ok) break;
+      // Reload to avoid overwriting seconds accumulated during the request.
+      const current=eventPlayEntry(uid,entry.session);
+      current.acked=Math.max(current.acked||0,whole);
+      localStorage.setItem(key,JSON.stringify(current));
+    }
+  } finally { PLAYTIME_SENDING = false; }
+}
+function eventPlayActivity() { PLAYTIME_LAST_INPUT = performance.now(); }
+for (const type of ['pointerdown','pointermove','keydown','touchstart','wheel','gamepadconnected']) {
+  window.addEventListener(type,eventPlayActivity,{passive:true});
+}
+document.addEventListener('visibilitychange',()=>{
+  PLAYTIME_PREVIOUS=performance.now();
+  if (!document.hidden) eventPlayActivity();
+  else eventPlaySync();
+});
+window.addEventListener('pagehide',()=>{eventPlayTick();eventPlaySync();});
+window.addEventListener('online',()=>eventPlaySync());
+setInterval(eventPlayTick,5000);
+setInterval(()=>{eventPlayTick();eventPlaySync();},30000);
+
 function eventSession() { sendEvent('session', { level: CAREER.level || 1, matches: (CAREER.stats || {}).matches || 0, team: CAREER.club && CAREER.club.bos || null, touch: IS_TOUCH, w: window.innerWidth, h: window.innerHeight, ver: (window.BUILD_VER || '') }); }
 function eventMatch(m, won) { if (!m || G.attract || m.training) return; sendEvent('match', { stage: m.stage || '', mode: m.mode, won: !!won, opp: m.opp, cat: m.category, online: !!m.online, trial: m.trial || null, throne: m.throne || null }); }
 // the form
