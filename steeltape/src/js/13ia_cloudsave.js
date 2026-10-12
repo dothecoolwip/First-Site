@@ -1,7 +1,7 @@
 // Steel & Tape cloud-save synchronisation. Existing st-* data remains the local/offline save.
 // Every saved game key is included so future shops, inventories, upgrades and activities are covered.
 // Linked cloud revisions use server-side compare-and-swap and an archive of the previous revision.
-const CLOUD = { uid:null, revision:0, ready:false, holding:false, loading:null, busy:false, timer:null, lastHash:'', optedOut:false, applying:false };
+const CLOUD = { uid:null, revision:0, ready:false, holding:false, loading:null, busy:false, timer:null, lastHash:'', optedOut:false, offline:false, applying:false };
 const CLOUD_META = 'steeltape-cloud-link-v1';
 const CLOUD_BACKUP = 'steeltape-local-backup-v1-';
 
@@ -34,6 +34,7 @@ function cloudPrepareGuestLink() {
     return false;
   }
 }
+function cloudIsOffline() { return typeof navigator !== 'undefined' && navigator.onLine === false; }
 function cloudReadMeta() { try { return JSON.parse(localStorage.getItem(CLOUD_META) || 'null'); } catch (e) { return null; } }
 function cloudWriteMeta(uid, revision, hash) {
   localStorage.setItem(CLOUD_META, JSON.stringify({ uid, revision, hash, at:new Date().toISOString() }));
@@ -156,7 +157,7 @@ function cloudReady(uid,revision,snapshot) {
   // If the acknowledgement cannot be persisted locally, don't pretend this
   // device is synced: the next session must compare its save explicitly.
   cloudWriteMeta(uid,Number(revision),hash);
-  CLOUD.revision=Number(revision);CLOUD.lastHash=hash;CLOUD.ready=true;CLOUD.holding=false;CLOUD.optedOut=false;
+  CLOUD.revision=Number(revision);CLOUD.lastHash=hash;CLOUD.ready=true;CLOUD.holding=false;CLOUD.optedOut=false;CLOUD.offline=false;
   if(typeof onbResumeAfterAuth==='function')setTimeout(onbResumeAfterAuth,0);
 }
 function cloudRestore(uid,revision,remoteSnapshot) {
@@ -190,87 +191,78 @@ async function cloudCommit(uid,expected,snapshot) {
   cloudReady(uid,answer.revision,snapshot);
   return true;
 }
-function cloudResolveChoice(uid,remote,local) {
-  CLOUD.holding=true;CLOUD.ready=false;
-  const a=cloudSummary(local), b=cloudSummary(remote.snapshot);
-  const msg='This account already has progress in the cloud, but this device has a different saved game.\n\n'+
-    'CLOUD: Level '+b.level+', $'+b.purse.toLocaleString()+', '+b.matches+' matches, '+b.keys+' saved sections.\n'+
-    'THIS DEVICE: Level '+a.level+', $'+a.purse.toLocaleString()+', '+a.matches+' matches, '+a.keys+' saved sections.\n\n'+
-    'Choose which save to continue. We keep a device backup before replacing local data, and the cloud keeps previous revisions before an overwrite. These saves cannot be safely auto-merged.';
-  return new Promise(resolve=>{
-    cloudOverlay('Choose your Steel & Tape save',msg,[
-      {label:'Use cloud save',run:()=>{try{cloudRestore(uid,remote.revision,remote.snapshot);}catch(e){cloudProblem(uid,e);}resolve();}},
-      {label:'Use this device',run:async()=>{try{
-        const ok=await cloudCommit(uid,remote.revision,cloudSnapshot());
-        if(!ok){await cloudStart(uid,true);}else {try{toastMenu('This device is now backed up to the cloud.');}catch(e){}}
-      }catch(e){cloudProblem(uid,e);}resolve();}},
-      {label:'Play locally for now',secondary:true,run:()=>{CLOUD.ready=false;CLOUD.holding=false;CLOUD.optedOut=true;if(typeof onbResumeAfterAuth==='function')onbResumeAfterAuth();resolve();}}
-    ]);
-  });
-}
+// If the cloud exists, it is authoritative. Never offer an online choice to
+// replace an existing account save with a different device's local data.
+// Only offline progress from THIS SAME account at the SAME server revision may
+// be uploaded on reconnection. Server revisions take priority on conflict.
 function cloudProblem(uid,error) {
   if(CLOUD.uid!==uid)return;
-  CLOUD.ready=false;CLOUD.holding=false;
-  const explanation = 'Your device save has not been deleted or replaced.\n\n'+String(error && error.message || error)+
-   '\n\nCloud backup is not active on this device. You can keep playing locally and retry after reconnecting.';
-  cloudOverlay('Cloud save needs attention',explanation,[{label:'Play locally for now',run:()=>{CLOUD.optedOut=true;if(typeof onbResumeAfterAuth==='function')onbResumeAfterAuth();}},{label:'Try again',secondary:true,run:()=>{CLOUD.optedOut=false;cloudOnAuth(uid,true);}}]);
+  CLOUD.ready=false;CLOUD.holding=false;CLOUD.offline=true;CLOUD.optedOut=true;
+  console.warn('Steel & Tape cloud unavailable; keeping the device save', error);
+  try { if (typeof toastMenu === 'function') toastMenu('Playing offline. Progress is saved on this device until cloud sync reconnects.'); } catch(e) {}
+  if(typeof onbResumeAfterAuth==='function')setTimeout(onbResumeAfterAuth,0);
 }
 async function cloudStart(uid,retry) {
   if(CLOUD.uid!==uid)return;
+  if(cloudIsOffline()) { cloudProblem(uid, new Error('No internet connection'));return; }
   const remote=await cloudRpc('steeltape_cloud_read');
   if(CLOUD.uid!==uid)return;
   const local=cloudSnapshot(), meta=cloudReadMeta(), localHash=cloudHash(local);
   if(!remote || !remote.snapshot) {
-    if(meta && meta.uid!==uid && cloudMeaningful(local)) {
-      CLOUD.holding=true;
-      return new Promise(resolve=>cloudOverlay('Different account on this device',
-        'This device has progress linked to a different account. To keep the two characters separate, start a new character or explicitly move the local save to this account. Your existing device save will be backed up.',
-        [{label:'Start a new character',run:async()=>{try{
-          cloudBackup(meta.uid,local);
-          const blank={'st-career':CAREER_DEFAULT()};
-          const ok=await cloudCommit(uid,0,blank);
-          if(ok)cloudRestore(uid,CLOUD.revision,blank);else await cloudStart(uid,true);
-        }catch(e){cloudProblem(uid,e);}resolve();}},
-        {label:'Move this device save',secondary:true,run:async()=>{try{const ok=await cloudCommit(uid,0,local);if(!ok)await cloudStart(uid,true);}catch(e){cloudProblem(uid,e);}resolve();}},
-        {label:'Not now',secondary:true,run:()=>{CLOUD.optedOut=true;CLOUD.holding=false;resolve();}}]));
+    if(meta && meta.uid!==uid) {
+      // A shared phone must never move somebody else's character to a
+      // different account automatically. Save the previous character first.
+      cloudBackup(meta.uid, local);
+      const empty={'st-career':CAREER_DEFAULT()};
+      const ok=await cloudCommit(uid,0,empty);
+      if(!ok)return cloudStart(uid,true);
+      cloudRestore(uid,CLOUD.revision,empty);
+      return;
     }
+    // First login for an unlinked device: adopt the existing local save.
     const ok=await cloudCommit(uid,0,local);
     if(!ok)return cloudStart(uid,true);
     return;
   }
-  const remoteHash=cloudHash(remote.snapshot);
-  if(remoteHash===localHash){cloudReady(uid,remote.revision,local);return;}
-  if(meta && meta.uid===uid && meta.hash===localHash){cloudRestore(uid,remote.revision,remote.snapshot);return;}
-  if(!cloudMeaningful(local) && (!meta || meta.uid!==uid)){cloudRestore(uid,remote.revision,remote.snapshot);return;}
-  if(meta && meta.uid===uid && Number(meta.revision)===Number(remote.revision)){
+  if(remoteHashMatches(remote.snapshot,localHash)) {
+    cloudReady(uid,remote.revision,local);return;
+  }
+  // An offline edit is allowed to become the cloud save ONLY when nobody
+  // changed the cloud since this device's last confirmed revision.
+  if(meta && meta.uid===uid && Number(meta.revision)===Number(remote.revision)
+      && meta.hash!==localHash) {
     const ok=await cloudCommit(uid,remote.revision,local);
     if(!ok)return cloudStart(uid,true);
     return;
   }
-  return cloudResolveChoice(uid,remote,local);
+  // Existing cloud always wins over new-device saves, other account saves,
+  // and offline changes racing an update from another device.
+  cloudRestore(uid,remote.revision,remote.snapshot);
 }
+function remoteHashMatches(snapshot,hash) {return cloudHash(snapshot)===hash;}
 function cloudOnAuth(uid,retry) {
   if(!uid||location.hash==='#autotest')return Promise.resolve();
   if(CLOUD.loading && CLOUD.uid===uid)return CLOUD.loading;
   if(CLOUD.uid===uid && CLOUD.ready && !retry)return Promise.resolve();
-  if(CLOUD.uid!==uid){ CLOUD.uid=uid;CLOUD.revision=0;CLOUD.ready=false;CLOUD.optedOut=false;CLOUD.holding=false; }
+  if(CLOUD.uid!==uid){ CLOUD.uid=uid;CLOUD.revision=0;CLOUD.ready=false;CLOUD.optedOut=false;CLOUD.offline=false;CLOUD.holding=false; }
   const promise=(async()=>{try{await cloudStart(uid,Boolean(retry));}catch(e){cloudProblem(uid,e);}})();
   CLOUD.loading=promise.finally(()=>{if(CLOUD.loading===done)CLOUD.loading=null;});
   const done=CLOUD.loading;
   return done;
 }
 function cloudOnSignOut() {
-  CLOUD.uid=null;CLOUD.ready=false;CLOUD.holding=false;CLOUD.optedOut=false;
+  CLOUD.uid=null;CLOUD.ready=false;CLOUD.holding=false;CLOUD.optedOut=false;CLOUD.offline=false;
   if(CLOUD.timer){clearTimeout(CLOUD.timer);CLOUD.timer=null;}
   const shade=document.getElementById('steeltapeCloudOverlay');if(shade)shade.remove();
 }
 function cloudSchedule() {
-  if(!CLOUD.uid||!CLOUD.ready||CLOUD.optedOut||CLOUD.applying)return;
+  if(!CLOUD.uid||!CLOUD.ready||CLOUD.optedOut||CLOUD.applying||cloudIsOffline())return;
   if(CLOUD.timer)clearTimeout(CLOUD.timer);
   CLOUD.timer=setTimeout(()=>{CLOUD.timer=null;cloudFlush();},3500);
 }
 async function cloudFlush() {
   if(!CLOUD.uid||!CLOUD.ready||CLOUD.optedOut||CLOUD.applying||CLOUD.busy)return;
+  if(cloudIsOffline()){cloudProblem(CLOUD.uid,new Error('No internet connection'));return;}
   const uid=CLOUD.uid, snapshot=cloudSnapshot(),hash=cloudHash(snapshot);
   if(hash===CLOUD.lastHash)return;
   CLOUD.busy=true;
@@ -283,7 +275,13 @@ async function cloudFlush() {
 const cloudOriginalSet=store.set.bind(store),cloudOriginalDel=store.del.bind(store);
 store.set=function(k,v){cloudOriginalSet(k,v);cloudSchedule();};
 store.del=function(k){cloudOriginalDel(k);cloudSchedule();};
-setInterval(()=>{if(CLOUD.ready)cloudFlush();},25000);
-window.addEventListener('online',()=>{if(CLOUD.uid&&!CLOUD.ready&&!CLOUD.holding&&!CLOUD.optedOut)cloudOnAuth(CLOUD.uid,true);else cloudFlush();});
+setInterval(()=>{if(CLOUD.ready)cloudFlush();else if(CLOUD.uid&&CLOUD.offline&&!cloudIsOffline()&&!CLOUD.loading)cloudOnAuth(CLOUD.uid,true);},25000);
+window.addEventListener('offline',()=>{
+  if(CLOUD.uid) cloudProblem(CLOUD.uid,new Error('Internet disconnected'));
+});
+window.addEventListener('online',()=>{
+  if(CLOUD.uid){CLOUD.optedOut=false;CLOUD.offline=false;CLOUD.ready=false;cloudOnAuth(CLOUD.uid,true);}
+  else if(typeof onbAccountRequired==='function'&&onbAccountRequired())setTimeout(()=>onbAccountGate(),0);
+});
 document.addEventListener('visibilitychange',()=>{if(document.hidden)cloudFlush();});
 window.addEventListener('pagehide',()=>{cloudFlush();});
