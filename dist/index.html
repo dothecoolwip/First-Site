@@ -16228,7 +16228,7 @@ function buildAvatar() {
 }
 function buildTown() {
   if (TOWN.root) W3.scene.remove(TOWN.root);
-  TOWN.root = new THREE.Group(); W3.scene.add(TOWN.root); TOWN.stalls = []; TOWN.obst = []; TOWN.home = null; TOWN.statue = null;
+  TOWN.root = new THREE.Group(); W3.scene.add(TOWN.root); TOWN.stalls = []; TOWN.obst = []; TOWN.home = null; TOWN.statue = null; SPECT.seated = [];
   TOWN.people = typeof UAL !== 'undefined' && UAL.ready;
   // the venue's club tents stay (they're the visiting clubs' pavilions); its cottages and tree ring are hidden in town
   const RX = LIST.W / 2 + 4, RZ = LIST.L / 2 + 4;
@@ -16327,8 +16327,8 @@ function updateTown(dt) {
   if (walking && TOWN.keyPrev !== undefined) { if (k.KeyH && !TOWN.keyPrev.h) callHorse(); if (k.KeyR && !TOWN.keyPrev.r && TOWN.wp) { TRAVEL.auto = !TRAVEL.auto; compassHud(); } }
   TOWN.keyPrev = { h: !!k.KeyH, r: !!k.KeyR };
   if (J && !TOWN.mounted) {
-    J.root.position.set(TOWN.pos.x, mineGroundY(TOWN.pos.x, TOWN.pos.z) + (TOWN.spec ? 1.45 : 0), TOWN.pos.z); J.root.rotation.y = TOWN.face;
-    if (J.ual) { J.play(sp > 3.5 ? 'Jog_Fwd_Loop' : sp > 0.3 ? 'Walk_Loop' : 'Idle_Loop', 0.2); J.mixer.update(dt); }
+    J.root.position.set(TOWN.pos.x, mineGroundY(TOWN.pos.x, TOWN.pos.z), TOWN.pos.z); J.root.rotation.y = TOWN.spec ? -Math.PI / 2 : TOWN.face;
+    if (J.ual) { J.play(TOWN.spec ? 'Sitting_Idle_Loop' : sp > 3.5 ? 'Jog_Fwd_Loop' : sp > 0.3 ? 'Walk_Loop' : 'Idle_Loop', 0.2); J.mixer.update(dt); }
   }
   // the nearest vendor within reach turns to you and talks
   let best = null, bd = 5;
@@ -16365,7 +16365,7 @@ function townCollide() {
       // The rope, not just the wooden list, is the public boundary.
       townPushRect(P, A.x, A.z, LIST_BLOCK.x, LIST_BLOCK.z, r);
       // Benches are solid; the spectator prompt remains reachable at their outer edge.
-      for (const side of [-1, 1]) townPushRect(P, A.x + side * (LIST.W / 2 + 6.4), A.z, 1.25, LIST.L * 0.4, r);
+      for (const side of [-1, 1]) townPushRect(P, A.x + side * (LIST.W / 2 + 7.2), A.z, 1.5, LIST.L * 0.4, r);
     }
     const ci = Math.floor(P.x / NAV.cell), cj = Math.floor(P.z / NAV.cell);
     for (let i = ci - 1; i <= ci + 1; i++) for (let j = cj - 1; j <= cj + 1; j++) for (const o of (NAV.grid.get(i + ',' + j) || NAV.none)) { const dx = P.x - o.x, dz = P.z - o.z, d = Math.hypot(dx, dz), m = o.r + r; if (d < m && d > 1e-4) { P.x = o.x + dx / d * m; P.z = o.z + dz / d * m; } }
@@ -17628,12 +17628,13 @@ function vendorOutfit(V) {
   return { outfit: o, tex: o.includes('Ranger') ? 'ranger' : (V.key === 'smith' || V.key === 'guild' ? 'peasant2' : 'peasant'), tint: '#' + c.getHexString() };
 }
 // spectators round the list in costume (the venue's block crowd is hidden in town)
-const SPECT = { people: [], t: 0 };
+const SPECT = { people: [], seated: [], t: 0 };
 function buildSpectators() {
   SPECT.people = []; if (typeof UAL === 'undefined' || !UAL.ready || !outfitInit()) return false;
   const spots = [];
-  for (const sx of [-1, 1]) for (const z of [-12, -6, 0, 6, 12]) spots.push([sx * rand(13, 14.5), z + rand(-1, 1)]);
-  for (const sz of [-1, 1]) for (const x of [-8, -3, 3, 8]) spots.push([x + rand(-1, 1), sz * rand(18, 19.5)]);
+  // Side aisles belong to the bleachers. Standing spectators watch from the
+  // north/south rope only, with their centres fully outside the string.
+  for (const sz of [-1, 1]) for (const x of [-11, -8, -5, -2, 2, 5, 8, 11]) spots.push([x + rand(-0.35, 0.35), sz * rand(20, 21)]);
   spots.forEach(([x, z], i) => {
     if (IS_TOUCH && i % 2) return;
     const fit = folkOutfit('towns', i), J = costumePerson(Object.assign({ h: rand(1.6, 1.86), anim: pick(['Idle_Loop', 'Idle_Talking_Loop', 'Idle_Loop']) }, fit)); if (!J) return;
@@ -17646,6 +17647,7 @@ function buildSpectators() {
 }
 function updateSpectators(dt) {
   SPECT.t += dt; if (SPECT.t < 1 / 30) return; const st = SPECT.t; SPECT.t = 0; // 30 fps is plenty for a crowd
+  updateArenaSeatFolk(st);
   const hot = typeof BOUT !== 'undefined' && BOUT.on && BOUT.phase === 'stopping';
   for (const S of SPECT.people) {
     S.t -= st; if (S.t <= 0 || (hot && S.J.cur !== 'Dance_Loop' && Math.random() < 0.02)) { S.t = rand(6, 18); S.J.play(hot || Math.random() < 0.2 ? 'Dance_Loop' : pick(['Idle_Loop', 'Idle_Talking_Loop']), 0.4); }
@@ -18155,9 +18157,9 @@ function arenaList(R, A, o) {
 function arenaStands(R, A, o) {
   const Y = gy(A.x, A.z), L = LIST.L, W = LIST.W;
   for (const sx of [-1, 1]) for (let row = 0; row < 3; row++) {
-    const bx = A.x + sx * (W / 2 + 5.5 + row * 0.9);
-    const b = mk(R, geo('ar_bench', () => new THREE.BoxGeometry(0.7, 0.12, L * 0.8)), tmat(o.bench || '#7a5a3a'), bx, Y + 0.45 + row * 0.5, A.z); b.receiveShadow = true;
-    for (const sz of [-1, 1]) mk(R, geo('ar_benchleg', () => new THREE.BoxGeometry(0.7, 1, 0.2)), tmat('#4a3422'), bx, Y + (0.45 + row * 0.5) / 2, A.z + sz * L * 0.38).scale.y = 0.45 + row * 0.5;
+    const bx = A.x + sx * (W / 2 + 6.3 + row * 0.9);
+    const b = mk(R, geo('ar_bench', () => new THREE.BoxGeometry(1.2, 0.12, L * 0.8)), tmat(o.bench || '#7a5a3a'), bx, Y + 0.45 + row * 0.5, A.z); b.receiveShadow = true;
+    for (const sz of [-1, 1]) mk(R, geo('ar_benchleg', () => new THREE.BoxGeometry(1.2, 1, 0.2)), tmat('#4a3422'), bx, Y + (0.45 + row * 0.5) / 2, A.z + sz * L * 0.38).scale.y = 0.45 + row * 0.5;
   }
   arenaSeatFolk(R, A);
 }
@@ -18899,29 +18901,58 @@ function trialEnd(m, won, withPurse) {
 // ===================================================================
 const SPEC = { results: {}, t: 0, follow: 0, zoom: 1 };
 const SPEC_MODES = ['Front row', 'Back row', 'Opposite stand', 'High stand'];
-// Both stands have a short-range interaction at their road-facing ends.
+// The rope-side aisle is reachable; the old trigger was behind the solid benches.
 function buildArenaSeats() {
   for (const A of ARENAS) {
     for (const side of [-1, 1]) {
-      const x = A.x + side * (LIST.W / 2 + 9.35);
-      const z = A.z + Math.sign(A.entry[1] - A.z) * LIST.L * 0.3;
-      const lab = new THREE.Object3D();
-      TOWN.stalls.push({ V: { key: 'a:' + A.key + ':' + side, name: A.name, role: 'Watch from the stands', icon: '🏟️' }, g: lab, npc: null, ry: 0, x, z, ax: x, az: z, label: lab, arena: A, reach: 2.2, open: () => spectate(A), verb: 'Spectate' });
+      for (const offset of [-9, 0, 9]) {
+        const x = A.x + side * (LIST.W / 2 + 4.7), z = A.z + offset;
+        const lab = new THREE.Object3D();
+        TOWN.stalls.push({ V: { key: 'a:' + A.key + ':' + side + ':' + offset, name: A.name, role: 'Watch from the stands', icon: '🏟️' }, g: lab, npc: null, ry: 0, x, z, ax: x, az: z, label: lab, arena: A, reach: 2.7, open: () => spectate(A), verb: 'Spectate' });
+      }
     }
   }
 }
-// festival clothes for the posed crowd (a few shared materials, so the stands still merge into a handful of meshes)
-const SEAT_COLS = ['#7a2b2b', '#2f4a6b', '#4a6b3a', '#8a6a3a', '#5b3a6b', '#6b6b6b', '#a0522d', '#2a5a5a'], SEAT_MAT = {};
-const SEAT_MATS = SEAT_COLS.map(c => () => SEAT_MAT[c] || (SEAT_MAT[c] = lmat({ color: c, roughness: 0.9, flatShading: true })));
-// posed spectators sitting on the benches (static meshes: cheap enough for every arena)
+// Each lane has an animated spectator who can leave, return, and take another
+// place on that bench. Keep the rig count bounded for phone GPUs.
 function arenaSeatFolk(R, A, sides) {
-  const rnd = seeded('seat' + A.key), keep = IS_TOUCH ? 0.22 : 0.45, L = LIST.L, W = LIST.W;
-  const kinds = ['po_male_sitting', 'po_female_sitting', 'po_male_sitting_cheering', 'po_female_sitting_cheering'];
-  for (const sx of sides || [-1, 1]) for (let row = 0; row < 3; row++) for (let zz = -L * 0.38; zz <= L * 0.38; zz += 1.3) {
-    if (rnd() > keep) continue;
-    const bx = A.x + sx * (W / 2 + 5.5 + row * 0.9), y = 0.45 + row * 0.5 + 0.06;
-    const p = kpiece(R, kinds[Math.floor(rnd() * kinds.length)], bx, gy(A.x, A.z) + y - 0.5, A.z + zz + (rnd() - 0.5) * 0.3, sx < 0 ? Math.PI / 2 : -Math.PI / 2, 1);
-    if (p) { const m = SEAT_MATS[Math.floor(rnd() * SEAT_MATS.length)](); p.traverse(o => { if (o.isMesh) o.material = m; }); }
+  if (!UAL.ready || !outfitInit()) return;
+  for (const sx of sides || [-1, 1]) for (let row = 0; row < (A.key === 'dome' ? 3 : IS_TOUCH ? 1 : 2); row++) {
+    const fit = folkOutfit('towns', row + (sx > 0 ? 7 : 0));
+    const J = costumePerson(Object.assign({ h: 1.7 + row * 0.05, anim: 'Sitting_Idle_Loop' }, fit));
+    if (!J) continue;
+    const x = A.x + sx * (LIST.W / 2 + 6.3 + row * 0.9), z = A.z + [-7, 0, 7][row], y = gy(A.x, A.z) + row * 0.5;
+    J.root.position.set(x, y, z); J.root.rotation.y = sx < 0 ? Math.PI / 2 : -Math.PI / 2;
+    R.add(J.root);
+    SPECT.seated.push({ J, A, sx, row, x, y, z, phase: 'sit', timer: rand(12, 28), gesture: rand(3, 8), exit: row % 2 ? -1 : 1 });
+  }
+}
+function updateArenaSeatFolk(dt) {
+  for (const S of SPECT.seated) {
+    S.timer -= dt;
+    const near = Math.hypot(TOWN.pos.x - S.A.x, TOWN.pos.z - S.A.z) < 70;
+    S.J.root.visible = near && S.phase !== 'away';
+    if (S.phase === 'sit') {
+      if ((S.gesture -= dt) <= 0) { S.gesture = rand(4, 9); S.J.play(pick(['Sitting_Idle_Loop', 'Sitting_Talking_Loop']), 0.4); }
+      if (S.timer <= 0) { S.phase = 'leave'; S.J.play('Walk_Loop', 0.25); S.J.root.rotation.y = S.exit > 0 ? 0 : Math.PI; }
+    } else if (S.phase === 'leave' || S.phase === 'enter') {
+      const target = S.phase === 'leave' ? S.A.z + S.exit * (LIST.L * 0.5 + 0.7) : S.z;
+      const step = Math.sign(target - S.J.root.position.z) * Math.min(Math.abs(target - S.J.root.position.z), dt * 1.7);
+      S.J.root.position.z += step;
+      if (Math.abs(target - S.J.root.position.z) < 0.05) {
+        if (S.phase === 'leave') { S.phase = 'away'; S.timer = rand(3, 8); }
+        else { S.phase = 'sit'; S.timer = rand(12, 28); S.J.root.rotation.y = S.sx < 0 ? Math.PI / 2 : -Math.PI / 2; S.J.play('Sitting_Idle_Loop', 0.3); }
+      }
+    } else if (S.phase === 'away' && S.timer <= 0) {
+      // Re-enter in the same row at another empty place, not through the bench.
+      const spots = S.A.key === 'dome' && S.row === 0 ? [-9, -6, -3, 0, 9] : [-9, -6, -3, 0, 3, 6, 9];
+      S.z = S.A.z + pick(spots.filter(z => Math.abs(S.A.z + z - S.z) > 0.1));
+      S.exit = Math.random() < 0.5 ? -1 : 1;
+      S.J.root.position.z = S.A.z + S.exit * (LIST.L * 0.5 + 0.7);
+      S.J.root.rotation.y = S.exit > 0 ? Math.PI : 0;
+      S.J.play('Walk_Loop', 0.25); S.phase = 'enter'; S.J.root.visible = near;
+    }
+    if (near && S.phase !== 'away') S.J.mixer.update(dt);
   }
 }
 function spectate(A) {
@@ -18929,7 +18960,7 @@ function spectate(A) {
   if (!BOUT.on || TOWN.boutArena !== A.key) { TOWN.forceArena = A.key; boutStop(); boutStart(); }
   TOWN.forceArena = A.key; SPEC.zoom = 1;
   TOWN.spec = { A, mode: 0, t: 0, returnPos };
-  TOWN.pos = { x: A.x + LIST.W / 2 + 6.4, z: A.z + LIST.L * 0.12 };
+  TOWN.pos = { x: A.x + LIST.W / 2 + 6.3, z: A.z + LIST.L * 0.12 };
   TOWN.cam = null; AU.click && AU.click();
   $('#townPrompt').hidden = true; specHud();
   toastMenu(`Watching at ${A.name}. Walk off or press Leave to stop.`);
@@ -18954,7 +18985,7 @@ function specCamera(dt) {
   let cx = 0, cz = 0; for (const f of live) { cx += f.pos.x; cz += f.pos.z; } if (live.length) { cx /= live.length; cz /= live.length; }
   const look = new THREE.Vector3(o.x + cx, o.y + 1.1, o.z + cz);
   const side = S.mode === 2 ? -1 : 1, row = S.mode === 0 ? 0 : 2;
-  const want = new THREE.Vector3(A.x + side * (LIST.W / 2 + 5.5 + row * 0.9), o.y + 2.2 + row * 0.5 + (S.mode === 3 ? 0.8 : 0), A.z + (S.mode === 3 ? -LIST.L * 0.2 : LIST.L * 0.12));
+  const want = new THREE.Vector3(A.x + side * (LIST.W / 2 + 6.3 + row * 0.9), o.y + 2.2 + row * 0.5 + (S.mode === 3 ? 0.8 : 0), A.z + (S.mode === 3 ? -LIST.L * 0.2 : LIST.L * 0.12));
   if (!TOWN.cam) { TOWN.cam = want.clone(); TOWN.look = look.clone(); }
   const k = 1 - Math.exp(-3 * dt); TOWN.cam.lerp(want, k); TOWN.look.lerp(look, k);
   cam.position.copy(TOWN.cam); cam.lookAt(TOWN.look);
