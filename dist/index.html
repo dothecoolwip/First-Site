@@ -1,5 +1,5 @@
 <!doctype html><html><head><meta charset="utf-8"><link rel="manifest" href="manifest.webmanifest"><meta name="theme-color" content="#0f1316"><link rel="apple-touch-icon" href="icon-192.png"><meta name="apple-mobile-web-app-capable" content="yes"><meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover"></head><body>
-<script>window.BUILD_VER="steel-tape-f8c765b751";</script><title>Buhurt: Steel &amp; Tape</title>
+<script>window.BUILD_VER="steel-tape-d88cb21334";</script><title>Buhurt: Steel &amp; Tape</title>
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Barlow+Semi+Condensed:wght@400;500;600;700&family=Big+Shoulders+Display:wght@700;800;900&family=Permanent+Marker&display=swap">
@@ -15990,14 +15990,14 @@ function updateTown(dt) {
   if (walking && TOWN.keyPrev !== undefined) { if (k.KeyH && !TOWN.keyPrev.h) callHorse(); if (k.KeyR && !TOWN.keyPrev.r && TOWN.wp) { TRAVEL.auto = !TRAVEL.auto; compassHud(); } }
   TOWN.keyPrev = { h: !!k.KeyH, r: !!k.KeyR };
   if (J && !TOWN.mounted) {
-    J.root.position.set(TOWN.pos.x, mineGroundY(TOWN.pos.x, TOWN.pos.z), TOWN.pos.z); J.root.rotation.y = TOWN.face;
+    J.root.position.set(TOWN.pos.x, mineGroundY(TOWN.pos.x, TOWN.pos.z) + (TOWN.spec ? 1.45 : 0), TOWN.pos.z); J.root.rotation.y = TOWN.face;
     if (J.ual) { J.play(sp > 3.5 ? 'Jog_Fwd_Loop' : sp > 0.3 ? 'Walk_Loop' : 'Idle_Loop', 0.2); J.mixer.update(dt); }
   }
   // the nearest vendor within reach turns to you and talks
-  let best = null, bd = 2.8;
+  let best = null, bd = 5;
   for (const S of TOWN.stalls) {
     if (!!S.mine !== !!TOWN.mineOn) continue;
-    const d = Math.hypot(S.ax - TOWN.pos.x, S.az - TOWN.pos.z); if (d < bd) { bd = d; best = S; }
+    const d = Math.hypot(S.ax - TOWN.pos.x, S.az - TOWN.pos.z); if (d < (S.arena ? 5 : 2.8) && d < bd) { bd = d; best = S; }
     const N = S.npc; if (N && N.ual) { const talk = S === TOWN.near || S.V.key === TOWN.vendor; N.play(talk ? 'Idle_Talking_Loop' : 'Idle_Loop', 0.4); if (N.root.visible) N.mixer.update(dt); }
     const dd = Math.hypot(S.x - TOWN.pos.x, S.z - TOWN.pos.z); S.label.visible = dd < 30 && !(S.node && S.node.until);
     if (N && N.root && !S.player && dd < 9) { const lx = TOWN.pos.x - S.x, lz = TOWN.pos.z - S.z; const local = Math.atan2(lx, lz) - S.ry; const t = clamp(Math.atan2(Math.sin(local), Math.cos(local)), -1.1, 1.1); N.root.rotation.y += (t - N.root.rotation.y) * Math.min(1, dt * 4); }
@@ -16015,6 +16015,7 @@ function updateTown(dt) {
 function townTalk(S) { if (S.open) S.open(); else openVendor(S.V.key); }
 function townCollide() {
   const P = TOWN.pos, r = 0.42;
+  if (TOWN.spec) return; // the spectator is seated above the blocked bleacher footprint
   if (TOWN.mineOn) { mineCollide(P, r); return; }
   for (let it = 0; it < 2; it++) {
     const A = arenaBlocked(P.x, P.z, r);
@@ -16029,7 +16030,7 @@ function townCollide() {
   }
 }
 function updateTownCamera(dt) {
-  const cam = W3.camera, wantFov = TOWN.spec ? 42 : 55; if (cam.near !== 0.15 || Math.abs(cam.fov - wantFov) > 0.1) { cam.near = 0.15; cam.fov = wantFov; cam.updateProjectionMatrix(); }
+  const cam = W3.camera, wantFov = TOWN.spec ? 50 / SPEC.zoom : 55; if (cam.near !== 0.15 || Math.abs(cam.fov - wantFov) > 0.1) { cam.near = 0.15; cam.fov = wantFov; cam.updateProjectionMatrix(); }
   if (ONB.tour && tourTick(dt)) return;
   if (TOWN.spec) { specCamera(dt); return; }
   if (TOWN.peek > 0) { TOWN.peek -= dt; cam.position.set(-104, 2.4, -200); cam.lookAt(-60, 3, -190); if (TOWN.peek <= 0) TOWN.cam = null; return; }
@@ -16678,27 +16679,36 @@ function buildFestival(R) {
   const O = TOWN.obst, add = (key, x, z, ry, s, r) => { const p = kpiece(R, key, x, 0, z, ry || 0, s || 1); if (r) O.push({ x, z, r }); return p; };
   const line = (x0, z0, x1, z1, r, gap) => { const L = Math.hypot(x1 - x0, z1 - z0), n = Math.max(1, Math.round(L / (r * 1.4))); for (let i = 0; i <= n; i++) { const t = i / n, x = x0 + (x1 - x0) * t, z = z0 + (z1 - z0) * t; if (gap && gap(x, z)) continue; O.push({ x, z, r }); } };
   TOWN.mapRects = [];
-  const ground = (x0, x1, z0, z1, col, tex) => { TOWN.mapRects.push([x0, x1, z0, z1, col]); const g = mk(R, new THREE.PlaneGeometry(x1 - x0, z1 - z0), lmat({ map: tex === false ? null : venueTex('dirt'), color: col, roughness: 1 }), (x0 + x1) / 2, 0.022 + Math.random() * 0.004, (z0 + z1) / 2, false); g.rotation.x = -Math.PI / 2; g.receiveShadow = true; return g; };
+  const ground = (x0, x1, z0, z1, col, tex) => {
+    TOWN.mapRects.push([x0, x1, z0, z1, col]);
+    const cx = (x0 + x1) / 2, cz = (z0 + z1) / 2;
+    const geo = new THREE.PlaneGeometry(x1 - x0, z1 - z0, Math.ceil((x1 - x0) / 2), Math.ceil((z1 - z0) / 2));
+    geo.rotateX(-Math.PI / 2);
+    const pos = geo.attributes.position;
+    for (let i = 0; i < pos.count; i++) pos.setY(i, gy(cx + pos.getX(i), cz + pos.getZ(i)) + 0.025);
+    pos.needsUpdate = true; geo.computeVertexNormals();
+    const g = mk(R, geo, lmat({ map: tex === false ? null : venueTex('dirt'), color: col, roughness: 1, side: THREE.DoubleSide }), cx, 0, cz, false);
+    g.receiveShadow = true; return g;
+  };
   const sign = (text, col, x, y, z, ry, s) => { const sg = townSign(text, col); sg.position.set(x, y, z); sg.rotation.y = ry || 0; if (s) sg.scale.setScalar(s); R.add(sg); return sg; };
   const flame = (x, y, z, s, col) => { const f = mk(R, geo('fest_flame', () => new THREE.ConeGeometry(0.12, 0.34, 8)), tmat(col || '#ffb02e', { emissive: col === '#7dffb0' ? '#00c46a' : '#ff6a00', emissiveIntensity: 1.7 }), x, y, z); f.scale.setScalar(s || 1); WORLD.flick.push(f); return f; };
   const face = (x, z, tx, tz) => Math.atan2(tx - x, tz - z);
   // ---- the world heightfield replaces the old featureless grass plane
   buildRealmTerrain(R);
   // ---- paths and squares
-  ground(-16, 16, 25, 70, '#b9a37c'); ground(-4.5, 4.5, -66, -24, '#b4a07a'); ground(-52, -28, -12, 31, '#b2a07a'); ground(25, 51, -10, 30, '#b9a37c');
+  ground(-17, -5, 37, 52, '#b9a37c'); ground(-4.5, 4.5, -66, -24, '#b4a07a'); ground(-52, -28, -12, 31, '#b2a07a'); ground(25, 51, -10, 30, '#b9a37c');
   ground(-50, -28, -40, -20, '#a89068'); ground(29, 61, 40, 72, '#a8956c');
   // ---- the festival gate at the south end of main street
   for (const sx of [-7, 7]) { add('cs_tower_mid', sx, 69, 0, 0.9, 2.6); const t = add('cs_tower_top_1', sx, 69, 0, 0.9, 0); if (t) t.position.y = 3.6; const b = add(sx < 0 ? 'bannerRed' : 'bannerGreen', sx, 66.6, 0, 2.6, 0); if (b) b.position.y = 0.4; }
   for (const sx of [-4.6, 4.6]) mk(R, geo('fest_gpole', () => new THREE.CylinderGeometry(0.1, 0.12, 6.4, 8)), tmat('#4a3422'), sx, 3.2, 68.6);
   sign('BUHURT FESTIVAL', '#6d1b28', 0, 5.7, 68.7, Math.PI, 3.2); sign('BUHURT FESTIVAL', '#6d1b28', 0, 5.7, 68.5, 0, 3.2);
-  // ---- main street: lanterns, banners, carts, the fountain, pumpkins for Halloween
+  // ---- main street: a clear processional route; furnishings belong to its side plaza and stalls
   for (const z of [30, 38, 46, 54, 62]) for (const sx of [-16.6, 16.6]) add('lantern', sx, z, 0, 2, 0.3);
-  add('fountainRoundDetail', 0, 44, 0, 2.3, 2.4);
+  add('fountainRoundDetail', -11, 44, 0, 2.3, 2.4);
   for (const [x, z, k] of [[-3.4, 24.4, 'bannerRed'], [3.4, 24.4, 'bannerGreen'], [-5, 66, 'bannerGreen'], [5, 66, 'bannerRed']]) add(k, x, z, 0, 2.2, 0.35);
   add('cartHigh', -15, 64.5, 0.5, 2, 1.4); add('cart', 14.5, 63.5, -0.4, 2, 1.3);
-  for (const [x, z] of [[-6, 30], [6, 30], [-6, 38], [6, 38], [-3.2, 51.5], [3.2, 51.5], [-14, 26.5], [14, 26.5]]) add('pumpkinCarved', x, z, face(x, z, 0, 44), 1.4);
-  add('slv_crate', -14.6, 39.6, 0.3, 1.2, 0.6); add('slv_veg', -14.4, 41.4, 0.2, 1.2, 0.5); add('fy_vil_barrel', -14.8, 49.6, 0, 1, 0.5); add('fy_asia_stone_lantern', -6.8, 62.4, 0, 1, 0.5); add('fy_asia_stone_lantern', 6.8, 62.4, 0, 1, 0.5);
-  add('dp_gold_pile', 14, 53.4, 0.4, 0.7, 0.6); add('dp_chest_big', 14.4, 46.6, -Math.PI / 2, 1, 0.6);
+  for (const [x, z] of [[-14, 38], [-15, 49], [-14, 26.5], [14, 26.5]]) add('pumpkinCarved', x, z, face(x, z, -11, 44), 1.4);
+  add('slv_crate', -14.6, 39.6, 0.3, 1.2, 0.6); add('slv_veg', -14.4, 41.4, 0.2, 1.2, 0.5); add('fy_vil_barrel', -14.8, 49.6, 0, 1, 0.5);
   // ---- craftsmen's row (west): the forge yard behind the blacksmith, racks at the armourer, the guild's pillory and gold
   add('bf_furnace', -45, 24.6, Math.PI / 2, 1, 1.8); const glow = mk(R, geo('w_forgeglow', () => new THREE.BoxGeometry(0.7, 0.35, 0.05)), tmat('#ff7a1a', { emissive: '#ff4a00', emissiveIntensity: 1.8 }), -43.7, 0.75, 24.6); glow.rotation.y = Math.PI / 2; WORLD.flick.push(glow);
   add('bf_anvil', -42, 18.6, 0.2, 1, 0.5); add('bf_armor_rack', -45, 18.2, Math.PI / 2, 1, 0.6); add('bf_weapon_rack', -47, 21.4, Math.PI / 2, 1, 0.8); add('bf_barrel', -46.4, 27.6, 0, 1, 0.5); add('bf_crate', -48, 25.4, 0.3, 1, 0.6);
@@ -16757,18 +16767,17 @@ function buildFestival(R) {
   add('ps_house2', 68, 40, face(68, 40, 0, 30), 1, 5.5); add('ps_house4', 64, 60, face(64, 60, 0, 30), 1, 5.5);
   // ---- the rest of the realm round the fairground
   buildRealm(R);
-  // ---- rocks and cliffs at the edges, and a ring of woods outside town
-  for (const [k, x, z, r] of [['fy_rock_big_3', -84, 10, 0.4], ['fy_rock_big_1', -78, -40, 1.2], ['fy_rock_medium_4', 82, 24, 2], ['fy_rock_big_pillar', 74, -52, 0.7], ['nt_boulder', 20, -34, 0], ['nt_rock_mossy', -20, -36, 1], ['fy_rock_big_3', 40, 82, 1], ['fy_rock_big_1', -50, 88, 2]]) add(k, x, z, r, 1, 1.4);
+  // ---- the wooded perimeter stays beyond the inhabited plots, not in the walking lanes
   const rnd = seeded('festwoods');
   for (let i = 0; i < (IS_TOUCH ? 50 : 90); i++) { const a = i / (IS_TOUCH ? 50 : 90) * TAU + rnd() * 0.05, e = 1.04 + rnd() * 0.28; if (onRoad(Math.cos(a) * FAIR_RX * e * 1.12, Math.sin(a) * FAIR_RZ * e * 1.12, 5)) continue; add(['slv_tree1', 'slv_tree2', 'slv_tree6', 'fy_pine_2', 'nt_pine', 'fy_birch_1', 'tree_pineTallB_detailed'][i % 7], Math.cos(a) * FAIR_RX * e * 1.12, Math.sin(a) * FAIR_RZ * e * 1.12, rnd() * TAU, 0.9 + rnd() * 0.5, 0); }
   // ---- flora scattered where nothing is planned
-  const kinds = [['treeHighRound', 2.6, 1], ['tree', 2.8, 1], ['treeCrooked', 2.6, 1], ['tree_oak_dark', 2.4, 1], ['nt_oak', 1, 1], ['nt_pine', 1, 1], ['nt_birch', 1, 1], ['fy_birch_6', 0.9, 1], ['slv_tree1', 1, 1], ['slv_tree6', 0.8, 1], ['plant_bushLarge', 2, 0.7], ['nt_bush', 1.3, 0.6], ['slv_bush3', 1, 0.6], ['nt_fern', 1.3, 0], ['nt_flowers', 1.6, 0], ['flower_yellowC', 2, 0], ['flower_purpleB', 2, 0], ['flower_redA', 2, 0], ['nt_grass', 2, 0], ['fy_grass_tuft', 1, 0], ['mushroom_red', 2.4, 0], ['nt_mushrooms', 1.6, 0], ['nt_boulder', 1.3, 0.8], ['nt_rocks', 1.3, 0.6], ['rockLarge', 1.8, 0.8], ['nt_stump', 1, 0.6], ['nt_log', 1, 0.7], ['nt_oak_sapling', 1.2, 0]];
+  const kinds = [['treeHighRound', 2.6, 1], ['tree', 2.8, 1], ['tree_oak_dark', 2.4, 1], ['nt_oak', 1, 1], ['nt_pine', 1, 1], ['nt_birch', 1, 1], ['plant_bushLarge', 2, 0.7], ['nt_bush', 1.3, 0.6], ['nt_fern', 1.3, 0], ['nt_flowers', 1.6, 0], ['flower_yellowC', 2, 0], ['nt_grass', 2, 0], ['fy_grass_tuft', 1, 0]];
   const fr = seeded('festflora'); let placed = 0;
-  for (let tries = 0; tries < 3000 && placed < (IS_TOUCH ? 120 : 240); tries++) {
-    const a = fr() * TAU, rr = 26 + fr() * 70, x = Math.cos(a) * rr, z = Math.sin(a) * rr * 1.06;
+  for (let tries = 0; tries < 2000 && placed < (IS_TOUCH ? 55 : 100); tries++) {
+    const a = fr() * TAU, rr = 75 + fr() * 25, x = Math.cos(a) * rr, z = Math.sin(a) * rr * 1.06;
     if (Math.hypot(x / FAIR_RX, z / FAIR_RZ) > 1.02) continue;
     if (arenaBlocked(x, z, 3)) continue;
-    if (festReserved(x, z, 1.5) || onRoad(x, z, 2)) continue;
+    if (festReserved(x, z, 1.5) || onRoad(x, z, 4)) continue;
     if (O.some(o => Math.hypot(o.x - x, o.z - z) < o.r + 2.2)) continue;
     if (Object.values(STALL_AT).some(([sx, sz]) => Math.hypot(sx - x, sz - z) < 6)) continue;
     const [k, s, r] = kinds[Math.floor(fr() * kinds.length)]; add(k, x, z, fr() * TAU, s * (0.85 + fr() * 0.3), r); placed++;
@@ -17463,6 +17472,10 @@ for (const [arena, marshalAt, heraldAt, crierAt, names, colours] of ARENA_CREWS)
 STATIONS.push({ key: 'training:coach', service: 'training', name: 'Coach Sigrid', role: 'Learn the moves',
   icon: '🥊', at: [-53, -35], ry: Math.PI, col: '#a36b37', look: 2, practice: true });
 const ROADS = [
+  // The fair's walkable spine reaches the Dome entrance; shops branch off it.
+  { name: 'fair-main', pts: [[0, 70], [0, 58], [1, 48], [0, 38], [0, 27]], w: 9 },
+  { name: 'fair-crafts', pts: [[0, 38], [-18, 38], [-31, 29], [-42, 20]], w: 5 },
+  { name: 'fair-market', pts: [[0, 38], [17, 38], [29, 32], [44, 30]], w: 5 },
   { name: 'north', pts: [[0, -24], [-7, -43], [4, -61], [-9, -79], [4, -98], [-5, -117], [0, -140]], w: 6 },
   { name: 'west', pts: [[-52, -2], [-74, 7], [-95, -11], [-119, -10], [-137, -30], [-162, -39], [-178, -61], [-196, -78]], w: 5 },
   { name: 'southwest', pts: [[-16, 70], [-38, 81], [-58, 101], [-87, 101], [-111, 123], [-135, 127], [-160, 140]], w: 5 },
@@ -17514,8 +17527,14 @@ function buildRealmTerrain(R) {
   m.receiveShadow = true; m.userData.landmark = true; TOWN.terrain = m;
 }
 function realmGround(R, x0, x1, z0, z1, col, tex, y) {
-  const g = mk(R, new THREE.PlaneGeometry(x1 - x0, z1 - z0), lmat({ map: tex === false ? null : venueTex(tex || 'dirt'), color: col, roughness: 1 }), (x0 + x1) / 2, y != null ? y : 0.02, (z0 + z1) / 2, false);
-  g.rotation.x = -Math.PI / 2; g.receiveShadow = true; (TOWN.mapRects = TOWN.mapRects || []).push([x0, x1, z0, z1, col]); return g;
+  const cx = (x0 + x1) / 2, cz = (z0 + z1) / 2;
+  const geo = new THREE.PlaneGeometry(x1 - x0, z1 - z0, Math.ceil((x1 - x0) / 2), Math.ceil((z1 - z0) / 2));
+  geo.rotateX(-Math.PI / 2);
+  const pos = geo.attributes.position;
+  for (let i = 0; i < pos.count; i++) pos.setY(i, y != null && y > 1 ? y : gy(cx + pos.getX(i), cz + pos.getZ(i)) + (y || 0.03));
+  pos.needsUpdate = true; geo.computeVertexNormals();
+  const g = mk(R, geo, lmat({ map: tex === false ? null : venueTex(tex || 'dirt'), color: col, roughness: 1, side: THREE.DoubleSide }), cx, 0, cz, false);
+  g.receiveShadow = true; (TOWN.mapRects = TOWN.mapRects || []).push([x0, x1, z0, z1, col]); return g;
 }
 function realmRoad(R, pts, w) {
   const m = TMAT['road' + w] || (TMAT['road' + w] = lmat({ map: venueTex('dirt'), color: '#b5a079', roughness: 1, side: THREE.DoubleSide }));
@@ -17634,7 +17653,8 @@ function arenaList(R, A, o) {
 // the original list sits under a great wooden dome: a ring of posts and a conical roof with an open top
 function buildDome(R) {
   const rad = 27, posts = 20, wood = tmat('#5a3b24'), roof = lmat({ color: '#c2a777', roughness: 1, side: THREE.DoubleSide });
-  for (let i = 0; i < posts; i++) { const a = i / posts * TAU; if (Math.abs(Math.sin(a)) > 0.97 && Math.cos(a) > 0) { } const x = Math.cos(a) * rad, z = Math.sin(a) * rad * 1.18; const p = mk(R, geo('dome_post', () => new THREE.CylinderGeometry(0.3, 0.36, 9, 8)), wood, x, 4.5, z); p.castShadow = true; TOWN.obst.push({ x, z, r: 0.5 }); }
+  for (let i = 0; i < posts; i++) { const a = i / posts * TAU; if (Math.sin(a) > 0.97) continue; // open the south entrance on the fair's main road
+    const x = Math.cos(a) * rad, z = Math.sin(a) * rad * 1.18; const p = mk(R, geo('dome_post', () => new THREE.CylinderGeometry(0.3, 0.36, 9, 8)), wood, x, 4.5, z); p.castShadow = true; TOWN.obst.push({ x, z, r: 0.5 }); }
   const cone = new THREE.CylinderGeometry(4, rad + 1.5, 7, 32, 1, true); const c = mk(R, cone, roof, 0, 12.5, 0, false); c.scale.z = 1.18;
   const ring = mk(R, new THREE.TorusGeometry(rad, 0.35, 6, 48), wood, 0, 9, 0); ring.rotation.x = Math.PI / 2; ring.scale.y = 1.18;
   for (let i = 0; i < 12; i++) { const a = i / 12 * TAU; const b = mk(R, geo('dome_flag', () => new THREE.PlaneGeometry(1.1, 2.2)), lmat({ color: i % 2 ? CAREER.club.tabard : '#e8e1cf', side: THREE.DoubleSide }), Math.cos(a) * (rad - 0.2), 7.6, Math.sin(a) * (rad - 0.2) * 1.18); b.lookAt(0, 7.6, 0); }
@@ -18350,12 +18370,12 @@ function trialEnd(m, won, withPurse) {
 // Arenas you aren't at still have results on their boards: they tick cheaply in the background.
 // ===================================================================
 const SPEC = { results: {}, t: 0, follow: 0, zoom: 1 };
-const SPEC_MODES = ['Rail', 'Follow', 'Orbit', 'Broadcast'];
+const SPEC_MODES = ['Front row', 'Back row', 'Opposite stand', 'High stand'];
 // the stands of every arena are somewhere to talk to (no NPC: the prompt just says Watch)
 function buildArenaSeats() {
   for (const A of ARENAS) {
-    const x = A.x + A.bx + 0.9, z = A.z, lab = new THREE.Object3D();
-    TOWN.stalls.push({ V: { key: 'a:' + A.key, name: A.name, role: 'Watch from the stands', icon: '🏟️' }, g: lab, npc: null, ry: -Math.PI / 2, x, z, ax: x, az: z, label: lab, arena: A, open: () => spectate(A), verb: 'Watch' });
+    const [ex, ez] = A.entry, x = ex, z = ez + Math.sign(A.z - ez) * 3, lab = new THREE.Object3D();
+    TOWN.stalls.push({ V: { key: 'a:' + A.key, name: A.name, role: 'Watch from the stands', icon: '🏟️' }, g: lab, npc: null, ry: 0, x, z, ax: x, az: z, label: lab, arena: A, open: () => spectate(A), verb: 'Spectate' });
   }
 }
 // festival clothes for the posed crowd (a few shared materials, so the stands still merge into a handful of meshes)
@@ -18373,21 +18393,25 @@ function arenaSeatFolk(R, A, sides) {
   }
 }
 function spectate(A) {
+  const returnPos = { ...TOWN.pos };
   if (!BOUT.on || TOWN.boutArena !== A.key) { TOWN.forceArena = A.key; boutStop(); boutStart(); }
-  TOWN.forceArena = A.key; TOWN.spec = { A, mode: 0, t: 0 }; TOWN.cam = null; AU.click && AU.click();
+  TOWN.forceArena = A.key; SPEC.zoom = 1;
+  TOWN.spec = { A, mode: 0, t: 0, returnPos };
+  TOWN.pos = { x: A.x + LIST.W / 2 + 3.4, z: A.z + LIST.L * 0.12 };
+  TOWN.cam = null; AU.click && AU.click();
   $('#townPrompt').hidden = true; specHud();
   toastMenu(`Watching at ${A.name}. Walk off or press Leave to stop.`);
 }
-function stopSpectating() { if (!TOWN.spec) return; TOWN.spec = null; TOWN.forceArena = null; TOWN.cam = null; specHud(); townPrompt(); }
+function stopSpectating() { if (!TOWN.spec) return; TOWN.pos = TOWN.spec.returnPos; TOWN.spec = null; TOWN.forceArena = null; TOWN.cam = null; TOWN.actPrev = true; specHud(); townPrompt(); }
 function specHud() {
   const el = $('#townSpec'); if (!el) return;
   const S = TOWN.spec; el.hidden = !S || !!G.screen; if (!S) return;
   if (!el.firstChild) el.append(h('span', { class: 'spectxt' }, h('small'), h('b')),
     h('button', { class: 'btn tape small', onclick: e => { e.stopPropagation(); if (TOWN.spec) { TOWN.spec.mode = (TOWN.spec.mode + 1) % SPEC_MODES.length; SPEC.follow++; specHud(); } } }, 'Angle'),
-    h('button', { class: 'btn tape small', onclick: e => { e.stopPropagation(); SPEC.zoom = SPEC.zoom === 1 ? 1.5 : SPEC.zoom === 1.5 ? 2 : 1; specHud(); } }, 'Binoculars'),
+    h('button', { class: 'btn tape small', onclick: e => { e.stopPropagation(); SPEC.zoom = SPEC.zoom === 1 ? 2 : SPEC.zoom === 2 ? 3 : 1; specHud(); } }, 'Binoculars'),
     h('button', { class: 'btn tape small', onclick: e => { e.stopPropagation(); stopSpectating(); } }, 'Leave'));
   const m = G.match, w = m && m.wins ? m.wins : [0, 0];
-  el.querySelector('.spectxt small').textContent = `${S.A.name} · ${SPEC_MODES[S.mode]}`;
+  el.querySelector('.spectxt small').textContent = `${S.A.name} · ${SPEC_MODES[S.mode]} · ${SPEC.zoom}×`;
   el.querySelector('.spectxt b').textContent = BOUT.on ? `${BOUT.vs} · ${w[0]}–${w[1]}` : 'Next pairing walking on…';
 }
 // the spectator camera (called from updateTownCamera)
@@ -18395,16 +18419,12 @@ function specCamera(dt) {
   const S = TOWN.spec, A = S.A, cam = W3.camera; S.t += dt;
   const o = W3.matchRoot.position, live = (G.fighters || []).filter(f => !f.out && f.pos);
   let cx = 0, cz = 0; for (const f of live) { cx += f.pos.x; cz += f.pos.z; } if (live.length) { cx /= live.length; cz /= live.length; }
-  const look = new THREE.Vector3(o.x + cx, o.y + 1.1, o.z + cz); let want;
-  if (S.mode === 0) { // from the rope where you stand, head high, leaning in toward the action
-    const px = TOWN.pos.x, pz = TOWN.pos.z, dx = look.x - px, dz = look.z - pz, d = Math.hypot(dx, dz) || 1, inn = Math.max(0, d - 9);
-    want = new THREE.Vector3(px + dx / d * inn, o.y + 2.4, pz + dz / d * inn);
-  } else if (S.mode === 1 && live.length) { const f = live[SPEC.follow % live.length], b = (f.facing || 0) + Math.PI; want = new THREE.Vector3(o.x + f.pos.x + Math.sin(b) * 3.6, o.y + 2.4, o.z + f.pos.z + Math.cos(b) * 3.6); look.set(o.x + f.pos.x, o.y + 1.3, o.z + f.pos.z); }
-  else if (S.mode === 2) { const a = S.t * 0.12; want = new THREE.Vector3(look.x + Math.sin(a) * 9, o.y + (A.indoor ? 3.6 : 4.2), look.z + Math.cos(a) * 9); }
-  else want = new THREE.Vector3(o.x + LIST.W / 2 + 4, o.y + (A.indoor ? 4 : 5.5), o.z + cz * 0.5);
+  const look = new THREE.Vector3(o.x + cx, o.y + 1.1, o.z + cz);
+  const side = S.mode === 2 ? -1 : 1, row = S.mode === 0 ? 0 : 2;
+  const want = new THREE.Vector3(A.x + side * (LIST.W / 2 + 1.6 + row * 0.9), o.y + 2.2 + row * 0.5 + (S.mode === 3 ? 0.8 : 0), A.z + (S.mode === 3 ? -LIST.L * 0.2 : LIST.L * 0.12));
   if (!TOWN.cam) { TOWN.cam = want.clone(); TOWN.look = look.clone(); }
   const k = 1 - Math.exp(-3 * dt); TOWN.cam.lerp(want, k); TOWN.look.lerp(look, k);
-  cam.position.copy(TOWN.cam); cam.lookAt(TOWN.look); cam.fov = 48 / SPEC.zoom; cam.updateProjectionMatrix();
+  cam.position.copy(TOWN.cam); cam.lookAt(TOWN.look);
   if ((G.frameN || 0) % 20 === 0) specHud();
 }
 // arenas you're not at: a pairing and a result every minute or two, so the boards and the map always have news
