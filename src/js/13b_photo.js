@@ -3,7 +3,7 @@ const PHOTO = { on: false, yaw: 0, pitch: 0.35, dist: 4.5, target: new THREE.Vec
 const PHOTO_FILTERS = { none: 'none', warm: 'sepia(.35) saturate(1.25) contrast(1.05)', mono: 'grayscale(1) contrast(1.2)', vivid: 'saturate(1.6) contrast(1.1)', film: 'sepia(.2) contrast(1.25) brightness(.95) saturate(.85)' };
 function openPhoto() {
   if (!G.match) return;
-  PHOTO.on = true; G.photo = true; G.paused = true; hideAll(); setHud(false); $('#touch').hidden = true;
+  PHOTO.on = true; G.photo = true; if (NET.on) { onlinePauseRequest(true); resetTransientInput(); } else G.paused = true; hideAll(); setHud(false); $('#touch').hidden = true;
   const f = G.lastDown && !G.lastDown.out ? G.lastDown : G.player || G.fighters[0];
   PHOTO.target.set(f.pos.x, (f.body ? f.body.h : 1.8) * 0.6, f.pos.z); PHOTO.yaw = (G.player ? G.player.facing : 0) + Math.PI + 0.6; PHOTO.pitch = 0.3; PHOTO.dist = 4.5;
   $('#photo').hidden = false; renderPhotoUI();

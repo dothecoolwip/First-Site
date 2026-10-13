@@ -6,7 +6,7 @@ function onInputMode(m) {
   updateLegend();
   if (m === 'pad' && G.screen) focusFirst();
 }
-function activeLayer() { return $('#steeltapeCloudOverlay') || (G.photo ? $('#photo') : G.screen ? $('#' + G.screen) : null); }
+function activeLayer() { return $('#steeltapeCloudOverlay') || (G.photo ? $('#photo') : G.screen ? $('#' + G.screen) : typeof TOWN !== 'undefined' && TOWN.spec ? $('#townSpec') : null); }
 function navItems(root) {
   return [...root.querySelectorAll('button, input, select, textarea, summary, a[href]')].filter(el => {
     if (el.disabled || el.closest('[hidden]')) return false;
@@ -46,6 +46,7 @@ function navBack() {
   const root = activeLayer(); if (!root) return;
   if (root.id === 'steeltapeCloudOverlay') return;
   if (G.photo) { closePhoto(); return; }
+  if (root && root.id === 'townSpec') { stopSpectating(); return; }
   if (G.screen === 'pause') { togglePause(false); return; }
   if (G.screen === 'townShop' && typeof TOWN !== 'undefined' && TOWN.vendor) { closeVendor(); return; }
   const b = root.querySelector('[data-back], [data-leave]'); if (b && b.getBoundingClientRect().width) { b.click(); return; }
@@ -56,7 +57,7 @@ function navStart() {
   if (G.screen === 'tactics') return $('#btnReady').click();
   if (G.screen === 'repair') return $('#btnRepairDone').click();
   if (G.screen === 'pause') return togglePause(false);
-  const root = activeLayer(); const p = root && root.querySelector('.pfoot .btn.primary, #btnRumble'); if (p) p.click();
+  const root = activeLayer(); const p = root && root.querySelector('.pfoot .btn.primary'); if (p) p.click();
 }
 function navTab(dir) {
   const root = activeLayer(); const bar = root && root.querySelector('.tabs'); if (!bar || !bar.getBoundingClientRect().width) return;
@@ -117,4 +118,12 @@ function updateLegend() {
 }
 window.addEventListener('gamepadconnected', () => { toastMenu('Controller connected'); });
 window.addEventListener('gamepaddisconnected', () => { toastMenu('Controller disconnected'); if (G.phase === 'fight' && !G.paused && IN.mode === 'pad') togglePause(true); });
+
+function rumbleFor(f, strong, weak, ms) {
+  if (!f || !G.settings.rumble || G.attract || G.autopilot) return;
+  if (!VS.on || f.pslot == null) { if (f.isPlayer) rumble(strong, weak, ms); return; }
+  const pads = seatPads(), useKeyboard = pads.length < VS.humans.length;
+  const gp = pads[useKeyboard ? f.pslot - 1 : f.pslot];
+  try { const result = gp?.vibrationActuator?.playEffect('dual-rumble', {startDelay:0,duration:ms,strongMagnitude:strong,weakMagnitude:weak}); if (result?.catch) result.catch(()=>{}); } catch (e) { }
+}
 

@@ -2,7 +2,7 @@
 function reachOf(f) { return f.weapon ? 0.6 + f.weapon.len * 0.92 + (f.reachB || 0) : 0.8; }
 function leanRatio(f) { return clamp(vlen(f.lean) / FALL_L, 0, 1); }
 function engagedBy(e, team, except) {
-  let n = 0; for (const o of G.fighters) if (o.team === team && o !== except && isUp(o) && (o.ai.target === e || (o.isPlayer && o.softTarget === e)) && dist2(o.pos, e.pos) < 2.8) n++;
+  let n = 0; for (const o of G.fighters) if (o.team === team && o !== except && isUp(o) && (o.ai.target === (e.source || e) || (o.isPlayer && o.softTarget === (e.source || e))) && dist2(o.pos, e.pos) < 2.8) n++;
   return n;
 }
 function teamPlan(team) {
@@ -46,18 +46,45 @@ function allyUnderPressure(f, mates, enemies) {
     .sort((a, b) => dist2(a.pos, f.pos) - dist2(b.pos, f.pos))[0] || null;
 }
 
+function aiCanSee(f, e) {
+  const d = dist2(f.pos, e.pos);
+  if (d >= 32 || facingDot(f, e) <= -0.1) return false;
+  const dx = e.pos.x - f.pos.x, dz = e.pos.z - f.pos.z, length2 = dx * dx + dz * dz;
+  return !G.fighters.some(o => {
+    if (o === f || o === e || !isUp(o) || length2 < 0.01) return false;
+    const t = ((o.pos.x - f.pos.x) * dx + (o.pos.z - f.pos.z) * dz) / length2;
+    return t > 0.08 && t < 0.92 && Math.hypot(o.pos.x - f.pos.x - t * dx, o.pos.z - f.pos.z - t * dz) < (o.radius || 0.3) * 0.7;
+  });
+}
+function aiObserved(f, e) { return f.ai.observations?.get(e); }
 function aiThreatReady(f, e) {
-  const seen = f.ai.threats && f.ai.threats.get(e);
-  return !!(seen && seen.action === e.action && f.ai.observedTime - seen.at >= 0.11 - 1e-8 && facingDot(f, e) > -0.1);
+  e = e.source || e;
+  const seen = f.ai.threats?.get(e);
+  return !!(seen && seen.action === e.action && f.ai.observedTime - seen.at >= 0.11 - 1e-8 && aiCanSee(f, e));
 }
 function aiObserveThreats(f, dt) {
   const ai = f.ai; ai.observedTime = (ai.observedTime || 0) + dt;
   if (!ai.threats) ai.threats = new Map();
+  if (!ai.observations) ai.observations = new Map();
   for (const e of G.fighters) {
-    const visible = e !== f && e.team !== f.team && isUp(e) && dist2(e.pos, f.pos) < 8 && facingDot(f, e) > -0.1;
-    if (!visible || !e.action) { ai.threats.delete(e); continue; }
-    const old = ai.threats.get(e);
-    if (!old || old.action !== e.action) ai.threats.set(e, { action: e.action, at: ai.observedTime });
+    if (e === f || e.team === f.team) continue;
+    const visible = isUp(e) && aiCanSee(f, e);
+    if (visible) {
+      const old = ai.observations.get(e);
+      const exertion = e.sprint || e.action ? 0.15 : 0;
+      const gas = clamp((old?.gas ?? 0.7) + dt * (exertion ? -exertion : 0.04), 0.15, 0.95);
+      // Copy observable posture and motion; never expose enemy AI targets or private stamina.
+      const observation = { source: e, id: e.id, team: e.team, pos: { ...e.pos }, vel: { ...e.vel }, lean: { ...e.lean }, facing: e.facing, state: e.state, out: e.out, weapon: e.weapon, radius: e.radius, mass: e.mass, reachB: e.reachB, guard: e.guard, brace: e.brace, atRail: e.atRail, gas, action: e.action ? { kind: e.action.kind, phase: e.action.phase, arc: e.action.arc, whiff: !!e.action.whiff, target: null } : null, clinch: e.clinch, stats: { takedowns: old?.stats.takedowns || 0 }, ai: {}, at: ai.observedTime };
+      if (observation.action) observation.action.target = G.fighters.filter(m => m.team === f.team && isUp(m) && facingDot(e, m) > 0.55).sort((a, b) => dist2(e.pos, a.pos) - dist2(e.pos, b.pos))[0] || null;
+      observation.ai.target = observation.action?.target || null;
+      ai.observations.set(e, observation);
+      if (e.action) { const threat = ai.threats.get(e); if (!threat || threat.action !== e.action) ai.threats.set(e, { action: e.action, at: ai.observedTime }); }
+      else ai.threats.delete(e);
+    } else {
+      ai.threats.delete(e);
+      const old = ai.observations.get(e);
+      if (old) { old.action = null; old.ai.target = null; if (ai.observedTime - old.at > 1.0) ai.observations.delete(e); }
+    }
   }
 }
 function aiControl(f, dt) {
@@ -74,7 +101,7 @@ function aiControl(f, dt) {
   }
   if (f.guard && f.action && f.action.kind === 'swing' && f.action.phase === 'windup') f.action.cancel = true;
   const t = ai.target;
-  if (t && isUp(t) && !f.clinch) f.wantFace = angTo(f.pos, t.pos);
+  const seenTarget = t && aiObserved(f, t); if (seenTarget && !f.clinch) f.wantFace = angTo(f.pos, seenTarget.pos);
   if (ai.next > 0) return;
   ai.next = Math.max(0.11, prof.react * rand(0.65, 1.3));
   think(f, prof);
@@ -84,11 +111,12 @@ function aiControl(f, dt) {
 const TRAITS = { steady: { aggr: 1, guard: 1, want: 0 }, reckless: { aggr: 1.35, guard: 0.6, want: -0.2 }, cautious: { aggr: 0.75, guard: 1.35, want: 0.4 }, grappler: { aggr: 0.95, guard: 1, want: -0.25 }, showboat: { aggr: 1.1, guard: 0.9, want: 0 } };
 function traitOf(f) { if (!f.trait) { const r = seeded('trait' + f.name + f.num)(); f.trait = r < 0.34 ? 'steady' : r < 0.52 ? 'reckless' : r < 0.7 ? 'cautious' : r < 0.86 ? 'grappler' : 'showboat'; } return f.trait; }
 function think(f, prof) {
+  aiObserveThreats(f, 0);
   const team = f.team, order = teamPlan(team), ai = f.ai, T = TRAITS[traitOf(f)];
   const pressure = botChallenge(f), stage = pressure > 0 ? challengeStage() : 0;
   const role = meleeRolesOn() ? ai.role : null;
   prof = { ...prof, aggr: prof.aggr * T.aggr, guard: Math.min(0.95, prof.guard * T.guard) };
-  const enemies = G.fighters.filter(o => o.team !== team && isUp(o));
+  const enemies = [...(ai.observations || new Map()).values()].filter(o => !o.out && ai.observedTime - o.at <= 1.0);
   const mates = G.fighters.filter(o => o.team === team && o !== f && isUp(o));
   const tank = role === 'rook' ? roleTank(f, mates) : null;
   const pressured = role === 'rook' ? allyUnderPressure(f, mates, enemies) : null;
@@ -98,7 +126,14 @@ function think(f, prof) {
     const attacker = enemies.find(e => aiThreatReady(f, e) && e.action && e.action.kind === 'swing' && e.action.phase === 'windup' && e.action.target === protect && dist2(e.pos, f.pos) < reachOf(e) + 0.5);
     if (attacker) { ai.guardT = Math.max(ai.guardT, 0.6); ai.gdir = aiReadArc(f, attacker); }
   }
-  if (!enemies.length) { f.move.x = f.move.z = 0; return; }
+  if (!enemies.length) {
+    const centre = vnorm({ x: -f.pos.x, z: -f.pos.z });
+    f.move = vlen(f.pos) > 2 ? centre : { x: 0, z: 0 };
+    if (vlen(f.pos) > 2) f.wantFace = Math.atan2(centre.x, centre.z);
+    const noise = G.fighters.find(e => e.team !== team && isUp(e) && dist2(e.pos, f.pos) < 3 && (e.sprint || e.action));
+    if (noise) f.wantFace = angTo(f.pos, noise.pos); // audible bearing only: no directional counter
+    return;
+  }
   if (stage && (!ai.combatRole || G.simTime >= (ai.combatRoleUntil || 0))) {
     const troubled = mates.find(m => enemies.filter(e => dist2(e.pos, m.pos) < 2.2).length >= 2 && dist2(m.pos, f.pos) < 6);
     ai.combatRole = stage >= 2 && troubled ? 'rescuer' : mates.some(m => m.ai.target && isUp(m.ai.target) && dist2(m.pos, m.ai.target.pos) < 2.5) ? 'flanker' : 'engager';
@@ -131,14 +166,14 @@ function think(f, prof) {
     let s = -d + 2.2 * leanRatio(e) * (order === 'hunt' ? 2 : 1);
     if (eng >= 1) s += order === 'pair' ? 1.8 : 0.6;
     if (eng >= 2) s -= 1.4;
-    if (e === ai.target) s += G.simTime < (ai.targetUntil || 0) ? 4.0 : 1.0;
-    if (order === 'pair' && e === pairT) s += 3;
+    if (e.source === ai.target) s += G.simTime < (ai.targetUntil || 0) ? 4.0 : 1.0;
+    if (order === 'pair' && e.source === pairT) s += 3;
     if (order === 'peel' && e.ai.target && engagedBy(e.ai.target, e.team) >= 2) s += 2.2;
     if (e.clinch) s += 0.8;
     s += peelBonus(f, e, mates);
     if (!e.weapon) s += 0.4;
     // team plays: gang up on someone isolated, rescue a mate in trouble, pin people on the rail
-    const isolated = !G.fighters.some(o => o !== e && o.team === e.team && isUp(o) && dist2(o.pos, e.pos) < 3);
+    const isolated = !enemies.some(o => o !== e && o.team === e.team && dist2(o.pos, e.pos) < 3);
     if (eng >= 1 && isolated && mates.length) s += 1.2;
     if (mates.some(m => (m.clinch && (m.clinch.a === e || m.clinch.b === e)) || (e.ai && e.ai.target === m && leanRatio(m) > 0.45))) s += 1.0;
     if (e.atRail && eng >= 1) s += 0.7;
@@ -146,11 +181,11 @@ function think(f, prof) {
     if (role === 'rook' && protect) s += e === protect.ai.target ? 3.5 : e.ai && e.ai.target === protect ? 3.2 : 0;
     if (role === 'runner') s += 2.8 * leanRatio(e) + 1.2 * (1 - e.gas) + (isolated ? 1.1 : 0) + (e.atRail ? 0.7 : 0) + (e.clinch ? 1.0 : 0);
     if (ai.combatRole === 'rescuer' && ai.rescue && dist2(e.pos, ai.rescue.pos) < 2.2) s += 4;
-    if (ai.combatRole === 'flanker' && mates.some(m => m.ai.target === e)) s += 2.4;
+    if (ai.combatRole === 'flanker' && mates.some(m => m.ai.target === e.source)) s += 2.4;
     if (s > bs) { bs = s; best = e; }
   }
-  if (best !== ai.target) ai.targetUntil = G.simTime + 1.3 + pressure * 0.6;
-  ai.target = best; const tg = best;
+  if (best.source !== ai.target) ai.targetUntil = G.simTime + 1.3 + pressure * 0.6;
+  ai.target = best.source; const tg = best;
   const d = dist2(tg.pos, f.pos);
   let aggr = prof.aggr * (mates.length + 1 < enemies.length ? 1.2 : 1);
   // movement goal
@@ -194,7 +229,7 @@ function think(f, prof) {
   if (f.cd > 0 || f.action || f.guard) return;
   if (f.gas < 0.12 + pressure * 0.08 && !f.clinch) { ai.guardT = 0.2; return; }
   if (f.clinch) {
-    const opts = [['throw', 0.35 + (f.arch.grip - 1) * 0.8 + (f.gas - (f.clinch.a === f ? f.clinch.b : f.clinch.a).gas)], ['knee', 0.45], ['disarm', f.arch.key === 'grappler' ? 0.35 : 0.1], ['shove', 0.18], ['none', 0.55]];
+    const opts = [['throw', 0.35 + (f.arch.grip - 1) * 0.8 + (f.gas - (aiObserved(f, f.clinch.a === f ? f.clinch.b : f.clinch.a)?.gas ?? 0.7))], ['knee', 0.45], ['disarm', f.arch.key === 'grappler' ? 0.35 : 0.1], ['shove', 0.18], ['none', 0.55]];
     if (role === 'tank') { opts[0][1] += 0.55; opts[2][1] += 0.55; opts[3][1] += 0.3; }
     if (role === 'rook' || role === 'runner') opts[0][1] += 0.3;
     const pickd = opts.map(o => [o[0], o[1] + rand(0, 0.4)]).sort((a, b) => b[1] - a[1])[0][0];
@@ -220,8 +255,8 @@ function think(f, prof) {
     const ohP = f.weapon.key === 'mace' || f.weapon.key === 'axe' ? 0.38 : 0.26;
     f.swingSide *= -1;
     const arc = chance(ohP) ? 'O' : f.swingSide > 0 ? 'R2L' : 'L2R';
-    if (startAction(f, 'swing', { arc: f.trait === 'showboat' && chance(0.4) ? 'O' : arc, charge: rand(0, 0.6) * aggr * (f.trait === 'showboat' ? 1.4 : 1), target: tg })) aiMaybeFeint(f);
-  } else if (choice !== 'none') startAction(f, choice, { target: tg });
+    if (startAction(f, 'swing', { arc: f.trait === 'showboat' && chance(0.4) ? 'O' : arc, charge: rand(0, 0.6) * aggr * (f.trait === 'showboat' ? 1.4 : 1), target: tg.source })) aiMaybeFeint(f);
+  } else if (choice !== 'none') startAction(f, choice, { target: tg.source });
 }
 function nearestEnemy(f) { let b = null, bd = 1e9; for (const o of G.fighters) if (o.team !== f.team && isUp(o)) { const d = dist2(o.pos, f.pos); if (d < bd) { bd = d; b = o; } } return b; }
 

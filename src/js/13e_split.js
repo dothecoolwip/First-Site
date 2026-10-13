@@ -33,7 +33,26 @@ function renderSplit(R) {
   R.setScissorTest(true);
   for (let i = 0; i < n; i++) { const [x, y, w, h2] = splitLayout(i, n, W, H); R.setViewport(x, y, w, h2); R.setScissor(x, y, w, h2); R.render(W3.scene, SPLIT.cams[i]); }
   R.setScissorTest(false); R.setViewport(0, 0, W, H);
-  const lab = $('#splitLabels'); if (lab && (lab.childElementCount !== n || lab.dataset.layout !== `${n}:${W}:${H}`)) { lab.dataset.layout = `${n}:${W}:${H}`; lab.innerHTML = ''; for (let i = 0; i < n; i++) { const [x, y, w, h2] = splitLayout(i, n, W, H); lab.append(h('span', { class: 'plabel', style: `left:${x + 10}px;bottom:${y + h2 - 34}px` }, 'P' + (i + 1))); } }
+  updateLocalFeedback();
+}
+function updateLocalFeedback() {
+  const lab = $('#splitLabels'); if (!lab) return;
+  const hum = VS.humans || [], n = hum.length, W = innerWidth, H = innerHeight;
+  document.body.classList.toggle('couch', !!VS.on);
+  lab.hidden = !VS.on || !!G.screen || !!G.photo;
+  if (!VS.on) return;
+  const layout = `${n}:${W}:${H}:${SPLIT.on}`;
+  if (lab.childElementCount !== n || lab.dataset.layout !== layout) {
+    lab.dataset.layout = layout; lab.replaceChildren();
+    for (let i = 0; i < n; i++) {
+      const [x,y,w,h2] = SPLIT.on ? splitLayout(i,n,W,H) : [i * W / n,0,W/n,H];
+      lab.append(h('span', {class:'plabel',style:`left:${x+6}px;bottom:${y+h2-64}px;max-width:${w-12}px;font-size:.8rem;white-space:normal`},''));
+    }
+  }
+  [...lab.children].forEach((el,i) => {
+    const f=hum[i]; if (!f) return;
+    el.textContent = `P${i+1} · Stamina ${Math.round(f.gas*100)}% · Balance ${Math.round((1-leanRatio(f))*100)}% · ${isDown(f)?'Down':f.guard?'Guard':f.action?f.action.kind:'Ready'}`;
+  });
 }
 // movement for a player is relative to their own half of the screen
 function vsCam(slot) { return splitActive() && SPLIT.cams[slot] ? SPLIT.cams[slot] : W3.camera; }

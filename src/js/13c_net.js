@@ -7,8 +7,26 @@ function vinAct(f, k, opp) {
   if (!f.weapon && k === 'shove') return;
   startAction(f, k, { target: opp });
 }
+const NET_PROTOCOL = 2;
+function validatedVin(raw, previous) {
+  if (!raw || typeof raw !== 'object') return null;
+  const counter = n => Number.isSafeInteger(n) && n >= 0 && n <= 1000000000;
+  if (![raw.mx, raw.mz].every(Number.isFinite) || !counter(raw.sw) || !raw.e || !['trip', 'shove', 'grab', 'tackle'].every(k => counter(raw.e[k]))) return null;
+  if (raw.yaw != null && !Number.isFinite(raw.yaw)) return null;
+  if (raw.pitch != null && !Number.isFinite(raw.pitch)) return null;
+  if (!['auto', 'R2L', 'L2R', 'O'].includes(raw.arc || 'auto') || ![0, 1, 2, 3, 4].includes(raw.gd || 0)) return null;
+  const cancel = raw.cancel || 0; if (!counter(cancel)) return null;
+  if (!counter(raw.orderSeq || 0) || (raw.order != null && !ORDERS[raw.order])) return null;
+  if (previous && (raw.sw < previous.sw || raw.sw - previous.sw > 1 || cancel < previous.cancel || cancel - previous.cancel > 1 || Object.keys(previous.e).some(k => raw.e[k] < previous.e[k] || raw.e[k] - previous.e[k] > 1))) return null;
+  const scale = Math.max(1, Math.hypot(raw.mx, raw.mz));
+  return { ...raw, mx: raw.mx / scale, mz: raw.mz / scale, pitch: clamp(raw.pitch || 0, -0.75, 0.55), yaw: raw.yaw == null ? null : angDiff(0, raw.yaw), sw: raw.sw, cancel, sp: !!raw.sp, br: !!raw.br, sh: !!raw.sh, e: { ...raw.e } };
+}
+function neutralVin(V) { return { ...V, mx: 0, mz: 0, sp: false, gd: 0, br: false, sh: false, e: { ...V.e } }; }
 function vinControl(f, V, dt) {
+  if (V.expired || V.menuNeutral) { f.move = { x: 0, z: 0 }; f.guard = f.brace = f.sprint = false; if (f.action?.held) f.action.cancel = true; if (f.vinSeen) f.vinSeen.held = false; return; }
+  V = validatedVin(V); if (!V) { f.move = { x: 0, z: 0 }; f.guard = f.brace = f.sprint = false; if (f.action?.held) f.action.cancel = true; return; }
   const S = f.vinSeen || (f.vinSeen = { sw: V.sw, cancel: 0, held: false, e: { ...V.e } });
+  if (V.order && V.orderSeq > (S.orderSeq || 0)) { S.orderSeq = V.orderSeq; if (!NET.on || onlineCaptain(f.team)?.uid === f.netUid) setOrder(V.order, f); }
   f.aimPitch = Number.isFinite(V.pitch) ? clamp(V.pitch, -0.75, 0.55) : 0;
   if (V.cancel && V.cancel !== S.cancel) { S.cancel = V.cancel; S.held = false; if (f.action && f.action.kind === 'swing' && f.action.phase === 'windup') f.action.cancel = true; }
   if (f.state !== 'standing' || G.phase !== 'fight') { f.move = { x: 0, z: 0 }; S.sw = V.sw; S.e = { ...V.e }; S.held = false; return; }
@@ -55,6 +73,8 @@ function keyVin(V) {
   once('KeyL', 'trip'); once('KeyI', 'shove'); once('KeyU', 'grab'); once('KeyO', 'tackle');
 }
 function readVersus() {
+  if (activeLayer()) { VS.vins.forEach(V => { if (!V.menuNeutral) Object.assign(V, neutralVin(V)); V.menuNeutral = true; }); return; }
+  VS.vins.forEach(V => V.menuNeutral = false);
   const pads = seatPads();
   const n = VS.vins.length, useKb = pads.length < n; // not enough controllers: player 1 takes the keyboard
   for (let i = 0; i < n; i++) { const gp = pads[useKb ? i - 1 : i]; if (useKb && i === 0) keyVin(VS.vins[0]); else if (gp) padVin(gp, VS.vins[i], i); }
@@ -77,8 +97,8 @@ function startVersus(kind) {
   document.body.classList.toggle('split', SPLIT.on); document.body.classList.toggle('split4', SPLIT.on && K.players > 2); $('#splitLabels').innerHTML = '';
   const t0 = G.fighters.filter(f => f.team === 0), t1 = G.fighters.filter(f => f.team === 1);
   const humans = kind === 'tag' ? [t0[0], t1[0], t0[1], t1[1]] : kind === 'duel' ? [t0[0], t1[0]] : [t0[0], t0[1]];
-  G.fighters.forEach(f => f.isPlayer = false); G.player = null;
-  humans.forEach((f, i) => { f.vin = VS.vins[i]; f.name = VS.names && VS.names[i] || 'Player ' + (i + 1); f.pslot = i; applyPick(f, i); });
+  G.fighters.forEach(f => { f.isPlayer = false; delete f.combatProfile; }); G.player = null;
+  humans.forEach((f, i) => { f.ai.role = null; f.combatProfile = careerCombatProfile(); f.weapon = profileWeapon(f.spec.weapon, f.combatProfile); f.vin = VS.vins[i]; f.name = VS.names && VS.names[i] || 'Player ' + (i + 1); f.pslot = i; applyPick(f, i); f.weapon = profileWeapon(f.spec.weapon, f.combatProfile); recalcBody(f); });
   VS.humans = humans;
   if (VS.names) { $('#sbA').textContent = VS.names[0].slice(0, 4).toUpperCase(); $('#sbB').textContent = (VS.names[1] || 'P2').slice(0, 4).toUpperCase(); startRound(); beginFight(); return; }
   $('#sbA').textContent = kind === 'duel' ? 'P1' : kind === 'tag' ? 'P1·3' : 'YOU'; $('#sbB').textContent = kind === 'duel' ? 'P2' : kind === 'tag' ? 'P2·4' : CLUBS.wardens.short;
@@ -103,23 +123,23 @@ const NET = { on: false, role: null, room: null, code: '', vin: newVin(), remote
 function netEvent(...e) { if (NET.on && NET.role === 'host') { NET.ev.push([++NET.seq, ...e]); if (NET.ev.length > 10) NET.ev.shift(); } }
 // Claude's room when the game runs on claude.ai and this viewer may use it; otherwise peer-to-peer
 async function getRoom() { let r = null; try { r = window.claude && window.claude.use ? await window.claude.use('room') : null; } catch (e) { r = null; } return r || p2pRoom(); }
-function myLoadout() { const L = G.loadout, w = loadoutWeapon(); return { creatorProof: creatorProof('combat'), helm: L.helm, weapon: w.key, base: w.base || null, shield: w.hands === 2 ? null : (L.shield === 'none' ? null : L.shield), height: L.height, build: L.build, heightValue: L.heightValue, massValue: L.massValue, gender: L.gender, sh: typeof lookLite === 'function' ? lookLite().sh : null, name: CAREER.name || 'Rival', bf: BOS.info && rosterEligible(BOS.info.fighter) ? BOS.info.fighter : null }; }
+function myLoadout() { const L = G.loadout, w = loadoutWeapon(); return { protocol: NET_PROTOCOL, combatProfile: careerCombatProfile(), creatorProof: creatorProof('combat'), helm: L.helm, weapon: w.key, base: w.base || null, shield: w.hands === 2 ? null : (L.shield === 'none' ? null : L.shield), height: L.height, build: L.build, heightValue: L.heightValue, massValue: L.massValue, gender: L.gender, sh: typeof lookLite === 'function' ? lookLite().sh : null, name: CAREER.name || 'Rival', bf: BOS.info && rosterEligible(BOS.info.fighter) ? BOS.info.fighter : null }; }
 function applyLo(f, lo, cat) {
-  if (!lo) return; const wk = WEAPONS[lo.weapon] && lo.weapon !== 'custom' ? lo.weapon : (WEAPONS[lo.base] ? lo.base : 'sword'); f.spec = { ...f.spec, helm: lo.helm, weapon: wk, shield: lo.shield }; f.weapon = WEAPONS[wk]; f.shield = lo.shield ? SHIELDS[lo.shield] : null;
+  if (!lo) return; const wk = WEAPONS[lo.weapon] && lo.weapon !== 'custom' ? lo.weapon : (WEAPONS[lo.base] ? lo.base : 'sword'); f.spec = { ...f.spec, helm: lo.helm, weapon: wk, shield: lo.shield }; f.combatProfile = validateCombatProfile(lo.combatProfile); f.weapon = profileWeapon(wk, f.combatProfile); f.shield = lo.shield ? SHIELDS[lo.shield] : null;
   f.body = makeBody(cat, f.spec.arch, 'net' + lo.name, { height: lo.height, build: lo.build, heightValue: lo.heightValue, massValue: lo.massValue, gender: lo.gender }); f.appearance = { sh: lo.sh }; f.name = String(lo.name || 'Rival').slice(0, 20); f.bosReal = rosterEligible(lo.bf) ? { id: lo.bf } : null; f.creatorProof = lo.creatorProof || null; f.creatorVerified = false; resetFighterForRound(f);
 }
 async function openOnline() { return openOnlineHub(); }
 const ST_CODE = ['standing', 'posting', 'falling', 'grounded', 'rising', 'kneeling'], AK = [null, 'swing', 'shove', 'trip', 'grab', 'knee', 'throw', 'disarm', 'tackle'], PH = ['windup', 'strike', 'recover', 'lunge'], ARC = ['R2L', 'L2R', 'O'];
 const q = v => Math.round(v * 1000) / 1000;
-function packF(f) { const a = f.action; return [q(f.pos.x), q(f.pos.z), q(f.facing), ST_CODE.indexOf(f.state), q(f.lean.x), q(f.lean.z), a ? AK.indexOf(a.kind) : 0, a ? PH.indexOf(a.phase) : 0, a ? ARC.indexOf(a.arc) : 0, a ? q(a.charge || 0) : 0, q(f.gas), q(f.fatigue || 0), q(f.groundPos.x), q(f.groundPos.z), q(f.fallDir.x), q(f.fallDir.z), q(f.fallT), q(f.gt || 0), (f.guard ? 1 : 0) | (f.brace ? 2 : 0) | (f.sprint ? 4 : 0) | (f.touched ? 8 : 0) | (f.weapon ? 16 : 0) | (f.out ? 32 : 0), q(f.vel.x), q(f.vel.z), q(f.bell), f.groundStyle === 'fall' ? 0 : f.groundStyle === 'kneel' ? 1 : 2, q(f.riseT || 0), a ? q(a.t || 0) : 0, f.gdir || null, q(f.aimPitch || 0)]; }
+function packF(f) { const a = f.action; return [q(f.pos.x), q(f.pos.z), q(f.facing), ST_CODE.indexOf(f.state), q(f.lean.x), q(f.lean.z), a ? AK.indexOf(a.kind) : 0, a ? PH.indexOf(a.phase) : 0, a ? ARC.indexOf(a.arc) : 0, a ? q(a.charge || 0) : 0, q(f.gas), q(f.fatigue || 0), q(f.groundPos.x), q(f.groundPos.z), q(f.fallDir.x), q(f.fallDir.z), q(f.fallT), q(f.gt || 0), (f.guard ? 1 : 0) | (f.brace ? 2 : 0) | (f.sprint ? 4 : 0) | (f.touched ? 8 : 0) | (f.weapon ? 16 : 0) | (f.out ? 32 : 0), q(f.vel.x), q(f.vel.z), q(f.bell), f.groundStyle === 'fall' ? 0 : f.groundStyle === 'kneel' ? 1 : 2, q(f.riseT || 0), a ? q(a.t || 0) : 0, f.gdir || null, q(f.aimPitch || 0), a ? a.id || 0 : 0]; }
 function unpackF(f, s, dt) {
   f.pos.x = damp(f.pos.x, s[0], 18, dt); f.pos.z = damp(f.pos.z, s[1], 18, dt); if (Math.hypot(f.pos.x - s[0], f.pos.z - s[1]) > 1.5) { f.pos.x = s[0]; f.pos.z = s[1]; }
   if (!f.isPlayer || !isCtl()) f.facing = s[2]; else f.facing = s[2];
   const st = ST_CODE[s[3]] || 'standing'; if (st === 'falling' && f.state !== 'falling') f.rag = null; f.state = st;
   f.lean.x = s[4]; f.lean.z = s[5];
   const kind = AK[s[6]];
-  if (kind) { const phase = PH[s[7]] || 'windup'; const changed = !f.action || f.action.kind !== kind || f.action.phase !== phase;
-    if (changed) f.action = { kind, t: 0, phase };
+  if (kind) { const phase = PH[s[7]] || 'windup'; const changed = !f.action || f.action.kind !== kind || f.action.phase !== phase || f.action.id !== s[27];
+    if (changed) f.action = { id: s[27], kind, t: 0, phase };
     f.action.phase = phase; f.action.arc = ARC[s[8]] || 'R2L'; f.action.charge = s[9];
     f.action.t = Number.isFinite(s[24]) ? Math.max(0, s[24]) : changed ? 0 : f.action.t + dt;
   } else f.action = null;

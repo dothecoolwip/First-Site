@@ -21,7 +21,7 @@ function startFFA(n = 6, humans = 0) {
   if (humans) {
     VS.on = true; VS.kind = 'ffa'; VS.vins = Array.from({ length: humans }, newVin); VS.prev = [[], [], [], []]; SPLIT.init = [false, false, false, false];
     G.fighters.forEach(f => f.isPlayer = false); G.player = null;
-    VS.humans = G.fighters.slice(0, humans); VS.humans.forEach((f, i) => { f.vin = VS.vins[i]; f.name = VS.names && VS.names[i] || 'Player ' + (i + 1); f.pslot = i; applyPick(f, i); });
+    VS.humans = G.fighters.slice(0, humans); VS.humans.forEach((f, i) => { f.ai.role = null; f.combatProfile = careerCombatProfile(); f.vin = VS.vins[i]; f.name = VS.names && VS.names[i] || 'Player ' + (i + 1); f.pslot = i; applyPick(f, i); f.weapon = profileWeapon(f.spec.weapon, f.combatProfile); recalcBody(f); });
     document.body.classList.toggle('split', SPLIT.on); document.body.classList.toggle('split4', SPLIT.on && humans > 2); $('#splitLabels').innerHTML = '';
   }
   $('#sbA').textContent = humans ? 'P1' : 'YOU'; $('#sbB').textContent = 'BEST';

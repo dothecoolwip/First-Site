@@ -44,8 +44,9 @@ table{width:100%;border-collapse:collapse;font-size:.9rem}th,td{text-align:left;
     <button id="signin">Sign in</button> <button class="alt" id="google">Sign in with Google</button>
     <p id="err" class="small"></p>
   </div>
-  <div id="app" hidden>
-    <p class="small"><span id="who"></span> · <button class="tiny alt" id="refresh">Refresh</button> <button class="tiny alt" id="signout">Sign out</button></p>
+  <div id="accountActions" hidden><button class="tiny alt" id="signout">Sign out</button></div>
+<div id="app" hidden>
+    <p class="small"><span id="who"></span> · <button class="tiny alt" id="refresh">Refresh</button> </p>
     <div id="trackerNote" class="notice" hidden></div>
     <div class="kpis" id="kpis"></div>
     <h2>Last 30 days</h2>
@@ -58,10 +59,10 @@ table{width:100%;border-collapse:collapse;font-size:.9rem}th,td{text-align:left;
     <div class="playtest-grid"><div id="playtestSessions" class="playtest-list"></div><div id="playtestDetail" class="playtest-detail muted">Select a session to view its route and notes.</div></div>
     <h2>Every tracked player</h2>
     <p class="muted small">Signed-in gamers and guest browsers, with all-time activity. Select a row for details. Playtime is measured from this tracking update onward; earlier hours cannot be recovered reliably.</p>
-    <div class="filters"><input id="playerSearch" type="search" placeholder="Search player name"><select id="playerFilter" aria-label="Filter players"><option value="all">All players</option><option value="account">BuhurtOS players</option><option value="guest">Guest browsers</option><option value="today">Active today</option><option value="week">Active this week</option><option value="inactive">Inactive 30+ days</option></select><button type="button" id="exportCsv" class="alt">Export CSV</button></div>
+    <div class="filters"><input id="playerSearch" type="search" placeholder="Search player name"><select id="playerFilter" aria-label="Filter players"><option value="all">All players</option><option value="account">BuhurtOS players</option><option value="guest">Guest browsers</option><option value="today">Active in last 24 hours</option><option value="week">Active in last 7 days</option><option value="inactive">Inactive 30+ days</option></select><button type="button" id="exportCsv" class="alt">Export CSV</button></div>
     <p id="playerCount" class="muted small"></p><div class="playerDetail" id="playerDetail" hidden></div>
-    <div class="tablewrap"><table id="players"><thead><tr><th>Name</th><th>Account</th><th>Total playtime</th><th>First played</th><th>Last active</th><th>Sessions</th><th>Matches</th><th>Wins</th><th>Losses*</th><th>Level</th><th>Device</th></tr></thead><tbody></tbody></table></div>
-    <p class="muted small">*Losses are estimated as matches minus wins; recorded draws are not distinguished yet.</p>
+    <div class="tablewrap"><table id="players"><thead><tr><th>Name</th><th>Account</th><th>Total playtime</th><th>First played</th><th>Last active</th><th>Sessions</th><th>Matches</th><th>Wins</th><th>Non-wins*</th><th>Level</th><th>Device</th></tr></thead><tbody></tbody></table></div>
+    <p class="muted small">*Non-wins are matches minus wins and include draws; historical losses cannot be distinguished.</p>
     <h2>Matches by mode</h2>
     <table id="modes"><thead><tr><th>Mode</th><th>Played</th><th>Won by players</th></tr></thead><tbody></tbody></table>
     <h2>The throne</h2>
@@ -220,7 +221,7 @@ function showPlayer(p) {
     ['Sessions', num(p.sessions)],
     ['Matches', num(p.matches)],
     ['Wins', num(p.wins)],
-    ['Matches less wins', Math.max(0,num(p.matches)-num(p.wins))],
+    ['Non-wins', Math.max(0,num(p.matches)-num(p.wins))],
     ['Level', p.level == null ? 'Unknown' : p.level],
     ['Device', dev(p.ua) || 'Unknown'],
     ['Bug reports', num(p.bugReports)],
@@ -245,7 +246,7 @@ function renderPlayerRows() {
 $('#playerSearch').oninput = renderPlayerRows;
 $('#playerFilter').onchange = renderPlayerRows;
 $('#exportCsv').onclick = () => {
-  const rows = [['Name','Account','Total time played (seconds)','Total time played','First played','Last active','Sessions','Matches','Wins','Matches less wins','Level','Device']].concat(playerRows().map(p=>[p.name||'Visitor',p.uid?'BuhurtOS':'Guest',p.uid ? (p.playSeconds ?? 0) : '',p.uid ? duration(p.playSeconds) : '',p.first||'',p.last||'',num(p.sessions),num(p.matches),num(p.wins),Math.max(0,num(p.matches)-num(p.wins)),p.level??'',dev(p.ua)||'']));
+  const rows = [['Name','Account','Total time played (seconds)','Total time played','First played','Last active','Sessions','Matches','Wins','Non-wins','Level','Device']].concat(playerRows().map(p=>[p.name||'Visitor',p.uid?'BuhurtOS':'Guest',p.uid ? (p.playSeconds ?? 0) : '',p.uid ? duration(p.playSeconds) : '',p.first||'',p.last||'',num(p.sessions),num(p.matches),num(p.wins),Math.max(0,num(p.matches)-num(p.wins)),p.level??'',dev(p.ua)||'']));
   const csv=rows.map(row=>row.map(value=>'"'+String(value??'').replace(/"/g,'""')+'"').join(',')).join('\r\n');
   const blob=URL.createObjectURL(new Blob([csv],{type:'text/csv;charset=utf-8'}));
   const link=document.createElement('a');link.href=blob;link.download='steel-tape-players.csv';link.click();setTimeout(()=>URL.revokeObjectURL(blob),1500);
@@ -253,6 +254,7 @@ $('#exportCsv').onclick = () => {
 
 async function load() {
   const { data: { session } } = await sb.auth.getSession();
+  $('#accountActions').hidden = !session;
   if (!session) { $('#login').hidden = false; $('#app').hidden = true; return; }
   const r = await fetch(URL_ + '/functions/v1/steeltape-admin', { headers: { Authorization: 'Bearer ' + session.access_token, apikey: KEY } });
   const d = await r.json().catch(() => ({}));
@@ -262,11 +264,13 @@ async function load() {
   allTrackedPlayers = P;
   $('#trackerNote').hidden = Boolean(P.length || num(d.total));
   $('#trackerNote').textContent = 'Player activity tracking has not yet recorded all game sessions. Zero recorded players is not proof nobody played. Older gameplay cannot be reconstructed.';
+  const secondaryMetrics = [
+    [S.platformTotal, 'BuhurtOS accounts total'], [S.platformNew30, 'New BuhurtOS accounts 30d'], [d.total, 'Recorded events all time']
+  ];
   const metrics = [
     [S.registered, 'Game accounts'],
+    [(d.reports || []).filter(r => !r.data?.resolved).length, 'Unresolved reports in loaded period'],
     [S.guestBrowsers, 'Guest browsers'],
-    [S.platformTotal, 'BuhurtOS accounts total'],
-    [S.platformNew30, 'New BuhurtOS accounts 30d'],
     [S.newPlayers30d, 'New game players 30d'],
     [S.createdAuth30d, 'New accounts that played 30d'],
     [S.online, 'Active in last 5 min'],
@@ -278,9 +282,9 @@ async function load() {
     [S.allTimeWins, 'Wins all time'],
     [d.byKind?.bug, 'Bug reports 30d'],
     [d.byKind?.feature, 'Feature ideas 30d'],
-    [d.total, 'Recorded events all time']
   ];
   $('#kpis').innerHTML = metrics.map(([v,k]) => `<div class="kpi"><b>${esc(v ?? '—')}</b><span>${esc(k)}</span></div>`).join('');
+  $('#kpis').insertAdjacentHTML('beforeend', `<details><summary>Platform & raw events</summary>${secondaryMetrics.map(([v,k]) => `<div class="kpi"><b>${esc(v ?? '—')}</b><span>${esc(k)}</span></div>`).join('')}</details>`);
   const days = []; for (let i = 29; i >= 0; i--) { const k = new Date(Date.now() - i * 86400000).toISOString().slice(0, 10); days.push([k, d.days[k] || { sessions: 0, matches: 0 }]); }
   const mx = Math.max(1, ...days.map(([, v]) => Math.max(v.sessions, v.matches)));
   $('#days').innerHTML = days.map(([k, v]) => `<i style="height:${v.sessions / mx * 100}%" data-t="${k}: ${v.sessions} sessions"></i><i class="m" style="height:${v.matches / mx * 100}%" data-t="${k}: ${v.matches} matches"></i>`).join('');
@@ -293,7 +297,7 @@ async function load() {
 }
 $('#signin').onclick = async () => { $('#err').textContent = ''; const { error } = await sb.auth.signInWithPassword({ email: $('#email').value.trim(), password: $('#pass').value }); if (error) { $('#err').textContent = error.message; return; } load(); };
 $('#google').onclick = () => sb.auth.signInWithOAuth({ provider: 'google', options: { redirectTo: location.origin + location.pathname } });
-$('#signout').onclick = async () => { await sb.auth.signOut(); $('#err').textContent = ''; load(); };
+$('#signout').onclick = async () => { try { const result = await sb.auth.signOut(); if (result.error) throw result.error; $('#err').textContent = ''; await load(); } catch (e) { $('#err').textContent = 'Could not sign out. Please retry.'; } };
 $('#refresh').onclick = load;
 sb.auth.onAuthStateChange(() => { setTimeout(() => load().catch(e => { $('#err').textContent = String(e); }), 0); });
 load();

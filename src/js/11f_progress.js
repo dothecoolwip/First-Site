@@ -209,3 +209,11 @@ function renderAwards(box) {
 }
 applyCosmeticUnlocks();
 
+function recordGuardOutcome(f, outcome) {
+  if (!G.match) return;
+  const metrics = G.match.defence || (G.match.defence = {});
+  const key = f.netUid || (f.pslot != null ? 'couch:' + f.pslot : f.isPlayer ? 'local' : 'bot:' + f.id);
+  const row = metrics[key] || (metrics[key] = { attempts: 0, full: 0, partial: 0, perfect: 0, failed: 0 });
+  row.attempts++; row[outcome]++;
+}
+

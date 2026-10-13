@@ -13,11 +13,30 @@ const PACK_SKINS = {
   pack_bronze_sword: { n: 'Bronze festival sword', f: 'sword', model: 'Sword_Bronze' },
   pack_bronze_axe: { n: 'Bronze festival axe', f: 'axe', model: 'Axe_Bronze' },
 };
+// Every Fantasy rack weapon is also a look for a legal weapon of the same family.
+// These entries borrow only the mesh: the equipped legal weapon still supplies all combat rules.
+const FANTASY_SKINS = {
+  f_sword: 'sword', f_rune: 'sword', f_golden: 'sword', f_hatchet: 'axe',
+  f_axe: 'axe', f_hammer: 'mace', f_great: 'longsword', f_claymore: 'longsword',
+  f_dblaxe: 'longaxe', f_maul: 'longaxe', f_scythe: 'polearm', f_spear: 'polearm'
+};
+const FUN_SKINS = {
+  fun_pan: { n: 'Frying pan', f: 'mace', model: 'x_pan' },
+  fun_foam: { n: 'Foam sword', f: 'sword', model: 'foam' },
+  fun_chicken: { n: 'Rubber chicken', f: 'mace', model: 'x_chicken' },
+  fun_hockey: { n: 'Hockey stick', f: 'polearm', model: 'x_hockey' },
+  fun_broom: { n: 'Curling broom', f: 'polearm', model: 'x_broom' },
+  fun_wrench: { n: 'Giant wrench', f: 'mace', model: 'x_wrench' },
+  fun_stop: { n: 'Stop sign', f: 'longaxe', model: 'x_stop' }
+};
 Object.assign(WSKIN_RARE, { pack_bronze_sword: 1, pack_bronze_axe: 1 });
-const RARITY = [{ name: 'Common', cost: 2500, col: '#b9b4a8' }, { name: 'Rare', cost: 7500, col: '#4fa3ff' }, { name: 'Epic', cost: 20000, col: '#b26bff' }, { name: 'Legendary', cost: 45000, col: '#ffb02e' }];
+const RARITY = [{ name: 'Common', cost: 350, col: '#b9b4a8' }, { name: 'Rare', cost: 900, col: '#4fa3ff' }, { name: 'Epic', cost: 2200, col: '#b26bff' }, { name: 'Legendary', cost: 5000, col: '#ffb02e' }];
+const FANTASY_RARE = { f_sword: 0, f_hatchet: 0, f_axe: 1, f_hammer: 1, f_rune: 1, f_great: 2, f_dblaxe: 2, f_maul: 2, f_spear: 2, f_golden: 3, f_claymore: 3, f_scythe: 3 };
+Object.assign(WSKIN_RARE, FANTASY_RARE);
 const WSKIN_GEOS = {};
-function wskinList(fam) { return [...(typeof WSKIN_GEO === 'undefined' ? [] : Object.keys(WSKIN_GEO)), ...Object.keys(PACK_SKINS)].filter(k => !fam || (WSKIN_GEO[k] || PACK_SKINS[k]).f === fam); }
-function wskinCost(k) { return RARITY[WSKIN_RARE[k] || 0].cost; }
+function wskinDef(k) { return (typeof WSKIN_GEO !== 'undefined' && WSKIN_GEO[k]) || PACK_SKINS[k] || (FANTASY_SKINS[k] && { n: WEAPONS[k].name, f: FANTASY_SKINS[k] }) || FUN_SKINS[k]; }
+function wskinList(fam) { return [...(typeof WSKIN_GEO === 'undefined' ? [] : Object.keys(WSKIN_GEO)), ...Object.keys(PACK_SKINS), ...Object.keys(FANTASY_SKINS), ...Object.keys(FUN_SKINS)].filter(k => !fam || wskinDef(k).f === fam); }
+function wskinCost(k) { return FUN_SKINS[k] ? 0 : RARITY[WSKIN_RARE[k] || 0].cost; }
 function wskinGeo(k) {
   if (WSKIN_GEOS[k]) return WSKIN_GEOS[k];
   const S = WSKIN_GEO[k], u8 = s => { const b = atob(s), a = new Uint8Array(b.length); for (let i = 0; i < b.length; i++) a[i] = b.charCodeAt(i); return a; };
@@ -34,6 +53,16 @@ const WSKIN_MAT = () => MAT.wskin || (MAT.wskin = new THREE.MeshStandardMaterial
 // the skin model sized to stand in for weapon `wkey` (same grip point, same reach)
 function buildSkinWeapon(skin, wkey) {
   if (PACK_SKINS[skin]) { const g = libraryWeapon(PACK_SKINS[skin].model, wkey); g.userData.skin = skin; return g; }
+  if (FANTASY_SKINS[skin]) {
+    const g = buildFantasyWeapon(skin), source = WEAPONS[skin], target = WEAPONS[wkey];
+    if (!g || !target) return null;
+    g.scale.setScalar(target.len / source.len); g.userData.skin = skin; return g;
+  }
+  if (FUN_SKINS[skin]) {
+    const g = skin === 'fun_foam' ? buildCuteWeapon(wkey, CLUBS.reavers) : buildWeapon(FUN_SKINS[skin].model, CLUBS.reavers);
+    if (skin !== 'fun_foam') g.scale.setScalar(WEAPONS[wkey].len / WEAPONS[FUN_SKINS[skin].model].len);
+    g.userData.skin = skin; return g;
+  }
   if (typeof WSKIN_GEO === 'undefined' || !WSKIN_GEO[skin]) return null;
   const W = WEAPONS[wkey]; if (!W) return null;
   const g = new THREE.Group(), m = new THREE.Mesh(wskinGeo(skin), WSKIN_MAT()); g.add(m);
@@ -47,7 +76,7 @@ function buildSkinWeapon(skin, wkey) {
 function skinFor(wkey) {
   const s = shopState(); s.wskin = s.wskin || {};
   const base = wkey === 'custom' && WEAPONS.custom ? WEAPONS.custom.base : wkey, fam = WSKIN_FAM[base];
-  const k = fam && s.wskin[fam], def = k && (WSKIN_GEO[k] || PACK_SKINS[k]); return def && def.f === fam && s.owned['ws:' + k] ? k : null;
+  const k = fam && s.wskin[fam], def = k && wskinDef(k); return def && def.f === fam && (wskinCost(k) === 0 || s.owned['ws:' + k]) ? k : null;
 }
 // your weapon as everyone sees it: the skin if you've equipped one
 function buildMyWeapon(wkey, club) {
@@ -62,6 +91,8 @@ function buildMyWeapon(wkey, club) {
 const WSKIN_ICONS = {};
 function skinIcon(k, W = 160, H = 160) {
   if (PACK_SKINS[k]) return libraryThumb(PACK_SKINS[k].model, W, H);
+  if (FANTASY_SKINS[k]) return weaponIcon(k, W, H);
+  if (FUN_SKINS[k]) return weaponIcon(FUN_SKINS[k].model === 'foam' ? 'sword' : FUN_SKINS[k].model, W, H);
   if (WSKIN_ICONS[k]) { const c = cvs(W, H); c.getContext('2d').drawImage(WSKIN_ICONS[k], 0, 0, W, H); return c; }
   const c = cvs(W, H), x = c.getContext('2d'), g = wskinGeo(k), pa = g.attributes.position, ca = g.attributes.color;
   // lay it diagonally, flat side to the viewer
@@ -83,8 +114,8 @@ function skinIcon(k, W = 160, H = 160) {
   for (const t of tris) { x.fillStyle = t.col; x.strokeStyle = t.col; x.lineWidth = 0.6; x.beginPath(); t.pts.forEach(([u, v], j) => { const X = ox + u * s, Y = oy - v * s; if (j) x.lineTo(X, Y); else x.moveTo(X, Y); }); x.closePath(); x.fill(); x.stroke(); }
   WSKIN_ICONS[k] = c; const out = cvs(W, H); out.getContext('2d').drawImage(c, 0, 0); return out;
 }
-function wskinFamOf(k) { const def = (typeof WSKIN_GEO !== 'undefined' && WSKIN_GEO[k]) || PACK_SKINS[k]; return def ? def.f : null; }
-function wskinName(k) { const def = (typeof WSKIN_GEO !== 'undefined' && WSKIN_GEO[k]) || PACK_SKINS[k]; return def ? def.n : k; }
+function wskinFamOf(k) { const def = wskinDef(k); return def ? def.f : null; }
+function wskinName(k) { const def = wskinDef(k); return def ? def.n : k; }
 // the artificer's counter: one tab per kind of weapon, your own weapon's kind first
 function renderArtificer(list, row, head) {
   const s = shopState(); s.wskin = s.wskin || {};
@@ -99,8 +130,8 @@ function renderArtificer(list, row, head) {
     row('Plain steel', on0 ? 'Equipped' : null, 'The weapon as the smith made it.', on0 ? 'Equipped' : 'Equip', !on0, () => { delete s.wskin[fam]; saveCareer(); toastMenu('Back to plain steel.'); }, on0 ? ' cur' : '', weaponIcon(PICK_WEAPONS.find(w => WSKIN_FAM[w] === fam), 120, 36));
     ks.sort((a, b) => (WSKIN_RARE[a] || 0) - (WSKIN_RARE[b] || 0));
     for (const k of ks) {
-      const R = RARITY[WSKIN_RARE[k] || 0], own = !!s.owned['ws:' + k], on = s.wskin[fam] === k, cost = wskinCost(k);
-      const r = row(wskinName(k), on ? 'Equipped' : own ? 'Owned' : R.name, own ? 'Yours. Equip it any time.' : `${R.name} look for your ${WSKIN_FAM_NAME[fam].toLowerCase().replace(/s$/, '').replace(/s,/, ',')}.`, on ? 'Equipped' : own ? 'Equip' : `Buy ${fmtMoney(cost)}`, !on && (own || CAREER.purse >= cost),
+      const R = RARITY[WSKIN_RARE[k] || 0], cost = wskinCost(k), free = cost === 0, own = free || !!s.owned['ws:' + k], on = s.wskin[fam] === k;
+      const r = row(wskinName(k), on ? 'Equipped' : free ? 'Free' : own ? 'Owned' : R.name, own ? 'Yours. Equip it any time.' : `${R.name} look for your ${WSKIN_FAM_NAME[fam].toLowerCase().replace(/s$/, '').replace(/s,/, ',')}.`, on ? 'Equipped' : own ? 'Equip free' : own ? 'Equip' : `Buy ${fmtMoney(cost)}`, !on && (own || CAREER.purse >= cost),
         () => { if (!own) { if (!spend(cost, wskinName(k))) return false; s.owned['ws:' + k] = 1; } s.wskin[fam] = k; saveCareer(); toastMenu(`${wskinName(k)} equipped. You'll see it in your next fight.`); if (typeof townDressMe === 'function') townDressMe(); }, (on ? ' cur' : '') + ' r' + (WSKIN_RARE[k] || 0), skinIcon(k, 96, 96),
         own ? null : { skill: 'artificing', R: skinMats(k), apply: () => { s.owned['ws:' + k] = 1; s.wskin[fam] = k; toastMenu(`${wskinName(k)} made and equipped.`); if (typeof townDressMe === 'function') townDressMe(); }, label: 'Craft it' });
       r.style.setProperty('--rc', R.col);

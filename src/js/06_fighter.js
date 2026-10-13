@@ -41,7 +41,7 @@ function recalcBody(f) {
   f.stabF = 1.06 - 0.06 * hs;
   f.reachB = (b.h - 1.8) * 0.5;
   // career kit upgrades (player only)
-  f.up = f.isPlayer && typeof CAREER !== 'undefined' ? shopUp() : null;
+  const profile = combatProfile(f); f.up = profile ? Object.fromEntries(Object.entries(profile.upgrades).map(([key, value]) => [key, upEff(value)])) : null;
   if (f.up) { f.spdF *= 1 + 0.03 * (f.up.harness || 0); f.stabF *= 1 + 0.035 * (f.up.boots || 0); }
   if (typeof shopFx === 'function') { const sq = squadFx(f); f.spdF *= 1 + pfx(f, 'spd') + sq; f.stabF *= 1 + pfx(f, 'stab') + sq; } // runes, drills, potions; your squad camp
   f.stabF *= (1 + 0.03 * perk(f, 'iron.rooted')) * mod(f, 'stab') * weatherStab();
@@ -79,7 +79,7 @@ function stepFighter(f, dt) {
 
 function standingUpdate(f, dt) {
   const gasF = 0.5 + 0.5 * f.gas;
-  const diffStab = f.isPlayer ? DIFF[G.settings.difficulty].playerStab : 1;
+  const diffStab = humanFighter(f) ? DIFF[G.settings.difficulty].playerStab : 1;
   if (f.buffT > 0) f.buffT -= dt;
   // fatigue: the whole round wears you down (heavier kit and stuffier helms faster), and it only partly comes back between rounds
   if (G.phase === 'fight' && !(G.match && G.match.training)) {
@@ -88,9 +88,9 @@ function standingUpdate(f, dt) {
   }
   const fat = f.fatigue || 0;
   if (f.gas > 1 - 0.5 * fat) f.gas = Math.max(1 - 0.5 * fat, f.gas - dt * 0.08); // less breath to come back to
-  const rally = !f.isPlayer && f.team === 0 && G.player && isUp(G.player) && perk(G.player, 'show.rally') ? 1.08 : 1;
+  const rally = G.fighters.some(m => m !== f && m.team === f.team && isUp(m) && perk(m, 'show.rally')) ? 1.08 : 1;
   const stab = f.arch.stab * diffStab * f.stabF * f.stabMul * botScale(f, 1.45) * (1 - 0.35 * f.bell) * (1 - 0.15 * fat) * (f.buffT > 0 ? f.buffStab || 1 : 1) * rally * (f.atRail && perk(f, 'iron.rail') ? 1.3 : 1);
-  if (f.isPlayer && f.gas < 0.2 && !f.secondUsed && perk(f, 'lungs.second')) { f.secondUsed = true; f.gas += 0.35; toast('Second wind!', 'good'); }
+  if (humanFighter(f) && f.gas < 0.2 && !f.secondUsed && perk(f, 'lungs.second')) { f.secondUsed = true; f.gas += 0.35; if (f.isPlayer) toast('Second wind!', 'good'); }
   const swinging = f.action && f.action.kind === 'swing' && f.action.phase !== 'recover';
   // ---- locomotion ----
   let spd = f.arch.speed * f.spdF * botScale(f, 1.30) * (0.55 + 0.45 * f.gas) * (1 - 0.28 * (f.fatigue || 0));
@@ -177,7 +177,7 @@ function startFall(f) {
     feed(`${label(f)} posts off the ${f.shield ? 'shield edge' : 'open hand'} after the throw. Still up.`, 'BR 1.3.2', teamColor(f));
     return;
   }
-  if (f.weapon && f.weapon.key === 'polearm' && f.plantCd <= 0 && chance(f.isPlayer ? 1 : 0.6)) { // planting the haft is legal
+  if (f.weapon && f.weapon.key === 'polearm' && f.plantCd <= 0 && chance(humanFighter(f) ? 1 : 0.6)) { // planting the haft is legal
     f.lean = { x: dir.x * 0.1, z: dir.z * 0.1 }; f.leanV = { x: 0, z: 0 }; f.noStep = 0; f.plantCd = 7; f.plantFx = 0.6;
     feed(`${label(f)} plants the haft and stays up.`, 'BR 1.3.2', teamColor(f));
     return;
@@ -244,9 +244,13 @@ function groundFighter(f, reason, cite) {
   }
   if (f.isPlayer) { G.shake = Math.max(G.shake, 0.5); toast('Grounded', 'bad', reason); ev('grounded'); rumble(1, 0.7, 380); if (f.groundStyle === 'fall') startCine(f, 1.3); }
   if (by && !by.isPlayer && by.trait === 'showboat' && isUp(by) && !by.action) by.saluteT = 1.1;
-  if (by && by.isPlayer && f.team !== by.team) { G.saluteUntil = G.simTime + 3.5; toast('Takedown!', 'big', `${howTxt} · ${label(f)} is down`); AU.cheer(1.3); rumble(0.5, 0.9, 220); startCine(f, 1.5);
+  if (by && humanFighter(by) && f.team !== by.team) {
     const hy = perk(by, 'show.hype'), lg = perk(by, 'show.legend');
-    if (hy || lg) { for (const m of G.fighters) if (m.team === by.team && isUp(m)) { m.buffT = lg ? 8 : 10; m.buffStab = Math.max(m.buffStab || 1, lg ? 1.15 : 1 + 0.05 * hy); m.buffImp = lg ? 1.1 : (m.buffImp || 1); } if (lg) { AU.cheer(1.6); setTimeout(() => toast('The crowd goes wild!', 'big', 'Your team is fired up'), 900); } } ev('takedown', { how, combo: how === 'trip' && f.comboTrip, weapon: by.weapon ? by.weapon.key : null }); }
+    if (hy || lg) for (const m of G.fighters) if (m.team === by.team && isUp(m)) {
+      m.buffT = lg ? 8 : 10; m.buffStab = Math.max(m.buffStab || 1, lg ? 1.15 : 1 + 0.05 * hy); m.buffImp = lg ? 1.1 : (m.buffImp || 1);
+    }
+    if (by.isPlayer) { G.saluteUntil = G.simTime + 3.5; toast('Takedown!', 'big', `${howTxt} · ${label(f)} is down`); AU.cheer(1.3); rumbleFor(by,0.5,0.9,220); startCine(f,1.5); ev('takedown', {how,combo:how==='trip' && f.comboTrip,weapon:by.weapon?by.weapon.key:null}); }
+  }
   f.comboTrip = false;
   if (G.match && G.match.training && f.returnAt < 0) f.returnAt = G.simTime + 2.2; // the yard has no rounds: everyone gets back up
   if (G.match && G.match.duel && G.phase === 'fight') { if (by && by.team !== f.team) duelScore(by, DUEL_PTS.takedown + (G.match.pro ? 1 : 0), 'Takedown'); if (f.returnAt < 0) f.returnAt = G.simTime + 1.6; }
@@ -275,8 +279,9 @@ function startAction(f, kind, o = {}) {
   if (kind === 'tackle' && f.clinch) return false;
   if (f.guard && kind === 'swing') return false;
   if (G.match && G.match.metrics) { const actions = G.match.metrics.actions[f.team]; actions[kind] = (actions[kind] || 0) + 1; }
-  f.action = { kind, t: 0, phase: 'windup', arc: o.arc || 'R2L', held: !!o.held, charge: o.charge || 0, hit: false, target: o.target || null };
-  if (f.isPlayer && o.target) playerLunge(f, kind, o.target);
+  f.actionSeq = (f.actionSeq || 0) + 1;
+  f.action = { id: f.actionSeq, kind, t: 0, phase: 'windup', arc: o.arc || 'R2L', held: !!o.held, charge: o.charge || 0, hit: false, target: o.target || null };
+  if (humanFighter(f) && o.target) playerLunge(f, kind, o.target);
   if (kind === 'swing' && !o.held) f.action.wind = swingTimes(f).wind + (o.charge || 0) * 0.4;
   return true;
 }
@@ -446,7 +451,7 @@ function resolveSwing(f, a, contact) {
   const t = contact === undefined ? findTarget(f, reach, a.arc === 'O' ? 0.55 + 0.1 * perk(f, 'steel.overhead') : 1.25, a.arc === 'O') : contact && (contact.target || contact);
   if (!t) { // whiff: over-commit
     if (G.match && G.match.metrics) G.match.metrics.whiffs[f.team]++;
-    a.whiff = true; const fw = fwd(f.facing); applyImpulse(f, fw, (0.32 + 0.4 * a.charge) * (G.player && f !== G.player && f.team !== 0 && dist2(G.player.pos, f.pos) < reach + 0.6 && perk(G.player, 'lungs.slip') ? 1.25 : 1));
+    a.whiff = true; const fw = fwd(f.facing); applyImpulse(f, fw, (0.32 + 0.4 * a.charge) * (G.fighters.some(m => m.team !== f.team && isUp(m) && dist2(m.pos, f.pos) < reach + 0.6 && perk(m, 'lungs.slip')) ? 1.25 : 1));
     if (f.isPlayer) { toast('Miss', 'bad', a.charge > 0.5 ? 'Big swings over-commit you' : ''); ev('miss'); }
     return;
   }
@@ -462,7 +467,7 @@ function resolveSwing(f, a, contact) {
   imp *= mod(f, 'imp');
   imp *= 1 + Math.min(0.3, closingSpeed(f, t) * 0.06); // momentum: a blow thrown while closing in hits harder
   if (CUTE.on) imp *= 0.86; // rubber swords and foam kit: bonks, not blows
-  if (t.isPlayer && t.up) imp *= (1 - 0.05 * (t.up.padding || 0)) * (1 - 0.03 * armourTier(t, 'body')); // thicker gambeson, better breastplate
+  if (humanFighter(t) && t.up) imp *= (1 - 0.05 * (t.up.padding || 0)) * (1 - 0.03 * armourTier(t, 'body')); // thicker gambeson, better breastplate
   imp *= 1 + 0.03 * weaponTier(f) + pfx(f, 'imp'); // better-made weapon, pommel, runes, drills
   imp *= 1 - pfx(t, 'push'); // rune of iron skin
   const tp = isDown(t) ? t.groundPos : t.pos;
@@ -485,15 +490,16 @@ function resolveSwing(f, a, contact) {
   let zone = contact && contact.zone || null, blocked = false, go = null;
   if (t.guard && t.state === 'standing' && facingAtt) {
     blocked = true; let bf = t.shield ? t.shield.block : t.weapon && t.weapon.special === 'sign' ? 0.38 : 0.62; go = guardOutcome(f, t, a, bf); bf = go.bf; imp *= bf * (1 - 0.12 * perk(t, 'iron.wall')); zone = 'shield'; G.stats.blocks++;
-    if (G.match && G.match.metrics) G.match.metrics.guards[t.team]++;
     // perfect block: guard raised just before the blow lands. No breath spent, and the attacker is thrown off balance
-    const perfect = !go.wrong && !go.mid && (G.simTime - (t.guardAt || -9) < (t.isPlayer || t.netUid || t.vin ? 0.2 : 0.12) || go.parry);
+    const perfect = !go.wrong && !go.mid && (G.simTime - (t.guardAt ?? -9) < (humanFighter(t) ? 0.2 : 0.12) || go.parry);
     if (perfect) { imp *= 0.35; t.riposteT = G.simTime + 0.8; applyImpulse(f, { x: -dir.x, z: -dir.z }, 0.55); f.cd = Math.max(f.cd, 0.45); sparks(new THREE.Vector3(t.pos.x + dir.x * -0.4, 1.3 * t.body.h / 1.8, t.pos.z + dir.z * -0.4), 16, 1.3, '#fff3b0');
       if (t.isPlayer) { toast('Perfect block!', 'big', 'They’re off balance. Hit back!'); comm('perfect', {}, 2); ev('perfect'); MT.perfect = (MT.perfect || 0) + 1; if (MT.perfect >= 5) unlock('perfect5'); impactFeel('heavy', null, 0.6); } }
     else {
       t.gas = Math.max(0, t.gas - (0.02 + 0.016 * (w.mass || 1.5)) * (t.shield ? 0.8 : 1)); // heavier weapons cost more breath to stop
       if (t.gas < 0.06 && imp > 0.9) { t.guard = false; t.guardBroken = G.simTime + 0.8; imp /= bf; blocked = false; zone = 'torso'; if (t.isPlayer) toast('Guard broken!', 'bad', 'Too tired to hold it up'); else if (f.isPlayer) toast('Guard broken!', 'big', 'They’re out of breath'); }
     }
+    recordGuardOutcome(t, !blocked ? 'failed' : go.wrong || go.mid ? 'partial' : perfect ? 'perfect' : 'full');
+    if (G.match?.metrics && blocked && !go.wrong && !go.mid) G.match.metrics.guards[t.team]++;
     AU.block(t.shield ? t.shield.key : (t.weapon && t.weapon.haft ? 'haft' : 'clash'), 0.6 + imp * 0.3, vol(t));
     if (!contact || !contact.pos) hitPos.y = 1.25;
   } else if (zone) {
@@ -515,6 +521,7 @@ function resolveSwing(f, a, contact) {
   if (t.brace) imp *= 0.78 * (perk(t, 'iron.brace') ? 0.85 : 1);
   applyImpulse(t, dir, imp, { type: 'hit', by: f });
   // hit stun: struck mid-wind-up and the swing is lost, unless braced
+  if (!blocked && t.guard && !facingAtt) recordGuardOutcome(t, 'failed');
   if (!blocked && imp > 0.6 && t.action && t.action.kind === 'swing' && t.action.phase === 'windup' && !t.brace) { t.action = null; t.cd = Math.max(t.cd, 0.28); if (t.isPlayer) toast('Swing knocked off!', 'bad', 'They struck first. Brace or guard'); else if (f.isPlayer) MT.interrupts = (MT.interrupts || 0) + 1; }
   if (!blocked && a.charge > 0.85 && perk(f, 'steel.thunder')) { // Thunderclap: the blow staggers everyone round the target
     for (const o of G.fighters) if (o !== t && o.team !== f.team && isUp(o) && dist2(o.pos, t.pos) < 1.9) applyImpulse(o, vnorm({ x: o.pos.x - t.pos.x, z: o.pos.z - t.pos.z }), 0.6, { type: 'hit', by: f });
@@ -546,6 +553,7 @@ function resolveSwing(f, a, contact) {
   if (t.isPlayer && blocked) { ev('block'); rumble(0.35, 0.35, 90); }
   if (f.isPlayer) { hitMark(blocked ? '#8d979a' : imp > 1.15 ? '#f2c40f' : '#ffffff'); toast(blocked ? (go && go.wrong ? 'Half through!' : 'Blocked') : imp > 1.15 ? 'Big hit!' : 'Hit', blocked ? (go && go.wrong ? 'good' : 'bad') : imp > 1.15 ? 'big' : 'good', blocked ? (go && go.wrong ? 'They guarded the wrong side. Keep mixing it up.' : 'They had their guard up. Mix your sides, feint, or shield-bash.') : zone === 'helmet' ? 'Helmet. Ringing their bell.' : ''); }
   else if (t.isPlayer && blocked) toast(go && go.wrong ? 'Wrong side!' : go && go.mid ? 'Half blocked' : 'Blocked', go && (go.wrong || go.mid) ? 'bad' : 'info', go && go.wrong ? `It came in ${{ L: 'on your left', R: 'on your right', H: 'overhead' }[ARC_SIDE[a.arc]]}.` : go && go.mid ? 'Flick toward the blow for a full block.' : '');
+  if (VS.on) { rumbleFor(t, blocked ? 0.25 : 0.6, 0.35, 100); if (f !== t) rumbleFor(f, 0.1, 0.4, 55); }
   if (t.isPlayer || f.isPlayer) {
     impactFeel(blocked ? 'block' : t.isPlayer ? 'taken' : imp > 1.15 ? 'heavy' : 'light', a.arc === 'O' ? null : dir, clamp(imp, 0.5, 1.6));
     if (t.isPlayer && !blocked) flashHit();
@@ -608,22 +616,22 @@ function isMale(f) { return G.match && G.match.category === 'men'; }
 function vol(f) { if (BOUT.inSim) return boutEar(f.pos.x, f.pos.z); return G.player ? clamp(1.25 - dist2(G.player.pos, f.pos) / 18, 0.2, 1) : 0.7; }
 
 function resolveShove(f) {
-  const P = f.isPlayer; const t = findTarget(f, 1.2 + (P ? 0.3 : 0), P ? 1.2 : 0.95, false); f.gas = Math.max(0, f.gas - 0.055 * (1 - 0.2 * perk(f, 'lungs.endure')));
+  const P = f.isPlayer, H = humanFighter(f); const t = findTarget(f, 1.2 + (H ? 0.3 : 0), H ? 1.2 : 0.95, false); f.gas = Math.max(0, f.gas - 0.055 * (1 - 0.2 * perk(f, 'lungs.endure')));
   if (!t) { applyImpulse(f, fwd(f.facing), 0.25); if (P) toast('Shove missed', 'bad', 'Get closer first'); return; }
   const dir = vnorm({ x: t.pos.x - f.pos.x, z: t.pos.z - f.pos.z });
-  let imp = (f.shield ? 1.35 : 1.05) * (0.6 + 0.4 * f.gas) * Math.sqrt(massF(f) / massF(t)) * f.arch.power * botScale(f, 1.35) * (P ? 1.2 : 1) * (f.weapon && f.weapon.special === 'sweep' ? 1.45 : 1) * (1 + 0.07 * perk(f, 'grapple.shove'));
+  let imp = (f.shield ? 1.35 : 1.05) * (0.6 + 0.4 * f.gas) * Math.sqrt(massF(f) / massF(t)) * f.arch.power * botScale(f, 1.35) * (H ? 1.2 : 1) * (f.weapon && f.weapon.special === 'sweep' ? 1.45 : 1) * (1 + 0.07 * perk(f, 'grapple.shove'));
   const braced = t.brace && facingDot(t, f) > 0.2; if (braced) imp *= 0.5;
   // shield bash: a shield driven into a raised guard knocks it open
   if (f.shield && t.guard && facingDot(t, f) > 0.3) { t.guard = false; t.guardBroken = G.simTime + 0.7; if (t.ai) t.ai.guardT = -1; imp *= 1.15; if (P) toast('Shield bash!', 'big', 'Their guard is open. Hit them!'); else if (t.isPlayer) toast('Shield bash!', 'bad', 'Your guard was knocked aside'); }
   applyImpulse(t, dir, imp, { type: 'shove', by: f });
   applyImpulse(f, { x: -dir.x, z: -dir.z }, 0.22);
-  if (P) { t.vel.x += dir.x * 1.9 * (braced ? 0.4 : 1); t.vel.z += dir.z * 1.9 * (braced ? 0.4 : 1); t.tripWin = G.simTime + (perk(f, 'grapple.opportunist') ? 1.5 : 1.0); hitMark('#ffffff'); toast(braced ? 'Shove: they braced' : 'Shoved!', braced ? 'bad' : 'good', braced ? '' : 'They\u2019re stumbling. Trip now!'); ev('shove'); }
+  if (H) { t.vel.x += dir.x * 1.9 * (braced ? 0.4 : 1); t.vel.z += dir.z * 1.9 * (braced ? 0.4 : 1); t.tripWin = G.simTime + (perk(f, 'grapple.opportunist') ? 1.5 : 1.0); if (P) { hitMark('#ffffff'); toast(braced ? 'Shove: they braced' : 'Shoved!', braced ? 'bad' : 'good', braced ? '' : 'They\u2019re stumbling. Trip now!'); ev('shove'); } }
   (f.shield ? AU.shieldHit : AU.thud).call(AU, 0.9, vol(f));
   if (t.clinch) breakClinch(t);
 }
 
 function resolveTrip(f) {
-  const P = f.isPlayer; const t = findTarget(f, 1.05 + (P ? 0.3 : 0) + 0.15 * perk(f, 'grapple.longarms'), 1.4, false); f.gas = Math.max(0, f.gas - 0.07); G.stats.trips++;
+  const P = f.isPlayer, H = humanFighter(f); const t = findTarget(f, 1.05 + (H ? 0.3 : 0) + 0.15 * perk(f, 'grapple.longarms'), 1.4, false); f.gas = Math.max(0, f.gas - 0.07); G.stats.trips++;
   if (!t) { f.noStep = 0.2; f.action.failed = true; if (P) toast('Trip missed', 'bad', 'Nobody in reach'); return; }
   const ratio = vlen(t.lean) / FALL_L;
   const fromSide = facingDot(t, f) < 0.35;
@@ -631,7 +639,7 @@ function resolveTrip(f) {
   p += 0.12 * (f.gas - t.gas);
   if (t.clinch && t.clinch !== f.clinch) p += 0.18; // tied up by your teammate
   const combo = G.simTime < (t.tripWin || 0);
-  if (P) p += 0.08 + (combo ? 0.22 : 0); // the shove-then-trip combo
+  if (H) p += 0.08 + (combo ? 0.22 : 0); // the shove-then-trip combo
   if (f.weapon && f.weapon.special === 'hook') p += 0.16; // hockey stick
   if (meleeRolesOn() && f.ai.role === 'runner') p += 0.08;
   p += 0.04 * perk(f, 'grapple.ankle') + (G.simTime < (f.chainT || 0) ? 0.25 : 0);
@@ -649,7 +657,7 @@ function resolveTrip(f) {
 }
 
 function resolveGrab(f) {
-  const P = f.isPlayer;
+  const P = f.isPlayer, H = humanFighter(f);
   // a seized polearm haft: grab again to twist it out of their hands
   if (f.haftOn && G.simTime < f.haftUntil && isUp(f.haftOn) && f.haftOn.weapon) {
     const t = f.haftOn; f.haftOn = null;
@@ -664,7 +672,7 @@ function resolveGrab(f) {
     else if (P) toast('Missed the haft', 'bad');
     return;
   }
-  const t = findTarget(f, 0.95 + (P ? 0.3 : 0) + 0.15 * perk(f, 'grapple.longarms'), P ? 1.2 : 1.0, false);
+  const t = findTarget(f, 0.95 + (H ? 0.3 : 0) + 0.15 * perk(f, 'grapple.longarms'), H ? 1.2 : 1.0, false);
   if (!t || t.clinch || f.clinch || t.state !== 'standing') { f.action.failed = true; if (P) toast('Grab missed', 'bad', t && t.clinch ? 'Already tied up' : 'Get closer first'); return; }
   const c = { a: f, b: t, t: 0, idle: 0 }; f.clinch = c; t.clinch = c; G.clinches.push(c);
   t.action = null; AU.thud(0.6, vol(f));

@@ -24,7 +24,7 @@ function teamCounts(L, hum) {
   const bots = [0, 1].map(t => { const free = n - h[t]; const b = L.bots[t]; return b == null ? free : clamp(b, 0, free); });
   return { h, n, bots, total: [h[0] + bots[0], h[1] + bots[1]] };
 }
-function myPresence(extra) { return Object.assign({ role: NET.role, uid: ONL.me, account: BOS.user && BOS.user.id || null, name: myName(), bos: !!BOS.info, lo: myLo(), level: clamp(CAREER.level || 1, 1, 100), team: ONL.team, ready: NET.role === 'host' ? true : ONL.ready }, extra || {}); }
+function myPresence(extra) { return Object.assign({ protocol: NET_PROTOCOL, role: NET.role, uid: ONL.me, account: BOS.user && BOS.user.id || null, name: myName(), bos: !!BOS.info, lo: myLo(), level: clamp(CAREER.level || 1, 1, 100), team: ONL.team, ready: NET.role === 'host' ? true : ONL.ready }, extra || {}); }
 function newCode() { return Array.from({ length: 4 }, () => 'ABCDEFGHJKLMNPQRSTUVWXYZ'[(Math.random() * 24) | 0]).join(''); }
 
 // ---- host: open a lobby (open = anyone tapping Find a match may join)
@@ -54,7 +54,15 @@ function onlineBotRole(team, slot, role) {
   roles[team][slot] = role === 'auto' ? null : role; ONL.L.roles = roles; hostSync(); lobbyRefresh();
 }
 function hostPeers(ch) {
-  for (const p of ch.peers) { const P = p.presence || {}; if (P.role === 'guest' && P.uid && P.vin) ONL.remote[P.uid] = P.vin; }
+  for (const p of ch.peers) { const P = p.presence || {};
+    if (P.role === 'guest' && P.uid && P.vin && P.protocol === NET_PROTOCOL) {
+      if (ONL.inMatch && !G.fighters.some(f => f.netUid === P.uid && f.netPeer === p.peer)) continue;
+      const old = ONL.remote[P.uid];
+      if (Number.isSafeInteger(P.vin.seq) && P.vin.seq > (old?.seq || 0)) {
+        const value = validatedVin(P.vin, old?.value);
+        if (value) ONL.remote[P.uid] = { value, seq: P.vin.seq, pause: !!P.pauseRequested, at: performance.now() };
+      }
+    } }
   if (!ONL.inMatch) for (const p of ch.peers) {
     const P = p.presence || {}, R = P.roleEdit;
     if (!P.uid || !R || !Number.isInteger(R.seq) || R.seq <= (ONL.roleSeqSeen[P.uid] || 0)) continue;
@@ -119,7 +127,7 @@ function renderLobby() {
 function renderLobbyParts() {
   const host = NET.role === 'host', L = host ? lobbyL() : Object.assign(lobbyL(), (hostPeer() || { presence: {} }).presence.L || {});
   const hum = lobbyHumans(), C = teamCounts(L, hum);
-  const cnt = $('#lobCount'); if (cnt) cnt.textContent = `${hum.length} of ${MAX_HUMANS} people · ${C.total[0]} v ${C.total[1]}`;
+  const cnt = $('#lobCount'); if (cnt) cnt.textContent = `${hum.length} of ${MAX_HUMANS} people · ${C.total[0]} v ${C.total[1]} · Challenge level ${Math.max(1, ...hum.map(x => x.level))} (highest human)`;
   const box = $('#lobTeams'); if (!box) return; box.innerHTML = '';
   ['Reavers', 'Wardens'].forEach((tn, t) => {
     const col = h('div', { class: 'lobteam t' + t }, h('h5', null, `${tn} · ${C.total[t]}`));
@@ -179,21 +187,23 @@ function hostStart() {
   }
   if (C.total[0] < 1 || C.total[1] < 1) { toastMenu('Each side needs at least one fighter: add a bot.'); return; }
   const H = []; for (const t of [0, 1]) hum.filter(x => x.team === t).forEach((x, i) => H.push({ uid: x.uid, account: x.account, t, i, lo: x.lo, peer: x.peer }));
-  const S = { counts: C.total, venue: L.throne ? 'hall' : L.venue, cat: L.throne ? (L.throne.seat === 'queen' ? 'women' : 'men') : L.cat, H, roles: L.roles || [[], []], throne: L.throne || null, challengeLevel: Math.max(1, ...hum.map(x => x.level)) };
+  if (hum.some(h => !h.lo || h.lo.protocol !== NET_PROTOCOL)) { toastMenu('A player needs to update the game before Ready.'); return; }
+  const S = { protocol: NET_PROTOCOL, counts: C.total, venue: L.throne ? 'hall' : L.venue, cat: L.throne ? (L.throne.seat === 'queen' ? 'women' : 'men') : L.cat, H, roles: L.roles || [[], []], throne: L.throne || null, challengeLevel: Math.max(1, ...hum.map(x => x.level)) };
   ONL.go = Date.now(); ONL.S = S; lobbySet({ look: null, st: 'in an online fight' }); LOBBY.invited = null;
   buildOnlineMatch(S);
 }
 function buildOnlineMatch(S) {
+  if (S.protocol != null && S.protocol !== NET_PROTOCOL) { toastMenu('Update the game before joining this match.'); return; }
   G.attract = false; G.tourney = null; REP.log = []; endTraining();
   const catWas = G.category; G.category = S.cat || G.category;
   const N = Math.max(S.counts[0], S.counts[1], 1);
   setupMatch({ mode: N, opp: 'wardens', stage: `Online ${S.counts[0]} v ${S.counts[1]}`, venue: S.venue, online: true, challengeLevel: clamp(Number(S.challengeLevel) || 1, 1, 100), pro: N === 1 });
   G.category = catWas;
   for (const t of [0, 1]) { const team = G.fighters.filter(f => f.team === t); for (const f of team.slice(S.counts[t])) { W3.matchRoot.remove(f.model.root); G.fighters.splice(G.fighters.indexOf(f), 1); } }
-  G.fighters.forEach(f => { f.isPlayer = false; f.vin = null; f.netUid = null; f.netPeer = null; }); G.player = null;
+  G.fighters.forEach(f => { f.isPlayer = false; delete f.combatProfile; f.vin = null; f.netUid = null; f.netPeer = null; }); G.player = null;
   for (const hm of S.H) {
     const f = G.fighters.filter(x => x.team === hm.t)[hm.i]; if (!f) continue;
-    applyLo(f, hm.lo, G.match.category); f.netUid = hm.uid; f.netPeer = hm.peer; f.isPlayer = hm.uid === ONL.me; f.spec.player = f.isPlayer;
+    applyLo(f, hm.lo, G.match.category); f.netUid = hm.uid; f.netPeer = hm.peer; f.ai.role = null; f.isPlayer = hm.uid === ONL.me; f.spec.player = f.isPlayer;
     const identityPeer = ONL.peers.find(p => p.presence?.uid === hm.uid);
     f.creatorVerified = !f.isPlayer && !!identityPeer && creatorRemote(f.creatorProof, 'combat', identityPeer.peer);
     W3.matchRoot.remove(f.model.root); buildFighterModel(f); W3.matchRoot.add(f.model.root);
@@ -208,7 +218,7 @@ function buildOnlineMatch(S) {
   G.match.netSpec = S; G.match.duel = N === 1 && S.counts[0] === 1 && S.counts[1] === 1; buildPips();
   if (S.throne) G.match.throneDuel = S.throne;
   $('#sbA').textContent = 'RVR'; $('#sbB').textContent = 'WDN';
-  ONL.inMatch = true; NET.on = true; NET.ev = []; NET.lastEv = 0; NET.snap = null;
+  ONL.inMatch = true; NET.on = true; NET.pauseRequested = false; NET.ev = []; NET.lastEv = 0; NET.snap = null;
   startRound();
   if (NET.role === 'host') beginFight();
   else { hideAll(); setHud(true); G.phase = 'prefight'; refreshTouchUI(); if (G.player) FP.yaw = G.player.facing; }
@@ -218,12 +228,18 @@ function netTick(dt) {
   if (!NET.on || !NET.room) return;
   NET.sendT -= dt;
   if (NET.role === 'host') {
-    for (const uid in ONL.remote) { const V = ONL.vins[uid], R = ONL.remote[uid]; if (V && R) Object.assign(V, R, { e: { ...(R.e || {}) } }); }
+    const humans = G.match?.netSpec?.H || [];
+    G.paused = onlineCoop() && humans.every(h => h.uid === ONL.me ? NET.pauseRequested : ONL.remote[h.uid]?.pause && performance.now() - ONL.remote[h.uid].at <= 500);
+    for (const uid in ONL.vins) {
+      const V = ONL.vins[uid], R = ONL.remote[uid];
+      if (R && performance.now() - R.at <= 500) { Object.assign(V, R.value, { e: { ...R.value.e } }); V.expired = false; }
+      else if (!V.expired) { Object.assign(V, neutralVin(V)); V.expired = true; }
+    }
     const big = G.fighters.length > 8;
     if (NET.sendT <= 0) {
       NET.sendT = big ? 0.08 : 0.05; const m = G.match; if (!m) return;
       const s = G.fighters.map(f => { const a = packF(f); return big ? a.map(v => typeof v === 'number' ? Math.round(v * 100) / 100 : v) : a; });
-      NET.room.presence({ role: 'host', simTime: q(G.simTime), go: ONL.go, S: Date.now() - ONL.go < 5000 ? ONL.S : null, L: null, s, m: [q(m.clock), m.pts[0], m.pts[1], m.wins[0], m.wins[1], m.round, ['prefight', 'fight', 'stopping', 'between', 'over', 'tactics'].indexOf(G.phase), m.overtime ? 1 : 0], mk: G.marshals.map(k => [q(k.pos.x), q(k.pos.z), q(k.facing), q(k.flagUp)]), ev: NET.ev });
+      NET.room.presence({ protocol: NET_PROTOCOL, paused: G.paused, role: 'host', simTime: q(G.simTime), go: ONL.go, S: Date.now() - ONL.go < 5000 ? ONL.S : null, L: null, s, m: [q(m.clock), m.pts[0], m.pts[1], m.wins[0], m.wins[1], m.round, ['prefight', 'fight', 'stopping', 'between', 'over', 'tactics'].indexOf(G.phase), m.overtime ? 1 : 0], mk: G.marshals.map(k => [q(k.pos.x), q(k.pos.z), q(k.facing), q(k.flagUp)]), ev: NET.ev });
     }
   } else {
     const V = NET.vin; V.mx = PIN.move.x; V.mz = PIN.move.z; V.yaw = isCtl() ? FP.yaw : null; V.pitch = isCtl() ? FP.pitch : 0; V.sp = PIN.sprint ? 1 : 0; V.gd = PIN.guard ? ({ L: 2, R: 3, H: 4 }[PIN.gdir] || 1) : 0; V.br = PIN.brace ? 1 : 0;
@@ -231,8 +247,9 @@ function netTick(dt) {
     if (V.sh) { let pv = null; if (IN.pad.id !== null) pv = arcFromDrag(IN.pad.dx, IN.pad.dy, 16); else if (IN.mouse.down) pv = arcFromDrag(IN.mouse.adx, IN.mouse.ady, 22); else if (IN.gp.rtDown) pv = PIN.rx > 0.45 ? 'R2L' : PIN.rx < -0.45 ? 'L2R' : PIN.ry < -0.5 ? 'O' : null; if (pv && pv !== 'auto') V.arc = pv; }
     if (IN.swingRelease) { if (IN.swingRelease !== 'auto') V.arc = IN.swingRelease; V.sh = 0; IN.swingRelease = null; }
     for (const k of ['trip', 'shove', 'grab', 'tackle']) if (IN.edges.has(k)) { IN.edges.delete(k); V.e[k]++; }
-    if (NET.sendT <= 0) { NET.sendT = 0.05; NET.room.presence({ role: 'guest', uid: ONL.me, name: myName(), team: ONL.team, vin: V }); }
-    const P = NET.snap; if (!P || !P.s) return;
+    if (G.screen || G.photo) { V.mx = V.mz = V.gd = 0; V.sp = V.br = V.sh = false; }
+    if (NET.sendT <= 0) { NET.sendT = 0.05; V.seq = (V.seq || 0) + 1; NET.room.presence({ protocol: NET_PROTOCOL, pauseRequested: !!NET.pauseRequested, role: 'guest', uid: ONL.me, name: myName(), team: ONL.team, vin: V }); }
+    const P = NET.snap; if (!P || !P.s) return; G.paused = onlineCoop() && !!P.paused;
     if (Number.isFinite(P.simTime)) G.simTime = Math.max(G.simTime, P.simTime);
     G.fighters.forEach((f, i) => P.s[i] && unpackF(f, P.s[i], dt));
     const m = G.match, M = P.m; if (!M) return; m.clock = M[0]; m.pts = [M[1], M[2]]; const won = [M[3], M[4]]; m.round = M[5]; m.overtime = !!M[7];
@@ -248,11 +265,11 @@ function resultTitle(m) {
   return [drawn ? 'Draw' : won ? 'Your side wins' : 'Your side loses', `<p>${m.wins[t]}–${m.wins[1 - t]} in rounds.</p>`];
 }
 function onlineMatchEnd() { // host
-  const [title, body] = resultTitle(G.match); progressMatch(G.match, title === 'Your side wins'); if (typeof throneOnlineEnd === 'function') throneOnlineEnd(G.match);
+  const [title, body] = resultTitle(G.match); if (!G.match.rewarded) { G.match.rewarded = true; progressMatch(G.match, title === 'Your side wins'); } if (typeof throneOnlineEnd === 'function') throneOnlineEnd(G.match);
   msg('online', title, body + '<p class="muted">Back to the lobby to go again, change sides or add bots.</p>', [['Back to lobby', hostBackToLobby, true], ['Leave', () => { netLeave(); toTitle(); }]]);
 }
 function netGuestEnd() {
-  const [title, body] = resultTitle(G.match); progressMatch(G.match, title === 'Your side wins'); if (typeof throneOnlineEnd === 'function') throneOnlineEnd(G.match);
+  const [title, body] = resultTitle(G.match); if (!G.match.rewarded) { G.match.rewarded = true; progressMatch(G.match, title === 'Your side wins'); } if (typeof throneOnlineEnd === 'function') throneOnlineEnd(G.match);
   setHud(false); msg('online', title, body + '<p class="muted">The lobby opens again when the host is ready.</p>', [['Leave', () => { netLeave(); toTitle(); }, true]]);
 }
 function hostBackToLobby() {

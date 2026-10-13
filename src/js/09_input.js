@@ -36,7 +36,7 @@ function initInput() {
   const cmdKeys = { Digit1: 'pair', Digit2: 'hold', Digit3: 'hunt', Digit4: 'peel', Digit5: 'free' };
   window.addEventListener('keydown', e => {
     if (e.isComposing || (e.target && (e.target.closest('input, textarea, select') || e.target.isContentEditable))) return;
-    if (activeLayer() && (G.photo || activeLayer().id === 'steeltapeCloudOverlay')) return;
+    if (activeLayer() && (G.photo || activeLayer().id === 'steeltapeCloudOverlay' || activeLayer().id === 'townSpec')) return;
     setMode('kb'); AU.init();
     if (e.repeat) { if (['Space', 'ArrowUp', 'ArrowDown'].includes(e.code)) e.preventDefault(); return; }
     IN.keys[e.code] = true;
@@ -192,6 +192,7 @@ function readInput(dt) {
     }
   }
   if (isCtl() && IN.mode === 'kb' && !document.pointerLockElement) { if (k.ArrowLeft) { FP.yaw += 2.4 * dt; mx += 1; } if (k.ArrowRight) { FP.yaw -= 2.4 * dt; mx -= 1; } }
+  if (activeLayer()) { mx = my = 0; sprint = guard = brace = false; IN.swingStart = false; IN.swingRelease = null; }
   const ml = Math.hypot(mx, my); if (ml > 1) { mx /= ml; my /= ml; }
   PIN.raw.x = mx; PIN.raw.y = my;
   IN.mouseIdle += dt;
@@ -266,6 +267,7 @@ function cycleLock(f) {
 }
 
 function playerControl(f, dt) {
+  if (activeLayer()) { f.move = {x:0,z:0}; f.guard = f.brace = f.sprint = false; if (f.action?.held) f.action.cancel = true; return; }
   // consume edges
   const E = IN.edges;
   for (const e of [...E]) if (e.startsWith('cmd:')) { setOrder(e.slice(4)); E.delete(e); }
@@ -343,10 +345,11 @@ function playerYield() {
   const f = G.player; if (!f || f.state !== 'standing' || G.phase !== 'fight') return;
   breakClinch(f); f.action = null; f.state = 'kneeling'; f.kneelT = 0;
 }
-function setOrder(o) {
-  if (!ORDERS[o]) return; G.orders[0] = o; AU.click();
+function setOrder(o, actor = G.player || (VS.on && VS.humans[0])) {
+  if (!ORDERS[o]) return; const team = actor ? actor.team : 0; G.orders[team] = o; AU.click();
+  if (NET.on && NET.role === 'guest' && actor === G.player) { NET.vin.order = o; NET.vin.orderSeq = (NET.vin.orderSeq || 0) + 1; }
   $('#cmd').textContent = ORDERS[o].name;
   $$('#tcmd button').forEach(b => b.setAttribute('aria-pressed', String(b.dataset.cmd === o)));
-  if (G.phase === 'fight') { feed(`You call: ${ORDERS[o].name}.`, '', 'var(--flag)'); const cp = perk(G.player, 'show.captain'); if (cp) for (const m of G.fighters) if (m.team === 0 && isUp(m)) { m.buffT = Math.max(m.buffT || 0, 8); m.buffStab = Math.max(m.buffStab || 1, 1 + 0.06 * cp); } }
+  if (G.phase === 'fight') { feed(`Squad call: ${ORDERS[o].name}.`, '', 'var(--flag)'); const cp = perk(actor, 'show.captain'); if (cp) for (const m of G.fighters) if (m.team === team && isUp(m)) { m.buffT = Math.max(m.buffT || 0, 8); m.buffStab = Math.max(m.buffStab || 1, 1 + 0.06 * cp); } }
 }
 

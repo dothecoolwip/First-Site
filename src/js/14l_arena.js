@@ -71,7 +71,7 @@ function spectate(A, side = 1, offset = 0) {
   TOWN.pitch = 0.5;
   TOWN.fpYaw = FP.yaw;
   TOWN.cam = null; AU.click && AU.click();
-  $('#townPrompt').hidden = true; specHud();
+  $('#townPrompt').hidden = true; specHud(); if (IN.mode === 'pad' || IN.mode === 'kb') focusFirst();
   toastMenu(`Watching at ${A.name}. Drag or use the right stick to look around; move or press Leave to stop.`);
 }
 function stopSpectating() { if (!TOWN.spec) return; const S = TOWN.spec; TOWN.pos = S.returnPos; TOWN.yaw = S.returnYaw; TOWN.pitch = S.returnPitch; TOWN.face = S.returnFace; TOWN.fpYaw = FP.yaw; TOWN.spec = null; TOWN.forceArena = null; TOWN.cam = null; TOWN.actPrev = true; specHud(); townPrompt(); }
@@ -81,7 +81,7 @@ function specHud() {
   if (!el.firstChild) el.append(h('span', { class: 'spectxt' }, h('small'), h('b')),
     h('button', { class: 'btn tape small', onclick: e => { e.stopPropagation(); if (TOWN.spec) { const S = TOWN.spec; S.mode = (S.mode + 1) % SPEC_MODES.length; TOWN.pos.x = S.A.x + S.side * (LIST.W / 2 + 6.3 + Math.min(S.mode, 2) * 0.9); TOWN.cam = null; specHud(); } } }, 'Seat'),
     h('button', { class: 'btn tape small', 'aria-label': 'Binoculars zoom', onclick: e => { e.stopPropagation(); SPEC.zoom = SPEC.zoom === 1 ? 2 : SPEC.zoom === 2 ? 3 : 1; specHud(); } }, 'Zoom'),
-    h('button', { class: 'btn tape small', onclick: e => { e.stopPropagation(); stopSpectating(); } }, 'Leave'));
+    h('button', { class: 'btn tape small', 'data-back': '', onclick: e => { e.stopPropagation(); stopSpectating(); } }, 'Leave'));
   const m = G.match, w = m && m.wins ? m.wins : [0, 0];
   el.querySelector('.spectxt small').textContent = `${S.A.name} · ${SPEC_MODES[S.mode]} · ${SPEC.zoom}×`;
   el.querySelector('.spectxt b').textContent = BOUT.on ? `${BOUT.vs} · ${w[0]}–${w[1]}` : 'Next pairing walking on…';

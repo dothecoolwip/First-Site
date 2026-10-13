@@ -191,7 +191,6 @@ function enterTown(vendorKey) {
   TOWN.cam = null; TOWN.fpYaw = FP.yaw;
   document.body.classList.add('intown'); venueExtras(false); showScreen(null); $('#townHud').hidden = false; townHudUpdate(); refreshTouchUI();
   AU.music && AU.music(false); AU.market && AU.market(true); AU.setCrowd && AU.setCrowd(0.02);
-  $('#townBadge').hidden = true;
   setTimeout(() => { if (TOWN.on && !BOUT.on) boutStart(); }, 1200); // there's always a fight on in the list
   if (!store.get('townSeen', false)) { store.set('townSeen', true); setTimeout(() => toastMenu('Walk up to a stall and talk to the vendor. Map shows who sells what.'), 600); }
 }
@@ -361,15 +360,6 @@ function openTownMap() {
   $('#townShopHead').innerHTML = '';
   $('#townShopHead').append(h('button', { class: 'back', 'data-back': '', 'data-gp': 'B', 'aria-label': 'Back', onclick: e => { e.stopPropagation(); AU.click(); closeVendor(); } }, h('span', null, '‹ Back')), h('h2', { class: 'ttape tape mk' }, 'Realm map'));
   box.append(townMapCanvas());
-  box.append(h('p', { class: 'muted small' }, 'Other places are below. Nothing teleports: walk, or hire a horse at the stables.'));
-  const list = h('div', { class: 'ups shop' }); box.append(list);
-  const rows = TOWN.stalls.filter(s => !s.mine && !s.player && !s.node && !s.arena && (!s.secret || secretFound(s.secret.key))).map(S => ({ icon: S.V.icon, name: S.V.name, role: S.V.role, x: S.ax, z: S.az, blurb: S.station ? '' : vendorBlurb(S.V.key) + ' ' }));
-  for (const r of rows) r.d = Math.hypot(r.x - TOWN.pos.x, r.z - TOWN.pos.z);
-  rows.sort((a, b) => a.d - b.d);
-  for (const r of rows) {
-    list.append(h('div', { class: 'up' }, h('div', null, h('div', { class: 'uph' }, h('span', { class: 'vicon' }, r.icon), h('b', null, r.name), h('span', { class: 'tier' }, r.role)), h('div', { class: 'muted' }, `${r.blurb}${districtAt(r.x, r.z).name}, ${Math.round(r.d)} m away.`)),
-      h('button', { class: 'btn tape small', onclick: () => { setWaypoint(r.x, r.z, r.name); closeVendor(); } }, 'Mark the way')));
-  }
   box.append(h('div', { class: 'row townrow' },
     h('button', { class: 'btn tape', onclick: () => { AU.click(); openCareer(); } }, 'Your fighter'),
     h('button', { class: 'btn tape', onclick: () => { AU.click(); G.backTo = 'title'; showScreen('settings'); } }, 'Settings'),
@@ -387,8 +377,6 @@ function initTown() {
   $('#townMini').onclick = () => { if (!G.screen) openTownMap(); };
   $('#townHorse').onclick = e => { e.stopPropagation(); if (!G.screen) callHorse(); };
   $('#townLeave').onclick = () => { AU.click(); leaveTown(); };
-  $('#btnTown').onclick = () => enterTown();
-  $('#townBadge').hidden = !!store.get('townSeen', false);
 }
 TOWN.frame = 0;
 

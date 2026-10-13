@@ -9,6 +9,29 @@ const TMAP_PLACES = [
   ['Food stalls', 38, -8], ['Archery', 64, 10], ['Farm', 60, -16], ['Homes', -44, 48], ['Club camp', 46, 62], ['Graveyard', 44, -56], ['Pond', -56, 72], ['Festival gate', 0, 70], ['Deep Mine', -256, -42]
 ];
 function tmapSites() { return [...ARENAS, TRAINING_GROUND]; }
+function mapStallVisible(S) {
+  return !S.mine && !S.player && !S.node && !S.arena && (!S.secret || secretFound(S.secret.key)) &&
+    (!S.hiddenTunnel || !!(CAREER.found && CAREER.found['tunnel:' + S.hiddenTunnel]) || !!(CAREER.bag && CAREER.bag.items && CAREER.bag.items.moon_map));
+}
+function placesDirectory(route) {
+  const box = h('div', { class: 'places-directory' });
+  const search = h('input', { type: 'search', placeholder: 'Search places & services', 'aria-label': 'Search places & services' });
+  const list = h('div', { class: 'ups shop', 'aria-label': 'Places & services' });
+  const draw = () => {
+    list.replaceChildren(); const query = search.value.trim().toLowerCase();
+    const rows = tmapSites().map(A => ({ name: A.name, icon: A.icon, role: A.practice ? 'Training' : 'Arena', x: A.entry[0], z: A.entry[1], description: A.gate && !gateOpen(A.gate) ? 'Gate locked' : '' }));
+    for (const S of TOWN.stalls || []) if (mapStallVisible(S)) rows.push({ name: S.V.name, icon: S.V.icon || '•', role: S.V.role || 'Destination', x: S.ax, z: S.az, description: vendorBlurb(S.V.key) || '' });
+    rows.sort((a, b) => Math.hypot(a.x - TOWN.pos.x, a.z - TOWN.pos.z) - Math.hypot(b.x - TOWN.pos.x, b.z - TOWN.pos.z));
+    for (const r of rows) {
+      if (!`${r.name} ${r.role} ${r.description}`.toLowerCase().includes(query)) continue;
+      const district = districtAt(r.x, r.z);
+      const desc = [r.description, district && district.name, `${Math.round(Math.hypot(r.x - TOWN.pos.x, r.z - TOWN.pos.z))} m away`].filter(Boolean).join(' · ');
+      list.append(h('div', { class: 'up' }, h('div', null, h('b', null, `${r.icon} ${r.name}`), h('div', { class: 'muted small' }, `${r.role} · ${desc}`)), h('button', { class: 'btn tape small', onclick: () => route(r) }, 'Route')));
+    }
+    if (!list.children.length) list.append(h('p', { class: 'muted' }, 'No matching places or services.'));
+  };
+  search.oninput = draw; box.append(h('h3', null, 'Places & services'), search, list); draw(); return box;
+}
 function tmapMarkers() {
   const out = tmapSites().map(A => ({ x: A.x, z: A.z, icon: A.icon, name: A.name, kind: 'arena', A, far: true }));
   for (const S of TOWN.stalls || []) {
@@ -141,14 +164,7 @@ function townMapCanvas() {
   const V = TMAP.view = TMAP.view || { cx: TOWN.pos.x, cz: TOWN.pos.z, k: 0 };
   const zb = (t, f) => h('button', { class: 'btn tape small', onclick: e => { e.stopPropagation(); f(); draw(); } }, t);
   const bar = h('div', { class: 'tmapbar' }, zb('−', () => V.k = Math.max(V.kmin, V.k / 1.5)), zb('+', () => V.k = Math.min(9, V.k * 1.5)), zb('Me', () => { V.cx = TOWN.pos.x; V.cz = TOWN.pos.z; V.k = Math.max(V.k, 2.4); }), zb('Realm', () => { V.k = V.kmin; V.cx = 0; V.cz = -5; }));
-  const stops = h('div', { class: 'ups shop', 'aria-label': 'Arena destinations' });
-  for (const A of tmapSites()) {
-    const D = DISTRICTS.find(d => d.key === A.district), locked = A.gate && !gateOpen(A.gate);
-    stops.append(h('div', { class: 'up' },
-      h('div', null, h('div', { class: 'uph' }, h('b', null, `${A.icon} ${A.name}`)),
-        h('div', { class: 'muted small' }, `${D.name} · ${A.practice ? 'Lessons · ' : ''}${Math.round(Math.hypot(TOWN.pos.x - A.x, TOWN.pos.z - A.z))} m${locked ? ' · Gate locked' : ''}`)),
-      h('button', { class: 'btn tape small', onclick: () => { setWaypoint(A.entry[0], A.entry[1], A.name); V.cx = A.x; V.cz = A.z; V.k = Math.max(V.k, 2); tip.textContent = `Waypoint set: ${A.name}. Follow the gold markers to the entrance.`; draw(); } }, 'Route')));
-  }
+  const stops = placesDirectory(r => { setWaypoint(r.x, r.z, r.name); V.cx = r.x; V.cz = r.z; V.k = Math.max(V.k, 2); tip.textContent = `Waypoint set: ${r.name}. Follow the gold markers.`; draw(); });
   wrap.append(bar, cv, tip, h('div', { class: 'tmaplegend muted small' }, '🏟️ Arena  ·  🔴 Live bout  ·  Gold trail: route  ·  Grey marker: locked gate'), stops);
   let W = 0, H = 0;
   const draw = () => {

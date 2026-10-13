@@ -1,6 +1,7 @@
 // ---------- screens, matches, the Red Deer Rumble ----------
 const SCREENS = ['title', 'howto', 'settings', 'tactics', 'sheetScr', 'repair', 'msgScr', 'pause', 'modes', 'ladder', 'career', 'townShop', 'creator'];
 function showScreen(id) {
+  if (id === 'howto') { renderHow(G.helpKind || IN.mode); selectTab($('#howTabs'), 'controls'); }
   if (id) { const oh = document.getElementById('onbHints'); if (oh) oh.hidden = true; }
   if (id === 'title' && G.hub && typeof TOWN !== 'undefined') { if (TOWN.on) { id = null; setTimeout(() => { refreshTouchUI(); townHudUpdate(); townPrompt(); }, 0); } else { enterTown(TOWN.returnTo); return; } } SCREENS.forEach(s => { $('#' + s).hidden = s !== id; }); G.screen = id; if (id && (IN.mode === 'pad' || IN.mode === 'kb')) setTimeout(() => { if (G.screen === id) { if (document.activeElement && document.activeElement !== document.body && !$('#' + id).contains(document.activeElement)) document.activeElement.blur(); if (IN.mode === 'pad') focusFirst(); } }, 30); updateLegend(); }
 function setHud(on) {
@@ -129,7 +130,7 @@ function resetFighterForRound(f) {
   // weapon back in hand; a torn haft wrap keeps the weapon out (WR 7.2.2)
   let wk = f.spec.weapon;
   if (f.kit.haft.failed) { if (f.isPlayer || G.attract) wk = 'sword'; else { f.kit.haft.failed = false; f.kit.haft.cond = 0.7; } }
-  f.weapon = f.isPlayer ? playerWeaponDef(wk) : WEAPONS[wk]; recalcBody(f);
+  f.weapon = humanFighter(f) ? profileWeapon(wk, combatProfile(f)) : WEAPONS[wk]; recalcBody(f);
   for (const k in f.kit) if (k !== 'haft' && f.kit[k].failed && !f.kit[k].covered && !f.isPlayer) { f.kit[k].failed = false; f.kit[k].cond = Math.max(f.kit[k].cond, 0.55); f.kit[k].tape = 'black'; }
   if (f.kit.helmet.failed && !f.isPlayer) { f.kit.helmet.failed = false; f.kit.helmet.cond = Math.max(f.kit.helmet.cond, 0.5); }
   // rebuild the model (helmet back on, weapon, tape)
@@ -179,6 +180,7 @@ function toTactics() {
   $('#tacStage').textContent = (m.champion ? "Champion's fight" : `${m.stage}, round ${m.round}`);
   $('#tacTitle').textContent = `${CLUBS.reavers.name} vs ${B.full}`;
   $('#tacSub').textContent = m.champion ? "Rounds are level. One fighter from each side, first to the floor loses." : m.mode > 1 ? 'Pick the call your squad opens with. You can change it mid-fight.' : m.pro ? `Profight: armoured MMA. Any weapon against any weapon, grappling counts, and a takedown scores ${DUEL_PTS.takedown + 1}. Clean hits: head ${DUEL_PTS.helmet}, body ${DUEL_PTS.torso}, limbs 1. ${DUEL_TIME}-second rounds, best of three.` : `${m.duelCat || 'Duel'} category: you both fight with the same kind of weapon. Head ${DUEL_PTS.helmet}, body ${DUEL_PTS.torso}, arms and legs 1, takedown ${DUEL_PTS.takedown}. Change your weapon and your opponent changes to match. ${DUEL_TIME}-second rounds, best of three.`;
+  $('#tacSub').append(document.createTextNode(` Challenge level ${m.challengeLevel} · ${G.settings.difficulty}. Milestones: 25, 50, 75, 80, 90, 100.`));
   renderKitPicker(); if (!G.player) renderLineup();
   selectTab($('#tacTabs'), G.player ? 'helm' : 'squad'); $$('#tacTabs [data-tab]').forEach(b => b.hidden = !G.player && b.dataset.tab !== 'squad');
   const ob = $('#orders'); ob.innerHTML = '';
@@ -585,7 +587,7 @@ function startLadder(i) {
 
 function lExitDefault() { AU.click(); if (G.onbTrain) { G.onbTrain = false; endTraining(); openCreator(); return; } toTitle(); }
 function dropPhoto() { if (!G.photo) return; try { stopReplay(); } catch (e) {} if (typeof PHOTO !== 'undefined') PHOTO.on = false; G.photo = false; $('#photo').hidden = true; $('#gl').style.filter = ''; $('#photoFrame').hidden = true; }
-function refreshDaily() { const S = dailyState(), P = dailyPlan(); $('#btnDaily').firstChild.textContent = `Daily #${P.day}`; $('#dailyBadge').hidden = !!S.done[P.key]; }
+function refreshDaily() { dailyState(); dailyPlan(); }
 function toTitle(opts) {
   // Account gate must run even for old completed saves and callers using skipOnb/home.
   if (typeof onbAccountGate === 'function' && onbAccountGate()) return;
@@ -593,9 +595,7 @@ function toTitle(opts) {
   if (G.hub && !(opts && opts.home) && typeof enterTown === 'function') { enterTown(TOWN.returnTo); startupDone(); return; }
   G.bracket = null; VS.names = null; refreshDaily(); if (LOBBY.pending) setTimeout(showInvite, 400);
   G.paused = false; setHud(false); G.autopilot = false; G.autoflow = false; AU.music(true); endTraining(); updateTitlePurse();
-  $('#trainBadge').hidden = !!CAREER.trained || CAREER.stats.matches > 2;
   startAttract();
-  $('#btnContinue').hidden = !store.get('tourney', null);
   showScreen('title');
   startupDone();
 }
@@ -605,7 +605,15 @@ function startAttract() {
   startRound(); G.phase = 'fight'; AU.setCrowd(0.04);
 }
 
+function onlineCoop() { return !!(NET.on && G.match?.netSpec?.H?.length && new Set(G.match.netSpec.H.map(h => h.t)).size === 1); }
+function onlinePauseRequest(on) { NET.pauseRequested = !!on; if (!onlineCoop()) G.paused = false; }
 function togglePause(force) {
+  if (NET.on) {
+    const open = force === undefined ? G.screen !== 'pause' : !!force;
+    onlinePauseRequest(open); resetTransientInput();
+    if (open) { showScreen('pause'); $('#touch').hidden = true; } else { hideAll(); refreshTouchUI(); }
+    return;
+  }
   if (G.phase !== 'fight' && G.phase !== 'prefight' && !G.paused) return;
   G.paused = force !== undefined ? force : !G.paused;
   if (G.paused) { showScreen('pause'); refreshTouchUI(); $('#touch').hidden = true; if (window.speechSynthesis) speechSynthesis.cancel(); COMM_AUDIO.stop(); }
@@ -613,6 +621,7 @@ function togglePause(force) {
 }
 
 function renderHow(kind) {
+  kind = ['touch', 'kb', 'pad'].includes(kind) ? kind : 'kb'; G.helpKind = kind;
   $$('#howSeg button').forEach(b => b.setAttribute('aria-pressed', String(b.dataset.how === kind)));
   const rows = {
     touch: [['Left thumb', 'Drag anywhere on the left to move. Push forward past the ring to run. With nobody locked on, pushing sideways turns you.'], ['Target lock', 'Your view follows the nearest opponent (yellow marker), so your right thumb is free for the buttons. Tap the right side of the screen to switch target; drag there to look around.'], ['1P / 3P', 'Top right: switch first and third person any time, even mid-fight.'], ['Swing pad', 'Hold to wind up, swipe to pick the arc (left, right, or up for overhead), let go to strike. Hold longer for a heavier blow.'], ['Trip', 'Back-heel. Works best on someone already stumbling, or from the side.'], ['Shove', 'Shield bash or haft push. Drives fighters into the rail.'], ['Grab', 'Clinch. In a clinch: swing pad = knee, trip = throw, grab = disarm.'], ['Guard / Brace', 'Hold. Drag on the guard button left, right or up to guard that side (a blow from the other side gets half through). Brace widens your base.'], ['Pair · Hold · Hunt · Peel', 'Squad calls for your teammates.']],
@@ -623,6 +632,16 @@ function renderHow(kind) {
   $('#howGrid').innerHTML = rows.map(r => `${kind === 'pad' && GL.includes(r[0]) ? `<span><i class="gp" data-k="${r[0]}">${gpName(r[0])}</i></span>` : `<kbd>${r[0]}</kbd>`}<span>${r[1]}</span>`).join('') + '<span></span><span class="muted">There is no thrust button. Thrusting is prohibited (BR 4.2).</span>';
 }
 
+function launchActivity(id) {
+  const routes = {
+    btnRumble: () => { AU.init(); store.del('tourney'); startTourney(); },
+    btnContinue: () => { AU.init(); continueTourney(); }, btnQuick: () => { AU.init(); openModes(); },
+    btnLadder: () => { AU.init(); openLadder(); }, btnDaily: openDaily, btnRun: openRun,
+    btnSeason: () => { AU.init(); openSeason(); }, btnInvite: () => { AU.click(); openInvite(); },
+    btnTrain: () => { AU.init(); startTraining(); }, btnCareer: () => { AU.init(); openCareer(); }
+  };
+  if (routes[id]) routes[id]();
+}
 function initMenus() {
   // Semantic version is intentionally human readable; suffix identifies the exact PWA build.
   const titleVersion = $('#titleVersion');
@@ -633,18 +652,11 @@ function initMenus() {
   const catTag = () => { const t = $('.tagline'); if (t) t.textContent = G.category === 'youth' ? 'Little knights. Foam swords. Very big helmets.' : 'Real steel. Real rules. Half of it held together with hockey tape.'; document.body.dataset.cat = G.category; };
   document.querySelectorAll('#catSeg button').forEach(b => { b.setAttribute('aria-pressed', String(b.dataset.cat === (G.category === 'youth' ? 'youth' : 'men'))); b.onclick = () => { G.category = b.dataset.cat; store.set('category', G.category); document.querySelectorAll('#catSeg button').forEach(x => x.setAttribute('aria-pressed', String(x === b))); catTag(); if (G.category === 'youth') AU.boing(0.7); else AU.click(); }; });
   catTag();
-  $('#btnRumble').onclick = () => { AU.init(); store.del('tourney'); startTourney(); };
-  $('#btnContinue').onclick = () => { AU.init(); continueTourney(); };
-  $('#btnQuick').onclick = () => { AU.init(); openModes(); };
-  $('#btnLadder').onclick = () => { AU.init(); openLadder(); };
-  $('#btnDaily').onclick = () => openDaily(); $('#btnRun').onclick = () => openRun(); $('#btnSeason').onclick = () => { AU.init(); openSeason(); }; $('#btnInvite').onclick = () => { AU.click(); openInvite(); }; $('#nowPlaying').onclick = () => { AU.click(); openInvite(); }; setTimeout(initLobby, 1500); setTimeout(checkJoinLink, 0);
+  $('#nowPlaying').onclick = () => { AU.click(); openInvite(); }; setTimeout(initLobby, 1500); setTimeout(checkJoinLink, 0);
   refreshDaily();
-  $('#btnTrain').onclick = () => { AU.init(); startTraining(); };
-  $('#btnCareer').onclick = () => { AU.init(); openCareer(); };
   $('#lSkip').onclick = () => { AU.click(); setLesson(TR.i >= LESSONS.length - 1 ? 0 : TR.i + 1); };
   $('#lExit').onclick = lExitDefault;
   $('#btnCredits').onclick = () => { G.backTo = 'title'; msg('credits', 'Credits', CREDITS_HTML, [['Back', () => showScreen('title')]]); };
-  $('#btnHow').onclick = () => { G.backTo = 'title'; renderHow(IN.mode); selectTab($('#howTabs'), 'controls'); showScreen('howto'); };
   $('#btnSettings').onclick = () => { G.backTo = 'title'; showScreen('settings'); };
   $$('[data-back]').forEach(b => b.onclick = () => showScreen(G.backTo || 'title'));
   $$('[data-leave]').forEach(b => b.onclick = () => { AU.click(); leaveScreen(); });

@@ -7,6 +7,8 @@ const CAREER_DEFAULT = () => ({
   ladder: { rung: 0 }, trained: false
 });
 const CAREER = (() => { const d = CAREER_DEFAULT(), s = store.get('career', null); if (!s) return d; return { ...d, ...s, club: { ...d.club, ...(s.club || {}) }, upgrades: { ...d.upgrades, ...(s.upgrades || {}) }, stats: { ...d.stats, ...(s.stats || {}) }, ladder: { ...d.ladder, ...(s.ladder || {}) }, ach: s.ach || {} }; })();
+CAREER.level = clamp(Math.floor(Number(CAREER.level) || 1), 1, 100);
+if (CAREER.level === 100) CAREER.xp = 0;
 function saveCareer() {
   if (typeof testAdminApply === 'function' && typeof BOS !== 'undefined' && BOS.testAdmin) testAdminApply(false);
   store.set('career', CAREER);
@@ -128,9 +130,17 @@ function shieldPreview(club, size = 96) {
 }
 function renderCareer() {
   const P = CAREER.club, box = $('#careerBody'); box.innerHTML = '';
-  if (G.careerTab === 'forge') G.careerTab = 'profile'; // the Forge lives at the blacksmith now
+  if (['forge', 'forge-gone'].includes(G.careerTab)) G.careerTab = 'shop'; if (G.careerTab === '__oldach') G.careerTab = 'ach'; // the Forge lives at the blacksmith now
   const tab = G.careerTab || 'profile';
   $$('#careerTabs [data-tab]').forEach(x => x.setAttribute('aria-pressed', String(x.dataset.tab === tab)));
+  if (['progress', 'ach', 'record'].includes(tab)) {
+    box.append(h('div', { class: 'seg', role: 'tablist', 'aria-label': 'Progress sections' }, ...[['progress', 'Progress'], ['ach', 'Awards'], ['record', 'Record']].map(([key, name]) => h('button', { role: 'tab', 'aria-pressed': String(tab === key), onclick: () => { G.careerTab = key; renderCareer(); } }, name))));
+    const parent = $('#careerTabs [data-tab="progress"]'); if (parent) parent.setAttribute('aria-pressed', 'true');
+  }
+  if (G.appearanceEditor && tab === 'profile') {
+    box.append(h('button', { class: 'btn tape small', 'data-back': '', onclick: () => { G.appearanceEditor = false; renderCareer(); } }, 'Back to Profile'));
+    const editor = h('div', { class: 'appearance-editor' }); box.append(editor); renderVendor(editor, 'barber', renderCareer); return;
+  }
   if (tab === 'skills') { renderSkills(box); return; }
   if (tab === 'profile') {
     const field = (label, input) => h('label', { class: 'fld' }, h('span', { class: 'label' }, label), input);
@@ -148,28 +158,17 @@ function renderCareer() {
     const chg = h('div', { class: 'seg small' }); for (const [v, t] of CHARGES) chg.append(h('button', { 'aria-pressed': String(P.charge === v), onclick: () => { P.charge = v; saveCareer(); applyProfile(); renderCareer(); AU.click(); } }, t));
     const teamRow = h('div', { class: 'up vcard vwide' }, h('div', null, h('b', null, P.bos ? `Team: ${P.name}` : 'Not on a team'), h('div', { class: 'muted small' }, P.bos ? 'Your BuhurtOS team. Your real team-mates fill the roster.' : 'Fighting under your own banner.')), h('button', { class: 'btn tape small', onclick: () => { AU.click(); G.creatorReturn = () => { renderCareer(); showScreen('career'); }; CAREER.teamPicked = false; saveCareer(); openCreator(); } }, 'Change team'));
     box.append(teamRow);
-    box.append(h('div', { class: 'up vcard vwide' }, h('div', null, h('b', null, 'Appearance'), h('div', { class: 'muted small' }, 'Change your body style, height, build, skin, hair, facial hair and eyes.')), h('button', { class: 'btn primary flagtape small', onclick: () => { AU.click(); G.appearanceReturn = () => { renderCareer(); showScreen('career'); }; creatorFighter(); } }, 'Edit fighter')));
+    box.append(h('div', { class: 'up vcard vwide' }, h('div', null, h('b', null, 'Appearance'), h('div', { class: 'muted small' }, 'Change your body style, height, build, skin, hair, facial hair and eyes.')), h('button', { class: 'btn primary flagtape small', onclick: () => { AU.click(); G.appearanceEditor = true; renderCareer(); } }, 'Edit fighter')));
     box.append(h('div', { class: 'profgrid' },
       h('div', { class: 'stack' }, h('div', { class: 'row fields' }, field('Fighter name', nameIn), field('Number', numIn)), h('div', { class: 'row fields' }, field('Club', clubIn), field('Short name', shortIn)),
         h('span', { class: 'label' }, 'Tabard'), sw(TABARDS, 'tabard'), h('span', { class: 'label' }, 'Trim'), sw(TRIMS, 'trim'), h('span', { class: 'label' }, 'Charge'), chg),
       pv));
     prev();
-  } else if (tab === 'forge-gone') {
-    box.append(h('div', { class: 'forgehead' }, h('span', { class: 'purse num' }, fmtMoney(CAREER.purse)), h('span', { class: 'muted small' }, 'in your purse')));
-    box.append(h('p', { class: 'muted small' }, 'Every event pays prize money. Wins pay more, each takedown adds a bonus, and the Rumble and the Duel Ladder pay best. Spend it here.'));
-    renderSmith(box);
-    box.append(h('div', { class: 'up shoplink' }, h('div', null, h('b', null, 'Looking for more to buy?'), h('div', { class: 'muted' }, 'Better weapons and armour, kit upgrades to level 10, tape refills, squires, your club hall, boosts, colours and titles are all in the Shop.')), h('button', { class: 'btn primary flagtape small', onclick: () => { AU.click(); G.careerTab = 'shop'; renderCareer(); } }, 'Open the Shop')));
   } else if (tab === 'shop') { renderShop(box);
   } else if (tab === 'inv') { renderInventory(box);
   } else if (tab === 'trades') { renderTrades(box);
   } else if (tab === 'progress') { renderProgress(box);
-  } else if (tab === 'ach') { renderAwards(box); } else if (tab === '__oldach') {
-    const got = Object.keys(CAREER.ach).length;
-    box.append(h('p', { class: 'muted small' }, `${got} of ${ACH.length} unlocked.`));
-    const ag = h('div', { class: 'achs' });
-    for (const a of ACH) ag.append(h('div', { class: 'ach' + (CAREER.ach[a.id] ? ' on' : '') }, h('b', null, a.name), h('span', null, a.desc)));
-    box.append(ag);
-  } else {
+  } else if (tab === 'ach') { renderAwards(box); } else {
     const S = CAREER.stats;
     const rows = [['Matches', S.matches], ['Wins', S.wins], ['Takedowns', S.takedowns], ['Successful trips', S.trips], ['Throws', S.throws], ['Disarms', S.disarms], ['Tackles', S.tackles], ['Hits landed', S.hits], ['Big hits', S.bigHits], ['Blocks', S.blocks], ['Straps repaired', S.repairs], ['Rumble titles', S.rumbleWins], ['Duel Ladder', `${CAREER.ladder.rung} of ${LADDER.length}`], ['Prize money earned', fmtMoney(S.earned)]];
     const RC = CAREER.records || {}; rows.push(['Best win streak', RC.streak || 0], ['Most takedowns in a match', RC.tdMatch || 0], ['Most helmet hits in a match', RC.heads || 0], ['Most duel points in a round', RC.duelPts || 0], ['Fastest takedown', RC.fastTd != null ? RC.fastTd + ' s' : '–']);
@@ -179,7 +178,7 @@ function renderCareer() {
 }
 const confirmReset = { armed: false };
 function toastMenu(text) { const el = $('#achPop'); el.innerHTML = ''; el.append(h('b', null, text)); el.classList.add('on'); setTimeout(() => el.classList.remove('on'), 2200); }
-function openCareer(tab) { G.backTo = G.screen === 'msgScr' ? 'title' : 'title'; skillsState(); G.careerTab = tab || (CAREER.sp > 0 ? 'skills' : 'profile'); renderCareer(); showScreen('career'); }
+function openCareer(tab) { G.appearanceEditor = false; G.backTo = G.screen === 'msgScr' ? 'title' : 'title'; skillsState(); G.careerTab = tab || (CAREER.sp > 0 ? 'skills' : 'profile'); renderCareer(); showScreen('career'); }
 
 // prize money and match achievements at full time
 function careerMatchEnd(m, won) {
@@ -196,10 +195,11 @@ function careerMatchEnd(m, won) {
   best('heads', (MT.zones || []).filter(z => z === 'helmet').length, 'Most helmet hits in a match');
   if (MT.firstDownT != null) best('fastTd', Math.round(MT.firstDownT * 10) / 10, 'Fastest takedown', true);
   MT.brokenRecords = brk;
-  const base = { 1: 30, 2: 40, 3: 50, 5: 60, 12: 90 }[m.mode] || 50;
-  let money = won ? base : Math.round(base * 0.3), lines = [`${won ? 'Win' : 'Appearance'} ${fmtMoney(money)}`];
-  gainXP(40 + (won ? 120 : 0) + 30 * m.wins[0] + (m.ladder != null && won ? 100 : 0));
-  const tb = MT.takedowns * 10; if (tb) { money += tb; lines.push(`${MT.takedowns} takedown${MT.takedowns === 1 ? '' : 's'} ${fmtMoney(tb)}`); }
+  // A first win buys an entry cosmetic after a few fights; a loss still pays enough to progress.
+  const base = { 1: 100, 2: 130, 3: 160, 5: 180, 12: 250 }[m.mode] || 160;
+  let money = won ? base : Math.round(base * 0.45), lines = [`${won ? 'Win' : 'Appearance'} ${fmtMoney(money)}`];
+  gainXP(65 + (won ? 135 : 0) + 35 * m.wins[0] + (m.ladder != null && won ? 100 : 0));
+  const tb = MT.takedowns * 15; if (tb) { money += tb; lines.push(`${MT.takedowns} takedown${MT.takedowns === 1 ? '' : 's'} ${fmtMoney(tb)}`); }
   if (m.ladder != null && won) { const lb = 50 * (m.ladder + 1); money += lb; lines.push(`Ladder rung ${m.ladder + 1} ${fmtMoney(lb)}`); }
   const p = G.player, w = p && p.spec ? WEAPONS[p.spec.weapon] : null;
   if (won && w && w.key === 'x_chicken') unlock('chicken');

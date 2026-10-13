@@ -667,7 +667,7 @@ body.split #cmd,body.split #viewBtn{display:none!important}
 body.split4 #hud::before{content:"";position:absolute;left:0;right:0;top:50%;height:4px;margin-top:-2px;background:#0f1316;z-index:1}
 body.split4 #hud::after{left:50%!important;right:auto!important;top:0!important;bottom:0!important;width:4px!important;height:auto!important;margin:0 0 0 -2px!important}
 .plabel{position:absolute;font-family:var(--display);font-weight:900;font-size:1.1rem;padding:2px 8px;background:rgba(10,13,15,.75);color:var(--chalk);z-index:2}
-body:not(.split) #splitLabels{display:none}
+body:not(.split):not(.couch) #splitLabels{display:none}
 .hitmap{display:flex;gap:14px;align-items:center;background:var(--pad);padding:8px 12px}
 .hitmap svg{width:78px;height:auto;flex:none}
 .hitmap div{display:flex;flex-direction:column;gap:2px;font-size:.88rem}
@@ -897,68 +897,68 @@ body.intown #hud{display:none!important}
 .tmap{display:block;max-width:100%;border:2px solid rgba(240,230,210,.35);border-radius:6px;touch-action:manipulation;cursor:pointer}
 /* ---- vendor counters: header, tabs and item cards ---- */
 .panel.wide.vendorpanel{max-width:1040px}
-#townShopBody{--vc:#6d1b28}
-#townShopBody .vhead{display:flex;align-items:center;gap:14px;margin:0 0 6px;padding:10px 12px;background:linear-gradient(90deg,color-mix(in srgb,var(--vc) 55%,transparent),transparent 75%);border-left:4px solid var(--vc)}
-#townShopBody .vmedal{flex:none;display:grid;place-items:center;width:58px;height:58px;border-radius:50%;font-size:1.9rem;background:radial-gradient(circle at 35% 30%,color-mix(in srgb,var(--vc) 70%,#fff),var(--vc) 70%);box-shadow:0 0 0 3px rgba(0,0,0,.35),0 0 0 5px color-mix(in srgb,var(--vc) 60%,#e3b341)}
-#townShopBody .vwho b{display:block;font-family:var(--display);font-size:1.45rem;letter-spacing:.02em;line-height:1.05}
-#townShopBody .vwho small{color:#d9d1bf;text-transform:uppercase;letter-spacing:.08em;font-size:.72rem}
-#townShopBody .vpursebox{margin-left:auto;text-align:right;line-height:1.05}
-#townShopBody .vpursebox small{display:block;color:#c9c2b2;font-size:.68rem;text-transform:uppercase;letter-spacing:.08em}
-#townShopBody .vpurse{color:var(--marshal);font-weight:800;font-size:1.35rem}
-#townShopBody .vhi{position:relative;margin:4px 0 12px 22px;padding:8px 12px;background:#efe6d0;color:#2a2116;font-style:italic;border-radius:10px;max-width:70ch}
-#townShopBody .vhi::before{content:"";position:absolute;left:-9px;top:10px;border:9px solid transparent;border-right-color:#efe6d0;border-left:0}
-#townShopBody > *{flex-shrink:0}
-#townShopBody .vtabs{position:sticky;top:-1px;z-index:2;display:flex;gap:6px;overflow-x:auto;padding:6px 0 8px;margin-bottom:6px;background:var(--rink);scrollbar-width:thin}
-#townShopBody .vtabs button{flex:none;display:flex;align-items:center;gap:6px;padding:7px 12px;min-height:40px;font:600 .9rem var(--body);color:var(--chalk);background:var(--pad-2);border:1px solid var(--rule);cursor:pointer;white-space:nowrap}
-#townShopBody .vtabs button small{font-size:.72rem;padding:0 6px;background:rgba(0,0,0,.35);color:#c9c2b2}
-#townShopBody .vtabs button[aria-pressed="true"]{background:var(--vc);border-color:color-mix(in srgb,var(--vc) 60%,#e3b341);box-shadow:inset 0 -3px 0 var(--marshal)}
-#townShopBody .vtabs button:focus-visible{outline:2px solid var(--marshal);outline-offset:1px}
-#townShopBody .vgrid{display:grid;grid-template-columns:repeat(auto-fill,minmax(250px,1fr));gap:10px;align-content:start}
-#townShopBody .vgrid > p,#townShopBody .vgrid > .vwide,#townShopBody .vgrid > .swatches{grid-column:1/-1;margin:0}
-#townShopBody .vcard{display:flex;flex-direction:column;justify-content:space-between;gap:8px;padding:10px 12px;background:var(--pad);border:1px solid var(--rule);border-top:3px solid var(--rc,var(--rule));transition:border-color .15s,transform .15s}
-#townShopBody .vcard:hover{border-color:color-mix(in srgb,var(--vc) 60%,var(--rule))}
-#townShopBody .vcard.cur{box-shadow:inset 0 0 0 1px var(--flag);border-top-color:var(--flag)}
-#townShopBody .vcard.done .vbuy{opacity:.75}
-#townShopBody .vcard.just{animation:vjust .9s ease-out}
+:is(#townShopBody,.appearance-editor){--vc:#6d1b28}
+:is(#townShopBody,.appearance-editor) .vhead{display:flex;align-items:center;gap:14px;margin:0 0 6px;padding:10px 12px;background:linear-gradient(90deg,color-mix(in srgb,var(--vc) 55%,transparent),transparent 75%);border-left:4px solid var(--vc)}
+:is(#townShopBody,.appearance-editor) .vmedal{flex:none;display:grid;place-items:center;width:58px;height:58px;border-radius:50%;font-size:1.9rem;background:radial-gradient(circle at 35% 30%,color-mix(in srgb,var(--vc) 70%,#fff),var(--vc) 70%);box-shadow:0 0 0 3px rgba(0,0,0,.35),0 0 0 5px color-mix(in srgb,var(--vc) 60%,#e3b341)}
+:is(#townShopBody,.appearance-editor) .vwho b{display:block;font-family:var(--display);font-size:1.45rem;letter-spacing:.02em;line-height:1.05}
+:is(#townShopBody,.appearance-editor) .vwho small{color:#d9d1bf;text-transform:uppercase;letter-spacing:.08em;font-size:.72rem}
+:is(#townShopBody,.appearance-editor) .vpursebox{margin-left:auto;text-align:right;line-height:1.05}
+:is(#townShopBody,.appearance-editor) .vpursebox small{display:block;color:#c9c2b2;font-size:.68rem;text-transform:uppercase;letter-spacing:.08em}
+:is(#townShopBody,.appearance-editor) .vpurse{color:var(--marshal);font-weight:800;font-size:1.35rem}
+:is(#townShopBody,.appearance-editor) .vhi{position:relative;margin:4px 0 12px 22px;padding:8px 12px;background:#efe6d0;color:#2a2116;font-style:italic;border-radius:10px;max-width:70ch}
+:is(#townShopBody,.appearance-editor) .vhi::before{content:"";position:absolute;left:-9px;top:10px;border:9px solid transparent;border-right-color:#efe6d0;border-left:0}
+:is(#townShopBody,.appearance-editor) > *{flex-shrink:0}
+:is(#townShopBody,.appearance-editor) .vtabs{position:sticky;top:-1px;z-index:2;display:flex;gap:6px;overflow-x:auto;padding:6px 0 8px;margin-bottom:6px;background:var(--rink);scrollbar-width:thin}
+:is(#townShopBody,.appearance-editor) .vtabs button{flex:none;display:flex;align-items:center;gap:6px;padding:7px 12px;min-height:40px;font:600 .9rem var(--body);color:var(--chalk);background:var(--pad-2);border:1px solid var(--rule);cursor:pointer;white-space:nowrap}
+:is(#townShopBody,.appearance-editor) .vtabs button small{font-size:.72rem;padding:0 6px;background:rgba(0,0,0,.35);color:#c9c2b2}
+:is(#townShopBody,.appearance-editor) .vtabs button[aria-pressed="true"]{background:var(--vc);border-color:color-mix(in srgb,var(--vc) 60%,#e3b341);box-shadow:inset 0 -3px 0 var(--marshal)}
+:is(#townShopBody,.appearance-editor) .vtabs button:focus-visible{outline:2px solid var(--marshal);outline-offset:1px}
+:is(#townShopBody,.appearance-editor) .vgrid{display:grid;grid-template-columns:repeat(auto-fill,minmax(250px,1fr));gap:10px;align-content:start}
+:is(#townShopBody,.appearance-editor) .vgrid > p,:is(#townShopBody,.appearance-editor) .vgrid > .vwide,:is(#townShopBody,.appearance-editor) .vgrid > .swatches{grid-column:1/-1;margin:0}
+:is(#townShopBody,.appearance-editor) .vcard{display:flex;flex-direction:column;justify-content:space-between;gap:8px;padding:10px 12px;background:var(--pad);border:1px solid var(--rule);border-top:3px solid var(--rc,var(--rule));transition:border-color .15s,transform .15s}
+:is(#townShopBody,.appearance-editor) .vcard:hover{border-color:color-mix(in srgb,var(--vc) 60%,var(--rule))}
+:is(#townShopBody,.appearance-editor) .vcard.cur{box-shadow:inset 0 0 0 1px var(--flag);border-top-color:var(--flag)}
+:is(#townShopBody,.appearance-editor) .vcard.done .vbuy{opacity:.75}
+:is(#townShopBody,.appearance-editor) .vcard.just{animation:vjust .9s ease-out}
 @keyframes vjust{0%{background:color-mix(in srgb,var(--marshal) 45%,var(--pad));transform:scale(1.02)}100%{background:var(--pad);transform:none}}
-#townShopBody .vtop{display:flex;gap:10px;align-items:flex-start}
-#townShopBody .vthumb{flex:none;display:grid;place-items:center;min-width:56px;min-height:56px;max-width:120px;background:radial-gradient(circle,#2b343a,#151a1d 75%);border:1px solid var(--rule)}
-#townShopBody .vthumb canvas{display:block;max-width:120px;height:auto}
-#townShopBody .barber-section{grid-template-columns:minmax(0,1fr) 260px;align-items:start}
-#townShopBody .barber-section > .shape-control,#townShopBody .barber-section > p{grid-column:1;min-width:0;box-sizing:border-box}
-#townShopBody .barber-controls{grid-column:1;min-width:0;display:flex;flex-direction:column;gap:10px}
-#townShopBody .barber-controls .shape-control{min-width:0;box-sizing:border-box}
-#townShopBody .barber-section > .barber-mirror{grid-column:2;grid-row:1;position:sticky;top:48px;display:flex;flex-wrap:wrap;flex-direction:row;align-items:center;justify-content:center;gap:10px;min-height:0;box-shadow:0 4px 10px #0008}
-#townShopBody .barber-mirror canvas{display:block;background:#111518;border:1px solid #8e714a;border-radius:8px}
-#townShopBody .barber-body{width:94px;height:125px}
-#townShopBody .barber-face{width:120px;height:120px;border-radius:50%!important}
-#townShopBody .barber-mirror p{max-width:180px;margin:5px 0 0}
-#townShopBody .barber-section > .barber-choice{grid-column:1;justify-content:flex-start;gap:9px}
-#townShopBody .barber-choice b{font-size:.94rem}
-@media(max-width:640px){#townShopBody .barber-section{grid-template-columns:minmax(0,1fr) 102px}#townShopBody .barber-body{width:76px;height:101px}#townShopBody .barber-face{width:70px;height:70px}#townShopBody .barber-mirror p{display:none}}
+:is(#townShopBody,.appearance-editor) .vtop{display:flex;gap:10px;align-items:flex-start}
+:is(#townShopBody,.appearance-editor) .vthumb{flex:none;display:grid;place-items:center;min-width:56px;min-height:56px;max-width:120px;background:radial-gradient(circle,#2b343a,#151a1d 75%);border:1px solid var(--rule)}
+:is(#townShopBody,.appearance-editor) .vthumb canvas{display:block;max-width:120px;height:auto}
+:is(#townShopBody,.appearance-editor) .barber-section{grid-template-columns:minmax(0,1fr) 260px;align-items:start}
+:is(#townShopBody,.appearance-editor) .barber-section > .shape-control,:is(#townShopBody,.appearance-editor) .barber-section > p{grid-column:1;min-width:0;box-sizing:border-box}
+:is(#townShopBody,.appearance-editor) .barber-controls{grid-column:1;min-width:0;display:flex;flex-direction:column;gap:10px}
+:is(#townShopBody,.appearance-editor) .barber-controls .shape-control{min-width:0;box-sizing:border-box}
+:is(#townShopBody,.appearance-editor) .barber-section > .barber-mirror{grid-column:2;grid-row:1;position:sticky;top:48px;display:flex;flex-wrap:wrap;flex-direction:row;align-items:center;justify-content:center;gap:10px;min-height:0;box-shadow:0 4px 10px #0008}
+:is(#townShopBody,.appearance-editor) .barber-mirror canvas{display:block;background:#111518;border:1px solid #8e714a;border-radius:8px}
+:is(#townShopBody,.appearance-editor) .barber-body{width:94px;height:125px}
+:is(#townShopBody,.appearance-editor) .barber-face{width:120px;height:120px;border-radius:50%!important}
+:is(#townShopBody,.appearance-editor) .barber-mirror p{max-width:180px;margin:5px 0 0}
+:is(#townShopBody,.appearance-editor) .barber-section > .barber-choice{grid-column:1;justify-content:flex-start;gap:9px}
+:is(#townShopBody,.appearance-editor) .barber-choice b{font-size:.94rem}
+@media(max-width:640px){:is(#townShopBody,.appearance-editor) .barber-section{grid-template-columns:minmax(0,1fr) 102px}:is(#townShopBody,.appearance-editor) .barber-body{width:76px;height:101px}:is(#townShopBody,.appearance-editor) .barber-face{width:70px;height:70px}:is(#townShopBody,.appearance-editor) .barber-mirror p{display:none}}
 @media(max-height:600px){
   #townShop .panel:has(.barber-layout){height:100%}
-  #townShopBody.barber-layout{display:flex;flex-direction:column;overflow:hidden;min-height:0}
-  #townShopBody.barber-layout .vhi{display:none}
-  #townShopBody.barber-layout .barber-section{grid-template-columns:minmax(0,1fr) 170px;flex:1 1 0;min-height:0;overflow:hidden;align-items:stretch}
-  #townShopBody .barber-controls{overflow-y:auto;min-height:0;overscroll-behavior:contain;padding-right:6px;padding-bottom:12px}
-  #townShopBody .barber-section > .barber-mirror{position:static;align-self:start;padding:8px;gap:6px}
-  #townShopBody .barber-face{width:64px;height:64px}#townShopBody .barber-body{width:64px;height:85px}
-  #townShopBody .barber-mirror p{display:none}#townShopBody .vtabs{position:static}
+  :is(#townShopBody,.appearance-editor).barber-layout{display:flex;flex-direction:column;overflow:hidden;min-height:0}
+  :is(#townShopBody,.appearance-editor).barber-layout .vhi{display:none}
+  :is(#townShopBody,.appearance-editor).barber-layout .barber-section{grid-template-columns:minmax(0,1fr) 170px;flex:1 1 0;min-height:0;overflow:hidden;align-items:stretch}
+  :is(#townShopBody,.appearance-editor) .barber-controls{overflow-y:auto;min-height:0;overscroll-behavior:contain;padding-right:6px;padding-bottom:12px}
+  :is(#townShopBody,.appearance-editor) .barber-section > .barber-mirror{position:static;align-self:start;padding:8px;gap:6px}
+  :is(#townShopBody,.appearance-editor) .barber-face{width:64px;height:64px}:is(#townShopBody,.appearance-editor) .barber-body{width:64px;height:85px}
+  :is(#townShopBody,.appearance-editor) .barber-mirror p{display:none}:is(#townShopBody,.appearance-editor) .vtabs{position:static}
 }
-#townShopBody .vtxt{min-width:0;flex:1}
-#townShopBody .vtxt b{font-size:1rem}
-#townShopBody .vfoot{display:flex;align-items:center;justify-content:space-between;gap:8px}
-#townShopBody .vfoot .btn{margin-left:auto}
-#townShopBody .vshort{font-size:.78rem;color:#ff9a8a}
-#townShopBody .vcard.r1 .tier{color:#7fbcff;border-color:#4fa3ff}
-#townShopBody .vcard.r2 .tier{color:#d3a6ff;border-color:#b26bff}
-#townShopBody .vcard.r3 .tier{color:#ffc65c;border-color:#ffb02e}
-#townShopBody .vcard.r3{background:linear-gradient(180deg,rgba(255,176,46,.08),var(--pad) 60%)}
-#townShopBody .btn.ghost{background:transparent;border:1px solid var(--rule);color:#c9c2b2}
-#townShopBody .vwide .smith{background:var(--pad);border:1px solid var(--rule);padding:10px 12px}
-@media (max-width:640px){#townShopBody .vgrid{grid-template-columns:1fr}#townShopBody .vmedal{width:46px;height:46px;font-size:1.5rem}#townShopBody .vwho b{font-size:1.15rem}#townShopBody .vhi{margin-left:14px;font-size:.88rem}}
-@media (max-height:520px){#townShopBody .vhead{padding:4px 8px;gap:10px;margin-bottom:2px}#townShopBody .vmedal{width:36px;height:36px;font-size:1.2rem}#townShopBody .vwho b{font-size:1.05rem}#townShopBody .vpurse{font-size:1.05rem}#townShopBody .vhi{margin:2px 0 4px 14px;padding:4px 10px;font-size:.8rem}#townShopBody .vtabs{padding:2px 0 4px}#townShopBody .vtabs button{min-height:34px;padding:4px 10px}}
+:is(#townShopBody,.appearance-editor) .vtxt{min-width:0;flex:1}
+:is(#townShopBody,.appearance-editor) .vtxt b{font-size:1rem}
+:is(#townShopBody,.appearance-editor) .vfoot{display:flex;align-items:center;justify-content:space-between;gap:8px}
+:is(#townShopBody,.appearance-editor) .vfoot .btn{margin-left:auto}
+:is(#townShopBody,.appearance-editor) .vshort{font-size:.78rem;color:#ff9a8a}
+:is(#townShopBody,.appearance-editor) .vcard.r1 .tier{color:#7fbcff;border-color:#4fa3ff}
+:is(#townShopBody,.appearance-editor) .vcard.r2 .tier{color:#d3a6ff;border-color:#b26bff}
+:is(#townShopBody,.appearance-editor) .vcard.r3 .tier{color:#ffc65c;border-color:#ffb02e}
+:is(#townShopBody,.appearance-editor) .vcard.r3{background:linear-gradient(180deg,rgba(255,176,46,.08),var(--pad) 60%)}
+:is(#townShopBody,.appearance-editor) .btn.ghost{background:transparent;border:1px solid var(--rule);color:#c9c2b2}
+:is(#townShopBody,.appearance-editor) .vwide .smith{background:var(--pad);border:1px solid var(--rule);padding:10px 12px}
+@media (max-width:640px){:is(#townShopBody,.appearance-editor) .vgrid{grid-template-columns:1fr}:is(#townShopBody,.appearance-editor) .vmedal{width:46px;height:46px;font-size:1.5rem}:is(#townShopBody,.appearance-editor) .vwho b{font-size:1.15rem}:is(#townShopBody,.appearance-editor) .vhi{margin-left:14px;font-size:.88rem}}
+@media (max-height:520px){:is(#townShopBody,.appearance-editor) .vhead{padding:4px 8px;gap:10px;margin-bottom:2px}:is(#townShopBody,.appearance-editor) .vmedal{width:36px;height:36px;font-size:1.2rem}:is(#townShopBody,.appearance-editor) .vwho b{font-size:1.05rem}:is(#townShopBody,.appearance-editor) .vpurse{font-size:1.05rem}:is(#townShopBody,.appearance-editor) .vhi{margin:2px 0 4px 14px;padding:4px 10px;font-size:.8rem}:is(#townShopBody,.appearance-editor) .vtabs{padding:2px 0 4px}:is(#townShopBody,.appearance-editor) .vtabs button{min-height:34px;padding:4px 10px}}
 /* ---- gathering: the swing-timing bar ---- */
 #townHud .gather{position:absolute;left:50%;bottom:calc(18px + env(safe-area-inset-bottom));transform:translateX(-50%);width:min(520px,92vw);background:rgba(12,14,16,.86);border:1px solid var(--rule);padding:10px 14px 12px;pointer-events:auto;display:grid;gap:8px;touch-action:manipulation;user-select:none}
 #townHud .gather .gh{display:flex;align-items:center;gap:10px}
@@ -989,11 +989,11 @@ body.intown #hud{display:none!important}
 .matlist{display:inline-flex;flex-wrap:wrap;gap:4px 8px;font-size:.8rem}
 .matlist .mat{display:inline-flex;align-items:center;gap:3px;padding:1px 6px;background:#0c0f11;border:1px solid #39444a;white-space:nowrap}
 .matlist .mat.ok{color:#9fe0b0;border-color:#2fa85a}.matlist .mat.no{color:#ff9a8a;border-color:#7a3a30}
-#townShopBody .vmake{display:flex;flex-direction:column;gap:4px;padding-top:6px;border-top:1px dashed var(--rule)}
-#townShopBody .vmake .vmrow{display:flex;align-items:center;justify-content:space-between;gap:8px;flex-wrap:wrap}
-#townShopBody .vmake small{color:#c9c2b2}
-#townShopBody .vmake .btn.small{min-height:36px;font-size:.85rem}
-#townShopBody .bigicon{font-size:2rem;line-height:1;padding:8px}
+:is(#townShopBody,.appearance-editor) .vmake{display:flex;flex-direction:column;gap:4px;padding-top:6px;border-top:1px dashed var(--rule)}
+:is(#townShopBody,.appearance-editor) .vmake .vmrow{display:flex;align-items:center;justify-content:space-between;gap:8px;flex-wrap:wrap}
+:is(#townShopBody,.appearance-editor) .vmake small{color:#c9c2b2}
+:is(#townShopBody,.appearance-editor) .vmake .btn.small{min-height:36px;font-size:.85rem}
+:is(#townShopBody,.appearance-editor) .bigicon{font-size:2rem;line-height:1;padding:8px}
 @media (max-height:520px){#townHud .gather{width:min(440px,70vw);padding:6px 10px 8px;gap:5px;bottom:calc(8px + env(safe-area-inset-bottom));grid-template-columns:1fr auto;align-items:center}
 #townHud .gather .gh,#townHud .gather .gbar,#townHud .gather .gsw{grid-column:1/-1}#townHud .gather .gh b{font-size:.95rem}#townHud .gather .gi{font-size:1.2rem}#townHud .gather .gbar{height:20px}
 #townHud .gather .gswing{min-height:38px;font-size:.9rem}#townHud .gather .gstop{min-height:34px}}
@@ -1075,8 +1075,7 @@ body.intown #hud{display:none!important}
 .shape-head { display:flex; align-items:center; justify-content:space-between; gap:12px; font-weight:700; }
 .shape-value { color:#efc770; font-variant-numeric:tabular-nums; white-space:nowrap; }
 .shape-control input[type="range"] { display:block; width:100%; min-height:38px; margin:4px 0 0; accent-color:#e6bb57; touch-action:none; }
-
-</style>
+@media(max-height:600px){#career .panel:has(.appearance-editor){height:100%}#careerBody:has(.appearance-editor){display:flex;flex-direction:column;min-height:0;overflow:hidden}#careerBody:has(.appearance-editor)>button{flex-shrink:0}.appearance-editor{flex:1;min-height:0}.appearance-editor>.vhead,.appearance-editor>.vtabs{flex-shrink:0}}</style>
 <div id="startup" role="status" aria-live="polite" aria-label="Loading Steel and Tape">
   <div class="startup-card">
     <span class="startup-kicker">BUHURT</span>
@@ -1183,22 +1182,8 @@ body.intown #hud{display:none!important}
           <button data-cat="youth" aria-pressed="false">Kids</button>
         </div>
         <button class="btn primary flagtape big" id="btnFight">Time to Fight</button>
-        <button class="btn primary flagtape big" id="btnRumble">Enter the Red Deer Rumble</button>
-        <button class="btn tape" id="btnContinue" hidden>Continue the Rumble</button>
-        <div class="mgrid">
-          <button class="btn tape" id="btnQuick">Quick fight</button>
-          <button class="btn tape" id="btnLadder">Duel Ladder</button>
-          <button class="btn tape" id="btnTrain">Training Yard<span class="newbadge" id="trainBadge" hidden>start here</span></button>
-          <button class="btn tape" id="btnCareer">Your fighter</button>
-          <button class="btn tape" id="btnTown">Town &amp; shops<span class="newbadge" id="townBadge">new</span></button>
-          <button class="btn tape" id="btnDaily">Rumble of the Day<span class="newbadge daybadge" id="dailyBadge" hidden>new</span></button>
-          <button class="btn tape" id="btnRun">Gauntlet run</button>
-          <button class="btn tape" id="btnSeason">Summer season</button>
-          <button class="btn tape" id="btnInvite">Play online<span class="newbadge" id="onlineBadge" hidden></span></button>
-        </div>
         <button class="nowplaying" id="nowPlaying" hidden><b id="npCount"></b><span id="npNames"></span></button>
         <div class="links">
-          <button id="btnHow">How to play</button>
           <button id="btnSettings">Settings</button>
           <button id="btnCredits">Credits</button>
         </div>
@@ -1309,10 +1294,10 @@ body.intown #hud{display:none!important}
           <div class="setrow col"><span>Marshal text-to-speech voice<small>Only for optional official calls; recorded commentary does not use this voice</small></span><div class="sndrow"><select id="voiceSel" class="chip"></select><button class="chip" id="voiceTest">Test</button></div></div>
           <div class="setrow col"><span id="sndStat" class="muted">Play a sound to start audio.</span>
             <div class="sndrow">
-              <button class="chip" data-snd="steel">Steel on steel</button>
+              <details><summary>Advanced audio</summary><button class="chip" data-snd="steel">Steel on steel</button>
               <button class="chip" data-snd="armour">Hit on armour</button>
               <button class="chip" data-snd="shield">Shield block</button>
-              <button class="chip" data-snd="crowd">Crowd</button>
+              <button class="chip" data-snd="crowd">Crowd</button></details>
             </div></div>
         </section>
       </div>
@@ -1409,7 +1394,7 @@ body.intown #hud{display:none!important}
   <section class="screen dimmed" id="career" hidden>
     <div class="panel wide">
       <header class="phead"><button class="back" data-back data-gp="B" aria-label="Back"><svg viewBox="0 0 24 24"><path d="M15 5l-7 7 7 7"/></svg><span>Back</span></button><h2 class="ttape tape mk">Your fighter</h2>
-        <div class="seg tabs" id="careerTabs" role="tablist"><button data-tab="skills" aria-pressed="false">Skills</button><button data-tab="profile" aria-pressed="true">Profile</button><button data-tab="shop" aria-pressed="false">Town</button><button data-tab="inv" aria-pressed="false">Inventory</button><button data-tab="trades" aria-pressed="false">Trades</button><button data-tab="progress" aria-pressed="false">Progress</button><button data-tab="ach" aria-pressed="false">Awards</button><button data-tab="record" aria-pressed="false">Record</button></div>
+        <div class="seg tabs" id="careerTabs" role="tablist"><button data-tab="skills" aria-pressed="false">Skills</button><button data-tab="profile" aria-pressed="true">Profile</button><button data-tab="shop" aria-pressed="false">Town</button><button data-tab="inv" aria-pressed="false">Inventory</button><button data-tab="trades" aria-pressed="false">Trades</button><button data-tab="progress" aria-pressed="false">Progress</button></div>
       </header>
       <div class="pbody" id="careerBody"></div>
     </div>
@@ -1464,7 +1449,6 @@ body.intown #hud{display:none!important}
   </section>
   <div id="achPop"></div>
 </div>
-
 <script src="three.min.js"></script>
 <script src="sfx_base.js"></script>
 <script src="sfx_00.js"></script>

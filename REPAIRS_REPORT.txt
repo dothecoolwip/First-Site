@@ -1,0 +1,51 @@
+BUHURT: Steel & Tape — implementation report, 13 October 2026
+
+Release candidate: steel-tape-auth-78ced6d2fe58.
+Baseline: private Site version 53, commit 14487e8582a3a916e0af75de74766358398624e0.
+Canonical authoring files: First-Site-live-merge/steeltape/src.
+Reconciled publishing source: First-Site-live-merge/sites/auth-return-deploy/src.
+The published economy changes and assets were retained. Previously dirty authoring source was preserved in source-before/; admin-before.html retains the original dashboard.
+
+Implemented
+- Help initializes its controls from every entry point and remembers the input tab.
+- One searchable Places & services directory supplies map and vendor navigation. Missing descriptions are omitted; hidden entrances use the marker discovery rules.
+- The rejected-account dashboard exposes Sign out, reports retry failures, labels derived matches-minus-wins as Non-wins (including CSV), and names rolling activity windows accurately.
+- Dashboard platform totals/raw events are secondary; loaded-period unresolved reports have their own summary.
+- Profile and Marta use the same appearance controls. Progress/Awards/Record are grouped; obsolete career panels are removed with stale-tab redirects. Audio diagnostic buttons are in Advanced audio.
+- NPCs call shared activity-launch functions. Hidden legacy activity buttons were removed; their activities remain available through town and mode screens.
+- Barber option changes update controls and mirrors in place. Body-style changes restore scroll and focus around their necessary structural update. Short-window Profile editor sizing was corrected during verification.
+- Every human receives a bounded combat profile. Skills, upgrades, effects, equipment variants, armour quality, recovery, padding, rally/slip, and grappling benefits resolve independently of local camera ownership. Couch humans share the host career with their selected equipment.
+- AI decisions use copied observable posture/motion, inferred opponent targeting, estimated stamina, crowd visibility, and expiring observations. Reactive counters retain the 110 ms gate; unseen noise supplies a bearing rather than a strike arc.
+- Remote controls are normalized and validated; ordered packets expire after 500 ms and cancel held actions. Inputs are associated with their owning peer. Protocol version 2, action identifiers, and squad-order counters are included.
+- Online reward processing is idempotent for the match. Competitive menus/photo keep simulation live; same-side co-op pauses require all connected humans. Menus own and neutralize gameplay input.
+- Spectator navigation owns keyboard/controller focus. Shared/split couch views show individual stamina, balance, and action state; contact rumble is sent to the relevant controller.
+- Challenge level appears in tactics and the lobby. Guard telemetry distinguishes full/partial/perfect/failed attempts and identifies the fighter; active fight duration follows simulated fight steps.
+- A reusable seeded equipped-policy outcome runner records the seven milestones across 1v1, 5v5 and 12v12. It declines emergency repairs through the existing timeout outcome. These exploratory results do not establish skilled human performance.
+
+Confirmed Barber cause
+renderBarber called again() after each appearance selection. renderVendor destroyed and rebuilt the independently scrolling .barber-controls container. The pre-fix regression failed on container identity; the help-opening regression also failed with an empty controls grid. Both pass after repair.
+
+Verification
+- Source build.py and scoped release build.py succeeded; both ESLint checks passed.
+- 33 desktop/phone core cases passed, covering Barber selection/colour/body changes and portrait scrolling, help, map filtering, combat sweeps, AI behavior, human profiles, and pause/input rules.
+- 9 navigation/peer cases passed, including lobby/start/results/rematch, matchmaking, captain roles and 20-fighter snapshots.
+- 15 auth-return/HACSA unit cases passed. Auth browser regressions passed during the first integration pass with mocked accounts.
+- Final parity rerun passed 7 cases; its Profile layout failure was corrected and passed on rerun.
+- The release artifact passed Barber, NPC launch, human profiles, input expiry, and pause checks. Its shared Profile case passed after the layout correction.
+- Exact release phone Barber/wardrobe test passed; barber-phone.png was inspected.
+- Exact release peer test passed real guest movement, a stalled sender, expiry, results and return to lobby.
+- Offline verification passed on the final candidate: HTTP cache cleared, networking disabled, renderer and all eight fonts loaded from Cache Storage, no page/game errors, missing assets failed without HTML, and practice setup opened. See fix-offline-result.json.
+- git diff --check passed.
+
+Remaining acceptance work
+Real Android Google return and Barber behavior, Supabase redirect allowlist, physical controllers/rumble, real WAN packet-loss/reconnect behavior, live authenticated save conflicts/storage denial, real-phone thermal/frame-time/resource measurements, broader accessibility/browser acceptance, and skilled equipped human outcomes at level 100 remain unverified.
+No live owner statistics were accessed; no player-account writes or Discord messages were sent.
+Public promotion remains behind these acceptance gates. Engine replacement, rollback networking, IK and ragdolls remain deferred.
+
+Evidence
+source-changes.patch: isolated authoring changes against the preserved baseline.
+fix-offline-result.json and fix-offline-phone.png: final candidate offline check.
+barber-phone.png: inspected landscape appearance panel.
+difficulty-outcomes.json: recorded seeded policy measurements.
+Canonical test outputs: test/results-final-core, results-online-navigation, results-final-parity, results-exact-release, results-profile-layout, results-exact-phone, results-exact-stalled-peer.
+Deployment confirmation will be recorded in deployment.json when private publication completes.

@@ -239,7 +239,7 @@ function stationRows(box, hi, rows) {
   return list;
 }
 // leave town and press one of the (hidden) title buttons: every mode keeps working exactly as before
-function townGo(btn, from) { if (typeof playtestAction === 'function') playtestAction('leave_for_mode', { button: btn, station: from || '' }); TOWN.returnTo = from; leaveTown(() => { const b = $('#' + btn); if (b) b.click(); }); }
+function townGo(btn, from) { if (typeof playtestAction === 'function') playtestAction('leave_for_mode', { button: btn, station: from || '' }); TOWN.returnTo = from; leaveTown(() => launchActivity(btn)); }
 function openStation(key) {
   const S = STATIONS.find(s => s.key === key);
   const service = S && S.service || key;
@@ -378,21 +378,52 @@ function renderWardrobe(list, again, spooky, row) {
 }
 function renderBarber(list, again) {
   const L = lookState(), lo = G.loadout || (G.loadout = {}), outfit = L.outfit || 'none';
+  const mirrors = [], selections = [];
+  const refreshMirrors = () => {
+    for (const size of ['170', 'face']) delete PORTRAITS[`${outfit}:${size}`];
+    for (const old of mirrors.flatMap(panel => [...panel.querySelectorAll('.barber-body, .barber-face')])) {
+      const next = outfitThumb(outfit, old.classList.contains('barber-face') ? 'face' : true);
+      next.className = old.className; old.replaceWith(next);
+    }
+  };
+  const rebuild = () => {
+    const host = mirrors[0] && mirrors[0].closest('#townShopBody, .appearance-editor');
+    const scrolls = host ? [host, ...host.querySelectorAll('.barber-controls')].map(el => [el.scrollTop, el.scrollLeft]) : [];
+    const focused = document.activeElement;
+    const key = focused && focused.dataset.barberKey, value = focused && focused.dataset.barberValue;
+    again();
+    if (!host) return;
+    const target = [...host.querySelectorAll('[data-barber-key]')].find(el => el.dataset.barberKey === key && el.dataset.barberValue === value);
+    if (target) target.focus({ preventScroll: true });
+    [host, ...host.querySelectorAll('.barber-controls')].forEach((el, i) => { if (scrolls[i]) { el.scrollTop = scrolls[i][0]; el.scrollLeft = scrolls[i][1]; } });
+  };
   const change = (key, value, body = false) => {
     if (body) { lo[key] = value; store.set('loadout', lo); }
     else L[key] = value;
     if (key === 'frame') { lo.gender = value; if (value === 'female') L.beard = 'none'; store.set('loadout', lo); }
-    saveCareer(); townDressMe(); AU.click(); again();
+    saveCareer(); townDressMe(); AU.click();
+    if (key === 'frame') rebuild();
+    else { selections.forEach(update => update()); refreshMirrors(); }
   };
-  const choice = (label, options, current, key, body = false) => h('div', { class: 'up vcard vwide barber-choice' },
-    h('b', null, label), h('div', { class: 'seg small' }, ...options.map(([value, name]) => h('button', { 'aria-pressed': String(current === value), onclick: () => change(key, value, body) }, name))));
-  const colours = (label, options, current, key) => h('div', { class: 'up vcard vwide barber-choice' }, h('b', null, label),
-    h('div', { class: 'swatches' }, ...options.map(c => h('button', { class: 'sw', style: `--c:${c}`, 'aria-label': c, 'aria-pressed': String(current === c), onclick: () => change(key, c) }))));
+  const group = (label, options, current, key, body, colour) => {
+    const buttons = options.map(([value, name]) => h('button', {
+      class: colour ? 'sw' : null, style: colour ? `--c:${value}` : null,
+      'aria-label': colour ? name : null, 'aria-pressed': String(current === value),
+      'data-barber-key': key, 'data-barber-value': String(value),
+      onclick: () => change(key, value, body)
+    }, colour ? null : name));
+    selections.push(() => buttons.forEach((b, i) => b.setAttribute('aria-pressed', String((body ? lo[key] : L[key]) === options[i][0]))));
+    return h('div', { class: 'up vcard vwide barber-choice' }, h('b', null, label), h('div', { class: colour ? 'swatches' : 'seg small' }, ...buttons));
+  };
+  const choice = (label, options, current, key, body = false) => group(label, options, current, key, body, false);
+  const colours = (label, options, current, key) => group(label, options.map(c => [c, c]), current, key, false, true);
   const mirror = () => {
     for (const size of ['170', 'face']) delete PORTRAITS[`${outfit}:${size}`];
     const full = outfitThumb(outfit, true), face = outfitThumb(outfit, 'face');
     full.className = 'barber-body'; face.className = 'barber-face';
-      return h('div', { class: 'up vcard vwide barber-mirror' }, face, full, h('div', null, h('b', null, CAREER.name === 'You' ? 'Your fighter' : CAREER.name), h('p', { class: 'muted small' }, 'Changes appear here and on your fighter in town.')));
+    const panel = h('div', { class: 'up vcard vwide barber-mirror' }, face, full, h('div', null, h('b', null, CAREER.name === 'You' ? 'Your fighter' : CAREER.name), h('p', { class: 'muted small' }, 'Changes appear here and on your fighter in town.')));
+    mirrors.push(panel);
+    return panel;
   };
   list.append(h('h4', null, 'Hair & face'), mirror(),
     choice('Hair style', FIGHTER_HAIR, L.hair || 'crop', 'hair'),
@@ -408,7 +439,7 @@ function renderBarber(list, again) {
     shapeTimer = setTimeout(() => {
       townDressMe();
       for (const size of ['170', 'face']) delete PORTRAITS[`${outfit}:${size}`];
-      for (const old of list.querySelectorAll('.barber-body, .barber-face')) {
+      for (const old of mirrors.flatMap(panel => [...panel.querySelectorAll('.barber-body, .barber-face')])) {
         const next = outfitThumb(outfit, old.classList.contains('barber-face') ? 'face' : true);
         next.className = old.className; old.replaceWith(next);
       }

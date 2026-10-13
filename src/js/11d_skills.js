@@ -74,14 +74,14 @@ function skillsState() {
   return CAREER.skills;
 }
 // rank of a perk for this fighter (only the player has perks)
-function perk(f, key) { if (!f || !f.isPlayer || G.autopilot) return 0; return (CAREER.skills && CAREER.skills[key]) || 0; }
+function perk(f, key) { return combatProfile(f)?.skills[key] || 0; }
 function treeSpent(tree) { const S = skillsState(); let n = 0; for (const k in S) if (k.startsWith(tree + '.')) n += S[k]; return n; }
 function totalSpent() { const S = skillsState(); let n = 0; for (const k in S) n += S[k]; return n; }
 // The early and mid-game curve is steady. From level 70 onward the next
 // level grows exponentially, making the top levels a long-term achievement.
 function xpNeed(lv) {
-  const normal = 160 + 100 * lv + 2 * lv * lv;
-  const at70 = 160 + 100 * 70 + 2 * 70 * 70;
+  const normal = 180 + 70 * lv + 1.5 * lv * lv;
+  const at70 = 180 + 70 * 70 + 1.5 * 70 * 70;
   return Math.round(lv <= 70 ? normal : at70 * Math.pow(1.08, lv - 70));
 }
 function canLearn(n) {

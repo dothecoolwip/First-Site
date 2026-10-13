@@ -4,7 +4,7 @@
 // The fight code reads the total effect of what you own through shopFx(key); everything is capped so it never gets silly.
 const QUAL_NAMES = ['Club issue', 'Rebalanced', 'Smith-made', 'Tempered', 'Master-forged', 'Legendary'];
 const ARM_NAMES = ['Starter', 'Fitted', 'Custom-made', 'Tempered', 'Master-made', 'Legendary'];
-const WQ_COST = [250, 700, 1800, 4500, 12000];
+const WQ_COST = [300, 800, 2000, 5000, 13000];
 const WEAPON_VARIANTS = [
   { id: 'light_mace', base: 'mace', name: 'Light flanged mace', cost: 1250, mass: 0.9, len: 0.57, desc: 'Shorter and lighter: quicker recovery, less reach and impact.' },
   { id: 'long_axe', base: 'axe', name: 'Long-haft axe', cost: 2200, mass: 1.3, len: 0.88, desc: 'A little more reach and weight, with a slower recovery.' },
@@ -16,7 +16,7 @@ function playerWeaponDef(key) {
   const variant = WEAPON_VARIANTS.find(v => v.id === id && v.base === key);
   return variant && s.owned['variant:' + id] ? { ...base, mass: variant.mass, len: variant.len, name: variant.name } : base;
 }
-const AQ_COST = [300, 800, 2000, 5000, 12500];
+const AQ_COST = [350, 900, 2200, 5500, 14000];
 const AQ_GROUPS = [
   { key: 'helmet', name: 'Helmet', desc: 'Strap wear −10% and getting your bell rung −6% per tier.' },
   { key: 'arms', name: 'Elbow cops', desc: 'Elbow strap wear −10% per tier.' },
@@ -141,13 +141,39 @@ function sponsorIncome() { const s = shopState(); return SPONSORS.reduce((n, S) 
 // kit upgrades past level 3 count half, so level 10 is strong but not silly
 function upEff(lv) { return Math.min(lv, 3) + 0.5 * Math.max(0, lv - 3); }
 function shopUp() { const out = {}; for (const k in CAREER.upgrades) out[k] = upEff(CAREER.upgrades[k] || 0); return out; }
-function weaponTier(f) { if (!f || !f.isPlayer || !f.weapon || f.weapon.key !== f.spec.weapon) return 0; return shopState().wq[f.weapon.key] || 0; }
-function armourTier(f, group) { if (!f || !f.isPlayer || typeof CAREER === 'undefined') return 0; return shopState().aq[group] || 0; }
-function pfx(f, k) { return f && f.isPlayer && !G.autopilot ? shopFx(k) : 0; }
+function humanFighter(f) { return !!(f && (f.isPlayer || f.netUid || f.vin || f.combatProfile)); }
+function validateCombatProfile(raw = {}) {
+  const rank = (v, max) => Number.isFinite(v) ? clamp(Math.floor(v), 0, max) : 0;
+  const out = { skills: {}, upgrades: {}, wq: {}, aq: {}, fx: {}, variants: {} };
+  for (const key in SKILL_BY_ID) out.skills[key] = rank(raw.skills && raw.skills[key], SKILL_BY_ID[key].max);
+  for (const key in CAREER_DEFAULT().upgrades) out.upgrades[key] = rank(raw.upgrades && raw.upgrades[key], 10);
+  for (const key in WEAPONS) out.wq[key] = rank(raw.wq && raw.wq[key], 5);
+  for (const group of AQ_GROUPS) out.aq[group.key] = rank(raw.aq && raw.aq[group.key], 5);
+  for (const key in FX_CAP) out.fx[key] = Number.isFinite(raw.fx && raw.fx[key]) ? clamp(raw.fx[key], 0, FX_CAP[key]) : 0;
+  for (const key in WEAPONS) { const variant = WEAPON_VARIANTS.find(v => v.base === key && v.id === raw.variants?.[key]); if (variant) out.variants[key] = variant.id; }
+  return out;
+}
+function careerCombatProfile() {
+  const s = shopState(), fx = {}; for (const key in FX_CAP) fx[key] = shopFx(key);
+  const variants = {}; for (const key in s.variant) if (s.owned['variant:' + s.variant[key]]) variants[key] = s.variant[key];
+  return validateCombatProfile({ skills: CAREER.skills || {}, upgrades: CAREER.upgrades, wq: s.wq, aq: s.aq, fx, variants });
+}
+function combatProfile(f) {
+  if (!humanFighter(f) || G.autopilot) return null;
+  if (!f.combatProfile) f.combatProfile = careerCombatProfile();
+  return f.combatProfile;
+}
+function profileWeapon(key, profile) {
+  const base = WEAPONS[key], variant = profile && WEAPON_VARIANTS.find(v => v.id === profile.variants[key] && v.base === key);
+  return variant ? { ...base, mass: variant.mass, len: variant.len, name: variant.name } : base;
+}
+function weaponTier(f) { const p = combatProfile(f); return p && f.weapon && f.weapon.key === f.spec.weapon ? p.wq[f.weapon.key] || 0 : 0; }
+function armourTier(f, group) { return combatProfile(f)?.aq[group] || 0; }
+function pfx(f, k) { return combatProfile(f)?.fx[k] || 0; }
 function pieceWearMult(f, piece) {
-  if (!f.isPlayer) return 1;
-  if (piece === 'haft') return Math.pow(0.88, weaponTier(f)) * (1 - shopFx('haft'));
-  const g = PIECE_GROUP[piece]; return (g ? 1 - 0.1 * armourTier(f, g) : 1) * (1 - shopFx('wear'));
+  if (!humanFighter(f)) return 1;
+  if (piece === 'haft') return Math.pow(0.88, weaponTier(f)) * (1 - pfx(f, 'haft'));
+  const g = PIECE_GROUP[piece]; return (g ? 1 - 0.1 * armourTier(f, g) : 1) * (1 - pfx(f, 'wear'));
 }
 function shopPrizeMult() { return 1 + shopFx('prize'); }
 function shopXpMult() { return 1 + shopFx('xp'); }
@@ -362,12 +388,10 @@ function renderVendor(box, key, again) {
 }
 // the Town tab in Your fighter: who sells what, and a way to walk there
 function renderShop(box) {
-  const s = shopState();
-  box.append(h('div', { class: 'forgehead' }, h('span', { class: 'purse num' }, fmtMoney(CAREER.purse)), h('span', { class: 'muted small' }, `in your purse · ${fmtMoney(s.spent)} spent so far`)));
-  box.append(h('p', { class: 'muted small' }, 'Everything is sold by the vendors in town, around the list. Walk up to one and talk to them.'));
-  box.append(h('button', { class: 'btn primary flagtape', onclick: () => { AU.click(); enterTown(); } }, 'Go to town'));
-  const list = h('div', { class: 'ups shop' }); box.append(list);
-  for (const V of VENDORS) list.append(h('div', { class: 'up' }, h('div', null, h('div', { class: 'uph' }, h('span', { class: 'vicon' }, V.icon), h('b', null, V.name), h('span', { class: 'tier' }, V.role)), h('div', { class: 'muted' }, vendorBlurb(V.key))), h('button', { class: 'btn tape small', onclick: () => { AU.click(); enterTown(V.key); } }, 'Walk there')));
+  box.append(h('p', { class: 'muted' }, 'Find a service and follow its route through the realm.'));
+  box.append(h('button', { class: 'btn primary flagtape', onclick: () => enterTown() }, 'Go to town'));
+  if (TOWN.on) box.append(placesDirectory(r => { setWaypoint(r.x, r.z, r.name); showScreen(null); refreshTouchUI(); }));
+  else box.append(h('p', { class: 'muted' }, 'Enter town to search its places and services.'));
 }
 function vendorBlurb(k) { const VV = VENDOR_BY[k]; if (VV && VV.as) return (VV.tier === 3 ? 'The King’s own work: ' : 'Garrison work, further up the bar: ') + vendorBlurb(VV.as); return { smith: 'Weapon quality, pommels, grips, hafts, custom forging.', armour: 'Armour quality, kit upgrades to 10, straps, repairs.', quarter: 'Tape rolls, gold-thread tape, the tape sponsor, bench gear.', wizard: 'Skill points, 8 runes, potions.', tavern: 'Food and drink boosts, a room, a fight agent, squires.', trainer: 'Training yard, 5 kinds of drills, coaching.', herald: '12 tabard colours, 8 trims.', bard: 'Ballads and 15 titles.', guild: 'Club hall, squad training camp, sponsors that pay every match.', estate: 'Your house, furniture, a statue (and gold leaf).', wardrobe: 'Outfits, colours, hats, capes, things to carry, pets.', barber: 'Hair, beard, eyes, skin tone and body style. Changes are free.', artificer: 'Cosmetic weapon skins: orc and fantasy looks, stats unchanged.', ghost: 'Spooky wardrobe: pumpkin head, ghostly shroud, scythe, undead pets.' }[k]; }
 shopState(); shopApplyOwned();
