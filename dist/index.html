@@ -1,5 +1,5 @@
 <!doctype html><html><head><meta charset="utf-8"><link rel="manifest" href="manifest.webmanifest"><meta name="theme-color" content="#0f1316"><link rel="apple-touch-icon" href="icon-192.png"><meta name="apple-mobile-web-app-capable" content="yes"><meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover"></head><body>
-<script>window.BUILD_VER="steel-tape-hosted-04d534f61d";</script><title>Buhurt: Steel &amp; Tape</title>
+<script>window.BUILD_VER="steel-tape-hosted-d534bda35b";</script><title>Buhurt: Steel &amp; Tape</title>
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Barlow+Semi+Condensed:wght@400;500;600;700&family=Big+Shoulders+Display:wght@700;800;900&family=Permanent+Marker&display=swap">
@@ -32476,6 +32476,7 @@ function renderCareer() {
     const chg = h('div', { class: 'seg small' }); for (const [v, t] of CHARGES) chg.append(h('button', { 'aria-pressed': String(P.charge === v), onclick: () => { P.charge = v; saveCareer(); applyProfile(); renderCareer(); AU.click(); } }, t));
     const teamRow = h('div', { class: 'up vcard vwide' }, h('div', null, h('b', null, P.bos ? `Team: ${P.name}` : 'Not on a team'), h('div', { class: 'muted small' }, P.bos ? 'Your BuhurtOS team. Your real team-mates fill the roster.' : 'Fighting under your own banner.')), h('button', { class: 'btn tape small', onclick: () => { AU.click(); G.creatorReturn = () => { renderCareer(); showScreen('career'); }; CAREER.teamPicked = false; saveCareer(); openCreator(); } }, 'Change team'));
     box.append(teamRow);
+    box.append(h('div', { class: 'up vcard vwide' }, h('div', null, h('b', null, 'Appearance'), h('div', { class: 'muted small' }, 'Change your body style, height, build, skin, hair, facial hair and eyes.')), h('button', { class: 'btn primary flagtape small', onclick: () => { AU.click(); G.appearanceReturn = () => { renderCareer(); showScreen('career'); }; creatorFighter(); } }, 'Edit fighter')));
     box.append(h('div', { class: 'profgrid' },
       h('div', { class: 'stack' }, h('div', { class: 'row fields' }, field('Fighter name', nameIn), field('Number', numIn)), h('div', { class: 'row fields' }, field('Club', clubIn), field('Short name', shortIn)),
         h('span', { class: 'label' }, 'Tabard'), sw(TABARDS, 'tabard'), h('span', { class: 'label' }, 'Trim'), sw(TRIMS, 'trim'), h('span', { class: 'label' }, 'Charge'), chg),
@@ -35205,7 +35206,7 @@ async function boot(hot) {
   if (location.hash === '#autotest') setTimeout(autotest, 300);
   window.__ST = { GAMEPLAY, SAT, YUKA, CANNON, RAPIER, BVH, gameplayShape, gameplayShapeBlocked, gameplayGroundAt, gameplayMove, G, AU, buildShield, buildWeapon, W3, startTourney, quickFight, toTitle, openRepair, kitCheck, setupMatch, toTactics, beginFight, endRound, matchEnd, CLUBS, WEAPONS, setView, toast, renderKitPicker, applyLoadout, IN, FP, showScreen, weaponIcon, startCine, startTraining, startLadder, openCareer, openModes, openLadder, CAREER, setLesson, TR, unlock, togglePause, afterRound, renderHow, selectPiece, selectTape, msg, renderSheet, setHud, endTraining, setMode, PAD, navMove, focusFirst, sparks, CUTE, THREE, BREATH, setCuteDeco, flipFx, PHOTO, UAL, raiseFlags, startVersus, startFFA, startBracket, startKid, KID, openSeason, startSeasonMatch, setVenue, VS, SPLIT, NET, buildOnlineMatch, hostLobby, joinLobby, ONL, vinControl, openRun, openDaily, openBracket, showBracket, bracketResult, ffaMatchEnd, ffaLeader, ffaWinner, endKid, openPhoto, closePhoto, startReplay, stopReplay, RP, store, startRunFight, newRun, runEnd, WX, setWeather, padVin, readVersus, applyLo, myLoadout, netDropped, netLeave, showIntro, installForged, dailyPlan, openKids, openVersus, openPicks, LESSONS, rivalClub, startGrudge, startDaily, seasonState, newSeason, refreshDaily, VENUES, COMM, hitMapHtml, resetFighterForRound, DIFF, PIN, PADS, NIN, padsUpdate, seatPads, LOBBY, MM, openOnlineHub, benchDown, benchMove, REP, squirePatch, coverage, openProfile, myProfile, BOS, updateTitlePurse, ACH, progressCheck, challenges, masteryOf, S2, rankOf, counterValue, renderCareer, progressMatch, saveCareer, shopState, shopUp, tapeLeft, shopMatchEnd, shopPrizeMult, shopXpMult, swingTimes, pieceWearMult, TABARDS, refillTape, renderShop, UPGRADES, freshKit, TAPE_STOCK, enterTown, leaveTown, TOWN, openVendor, closeVendor, openTownMap, shopFx, renderVendor, VENDORS, ITEMS, itemCost, spCost, skillRoom, sponsorIncome, BOOSTS, STALL_AT, HOMES, FURNISH, pfx, squadFx, boostKit, townCollide, townRefresh, townWalkTo, townTalk, townTeardown, lookState, WORLD, guildCheck, STATIONS, townDressMe, FOLK, updateFolk, navBlocked, buildFolk, BOUT, boutStart, boutStop, boutTick, drawTownMap, updateMiniMap, costumePerson, OUTFIT, buildSkinWeapon, skinIcon, wskinList, skinFor, buildMyWeapon, wskinFamOf, GATHER, startGather, gatherSwing, stopGather, tradeState, tradeLevel, tradeGain, give, have, craft, NODES, MATS, renderTrades, TRADE_SKILLS, ARENAS, DISTRICTS, TRAVEL, setWaypoint, clearWaypoint, realmPath, callHorse, mount, dismount, ANIMAL, districtAt, realmCull, REALM_TIERS, gateOpen, townJump, stableRows, horseAvailable, peopleCull, boutArenaFor, arenaLive, bagSlots, bagState, bagRoom, secretFound, lookOwned, SECRETS, stopSpectating, startTrial, TRIALS, tierCap, gy, tierOf, HILL, hillHouses, cliffAt, gateBlocked, arenaBlocked, localPath, NAV, rampAt, ROSTER, rosterClubs, rosterLive, rosterName, liveBoutPick, aiTier, AI_TIER, guardOutcome, fighterGlow, ONB, onbStage, onbSet, openCreator, tourStart, tourEnd, TOUR_STOPS, THRONE, throneHolder, throneChallenge, throneLoad, throneOnlineEnd, openThrone, BOARDS, boardFetch, boardCrownStatues, sideFromDrag, VOICE };
   if (location.protocol === 'file:' && window.__steeltapeTest)
-    Object.assign(window.__ST, { penalize, failPiece, closeRepair, xpNeed, tierProf, runToRepairCorner, onbAfterAccount, onbAccountGate, onbResumeAfterAuth, leaveTarget, leaveScreen, CLOUD, bosLoadInfo, bosBoot, swingLeverage, weaponBindPossible, resolveSwing, sweptSwingTarget, updateAction, think, updateTownCamera, LIBRARY, LIBRARY_DATA, WEAPON_VARIANTS, playerWeaponDef, libraryModel, libraryThumb, LIST, navPushOut, townCollide, SPECT, updateArenaSeatFolk, testAdminApply, testAdminRefresh, testAdminTeleport, openTestAdmin, PLAYTEST, playtestStart, playtestStop, playtestTick, playtestAction, playtestFlush, playtestCapture, gameplayShapePush, gameplayCannonTick, gameplayFolkDirection, arenaRope, gateRefused, stationTrial, commClipName, COMM_AUDIO, SFX_FILES });
+    Object.assign(window.__ST, { penalize, failPiece, closeRepair, xpNeed, tierProf, runToRepairCorner, onbAfterAccount, onbAccountGate, onbResumeAfterAuth, leaveTarget, leaveScreen, CLOUD, bosLoadInfo, bosBoot, swingLeverage, weaponBindPossible, resolveSwing, sweptSwingTarget, updateAction, think, updateTownCamera, LIBRARY, LIBRARY_DATA, WEAPON_VARIANTS, playerWeaponDef, libraryModel, libraryThumb, LIST, navPushOut, townCollide, SPECT, updateArenaSeatFolk, testAdminApply, testAdminRefresh, testAdminTeleport, openTestAdmin, PLAYTEST, playtestStart, playtestStop, playtestTick, playtestAction, playtestFlush, playtestCapture, gameplayShapePush, gameplayCannonTick, gameplayFolkDirection, arenaRope, gateRefused, stationTrial, commClipName, COMM_AUDIO, SFX_FILES, castleWalkable, castleSurfaceSafe });
 }
 
 function autotest() {
@@ -37070,24 +37071,30 @@ function creatorFighter() {
   numIn.oninput = () => { const v = clamp(parseInt(numIn.value || '4', 10) || 4, 1, 99); CAREER.num = v; saveCareer(); applyProfile(); prev(); };
   const seg = (opts, get, set) => { const s = h('div', { class: 'seg small' }); for (const [v, t] of opts) s.append(h('button', { 'aria-pressed': String(get() === v), onclick: () => { set(v); AU.click(); s.querySelectorAll('button').forEach(b => b.setAttribute('aria-pressed', String(b.textContent === t))); prev(); } }, t)); return s; };
   const sw = (list, get, set) => { const row = h('div', { class: 'swatches' }); for (const c of list) row.append(h('button', { class: 'sw', style: `--c:${c}`, 'aria-pressed': String(get() === c), 'aria-label': c, onclick: () => { set(c); AU.click(); row.querySelectorAll('.sw').forEach(b => b.setAttribute('aria-pressed', String(b.style.getPropertyValue('--c') === c))); prev(); } })); return row; };
-  const pv = h('div', { class: 'crpv' }), prev = () => { pv.innerHTML = ''; PORTRAITS.none = null; const c = outfitThumb('none'); c.className = 'crportrait'; pv.append(c, shieldPreview(P, 72), h('b', null, `${CAREER.name === 'You' ? 'Your fighter' : CAREER.name} · #${CAREER.num}`), h('span', { class: 'muted' }, P.name)); };
+  const pv = h('div', { class: 'crpv' }), prev = () => { pv.innerHTML = ''; delete PORTRAITS.none; if (L.outfit) delete PORTRAITS[L.outfit]; const c = outfitThumb(L.outfit || 'none'); c.className = 'crportrait'; pv.append(c, shieldPreview(P, 72), h('b', null, `${CAREER.name === 'You' ? 'Your fighter' : CAREER.name} · #${CAREER.num}`), h('span', { class: 'muted' }, P.name)); };
   const own = !P.bos, clubIn = h('input', { type: 'text', maxlength: '22', value: P.name, placeholder: 'Your banner’s name', autocomplete: 'off' });
   clubIn.oninput = () => { P.name = clubIn.value.trim() || 'Festival Company'; P.short = P.name.slice(0, 3).toUpperCase(); saveCareer(); applyProfile(); prev(); };
   const left = h('div', { class: 'stack' },
     h('div', { class: 'row fields' }, field('Name', nameIn), field('Number', numIn)),
     h('span', { class: 'label' }, 'Division'), seg([['men', 'Adult'], ['youth', 'Kids']], () => G.category === 'youth' ? 'youth' : 'men', v => { G.category = v; store.set('category', v); }),
-    h('span', { class: 'label' }, 'Height'), seg([['short', 'Short'], ['avg', 'Average'], ['tall', 'Tall']], () => lo.height, v => { lo.height = v; store.set('loadout', lo); }),
-    h('span', { class: 'label' }, 'Build'), seg([['light', 'Light'], ['medium', 'Medium'], ['heavy', 'Heavy']], () => lo.build, v => { lo.build = v; store.set('loadout', lo); }),
-    h('span', { class: 'label' }, 'Skin'), sw(SKIN_TONES, () => L.skin || SKIN_TONES[2], c => { L.skin = c; saveCareer(); }));
+    h('span', { class: 'label' }, 'Height'), seg([['short', 'Short'], ['avg', 'Average'], ['tall', 'Tall']], () => lo.height, v => { lo.height = v; store.set('loadout', lo); townDressMe(); }),
+    h('span', { class: 'label' }, 'Build'), seg([['light', 'Light'], ['medium', 'Medium'], ['heavy', 'Heavy']], () => lo.build, v => { lo.build = v; store.set('loadout', lo); townDressMe(); }),
+    h('h3', null, 'Your appearance'),
+    h('span', { class: 'label' }, 'Body style'), seg([['male', 'Masculine'], ['female', 'Feminine']], () => L.frame || (I.gender === 'female' ? 'female' : 'male'), v => { L.frame = v; saveCareer(); townDressMe(); }),
+    h('span', { class: 'label' }, 'Skin tone'), sw(SKIN_TONES, () => L.skin || SKIN_TONES[2], c => { L.skin = c; saveCareer(); townDressMe(); }),
+    h('span', { class: 'label' }, 'Hair'), seg(FIGHTER_HAIR, () => L.hair, v => { L.hair = v; saveCareer(); townDressMe(); }),
+    h('span', { class: 'label' }, 'Hair colour'), sw(FIGHTER_HAIR_COLORS, () => L.hairColor, c => { L.hairColor = c; saveCareer(); townDressMe(); }),
+    h('span', { class: 'label' }, 'Facial hair'), seg(FIGHTER_BEARDS, () => L.beard, v => { L.beard = v; saveCareer(); townDressMe(); }),
+    h('span', { class: 'label' }, 'Eye colour'), sw(FIGHTER_EYES, () => L.eyes, c => { L.eyes = c; saveCareer(); townDressMe(); }));
   if (own) left.append(h('div', { class: 'row fields' }, field('Your banner', clubIn)), h('span', { class: 'label' }, 'Colour'), sw(TABARDS, () => P.tabard, c => { P.tabard = c; saveCareer(); applyProfile(); }), h('span', { class: 'label' }, 'Trim'), sw(TRIMS, () => P.trim, c => { P.trim = c; saveCareer(); applyProfile(); }));
   else left.append(h('p', { class: 'muted small' }, `You fight in ${P.name}’s colours.`));
   left.append(h('span', { class: 'label' }, 'Charge'), seg(CHARGES, () => P.charge, v => { P.charge = v; saveCareer(); applyProfile(); }),
-    h('p', { class: 'muted small' }, 'Armour, weapons, outfits and everything else are bought or made in the realm. All of this can be changed later in Your fighter → Profile.'));
+    h('p', { class: 'muted small' }, 'Your starting clothes fit your body style and carry your club colours. The wardrobe has more outfits. Appearance can be changed later in Your fighter → Profile.'));
   box.append(h('div', { class: 'profgrid' }, left, pv));
   prev();
   $('#creatorDone').hidden = false; $('#creatorBack').hidden = false;
-  $('#creatorBack').onclick = () => { AU.click(); CAREER.teamPicked = false; saveCareer(); creatorTeam(); };
-  $('#creatorDone').onclick = () => { AU.click(); if (onbAccountGate()) return; onbSet('tour'); showScreen(null); G.hub = true; enterTown(); };
+  $('#creatorBack').onclick = () => { AU.click(); if (G.appearanceReturn) { const back = G.appearanceReturn; G.appearanceReturn = null; back(); return; } CAREER.teamPicked = false; saveCareer(); creatorTeam(); };
+  $('#creatorDone').onclick = () => { AU.click(); if (G.appearanceReturn) { const back = G.appearanceReturn; G.appearanceReturn = null; back(); return; } if (onbAccountGate()) return; onbSet('tour'); showScreen(null); G.hub = true; enterTown(); };
   showScreen('creator');
 }
 // ---- the tour: a skippable fly-over of the realm with captions, the first time you walk in
@@ -37390,9 +37397,25 @@ function buildStatue() {
 }
 function buildAvatar() {
   if (TOWN.me) TOWN.root.remove(TOWN.me.root);
-  const L = lookLite(); const J = lookPerson(L, 1.8); TOWN.me = J; TOWN.root.add(J.root);
+  const L = lookLite(); const J = lookPerson(L, L.ht); TOWN.me = J; TOWN.root.add(J.root);
   if (G.guildLabel !== false && guildTag()) { const gl = townLabel(`[${guildTag()}]`, (guildState() || {}).name || '', (guildState() || {}).col); gl.scale.multiplyScalar(0.7); gl.position.y = 2.3; J.root.add(gl); }
   const ring = mk(J.root, geo('t_ring', () => new THREE.RingGeometry(0.42, 0.5, 24)), new THREE.MeshBasicMaterial({ color: '#f2c40f', transparent: true, opacity: 0.7, depthWrite: false }), 0, 0.04, 0, false); ring.rotation.x = -Math.PI / 2;
+}
+function townResolveApproaches() {
+  // Props, gather nodes and new walls are all built by this point. Give every
+  // interaction a real standing spot, on the same terrace as its object.
+  for (const S of TOWN.stalls) {
+    if (S.mine || S.x == null || S.z == null || !navBlocked(S.ax, S.az, 0.42)) continue;
+    const tier = tierOf(S.x, S.z);
+    let best = null, score = Infinity;
+    for (let radius = 1.8; radius <= 4.2; radius += 0.4) for (let i = 0; i < 24; i++) {
+      const angle = i * TAU / 24, x = S.x + Math.sin(angle) * radius, z = S.z + Math.cos(angle) * radius;
+      if (tierOf(x, z) !== tier || navBlocked(x, z, 0.42)) continue;
+      const cost = Math.hypot(x - S.ax, z - S.az) + radius * 0.1;
+      if (cost < score) { best = { x, z }; score = cost; }
+    }
+    if (best) { S.ax = best.x; S.az = best.z; if (S.node) { S.node.ax = best.x; S.node.az = best.z; } }
+  }
 }
 function buildTown() {
   gameplayStop();
@@ -37405,6 +37428,7 @@ function buildTown() {
   for (const V of VENDORS) if (!V.custom) buildStall(V);
   buildSpecialVendors(); buildWorld(); buildSpawnBoards(); navBuild(); buildGatherNodes(TOWN.root); buildSecrets(TOWN.root); navBuild(); realmCells();
   buildHome(); buildStatue(); buildAvatar(); buildMyPet(); buildWaypoint(); buildAnimals(); buildArenaSeats(); buildDeepMine(); navBuild();
+  townResolveApproaches();
   gameplayStart();
 }
 // the field venue's own cottages and tree ring would sit in the middle of the festival: hide them in town
@@ -37491,11 +37515,12 @@ function updateTown(dt) {
     const spd = base * m; if (TRAVEL.auto) TRAVEL.auto = false;
     vx = (-sy * my + cy * mx); vz = (-cy * my - sy * mx); const l = Math.hypot(vx, vz) || 1; vx = vx / l * spd; vz = vz / l * spd;
   } else if (walking) { const a = travelAutoVel(TOWN.mounted ? 7 : 4.2); if (a) { vx = a.vx; vz = a.vz; } }
+  const beforeMove = { x: TOWN.pos.x, z: TOWN.pos.z };
   if (vx || vz) {
     gameplayMove(TOWN.pos, vx * dt, vz * dt);
     const want = Math.atan2(vx, vz); let d = want - TOWN.face; d = Math.atan2(Math.sin(d), Math.cos(d)); TOWN.face += d * Math.min(1, dt * (TOWN.mounted ? 5 : 10));
   }
-  townCollide();
+  townCollide(beforeMove);
   if (typeof playtestTick === 'function') playtestTick();
   const J = TOWN.me, sp = Math.hypot(vx, vz); TOWN.speed = sp;
   realmTick(dt); updateAnimals(dt);
@@ -37531,7 +37556,7 @@ function townPushRect(P, x, z, hx, hz, r) {
   if (px < pz) P.x = x + Math.sign(dx || 1) * (hx + r);
   else P.z = z + Math.sign(dz || 1) * (hz + r);
 }
-function townCollide() {
+function townCollide(beforeMove) {
   const P = TOWN.pos, r = 0.42;
   if (TOWN.spec) return; // the spectator is seated above the blocked bleacher footprint
   if (TOWN.mineOn) { mineCollide(P, r); return; }
@@ -37540,13 +37565,19 @@ function townCollide() {
       // The rope, not just the wooden list, is the public boundary.
       townPushRect(P, A.x, A.z, LIST_BLOCK.x, LIST_BLOCK.z, r);
       // Benches are solid; the spectator prompt remains reachable at their outer edge.
-      for (const side of [-1, 1]) townPushRect(P, A.x + side * (LIST.W / 2 + 7.2), A.z, 1.5, LIST.L * 0.4, r);
+      if (!A.indoor) for (const side of [-1, 1]) townPushRect(P, A.x + side * (LIST.W / 2 + 7.2), A.z, 1.5, LIST.L * 0.4, r);
     }
     const ci = Math.floor(P.x / NAV.cell), cj = Math.floor(P.z / NAV.cell);
     for (let i = ci - 1; i <= ci + 1; i++) for (let j = cj - 1; j <= cj + 1; j++) for (const o of (NAV.grid.get(i + ',' + j) || NAV.none)) { const dx = P.x - o.x, dz = P.z - o.z, d = Math.hypot(dx, dz), m = o.r + r; if (d < m && d > 1e-4) { P.x = o.x + dx / d * m; P.z = o.z + dz / d * m; } }
     gameplayShapePush(P, r);
     realmGateCollide(P, r);
     const e = Math.hypot(P.x / TOWN_RX, P.z / TOWN_RZ); if (e > 1) { P.x /= e; P.z /= e; }
+  }
+  if (beforeMove && !castleWalkable(beforeMove.x, beforeMove.z, P.x, P.z, r)) {
+    const x = P.x, z = P.z;
+    P.x = beforeMove.x; P.z = beforeMove.z;
+    if (castleWalkable(beforeMove.x, beforeMove.z, x, beforeMove.z, r)) P.x = x;
+    if (castleWalkable(P.x, beforeMove.z, P.x, z, r)) P.z = z;
   }
 }
 function updateTownCamera(dt) {
@@ -37659,9 +37690,9 @@ const LOOKS = {
   pet: [['none', 'No pet', 0], ['dog', 'Dog', 2000], ['pumpkin', 'Pumpkin buddy', 1500], ['ghost', 'Little ghost', 5000, 'ghost'], ['skeleton', 'Skeleton', 4000, 'ghost'], ['zombie', 'Zombie', 6000, 'ghost'], ['vampire', 'Vampire', 8000, 'ghost']]
 };
 const LOOK_SLOT = { hat: 'Hats', foot: 'Footwear', cape: 'Capes', hand: 'In your hand', pet: 'Pets', outfit: 'Outfits' };
-function lookState() { const s = shopState(), d = { hat: 'cap', foot: 'none', cape: 'club', hand: 'weapon', pet: 'none', body: '', trim: '' }; const L = s.look || (s.look = {}); for (const k in d) if (L[k] == null) L[k] = d[k]; return L; }
+function lookState() { const s = shopState(), d = { hat: 'none', foot: 'none', cape: 'club', hand: 'weapon', pet: 'none', body: '', trim: '', hair: 'crop', hairColor: FIGHTER_HAIR_COLORS[1], beard: 'none', eyes: FIGHTER_EYES[0] }; const L = s.look || (s.look = {}); for (const k in d) if (L[k] == null) L[k] = d[k]; return L; }
 function lookOwned(slot, key) { const it = LOOKS[slot].find(x => x[0] === key); return !!it && ((it[2] === 0 && it[3] !== 'hidden') || !!shopState().owned['wd:' + slot + ':' + key]); }
-function lookLite() { const L = lookState(); return { b: L.body || CAREER.club.tabard, t: L.trim || CAREER.club.trim, h: L.hat, f: L.foot, c: L.cape, p: L.pet, n: L.hand, o: L.outfit && L.outfit !== 'none' ? L.outfit : '', s: L.skin || '', d: L.dye ? 1 : 0 }; }
+function lookLite() { const L = lookState(), lo = G.loadout || {}; const stature = { short: 1.65, avg: 1.8, tall: 1.94 }; return { b: L.body || CAREER.club.tabard, t: L.trim || CAREER.club.trim, h: L.hat, f: L.foot, c: L.cape, p: L.pet, n: L.hand, o: L.outfit && L.outfit !== 'none' ? L.outfit : '', s: L.skin || '', d: L.dye ? 1 : 0, g: L.frame || (BOS.info && BOS.info.gender === 'female' ? 'female' : 'male'), ha: L.hair, hc: L.hairColor, be: L.beard, ec: L.eyes, ht: stature[lo.height] || 1.8, bd: lo.build || 'medium' }; }
 function dress(J, L) {
   const head = (J.bones && J.bones.Head) || J.torso || J.root, ual = !!J.ual, hy = ual ? 0.12 : 0.72;
   const club = { tabard: L.b, trim: L.t };
@@ -37824,7 +37855,7 @@ function updateOthers(dt) {
     const tw = p.presence && p.presence.tw; if (!tw || typeof tw.x !== 'number') continue;
     seen[p.peer] = 1; let O = WORLD.others[p.peer];
     if (!O) {
-      const L = tw.l || {}; const J = lookPerson({ b: L.b, t: L.t, h: L.h, c: L.c, n: L.n, o: L.o, s: L.s, d: L.d }, 1.8);
+      const L = tw.l || {}; const J = lookPerson(L, L.ht || 1.8);
       const nm = String(p.presence.name || 'A fighter').slice(0, 20), lab = townLabel(nm, (tw.g ? `[${tw.g}] ` : '') + 'online now', '#7fb6ff'); lab.position.y = 2.35; J.root.add(lab);
       J.root.position.set(tw.x, tw.mine ? DEEP_MINE.y : gy(tw.x, tw.z), tw.z); TOWN.root.add(J.root);
       O = WORLD.others[p.peer] = { J, x: tw.x, z: tw.z, mine: !!tw.mine, f: tw.f || 0, p, lk: JSON.stringify(tw.l || {}) };
@@ -38151,7 +38182,7 @@ function navSteer(N, tx, tz) {
   }
   return [bx, bz];
 }
-function navPushOut(N) { // a gentle positional correction, never a jump
+function navPushOut(N, beforeMove) { // a gentle positional correction, never a jump
   // World NPCs stay behind every list's rope. Fight participants are managed by
   // the bout engine inside the list, so this does not move fighters or corners.
   for (const A of ARENAS) {
@@ -38164,6 +38195,12 @@ function navPushOut(N) { // a gentle positional correction, never a jump
   const L = NAV.grid.get(Math.floor(N.x / NAV.cell) + ',' + Math.floor(N.z / NAV.cell)) || NAV.none;
   for (const o of L) { const dx = N.x - o.x, dz = N.z - o.z, d = Math.hypot(dx, dz), m = o.r + 0.3; if (d < m && d > 1e-4) { N.x = o.x + dx / d * m; N.z = o.z + dz / d * m; } }
   gameplayShapePush(N, 0.3);
+  if (beforeMove && !castleWalkable(beforeMove.x, beforeMove.z, N.x, N.z, 0.3)) {
+    const x = N.x, z = N.z;
+    N.x = beforeMove.x; N.z = beforeMove.z;
+    if (castleWalkable(beforeMove.x, beforeMove.z, x, beforeMove.z, 0.3)) N.x = x;
+    if (castleWalkable(N.x, beforeMove.z, N.x, z, 0.3)) N.z = z;
+  }
 }
 // a free point near (x, z), searching outward
 function navFree(x, z, r = 0.4) {
@@ -38273,7 +38310,8 @@ function updateFolk(dt) {
       const [sx, sz] = gameplayFolkDirection(N, N.tx, N.tz, dt, cx, cz);
       N.hx += (sx - N.hx) * Math.min(1, dt * 6); N.hz += (sz - N.hz) * Math.min(1, dt * 6); const hl = Math.hypot(N.hx, N.hz) || 1; N.hx /= hl; N.hz /= hl;
       const walkSpeed = Math.min(N.spd, Math.max(0.6, Math.hypot(N.tx - N.x, N.tz - N.z) / 0.6));
-      N.x += N.hx * walkSpeed * dt; N.z += N.hz * walkSpeed * dt; navPushOut(N);
+      const beforeMove = { x: N.x, z: N.z };
+      N.x += N.hx * walkSpeed * dt; N.z += N.hz * walkSpeed * dt; navPushOut(N, beforeMove);
       N.face = Math.atan2(N.hx, N.hz);
       const d = Math.hypot(N.tx - N.x, N.tz - N.z);
       if (d < N.best - 0.05) { N.best = d; N.stuck = 0; } else if ((N.stuck += dt) > 2.5) { N.stuck = 0; N.best = 1e9; if (++N.fails >= 2) { N.fails = 0; folkRelease(N); N.state = 'choose'; N.timer = rand(0.5, 2); folkPlay(N, 'Idle_Loop'); continue; } const t = navFree(N.x + rand(-4, 4), N.z + rand(-4, 4)); N.tx = t.x; N.tz = t.z; N.detour = true; }
@@ -38833,6 +38871,53 @@ function updateMiniMap(dt) {
 // ===================================================================
 const OUTFIT = { ready: false, geo: {}, tex: {}, ibm: {}, head: new Map(), mats: new Map() };
 const SKIN_TONES = ['#f1c9a5', '#e0ac85', '#c68a62', '#a86b45', '#8a5535', '#6b3f26', '#f3d2b8', '#d59b72'];
+const FIGHTER_HAIR = [['none', 'Shaved'], ['crop', 'Short crop'], ['swept', 'Swept'], ['long', 'Long'], ['braid', 'Braid'], ['bun', 'Bun']];
+const FIGHTER_HAIR_COLORS = ['#171311', '#3b2419', '#75462c', '#a66c3d', '#d5ab61', '#bd6b42', '#817d75', '#e1d7bf'];
+const FIGHTER_BEARDS = [['none', 'Clean shaven'], ['stubble', 'Stubble'], ['short', 'Short beard'], ['full', 'Full beard']];
+const FIGHTER_EYES = ['#3e2b1f', '#627957', '#527d96', '#8b7454'];
+function fighterAppearance(J, L) {
+  const head = J.bones && J.bones.Head;
+  if (!head) return J;
+  const skin = SKIN_TONES.includes(L.s) ? L.s : SKIN_TONES[2];
+  const hair = FIGHTER_HAIR_COLORS.includes(L.hc) ? L.hc : FIGHTER_HAIR_COLORS[1];
+  const eyes = FIGHTER_EYES.includes(L.ec) ? L.ec : FIGHTER_EYES[0];
+  const style = FIGHTER_HAIR.some(([key]) => key === L.ha) ? L.ha : 'crop';
+  const beard = FIGHTER_BEARDS.some(([key]) => key === L.be) ? L.be : 'none';
+  const skinMat = tmat(skin), hairMat = tmat(hair), eyeMat = tmat(eyes);
+  const face = grp(head, 0, 0, 0);
+  face.name = 'fighterAppearance';
+  for (const side of [-1, 1]) {
+    const ear = mk(face, geo('face_ear', () => new THREE.SphereGeometry(0.029, 10, 8)), skinMat, side * 0.113, -0.014, 0);
+    ear.scale.set(0.55, 1, 0.55);
+    mk(face, geo('face_eye_white', () => new THREE.SphereGeometry(0.017, 10, 8)), tmat('#f3eadb'), side * 0.043, 0.025, 0.105);
+    mk(face, geo('face_iris', () => new THREE.SphereGeometry(0.010, 10, 8)), eyeMat, side * 0.043, 0.025, 0.119);
+    const brow = mk(face, geo('face_brow', () => new THREE.BoxGeometry(0.047, 0.009, 0.009)), hairMat, side * 0.045, 0.053, 0.113);
+    brow.rotation.z = side * 0.12;
+  }
+  mk(face, geo('face_nose', () => new THREE.ConeGeometry(0.019, 0.054, 8)), skinMat, 0, -0.021, 0.125).rotation.x = Math.PI / 2;
+  const mouth = mk(face, geo('face_mouth', () => new THREE.BoxGeometry(0.043, 0.006, 0.008)), tmat('#784d43'), 0, -0.072, 0.111);
+  mouth.rotation.z = -0.06;
+  if (style !== 'none') {
+    const cap = mk(face, geo('face_hair_cap', () => new THREE.SphereGeometry(0.119, 16, 10, 0, TAU, 0, Math.PI * 0.58)), hairMat, 0, 0.094, -0.006);
+    cap.scale.set(1.04, style === 'crop' ? 0.67 : 0.92, 1.05);
+    if (style === 'swept') {
+      const fringe = mk(face, geo('face_hair_fringe', () => new THREE.SphereGeometry(0.082, 12, 8)), hairMat, -0.037, 0.108, 0.086);
+      fringe.scale.set(1.3, 0.43, 0.65); fringe.rotation.z = -0.25;
+    }
+    if (style === 'long' || style === 'braid') for (const side of [-1, 1]) {
+      const lock = mk(face, geo('face_hair_lock', () => new THREE.CapsuleGeometry(0.036, 0.15, 5, 8)), hairMat, side * 0.102, -0.097, -0.018);
+      lock.rotation.z = side * 0.1;
+    }
+    if (style === 'braid') for (let i = 0; i < 4; i++) mk(face, geo('face_braid', () => new THREE.SphereGeometry(0.035, 9, 7)), hairMat, 0.055, -0.055 - i * 0.061, -0.125);
+    if (style === 'bun') mk(face, geo('face_bun', () => new THREE.SphereGeometry(0.074, 14, 10)), hairMat, 0, 0.104, -0.135);
+  }
+  if (beard !== 'none') {
+    const chin = mk(face, geo('face_beard', () => new THREE.SphereGeometry(0.075, 14, 9)), hairMat, 0, -0.085, 0.063);
+    chin.scale.set(beard === 'stubble' ? 1.13 : 1.2, beard === 'full' ? 1.15 : 0.65, 0.75);
+    if (beard !== 'stubble') for (const side of [-1, 1]) mk(face, geo('face_beard_side', () => new THREE.SphereGeometry(0.034, 10, 8)), hairMat, side * 0.077, -0.073, 0.072);
+  }
+  return J;
+}
 function outfitInit() {
   if (OUTFIT.ready || OUTFIT.failed || typeof OUTFIT_GEO === 'undefined') return OUTFIT.ready;
   try {
@@ -38963,7 +39048,15 @@ function lookPerson(L, ht) {
       J = costumePerson({ outfit, tex, tint, skin, h: ht || 1.8, anim: 'Idle_Loop' });
     }
   }
+  if (!J) {
+    const outfit = L.g === 'female' ? 'Female_Peasant' : 'Male_Peasant';
+    const tint = '#' + new THREE.Color('#ffffff').lerp(new THREE.Color(L.b || '#888888'), 0.38).getHexString();
+    J = costumePerson({ outfit, tex: 'peasant', tint, skin: SKIN_TONES.includes(L.s) ? L.s : SKIN_TONES[2], h: ht || 1.8, anim: 'Idle_Loop' });
+  }
   if (!J) J = townPerson({ main: L.b || '#555', joints: L.t || '#2a2e33', h: ht || 1.8, anim: 'Idle_Loop' });
+  if (L.bd === 'light') J.root.scale.set(0.91, 1, 0.91);
+  else if (L.bd === 'heavy') J.root.scale.set(1.11, 1, 1.11);
+  fighterAppearance(J, L);
   return dress(J, { b: L.b || '#555', t: L.t || '#ccc', h: L.h, f: L.f, c: L.c, n: L.n, e: L.e, w: L.w });
 }
 // a little portrait of an outfit for the wardrobe card, rendered once off-screen with the game's own renderer
@@ -38974,7 +39067,7 @@ function outfitThumb(key) {
   if (PORTRAITS[key]) { draw(PORTRAITS[key]); return c; }
   try {
     if (!W3.renderer || typeof UAL === 'undefined' || !UAL.ready) return c;
-    const L = lookLite(), J = key === 'none' ? townPerson({ main: L.b, joints: L.t, h: 1.8, anim: 'Idle_Loop' }) : lookPerson({ o: key, b: L.b, t: L.t, s: L.s, h: 'none', c: 'none', n: 'none' }, 1.8);
+    const L = lookLite(), J = lookPerson({ ...L, o: key === 'none' ? '' : key, h: 'none', c: 'none', n: 'none' }, L.ht || 1.8);
     if (!J) return c;
     J.mixer.update(0.01);
     const sc = new THREE.Scene(); sc.add(new THREE.HemisphereLight('#ffffff', '#6b5a48', 1.1)); const dl = new THREE.DirectionalLight('#ffffff', 1.3); dl.position.set(1.5, 3, 4); sc.add(dl); sc.add(J.root);
@@ -39193,7 +39286,7 @@ const ARENA_CREWS = [
   ['forest', [-221, -74], [-214, -74], [-207, -74], ['Rowan Ashshield', 'Bram of the Pines', 'Mara Mossbell'], ['#4a6240', '#765437', '#596d58']],
   ['beach', [141, 103], [148, 103], [155, 103], ['Captain Irena Shore', 'Dagan Driftwood', 'Nessa Tidecaller'], ['#335d79', '#a27b4c', '#36919a']],
   ['castle', [-81, -179], [-74, -179], [-67, -179], ['Ser Corvin Vale', 'Odo Stonevoice', 'Lady Elspeth Grey'], ['#48566f', '#74544c', '#775578']],
-  ['hall', [-7, -244], [0, -244], [7, -244], ['Dame Ysabel Crown', 'Lord Roderic Gold', 'Herald Celestine'], ['#65496b', '#a47b31', '#784057']]
+  ['hall', [-7, -233], [0, -233], [7, -233], ['Dame Ysabel Crown', 'Lord Roderic Gold', 'Herald Celestine'], ['#65496b', '#a47b31', '#784057']]
 ];
 for (const [arena, marshalAt, heraldAt, crierAt, names, colours] of ARENA_CREWS) {
   const A = ARENAS.find(a => a.key === arena);
@@ -39440,7 +39533,7 @@ function castleGate(R, x, z, key, label, Y, ry) {
   for (let j = 0; j < 4; j++) mk(port, geo('rlm_pbar2', () => new THREE.BoxGeometry(4.6, 0.12, 0.12)), iron, 0, 0.5 + j * 0.95, 0);
   // the gatehouse walls either side of the opening (so nobody slips past the portcullis)
   for (const sx of [-4, 4]) TOWN.obst.push({ x: x + Math.cos(ry) * sx, z: z - Math.sin(ry) * sx, r: 1.5 });
-  const G = { key, label, x: x + Math.sin(ry) * 0.2, z: z + Math.cos(ry) * 0.2, port, r: 4.2 }; (TOWN.gates = TOWN.gates || []).push(G); return G;
+  const G = { key, label, x: x + Math.sin(ry) * 0.2, z: z + Math.cos(ry) * 0.2, port, r: 4.5 }; (TOWN.gates = TOWN.gates || []).push(G); return G;
 }
 // a list for one of the outer arenas: fence, rope, posts, stands on the long sides, a scoreboard and torches
 function arenaRope(R, A) {
@@ -39568,7 +39661,7 @@ function buildRealm(R) {
   const O = TOWN.obst, add = (key, x, z, ry, s, r) => { const p = kpiece(R, key, x, gy(x, z), z, ry || 0, s || 1); if (r) O.push({ x, z, r }); return p; };
   const face = (x, z, tx, tz) => Math.atan2(tx - x, tz - z);
   // roads, then signposts where they leave the fairground
-  for (const Rd of ROADS) realmRoad(R, roadPath(Rd), Rd.w);
+  for (const Rd of ROADS) if (!Rd.navOnly) realmRoad(R, roadPath(Rd), Rd.w);
   signpost(R, 5, -28, 0, [['CASTLE ↑', 0], ['FAIRGROUND ↓', Math.PI]]);
   signpost(R, -56, 4, -Math.PI / 2, [['THE OLD WOODS', -Math.PI / 2], ['FAIRGROUND', Math.PI / 2]]);
   signpost(R, 56, 10, Math.PI / 2, [['MIRROR LAKE', Math.PI / 2], ['FAIRGROUND', -Math.PI / 2]]);
@@ -39608,7 +39701,7 @@ function buildRealmCastle(R, add, face) {
   buildCastleHill(R, add);
   // ---- tier 1, the yard inside the curtain wall: the street up the middle, the arena west, the training yard and armoury east
   add('kb_market', 16, -150, 0.3, 5, 4); add('fb_well', -14, -152, 0, 1.2, 1.2);
-  for (const z of [-148, -160, -172]) for (const sx of [-6, 6]) { add('mk_Banner_1', sx, z, 0, 1.4, 0.4); add('mk_Banner_1_Cloth', sx, z, 0, 1.4, 0); }
+  for (const z of [-148, -160, -172]) for (const sx of [-9, 9]) { add('mk_Banner_1', sx, z, 0, 1.4, 0.4); add('mk_Banner_1_Cloth', sx, z, 0, 1.4, 0); }
   for (const z of [-154, -166, -178]) for (const sx of [-5, 5]) add('ps_lamp', sx, z, 0, 1, 0.3);
   realmHall(R, 80, -200, 18, 9, 5, -Math.PI / 2, { sign: 'ARMOURY', signCol: '#3d4a57', tower: true });
   for (let i = 0; i < 5; i++) { const x = 24 + i * 4, z = -158; mk(R, geo('fest_pell', () => new THREE.CylinderGeometry(0.13, 0.15, 1.9, 8)), tmat('#8a6a42'), x, 0.95 + gy(x, z), z).castShadow = true; O_push(x, z, 0.35); }
@@ -39648,7 +39741,7 @@ function buildRealmCastle(R, add, face) {
   realmHall(R, -25, -262, 10, 12, 5, 0, { sign: 'ROYAL TAILOR', signCol: '#5b2a86' });
   landmark(R, () => buildGreatHall(R, add));
   // the king's guard and court in the forecourt (static figures; the walking guards are townsfolk)
-  for (const [k, x, z, ry] of [['po_male_standing', -6, -238, 0], ['po_male_standing', 6, -238, 0], ['po_female_standing_hips', -12, -236, 0.8], ['po_male_standing_hips', 12, -236, -0.6]]) { const p = add(k, x, z, ry, 1, 0.4); if (p) p.traverse(o => { if (o.isMesh) o.material = TMAT.court || (TMAT.court = lmat({ vertexColors: true, roughness: 0.9, flatShading: true, color: '#c8b8ff' })); }); }
+  for (const [k, x, z, ry] of [['po_male_standing', -6, -238, 0], ['po_male_standing', 6, -238, 0], ['po_female_standing_hips', -11, -232, 0.8], ['po_male_standing_hips', 11, -232, -0.6]]) { const p = add(k, x, z, ry, 1, 0.4); if (p) p.traverse(o => { if (o.isMesh) o.material = TMAT.court || (TMAT.court = lmat({ vertexColors: true, roughness: 0.9, flatShading: true, color: '#c8b8ff' })); }); }
   // and the town itself: houses packed along every wall and cliff
   TOWN.hillHouses = hillHouses(R, add);
 }
@@ -39671,7 +39764,8 @@ function buildGreatHall(R0, add) {
   TOWN.hallRoof = roof;
   // inside: flagstones, banners, chandeliers, the king's dais and throne, torches on the walls
   const fl = mk(R, new THREE.PlaneGeometry(w - 1, d - 1), lmat({ map: venueTex('dirt'), color: '#8a8478', roughness: 1 }), cx, 0.03, cz, false); fl.rotation.x = -Math.PI / 2; fl.receiveShadow = true;
-  arenaList(R0, ARENAS[5], { post: '#3a2a1a', rail: '#6a4a2a', bench: '#5a3a2a', signCol: '#8a6a12' });
+  // The Hall's side aisles must stay open so visitors can reach the throne.
+  arenaList(R0, ARENAS[5], { post: '#3a2a1a', rail: '#6a4a2a', stands: false, signCol: '#8a6a12' });
   mk(R, new THREE.BoxGeometry(10, 0.8, 4), dark, cx, 0.4, H.z0 + 3.2); add('mk_Chair_1', cx, H.z0 + 3.4, 0, 2.2, 0); { const cr = kpiece(R, 'rp_crown', cx, 2.9, H.z0 + 3.2, 0, 0.5); }
   for (const sx of [-1, 1]) for (let i = 0; i < 4; i++) { const b = mk(R, geo('gh_ban', () => new THREE.PlaneGeometry(1.4, 3.6)), lmat({ color: i % 2 ? '#8a1a2a' : '#e3b341', side: THREE.DoubleSide }), cx + sx * (w / 2 - 0.66), 6.4, H.z0 + 8 + i * 9); b.rotation.y = sx > 0 ? -Math.PI / 2 : Math.PI / 2; }
   for (let i = 0; i < 3; i++) { const c = kpiece(R, 'mk_Chandelier', cx, 7.6, H.z0 + 10 + i * 14, 0, 1.6); }
@@ -40527,7 +40621,7 @@ function buildThrone(R) {
     kpiece(R, 'rp_crown', cx + dx, Y + 2.45, z, 0, 0.42);
     const lab = townLabel(seat === 'king' ? 'The King' : 'The Queen', '👑', '#e3b341'); lab.position.set(cx + dx, Y + 3.3, z); lab.userData.landmark = true; R.add(lab); THRONE.labels[seat] = lab;
   }
-  TOWN.stalls.push({ V: { key: 'throne', name: 'The Throne', role: 'Challenge for the crown', icon: '👑' }, g: new THREE.Object3D(), npc: null, ry: 0, x: cx, z: z + 4, ax: cx, az: z + 5, label: new THREE.Object3D(), open: openThrone, verb: 'Approach' });
+  TOWN.stalls.push({ V: { key: 'throne', name: 'The Throne', role: 'Challenge for the crown', icon: '👑' }, g: new THREE.Object3D(), npc: null, ry: 0, x: cx, z, ax: cx + 7, az: z - 0.8, label: new THREE.Object3D(), open: openThrone, verb: 'Approach' });
   throneLabels(); throneLoad();
 }
 function throneLabels() {
@@ -40608,7 +40702,7 @@ const HILL = {
     { cx: 0, cz: -258, rx: 52, rz: 52, h: 12 },
     { cx: 0, cz: -264, rx: 40, rz: 40, h: 18 }
   ],
-  rampW: 9, rise: 6,
+  rampW: 9, rise: 6, rampLanding: 1.6,
   // ramps: from tier k up to tier k+1, hugging the cliff of tier k+1, from angle a (bottom) to b (top). Angles are from the
   // tier's centre, 0 = south, positive = east.
   ramps: [{ k: 1, a: 0.12, b: 0.66 }, { k: 2, a: 0.6, b: -0.06 }, { k: 3, a: -0.2, b: -1.09 }],
@@ -40628,8 +40722,10 @@ function rampAt(x, z) {
   for (const Rp of HILL.ramps) {
     const U = HILL_T[Rp.k], dx = x - U.cx, dz = z - U.cz, r = Math.hypot(dx, dz);
     if (r < U.rx || r > U.rx + HILL.rampW) continue;
-    const th = Math.atan2(dx, dz), t = (th - Rp.a) / (Rp.b - Rp.a);
-    if (t < 0 || t > 1) continue;
+    const th = Math.atan2(dx, dz), progress = (th - Rp.a) / (Rp.b - Rp.a);
+    const landing = HILL.rampLanding / (r * Math.abs(Rp.b - Rp.a));
+    if (progress < -landing || progress > 1 + landing) continue;
+    const t = Math.max(0, Math.min(1, progress));
     return { ramp: Rp, t, r, th };
   }
   return null;
@@ -40655,6 +40751,27 @@ function gy(x, z) {
   const rp = rampAt(x, z); if (rp) return HILL_T[rp.ramp.k - 1].h + HILL.rise * rp.t;
   const k = tierOf(x, z); return k ? HILL_T[k - 1].h : realmHeight(x, z);
 }
+// A walking body needs floor under its full footprint. Checking the travelled
+// segment as well prevents a fast movement frame from skipping a thin cliff.
+function castleSurfaceSafe(x, z, radius) {
+  if (hillNd(HILL_T[0], x, z) > 1.08) return true;
+  const y = gy(x, z);
+  for (let i = 0; i < 8; i++) {
+    const a = i * Math.PI / 4;
+    if (Math.abs(gy(x + Math.cos(a) * radius, z + Math.sin(a) * radius) - y) > 1.2) return false;
+  }
+  return true;
+}
+function castleWalkable(x0, z0, x1, z1, radius) {
+  const length = Math.hypot(x1 - x0, z1 - z0), n = Math.max(1, Math.ceil(length / 0.25));
+  let oldY = gy(x0, z0);
+  for (let i = 1; i <= n; i++) {
+    const t = i / n, x = x0 + (x1 - x0) * t, z = z0 + (z1 - z0) * t, y = gy(x, z);
+    if (Math.abs(y - oldY) > 1.2 || !castleSurfaceSafe(x, z, radius)) return false;
+    oldY = y;
+  }
+  return true;
+}
 // the slope under your feet (for leaning the horse a touch): dy of the ground per metre north
 function gslope(x, z) { return (gy(x, z - 0.5) - gy(x, z + 0.5)); }
 // ---- building blocks from the kits
@@ -40664,7 +40781,7 @@ function hillTower(R, x, z, Y, h, o) {
   for (let i = 0; i < h; i++) kpiece(R, i === 0 ? 'ck_tower_square' : (i === h - 1 ? 'ck_tower_square_mid_windows' : 'ck_tower_square_mid'), x, Y + i * lift, z, 0, s);
   const top = kpiece(R, o.flat ? 'ck_tower_square_top' : o.high ? 'ck_tower_square_top_roof_high' : 'ck_tower_square_top_roof', x, Y + h * lift, z, 0, s);
   if (o.flag) { const fl = kpiece(R, 'ck_flag', x + s * 0.25, Y + h * lift + (o.flat ? 0.3 : 1.0) * s, z, 0, s * 0.9); if (fl && o.flagCol) fl.traverse(m => { if (m.isMesh) m.material = TMAT['hflag' + o.flagCol] || (TMAT['hflag' + o.flagCol] = lmat({ color: o.flagCol, roughness: 0.9, flatShading: true })); }); }
-  TOWN.obst.push({ x, z, r: s * 0.7 }); return top;
+  TOWN.obst.push({ x, z, r: s * (o.rim ? 0.8 : 0.7) }); return top;
 }
 // a wall of Kenney blocks along a tier's rim (just inside the edge), blocks overlapping so there are no gaps.
 // gaps: a list of [angle, halfWidth in metres]. Where the terrace below is within 7 m (the sheer back of the hill) the wall is left out.
@@ -40676,9 +40793,9 @@ function hillRimWall(R, k, Y, gaps, flagCol) {
     if (gaps.some(([ga, gw]) => Math.abs(Math.atan2(Math.sin(th - ga), Math.cos(th - ga))) * T.rx < gw)) continue;
     if (below && hillNd(below, x, z) > 1 - 7 / Math.min(below.rx, below.rz)) continue;
     const [x2, z2] = hillPt(T, th + 0.01, f), ang = Math.atan2(x2 - x, z2 - z);
-    if (i % toweri === 0) { hillTower(R, x, z, Y, k === 1 ? 3 : 2, { flag: i % (toweri * 2) === 0, flagCol, high: k > 2 }); continue; }
+    if (i % toweri === 0) { hillTower(R, x, z, Y, k === 1 ? 3 : 2, { flag: i % (toweri * 2) === 0, flagCol, high: k > 2, rim: k === 1 }); continue; }
     kpiece(R, 'ck_wall', x, Y, z, ang, s);
-    TOWN.obst.push({ x, z, r: s * 0.55 });
+    TOWN.obst.push({ x, z, r: s * (k === 1 ? 0.78 : 0.55) });
   }
 }
 // the terrace top and its cliff: a disc at height Y, and a cylinder of white rock down to the terrace below
@@ -40697,7 +40814,9 @@ function hillRamp(R, Rp) {
   const U = HILL_T[Rp.k], y0 = HILL_T[Rp.k - 1].h, y1 = U.h, n = 28, r0 = U.rx + 0.25, r1 = U.rx + HILL.rampW, W = HILL.rampW;
   const pos = [], uv = [], idx = [], wpos = [], widx = [];
   for (let i = 0; i <= n; i++) {
-    const t = i / n, th = Rp.a + (Rp.b - Rp.a) * t, y = y0 + (y1 - y0) * t + 0.04, sn = Math.sin(th), cs = Math.cos(th);
+    const landing = HILL.rampLanding / (r1 * Math.abs(Rp.b - Rp.a));
+    const progress = -landing + i / n * (1 + 2 * landing);
+    const t = Math.max(0, Math.min(1, progress)), th = Rp.a + (Rp.b - Rp.a) * progress, y = y0 + (y1 - y0) * t + 0.04, sn = Math.sin(th), cs = Math.cos(th);
     pos.push(U.cx + r0 * sn, y, U.cz + r0 * cs, U.cx + r1 * sn, y, U.cz + r1 * cs); uv.push(t * 10, 0, t * 10, 1);
     if (i) { const b = (i - 1) * 2; idx.push(b, b + 1, b + 2, b + 1, b + 3, b + 2); }
     const rw = r1 + 0.5; wpos.push(U.cx + rw * sn, y0 - 0.4, U.cz + rw * cs, U.cx + rw * sn, y + 1.15, U.cz + rw * cs);
@@ -40796,7 +40915,10 @@ function hillRoads() {
   rd('yardE', [[0, gate[1] - 22], [40, -170], [66, -184], [68, -206], [70, -236], [72, -258]], 4);
   rd('ramp1', r1, 7); rd('t2', [r1[4], g2, [g2[0] - 4, g2[1] - 8], r2[0]], 5);
   rd('ramp2', r2, 7); rd('t3', [r2[4], g3, [g3[0] - 1, g3[1] - 9], r3[0]], 5);
-  rd('ramp3', r3, 7); rd('t4', [r3[4], g4, [-24, -244], [-14, -236], [0, -236], [0, HALL.z1 + 1]], 5);
+  rd('ramp3', r3, 7); rd('t4', [r3[4], g4, [-24, -244], [-21.5, -240.5], [-21, -237.5], [-17, -236.5], [-14, -236], [0, -236], [0, HALL.z1 + 1]], 3.5);
+  rd('t4east', [[0, -236], [14, -236], [20.5, -237.5], [21.5, -240.5], [21.5, -251.3]], 3.5);
+  rd('t4hall', [[0, -239], [0, -242], [10, -242], [15.8, -246.5], [15.8, -280], [13, -284.5], [7, -285.4]], 2);
+  out[out.length - 1].navOnly = true; // the Hall already has flagstones
   return out;
 }
 
@@ -40843,8 +40965,8 @@ function boardCrownStatues() {
     TOWN.root.add(g); BOARDS.statues = BOARDS.statues || {}; BOARDS.statues[seat] = g;
     mk(g, geo('crown_statue_base', () => new THREE.CylinderGeometry(0.8, 0.95, 0.8, 8)), tmat('#8b8171'), 0, 0.4, 0);
     const look = holder && holder.look || {};
-    const L = { b: look.b || '#6b5240', t: look.t || '#c8b99c', h: look.h || 'none', f: look.f || 'none', c: look.c || 'none', n: look.n || 'none', o: look.o || (!holder?.look && seat === 'queen' ? 'Female_Peasant|peasant' : ''), s: look.s || '', d: look.d || 0, e: look.e, w: look.w };
-    const J = lookPerson(L, 2.05); J.root.position.y = 0.82; g.add(J.root);
+    const L = { b: look.b || '#6b5240', t: look.t || '#c8b99c', h: look.h || 'none', f: look.f || 'none', c: look.c || 'none', n: look.n || 'none', o: look.o || '', s: look.s || '', d: look.d || 0, e: look.e, w: look.w, g: look.g || (seat === 'queen' ? 'female' : 'male'), ha: look.ha, hc: look.hc, be: look.be, ec: look.ec, ht: look.ht, bd: look.bd };
+    const J = lookPerson(L, 2.05 * (L.ht || 1.8) / 1.8); J.root.position.y = 0.82; g.add(J.root);
     if (J.mixer) J.mixer.update(0.6);
     // The crown floats above the copied outfit so the last-worn hat stays visible.
     const crown = mk(g, geo('crown_statue_ring', () => new THREE.CylinderGeometry(0.16, 0.16, 0.08, 12, 1, true)), tmat('#e3b341'), 0, 3.04, 0);
@@ -41058,6 +41180,9 @@ function gameplayShapePush(P, radius) {
 }
 
 function gameplayGroundAt(x, z) {
+  // The raycast mesh is the continuous country below the castle. The raised
+  // courtyards and ramps are separate meshes and use gy() for their floor.
+  if (tierOf(x, z) || rampAt(x, z)) return gy(x, z);
   if (!GAMEPLAY.terrainBVH || !TOWN.terrain) return gy(x, z);
   const ray = new THREE.Raycaster(new THREE.Vector3(x, 90, z), new THREE.Vector3(0, -1, 0), 0, 150);
   ray.firstHitOnly = true;
