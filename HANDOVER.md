@@ -1,5 +1,9 @@
 # BUHURT: Steel & Tape — handover for the next assistant
 
+## 13 Oct 2026 — Patch 4.3 production release
+
+Production candidate comes from the exact published private Site version 52, source commit `572b8904a0138ad66ca1bbde0d831b34190a5163`, build `steel-tape-auth-56e90ed91fab`. Source provenance and auth validation are in the scoped Site source checkout (`sites/auth-return-deploy`) and `auth-return-audit/verification.json`. This promotes the tested page, worker and version together and adds the renderer/fonts referenced by its offline cache. Asset bundles and current combat difficulty milestones are preserved. Desktop and phone startup passed without page or game-loop errors; 40 worker cache entries exist. Auth repair previously passed 15 unit, 14 browser and 3 exact-release phone cases using mocked authentication. Actual Android Google-return acceptance remains unverified. Patch 4.3 must be dispatched only after production is READY, to both required Discord destinations, without duplicate notes or broad mentions.
+
 You are picking up a browser game called **BUHURT: Steel & Tape**, a free single-file web game about buhurt (armoured medieval combat, Canadian prairie clubs). This document is the complete brief: what it is, what's built, where everything lives, how to build/test/ship, and what's still open. Read all of it before touching anything.
 
 ## 1. What the game is
