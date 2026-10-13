@@ -1,5 +1,5 @@
 <!doctype html><html><head><meta charset="utf-8"><link rel="manifest" href="manifest.webmanifest"><meta name="theme-color" content="#0f1316"><link rel="apple-touch-icon" href="icon-192.png"><meta name="apple-mobile-web-app-capable" content="yes"><meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover"></head><body>
-<script>window.BUILD_VER="steel-tape-29659c73d8";</script><title>Buhurt: Steel &amp; Tape</title>
+<script>window.BUILD_VER="steel-tape-1ff633e7be";</script><title>Buhurt: Steel &amp; Tape</title>
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Barlow+Semi+Condensed:wght@400;500;600;700&family=Big+Shoulders+Display:wght@700;800;900&family=Permanent+Marker&display=swap">
@@ -35197,13 +35197,13 @@ async function boot(hot) {
   VOICE.enabled = G.settings.voice; AU.muted = !!store.get('muted', false);
   if (AU.muted) $('#muteWave').style.display = 'none';
   try { await Promise.race([Promise.all([document.fonts.load('40px "Permanent Marker"'), document.fonts.load('900 40px "Big Shoulders Display"'), document.fonts.load('600 20px "Barlow Semi Condensed"')]), new Promise(r => setTimeout(r, 1800))]); } catch (e) { }
-  buildTextures(); initThree(); buildViewmodel(); initInput(); initBench(); initMenus(); initTown(); buildOverlays(); applyProfile(); applyGfx(true); watchContext(); applyTextSize(); initPhoto(); loadUAL(); installForged(); SPLIT.on = store.get('split', true); boardsStartHeartbeat();
+  buildTextures(); initThree(); buildViewmodel(); initInput(); initBench(); initMenus(); initTown(); buildOverlays(); applyProfile(); applyGfx(true); watchContext(); applyTextSize(); initPhoto(); loadUAL(); installForged(); SPLIT.on = store.get('split', true); boardsStartHeartbeat(); initLobby();
   try { window.claude && window.claude.hot && window.claude.hot.snapshot && window.claude.hot.snapshot(() => ({ tourney: G.tourney })); } catch (e) { }
   window.addEventListener('error', e => G.stats.errors.push(String(e.message)));
   toTitle();
   requestAnimationFrame(frame);
   if (location.hash === '#autotest') setTimeout(autotest, 300);
-  window.__ST = { GAMEPLAY, SAT, YUKA, CANNON, RAPIER, BVH, gameplayShape, gameplayShapeBlocked, gameplayGroundAt, gameplayMove, G, AU, buildShield, buildWeapon, W3, startTourney, quickFight, toTitle, openRepair, kitCheck, setupMatch, toTactics, beginFight, endRound, matchEnd, CLUBS, WEAPONS, setView, toast, renderKitPicker, applyLoadout, IN, FP, showScreen, weaponIcon, startCine, startTraining, startLadder, openCareer, openModes, openLadder, CAREER, setLesson, TR, unlock, togglePause, afterRound, renderHow, selectPiece, selectTape, msg, renderSheet, setHud, endTraining, setMode, PAD, navMove, focusFirst, sparks, CUTE, THREE, BREATH, setCuteDeco, flipFx, PHOTO, UAL, raiseFlags, startVersus, startFFA, startBracket, startKid, KID, openSeason, startSeasonMatch, setVenue, VS, SPLIT, NET, buildOnlineMatch, hostLobby, joinLobby, ONL, vinControl, openRun, openDaily, openBracket, showBracket, bracketResult, ffaMatchEnd, ffaLeader, ffaWinner, endKid, openPhoto, closePhoto, startReplay, stopReplay, RP, store, startRunFight, newRun, runEnd, WX, setWeather, padVin, readVersus, applyLo, myLoadout, netDropped, netLeave, showIntro, installForged, dailyPlan, openKids, openVersus, openPicks, LESSONS, rivalClub, startGrudge, startDaily, seasonState, newSeason, refreshDaily, VENUES, COMM, hitMapHtml, resetFighterForRound, DIFF, PIN, PADS, NIN, padsUpdate, seatPads, LOBBY, MM, openOnlineHub, benchDown, benchMove, REP, squirePatch, coverage, openProfile, myProfile, BOS, updateTitlePurse, ACH, progressCheck, challenges, masteryOf, S2, rankOf, counterValue, renderCareer, progressMatch, saveCareer, shopState, shopUp, tapeLeft, shopMatchEnd, shopPrizeMult, shopXpMult, swingTimes, pieceWearMult, TABARDS, refillTape, renderShop, UPGRADES, freshKit, TAPE_STOCK, enterTown, leaveTown, TOWN, openVendor, closeVendor, openTownMap, shopFx, renderVendor, VENDORS, ITEMS, itemCost, spCost, skillRoom, sponsorIncome, BOOSTS, STALL_AT, HOMES, FURNISH, pfx, squadFx, boostKit, townCollide, townRefresh, townWalkTo, townTalk, townTeardown, lookState, WORLD, guildCheck, STATIONS, townDressMe, FOLK, updateFolk, navBlocked, buildFolk, BOUT, boutStart, boutStop, boutTick, drawTownMap, updateMiniMap, costumePerson, OUTFIT, buildSkinWeapon, skinIcon, wskinList, skinFor, buildMyWeapon, wskinFamOf, GATHER, startGather, gatherSwing, stopGather, tradeState, tradeLevel, tradeGain, give, have, craft, NODES, MATS, renderTrades, TRADE_SKILLS, ARENAS, DISTRICTS, TRAVEL, setWaypoint, clearWaypoint, realmPath, callHorse, mount, dismount, ANIMAL, districtAt, realmCull, REALM_TIERS, gateOpen, townJump, stableRows, horseAvailable, peopleCull, boutArenaFor, arenaLive, bagSlots, bagState, bagRoom, secretFound, lookOwned, SECRETS, stopSpectating, startTrial, TRIALS, tierCap, gy, tierOf, HILL, hillHouses, cliffAt, gateBlocked, arenaBlocked, localPath, NAV, rampAt, ROSTER, rosterClubs, rosterLive, rosterName, liveBoutPick, aiTier, AI_TIER, guardOutcome, fighterGlow, ONB, onbStage, onbSet, openCreator, tourStart, tourEnd, TOUR_STOPS, THRONE, throneHolder, throneFight, throneBow, openThrone, sideFromDrag, VOICE };
+  window.__ST = { GAMEPLAY, SAT, YUKA, CANNON, RAPIER, BVH, gameplayShape, gameplayShapeBlocked, gameplayGroundAt, gameplayMove, G, AU, buildShield, buildWeapon, W3, startTourney, quickFight, toTitle, openRepair, kitCheck, setupMatch, toTactics, beginFight, endRound, matchEnd, CLUBS, WEAPONS, setView, toast, renderKitPicker, applyLoadout, IN, FP, showScreen, weaponIcon, startCine, startTraining, startLadder, openCareer, openModes, openLadder, CAREER, setLesson, TR, unlock, togglePause, afterRound, renderHow, selectPiece, selectTape, msg, renderSheet, setHud, endTraining, setMode, PAD, navMove, focusFirst, sparks, CUTE, THREE, BREATH, setCuteDeco, flipFx, PHOTO, UAL, raiseFlags, startVersus, startFFA, startBracket, startKid, KID, openSeason, startSeasonMatch, setVenue, VS, SPLIT, NET, buildOnlineMatch, hostLobby, joinLobby, ONL, vinControl, openRun, openDaily, openBracket, showBracket, bracketResult, ffaMatchEnd, ffaLeader, ffaWinner, endKid, openPhoto, closePhoto, startReplay, stopReplay, RP, store, startRunFight, newRun, runEnd, WX, setWeather, padVin, readVersus, applyLo, myLoadout, netDropped, netLeave, showIntro, installForged, dailyPlan, openKids, openVersus, openPicks, LESSONS, rivalClub, startGrudge, startDaily, seasonState, newSeason, refreshDaily, VENUES, COMM, hitMapHtml, resetFighterForRound, DIFF, PIN, PADS, NIN, padsUpdate, seatPads, LOBBY, MM, openOnlineHub, benchDown, benchMove, REP, squirePatch, coverage, openProfile, myProfile, BOS, updateTitlePurse, ACH, progressCheck, challenges, masteryOf, S2, rankOf, counterValue, renderCareer, progressMatch, saveCareer, shopState, shopUp, tapeLeft, shopMatchEnd, shopPrizeMult, shopXpMult, swingTimes, pieceWearMult, TABARDS, refillTape, renderShop, UPGRADES, freshKit, TAPE_STOCK, enterTown, leaveTown, TOWN, openVendor, closeVendor, openTownMap, shopFx, renderVendor, VENDORS, ITEMS, itemCost, spCost, skillRoom, sponsorIncome, BOOSTS, STALL_AT, HOMES, FURNISH, pfx, squadFx, boostKit, townCollide, townRefresh, townWalkTo, townTalk, townTeardown, lookState, WORLD, guildCheck, STATIONS, townDressMe, FOLK, updateFolk, navBlocked, buildFolk, BOUT, boutStart, boutStop, boutTick, drawTownMap, updateMiniMap, costumePerson, OUTFIT, buildSkinWeapon, skinIcon, wskinList, skinFor, buildMyWeapon, wskinFamOf, GATHER, startGather, gatherSwing, stopGather, tradeState, tradeLevel, tradeGain, give, have, craft, NODES, MATS, renderTrades, TRADE_SKILLS, ARENAS, DISTRICTS, TRAVEL, setWaypoint, clearWaypoint, realmPath, callHorse, mount, dismount, ANIMAL, districtAt, realmCull, REALM_TIERS, gateOpen, townJump, stableRows, horseAvailable, peopleCull, boutArenaFor, arenaLive, bagSlots, bagState, bagRoom, secretFound, lookOwned, SECRETS, stopSpectating, startTrial, TRIALS, tierCap, gy, tierOf, HILL, hillHouses, cliffAt, gateBlocked, arenaBlocked, localPath, NAV, rampAt, ROSTER, rosterClubs, rosterLive, rosterName, liveBoutPick, aiTier, AI_TIER, guardOutcome, fighterGlow, ONB, onbStage, onbSet, openCreator, tourStart, tourEnd, TOUR_STOPS, THRONE, throneHolder, throneChallenge, openThrone, sideFromDrag, VOICE };
   if (location.protocol === 'file:' && window.__steeltapeTest)
     Object.assign(window.__ST, { penalize, failPiece, closeRepair, xpNeed, tierProf, runToRepairCorner, onbAfterAccount, onbAccountGate, onbResumeAfterAuth, leaveTarget, leaveScreen, CLOUD, bosLoadInfo, bosBoot, swingLeverage, weaponBindPossible, resolveSwing, sweptSwingTarget, updateAction, think, updateTownCamera, LIBRARY, LIBRARY_DATA, WEAPON_VARIANTS, playerWeaponDef, libraryModel, libraryThumb, LIST, navPushOut, townCollide, SPECT, updateArenaSeatFolk, testAdminApply, testAdminRefresh, testAdminTeleport, openTestAdmin, PLAYTEST, playtestStart, playtestStop, playtestTick, playtestAction, playtestFlush, playtestCapture, gameplayShapePush, gameplayCannonTick, gameplayFolkDirection, arenaRope, gateRefused, stationTrial, commClipName, COMM_AUDIO, SFX_FILES });
 }
@@ -35547,7 +35547,7 @@ async function initLobby() {
         const inv = p.presence.invite;
         if (!inv || inv.to !== LOBBY.me || !/^[A-Z]{4}$/.test(String(inv.code || ''))) continue;
         const key = p.peer + inv.code; if (LOBBY.seen[key]) continue; LOBBY.seen[key] = 1;
-        LOBBY.pending = { from: String(p.presence.name || 'A friend').slice(0, 20), code: inv.code, peer: p.peer };
+        LOBBY.pending = { from: String(p.presence.name || 'A friend').slice(0, 20), code: inv.code, peer: p.peer, throne: inv.throne || null };
         showInvite();
       }
       if (G.screen === 'msgScr' && $('#inviteList')) renderInviteList();
@@ -35606,7 +35606,10 @@ function showInvite() {
   const P = LOBBY.pending; if (!P) return;
   if ((G.phase === 'fight' && !G.attract && !G.paused) || NET.on) { toast(`${P.from} wants to fight you online`, 'big', 'Answer after this fight'); return; }
   LOBBY.pending = null; AU.cheer && AU.cheer(0.5);
-  msg('invite', `${escTxt(P.from)} invited you!`, `<p><b>${escTxt(P.from)}</b> invited you to their lobby. Pick your side and kit there.</p>`,
+  const crown = P.throne && (P.throne.seat === 'king' || P.throne.seat === 'queen') ? P.throne : null;
+  msg('invite', crown ? `Defend your ${crown.seat} crown!` : `${escTxt(P.from)} invited you!`, crown
+    ? `<p><b>${escTxt(P.from)}</b> challenges you for the ${crown.seat} title. This is a one-on-one crown fight. If you lose, the title passes to them.</p>`
+    : `<p><b>${escTxt(P.from)}</b> invited you to their lobby. Pick your side and kit there.</p>`,
     [['Join', () => joinLobby(P.code), true], ['No thanks', openOnlineHub]]);
 }
 // ---- Find a match: join an open lobby, or open one and wait for others
@@ -35656,11 +35659,12 @@ function renderInviteList() {
   }
 }
 // inviting someone opens your lobby (if you haven't one) and sends them its code
-async function sendInvite(p) {
+async function sendInvite(p, crown) {
   AU.click(); await initLobby();
   if (!(NET.room && NET.role === 'host')) { const ok = await hostLobby(false); if (!ok) return; }
+  if (crown) { ONL.L = Object.assign(lobbyL(), { n: 1, bots: [0, 0], cat: crown.seat === 'queen' ? 'women' : 'men', venue: 'hall', throne: crown }); hostSync(); }
   LOBBY.invited = p.peer;
-  lobbySet({ name: myName(), invite: { to: p.peer, code: NET.code, t: Date.now() } });
+  lobbySet({ name: myName(), invite: { to: p.peer, code: NET.code, t: Date.now(), throne: crown || null } });
   toastMenu(`Invite sent to ${String(p.presence.name).slice(0, 20)}`);
   if (G.screen === 'msgScr' && $('#lobTeams')) renderLobbyInvite(); else renderLobby();
 }
@@ -35850,7 +35854,7 @@ function lobbyHumans() {
   const out = []; const seen = new Set();
   for (const p of ONL.peers) {
     const P = p.presence || {}; if (!P.uid || (P.role !== 'host' && P.role !== 'guest') || seen.has(P.uid)) continue; seen.add(P.uid);
-    out.push({ uid: P.uid, bos: !!P.bos, name: String(P.name || 'A fighter').slice(0, 20), team: P.team === 1 ? 1 : 0, lo: P.lo, ready: !!P.ready, host: P.role === 'host', me: P.uid === ONL.me, peer: p.peer });
+    out.push({ uid: P.uid, account: P.account || null, bos: !!P.bos, name: String(P.name || 'A fighter').slice(0, 20), team: P.team === 1 ? 1 : 0, lo: P.lo, ready: !!P.ready, host: P.role === 'host', me: P.uid === ONL.me, peer: p.peer });
   }
   return out.sort((a, b) => (b.host ? 1 : 0) - (a.host ? 1 : 0)).slice(0, MAX_HUMANS);
 }
@@ -35859,7 +35863,7 @@ function teamCounts(L, hum) {
   const bots = [0, 1].map(t => { const free = n - h[t]; const b = L.bots[t]; return b == null ? free : clamp(b, 0, free); });
   return { h, n, bots, total: [h[0] + bots[0], h[1] + bots[1]] };
 }
-function myPresence(extra) { return Object.assign({ role: NET.role, uid: ONL.me, name: myName(), bos: !!BOS.info, lo: myLo(), team: ONL.team, ready: NET.role === 'host' ? true : ONL.ready }, extra || {}); }
+function myPresence(extra) { return Object.assign({ role: NET.role, uid: ONL.me, account: BOS.user && BOS.user.id || null, name: myName(), bos: !!BOS.info, lo: myLo(), team: ONL.team, ready: NET.role === 'host' ? true : ONL.ready }, extra || {}); }
 function newCode() { return Array.from({ length: 4 }, () => 'ABCDEFGHJKLMNPQRSTUVWXYZ'[(Math.random() * 24) | 0]).join(''); }
 
 // ---- host: open a lobby (open = anyone tapping Find a match may join)
@@ -35983,9 +35987,13 @@ function leaveLobby() { lobbySet({ look: null, invite: null }); LOBBY.invited = 
 // ---- start: the host turns the lobby into a match spec everyone builds the same way
 function hostStart() {
   const L = lobbyL(), hum = lobbyHumans(), C = teamCounts(L, hum);
+  if (L.throne) {
+    const challenger = hum.find(x => x.account === L.throne.challenger), holder = hum.find(x => x.account === L.throne.holder);
+    if (C.total[0] !== 1 || C.total[1] !== 1 || hum.length !== 2 || !challenger || !holder || challenger.team === holder.team) { toastMenu('A crown duel must be one signed-in challenger against the current title holder, with no bots.'); return; }
+  }
   if (C.total[0] < 1 || C.total[1] < 1) { toastMenu('Each side needs at least one fighter: add a bot.'); return; }
-  const H = []; for (const t of [0, 1]) hum.filter(x => x.team === t).forEach((x, i) => H.push({ uid: x.uid, t, i, lo: x.lo, peer: x.peer }));
-  const S = { counts: C.total, venue: L.venue, cat: L.cat, H };
+  const H = []; for (const t of [0, 1]) hum.filter(x => x.team === t).forEach((x, i) => H.push({ uid: x.uid, account: x.account, t, i, lo: x.lo, peer: x.peer }));
+  const S = { counts: C.total, venue: L.throne ? 'hall' : L.venue, cat: L.throne ? (L.throne.seat === 'queen' ? 'women' : 'men') : L.cat, H, throne: L.throne || null };
   ONL.go = Date.now(); ONL.S = S; lobbySet({ look: null, st: 'in an online fight' }); LOBBY.invited = null;
   buildOnlineMatch(S);
 }
@@ -36005,6 +36013,7 @@ function buildOnlineMatch(S) {
     else if (NET.role === 'host') f.vin = ONL.vins[hm.uid] = ONL.vins[hm.uid] || newVin();
   }
   G.match.netSpec = S; G.match.duel = N === 1 && S.counts[0] === 1 && S.counts[1] === 1; buildPips();
+  if (S.throne) G.match.throneDuel = S.throne;
   $('#sbA').textContent = 'RVR'; $('#sbB').textContent = 'WDN';
   ONL.inMatch = true; NET.on = true; NET.ev = []; NET.lastEv = 0; NET.snap = null;
   startRound();
@@ -36045,11 +36054,11 @@ function resultTitle(m) {
   return [drawn ? 'Draw' : won ? 'Your side wins' : 'Your side loses', `<p>${m.wins[t]}–${m.wins[1 - t]} in rounds.</p>`];
 }
 function onlineMatchEnd() { // host
-  const [title, body] = resultTitle(G.match); progressMatch(G.match, title === 'Your side wins'); if (typeof throneOnlineEnd === 'function') throneOnlineEnd(title === 'Your side wins');
+  const [title, body] = resultTitle(G.match); progressMatch(G.match, title === 'Your side wins'); if (typeof throneOnlineEnd === 'function') throneOnlineEnd(G.match);
   msg('online', title, body + '<p class="muted">Back to the lobby to go again, change sides or add bots.</p>', [['Back to lobby', hostBackToLobby, true], ['Leave', () => { netLeave(); toTitle(); }]]);
 }
 function netGuestEnd() {
-  const [title, body] = resultTitle(G.match); progressMatch(G.match, title === 'Your side wins'); if (typeof throneOnlineEnd === 'function') throneOnlineEnd(title === 'Your side wins');
+  const [title, body] = resultTitle(G.match); progressMatch(G.match, title === 'Your side wins'); if (typeof throneOnlineEnd === 'function') throneOnlineEnd(G.match);
   setHud(false); msg('online', title, body + '<p class="muted">The lobby opens again when the host is ready.</p>', [['Leave', () => { netLeave(); toTitle(); }, true]]);
 }
 function hostBackToLobby() {
@@ -36155,14 +36164,14 @@ async function bosLoadInfo() {
   if (typeof CLOUD !== 'undefined' && CLOUD.applying) return;
   if (!BOS.user || BOS.user.id !== u.id) return;
   if (BOS.testAdmin && typeof testAdminApply === 'function') testAdminApply();
-  const info = { name: '', team: '', fighter: null, m: 0, w: 0, l: 0, golds: 0, podiums: 0, wins_t: 0 };
+  const info = { name: '', team: '', fighter: null, gender: null, m: 0, w: 0, l: 0, golds: 0, podiums: 0, wins_t: 0 };
   try { const { data } = await sb.from('profiles').select('display_name').eq('id', u.id).maybeSingle(); if (data && data.display_name) info.name = data.display_name; } catch (e) { }
   try {
     const { data: link } = await sb.from('fighter_accounts').select('fighter_id').eq('user_id', u.id).limit(1).maybeSingle();
     if (link && link.fighter_id) {
       info.fighter = link.fighter_id;
-      const { data: dir } = await sb.from('fighter_directory').select('display_name, team_name').eq('id', link.fighter_id).maybeSingle();
-      if (dir) { info.name = dir.display_name || info.name; info.team = dir.team_name || ''; }
+      const { data: dir } = await sb.from('fighter_directory').select('display_name, team_name, gender').eq('id', link.fighter_id).maybeSingle();
+      if (dir) { info.name = dir.display_name || info.name; info.team = dir.team_name || ''; info.gender = dir.gender || null; }
       const { data: st } = await sb.from('fighter_career_stats').select('matches, wins, losses, golds, podiums, tournament_victories').eq('fighter_id', link.fighter_id).maybeSingle();
       if (st) Object.assign(info, { m: st.matches || 0, w: st.wins || 0, l: st.losses || 0, golds: st.golds || 0, podiums: st.podiums || 0, wins_t: st.tournament_victories || 0 });
     }
@@ -36699,6 +36708,9 @@ async function playtestCapture() {
   } catch (e) { }
   if (!blob) { toastMenu('Could not capture the game view.'); return; }
   const position = playtestPlace(), captureAt = new Date().toISOString();
+  const sessionId = PLAYTEST.id, noteId = crypto.randomUUID();
+  const path = `${BOS.user.id}/${sessionId}/${noteId}.jpg`;
+  let screenshotUploaded = false;
   const previewUrl = URL.createObjectURL(blob);
   townPanel('Screenshot note', box => {
     const preview = h('img', { src: previewUrl, alt: 'Captured game view', style: 'width:100%;max-height:42vh;object-fit:contain;background:#111' });
@@ -36709,11 +36721,13 @@ async function playtestCapture() {
       if (!body) { status.textContent = 'Write a note before saving.'; return; }
       save.disabled = true; status.textContent = 'Uploading screenshot and note…';
       try {
-        const sb = await bosClient(), noteId = crypto.randomUUID();
-        const path = `${BOS.user.id}/${PLAYTEST.id}/${noteId}.jpg`;
-        const uploaded = await sb.storage.from('steeltape-playtest').upload(path, blob, { contentType: 'image/jpeg', upsert: false });
-        if (uploaded.error) throw uploaded.error;
-        const { error } = await sb.from('steeltape_playtest_notes').insert({ id: noteId, session_id: PLAYTEST.id, owner_id: BOS.user.id, at: captureAt, ...position, body, screenshot_path: path });
+        const sb = await bosClient();
+        if (!screenshotUploaded) {
+          const uploaded = await sb.storage.from('steeltape-playtest').upload(path, blob, { contentType: 'image/jpeg', upsert: false });
+          if (uploaded.error) throw uploaded.error;
+          screenshotUploaded = true;
+        }
+        const { error } = await sb.from('steeltape_playtest_notes').insert({ id: noteId, session_id: sessionId, owner_id: BOS.user.id, at: captureAt, ...position, body, screenshot_path: path });
         if (error) throw error;
         playtestEntry('note', { noteId });
         URL.revokeObjectURL(previewUrl); closeVendor(); toastMenu('Screenshot and note saved to the admin panel.');
@@ -37400,6 +37414,7 @@ function townRefresh() { if (!TOWN.on) return; buildHome(); buildStatue(); navBu
 function enterTown(vendorKey) {
   // Legacy saves with onboarding marked complete still require a real login.
   if (typeof onbAccountGate === 'function' && onbAccountGate(true)) return;
+  initLobby();
   AU.init(); G.hub = true; if (typeof onbStage === 'function' && onbStage() === 'tour') setTimeout(() => { if (TOWN.on && TOWN.people) tourStart(); else setTimeout(() => TOWN.on && tourStart(), 2500); }, 1200); if (typeof LOBBY !== 'undefined' && LOBBY.pending) setTimeout(showInvite, 400);
   BOUT.on = false; clearMatch(); G.attract = false; G.autopilot = false; G.tourney = null; G.paused = false; G.phase = 'town'; G.match = null;
   setHud(false); endTraining && endTraining();
@@ -37453,6 +37468,7 @@ function townHudUpdate() { const p = $('#townPurse'); if (p) p.textContent = typ
 // walking, camera, who you're next to
 function updateTown(dt) {
   if (!TOWN.on) return; updateMiniMap(dt);
+  boardTick();
   if (!TOWN.people && !TOWN.mineOn && typeof UAL !== 'undefined' && UAL.ready) { const keep = { ...TOWN.pos }; buildTown(); TOWN.pos = keep; }
   updateGather(dt);
   const walking = !G.screen && !G.paused && !TOWN.busy;
@@ -37654,7 +37670,7 @@ function dress(J, L) {
   else if (L.h === 'straw') { const straw = new THREE.MeshStandardMaterial({ map: librarySurface('straw'), color: '#e1c28d', roughness: 1, side: THREE.DoubleSide }); mk(hat, geo('w_strawcrown', () => new THREE.CylinderGeometry(0.105, 0.125, 0.14, 20)), straw, 0, 0.08, 0); mk(hat, geo('w_strawbrim', () => new THREE.CylinderGeometry(0.23, 0.23, 0.018, 24)), straw, 0, 0, 0); }
   else if (L.h === 'hood') mk(hat, geo('w_hood', () => new THREE.SphereGeometry(0.15, 14, 10, 0, TAU, 0, Math.PI * 0.62)), tmat(L.b), 0, -0.02, -0.02);
   else if (L.h === 'flowers') for (let i = 0; i < 9; i++) { const a = i / 9 * TAU; mk(hat, geo('w_fl', () => new THREE.SphereGeometry(0.028, 8, 6)), tmat(['#ff6fa0', '#ffd24d', '#ffffff', '#9b7bff'][i % 4]), Math.cos(a) * 0.115, 0.03, Math.sin(a) * 0.115); }
-  else if (L.h === 'helm') { try { const hd = grp(hat, 0, ual ? -0.1 : -0.7, 0); buildHelmet(hd, (G.loadout && G.loadout.helm) || 'pigface'); } catch (e) { } }
+  else if (L.h === 'helm') { try { const hd = grp(hat, 0, ual ? -0.1 : -0.7, 0); buildHelmet(hd, L.e || (G.loadout && G.loadout.helm) || 'pigface'); } catch (e) { } }
   else if (L.h === 'wizard') { mk(hat, geo('t_hat', () => new THREE.ConeGeometry(0.16, 0.5, 14)), tmat('#2a1a5a'), 0, 0.22, 0); mk(hat, geo('t_brim', () => new THREE.CylinderGeometry(0.27, 0.27, 0.02, 18)), tmat('#2a1a5a'), 0, 0, 0); }
   else if (L.h === 'horns') { const st = tmat('#9aa3a8', { metalness: 0.6, roughness: 0.4 }); mk(hat, geo('w_dome', () => new THREE.SphereGeometry(0.135, 14, 10, 0, TAU, 0, Math.PI / 2)), st, 0, 0, 0); for (const sx of [-1, 1]) { const h2 = mk(hat, geo('w_horn', () => new THREE.ConeGeometry(0.035, 0.2, 8)), tmat('#efe6cf'), sx * 0.15, 0.07, 0); h2.rotation.z = -sx * 0.9; } }
   else if (L.h === 'crown') { const gold = tmat('#e3b341', { metalness: 0.8, roughness: 0.25 }); mk(hat, geo('w_crown', () => new THREE.CylinderGeometry(0.12, 0.12, 0.07, 16, 1, true)), gold, 0, 0.04, 0).material.side = THREE.DoubleSide; for (let i = 0; i < 6; i++) { const a = i / 6 * TAU; mk(hat, geo('w_spk', () => new THREE.ConeGeometry(0.022, 0.07, 6)), gold, Math.cos(a) * 0.115, 0.1, Math.sin(a) * 0.115); } mk(hat, geo('w_gem', () => new THREE.OctahedronGeometry(0.022)), tmat('#ff3d5a', { emissive: '#7a0010' }), 0, 0.05, 0.122); }
@@ -37667,7 +37683,7 @@ function dress(J, L) {
   // in your hand
   const hand = J.handR; if (hand && L.n !== 'none') {
     const it = grp(hand, 0, 0.08, 0.02); J.heldItem = it;
-    if (L.n === 'weapon') { try { it.add(buildMyWeapon(G.loadout && G.loadout.weapon || 'sword', CLUBS.reavers)); } catch (e) { } }
+    if (L.n === 'weapon') { try { it.add(buildMyWeapon(L.w || (G.loadout && G.loadout.weapon) || 'sword', CLUBS.reavers)); } catch (e) { } }
     else if (L.n === 'torch') { mk(it, geo('w_tst', () => new THREE.CylinderGeometry(0.025, 0.02, 0.55, 6)), tmat('#5a3b24'), 0, 0.2, 0); const fl = mk(it, geo('w_flame', () => new THREE.ConeGeometry(0.06, 0.18, 8)), tmat('#ffb02e', { emissive: '#ff6a00', emissiveIntensity: 1.6 }), 0, 0.55, 0); WORLD.flick.push(fl); }
     else if (L.n === 'lantern') kpiece(it, 'lanternCandle', 0, -0.25, 0, 0, 0.6);
     else if (L.n === 'banner') { mk(it, geo('w_bp', () => new THREE.CylinderGeometry(0.02, 0.02, 1.9, 6)), tmat('#4a3422'), 0, 0.6, 0); const f = mk(it, geo('w_bf', () => new THREE.PlaneGeometry(0.55, 0.38)), lmat({ color: L.b, side: THREE.DoubleSide }), 0.28, 1.35, 0); WORLD.bob.push({ o: f, k: 'flag' }); }
@@ -38948,7 +38964,7 @@ function lookPerson(L, ht) {
     }
   }
   if (!J) J = townPerson({ main: L.b || '#555', joints: L.t || '#2a2e33', h: ht || 1.8, anim: 'Idle_Loop' });
-  return dress(J, { b: L.b || '#555', t: L.t || '#ccc', h: L.h, f: L.f, c: L.c, n: L.n });
+  return dress(J, { b: L.b || '#555', t: L.t || '#ccc', h: L.h, f: L.f, c: L.c, n: L.n, e: L.e, w: L.w });
 }
 // a little portrait of an outfit for the wardrobe card, rendered once off-screen with the game's own renderer
 const PORTRAITS = {};
@@ -39238,7 +39254,10 @@ function buildRealmTerrain(R) {
   g.rotateX(-Math.PI / 2);
   const p = g.attributes.position, colours = new Float32Array(p.count * 3), c = new THREE.Color();
   for (let i = 0; i < p.count; i++) {
-    const x = p.getX(i), z = p.getZ(i), y = gy(x, z);
+    // This broad mesh is the country underneath the castle. Sampling gy() here
+    // pulls individual coarse vertices up onto a terrace and stretches giant
+    // grass triangles across its cliff (and over the Bailey lists).
+    const x = p.getX(i), z = p.getZ(i), y = realmHeight(x, z);
     p.setY(i, y - 0.055);
     const rocky = x < -230 && y > 4, farmland = z > 185 && x > -280 && x < 60;
     c.set(rocky ? '#a6a08d' : farmland ? '#c5bf8b' : y > 7 ? '#9faa82' : '#b4c7a0').convertSRGBToLinear();
@@ -40480,9 +40499,8 @@ function renderSecrets(box) {
 }
 
 // ===================================================================
-// The King and the Queen sit in the Great Hall. Hold the Royal writ and you may challenge either for their seat.
-// If the real holder is online in the game, it's them you fight (an invite to a duel); if not, a tougher-than-the-guard
-// stand-in with their name. The very first challenge a seat ever gets is met with a bow: "The crown is yours!"
+// The King and Queen sit in the Great Hall. A crown can change hands only after
+// a one-on-one fight between its holder and an eligible linked fighter.
 // The seats are kept on the BuhurtOS server (steeltape-throne), so everyone sees the same King and Queen.
 // ===================================================================
 const THRONE_URL = BOS_URL + '/functions/v1/steeltape-throne';
@@ -40490,13 +40508,13 @@ const THRONE = { seats: null, at: 0, loading: false, labels: {} };
 function throneLoad(force) {
   if (THRONE.loading || typeof fetch !== 'function') return; if (!force && Date.now() - THRONE.at < 60000) return;
   THRONE.loading = true;
-  fetch(THRONE_URL, { cache: 'no-store' }).then(r => r.ok ? r.json() : null).then(d => { THRONE.loading = false; if (d && d.seats) { THRONE.seats = d.seats; THRONE.at = Date.now(); throneLabels(); } }).catch(() => { THRONE.loading = false; });
+  fetch(THRONE_URL, { cache: 'no-store' }).then(r => r.ok ? r.json() : null).then(d => { THRONE.loading = false; if (d && d.seats) { THRONE.seats = d.seats; THRONE.at = Date.now(); throneLabels(); boardCrownStatues(); } }).catch(() => { THRONE.loading = false; });
 }
 async function thronePost(body) {
   const headers = { 'Content-Type': 'application/json' };
   try { const s = BOS.sb && (await BOS.sb.auth.getSession()).data.session; if (s && s.access_token) headers.Authorization = 'Bearer ' + s.access_token; } catch (e) { }
-  const r = await fetch(THRONE_URL, { method: 'POST', headers, body: JSON.stringify(body) }); if (!r.ok) throw new Error('throne ' + r.status);
-  const d = await r.json(); if (d.seats) { THRONE.seats = d.seats; THRONE.at = Date.now(); throneLabels(); } return d;
+  const r = await fetch(THRONE_URL, { method: 'POST', headers, body: JSON.stringify(body) }); if (!r.ok) { const d = await r.json().catch(() => ({})); throw new Error(d.error || 'The herald could not record the duel.'); }
+  const d = await r.json(); if (d.seats) { THRONE.seats = d.seats; THRONE.at = Date.now(); throneLabels(); boardCrownStatues(); } return d;
 }
 function throneHolder(seat) { const S = THRONE.seats && THRONE.seats[seat]; return S ? S : { name: seat === 'king' ? 'the King' : 'the Queen', uid: null, challenges: 1 }; }
 function throneMine(seat) { const H = throneHolder(seat); return !!(H.uid && BOS.user && BOS.user.id === H.uid); }
@@ -40522,11 +40540,11 @@ function openThrone() {
   townPanel('The throne', box => {
     const list = stationRows(box, '“Who comes before the crown? Speak, and say which seat you dare to claim.”', []);
     for (const seat of ['king', 'queen']) {
-      const H = throneHolder(seat), mine = throneMine(seat), online = throneOnline(seat), first = THRONE.seats && H.challenges === 0;
+      const H = throneHolder(seat), mine = throneMine(seat), online = throneOnline(seat), eligible = BOS.info && BOS.info.gender === (seat === 'king' ? 'male' : 'female');
       const who = (seat === 'king' ? 'King ' : 'Queen ') + H.name, held = (CAREER.throne || {})[seat];
       list.append(h('div', { class: 'up' }, h('div', null, h('div', { class: 'uph' }, h('b', null, who), h('span', { class: 'tier' }, mine ? 'You hold this seat' : online ? 'Online now' : held ? 'You took it once' : 'On the throne')),
-        h('div', { class: 'muted' }, mine ? 'Sit back. Challengers will come to you.' : online ? `${H.name} is in the realm right now: it’s them you’d fight, one on one, in the Great Hall.` : `${H.name} isn’t here; their champion fights for them. Beat them and the seat is yours${first ? '' : ''}.`)),
-        h('button', { class: 'btn small ' + (mine ? 'tape' : 'primary flagtape'), disabled: mine ? true : null, onclick: () => { if (!mine) throneChallenge(seat); } }, mine ? 'Yours' : 'Challenge')));
+        h('div', { class: 'muted' }, mine ? 'Defend your crown when a challenger arrives.' : !eligible ? `Only a linked ${seat === 'king' ? 'male' : 'female'} fighter can challenge for this title.` : online ? `Fight ${H.name} in a one-on-one duel to take the crown.` : `${H.name} is offline. You must fight the real title holder when they return.`)),
+        h('button', { class: 'btn small ' + (mine ? 'tape' : 'primary flagtape'), disabled: mine || !online || !eligible || !THRONE.seats ? true : null, onclick: () => { if (!mine) throneChallenge(seat); } }, mine ? 'Yours' : 'Challenge')));
     }
     if (!THRONE.seats) list.append(h('p', { class: 'muted small' }, 'The herald is still fetching the court rolls. Try again in a moment if the names look wrong.'));
   });
@@ -40534,40 +40552,42 @@ function openThrone() {
 // is the real holder in the game right now? (a lobby peer signed in to BuhurtOS with the holder's id)
 function throneOnline(seat) { const H = throneHolder(seat); if (!H.uid) return null; return ((typeof LOBBY !== 'undefined' && LOBBY.peers) || []).find(p => p.presence && p.presence.bu === H.uid && p.peer !== (LOBBY.me || null)) || null; }
 async function throneChallenge(seat) {
-  AU.click(); closeVendor(); toastMenu('You step before the throne…');
-  let d; try { d = await thronePost({ seat, action: 'challenge', name: myName() }); } catch (e) { toastMenu('The herald can’t reach the court rolls. Try again when you’re online.'); return; }
-  if (d.bow) { throneBow(seat, d.was); return; }
+  AU.click();
+  if (!BOS.info || BOS.info.gender !== (seat === 'king' ? 'male' : 'female')) { toastMenu(`Only a linked ${seat === 'king' ? 'male' : 'female'} fighter can challenge.`); return; }
+  await initLobby();
   const online = throneOnline(seat);
-  if (online) { THRONE.pending = seat; await sendInvite(online); toastMenu(`${throneHolder(seat).name} is here: a duel invite is sent. Win it and the seat is yours.`); return; }
-  throneFight(seat);
+  if (!online) { toastMenu('The title holder is offline. Fight them when they return.'); return; }
+  let d; try { d = await thronePost({ seat, action: 'challenge' }); } catch (e) { toastMenu(e.message); return; }
+  closeVendor(); await sendInvite(online, d.duel);
+  toastMenu(`Crown duel sent to ${throneHolder(seat).name}. Beat the holder to take the title.`);
 }
-// the first ever challenge: the holder rises and bows
-function throneBow(seat, was) {
-  CAREER.throne = CAREER.throne || {}; CAREER.throne[seat] = Date.now(); saveCareer(); unlock('crowned', true);
-  msg('the throne', 'The crown is yours!', `<p>${was} rises from the ${seat === 'king' ? 'King’s' : 'Queen’s'} seat, looks you up and down, and bows low.</p><p><b>“The crown is yours!”</b></p><p>The hall erupts. You are ${seat === 'king' ? 'King' : 'Queen'} of the realm until someone takes it from you.</p>`, [['Take the seat', toTitle, true]]);
-  try { AU.cheer(1.8); } catch (e) { }
-}
-// the stand-in: a tougher opponent than the King's Guard, in the holder's name
-function throneFight(seat) {
-  const H = throneHolder(seat);
-  CLUBS.throne = { key: 'throne', name: H.name, full: (seat === 'king' ? 'King ' : 'Queen ') + H.name, short: 'CRN', tabard: seat === 'king' ? '#5b2a86' : '#8a1a2a', trim: '#e3b341', charge: 'quarterly', flag: '#e3b341',
-    roster: [{ num: 1, name: H.name, arch: seat === 'king' ? 'heavy' : 'striker', weapon: seat === 'king' ? 'longaxe' : 'longsword', shield: null, helm: 'greathelm', prof: { react: 0.11, aggr: 1.35, guard: 0.86, cancel: 0.84 }, stab: 1.24, keep: true, bos: H.fighter ? { id: H.fighter, team: null } : null }] };
-  G.attract = false; G.tourney = null; REP.log = []; endTraining(); TOWN.returnTo = 'throne';
-  leaveTown(() => { setupMatch({ mode: 1, opp: 'throne', stage: `For the ${seat === 'king' ? 'King’s' : 'Queen’s'} seat`, throne: seat, venue: 'hall', aiTier: 3 }); toTactics(); });
-}
-// the online duel with the real holder is over
-function throneOnlineEnd(won) {
-  const seat = THRONE.pending; if (!seat) return; THRONE.pending = null;
-  if (!won) { toastMenu(`${throneHolder(seat).name} keeps the ${seat === 'king' ? 'King’s' : 'Queen’s'} seat.`); return; }
-  thronePost({ seat, action: 'claim', name: myName() }).then(() => { CAREER.throne = CAREER.throne || {}; CAREER.throne[seat] = Date.now(); pay(5000); saveCareer(); updateTitlePurse(); unlock('crowned', true); toastMenu(`The crown is yours! You are ${seat === 'king' ? 'King' : 'Queen'} of the realm.`); }).catch(() => toastMenu('You won, but the herald couldn’t record it. Challenge again when you’re online.'));
+async function throneOnlineEnd(m) {
+  const duel = m && m.throneDuel, spec = m && m.netSpec;
+  if (!duel || !spec || m.wins[0] === m.wins[1]) return;
+  const challenger = spec.H.find(x => x.account === duel.challenger), holder = spec.H.find(x => x.account === duel.holder);
+  if (!challenger || !holder || challenger.t === holder.t || !BOS.user) return;
+  const winner = m.wins[challenger.t] > m.wins[holder.t] ? 'challenger' : 'holder';
+  try {
+    await thronePost({ action: 'report', id: duel.id, winner });
+    if (winner === 'holder') { toastMenu(`${throneHolder(duel.seat).name} keeps the crown.`); return; }
+    if (BOS.user.id !== duel.challenger) return;
+    for (let attempt = 0; attempt < 8; attempt++) {
+      await new Promise(resolve => setTimeout(resolve, 2000));
+      const r = await fetch(THRONE_URL, { cache: 'no-store' });
+      if (!r.ok) continue;
+      const d = await r.json();
+      if (d.seats) { THRONE.seats = d.seats; throneLabels(); boardCrownStatues(); }
+      if (d.seats && d.seats[duel.seat] && d.seats[duel.seat].uid === BOS.user.id) {
+        CAREER.throneDuels = CAREER.throneDuels || {};
+        if (!CAREER.throneDuels[duel.id]) { CAREER.throneDuels[duel.id] = true; CAREER.throne = CAREER.throne || {}; CAREER.throne[duel.seat] = Date.now(); pay(5000); saveCareer(); updateTitlePurse(); unlock('crowned', true); }
+        toastMenu(`The crown is yours! You are ${duel.seat === 'king' ? 'King' : 'Queen'} of the realm.`); return;
+      }
+    }
+    toastMenu('Your win is awaiting confirmation from the title holder.');
+  } catch (e) { toastMenu(e.message || 'The duel result could not be recorded.'); }
 }
 async function throneEnd(m, won, withPurse) {
-  const seat = m.throne, H = throneHolder(seat);
-  if (won) {
-    try { await thronePost({ seat, action: 'claim', name: myName() }); } catch (e) { }
-    CAREER.throne = CAREER.throne || {}; CAREER.throne[seat] = Date.now(); pay(5000); saveCareer(); updateTitlePurse(); unlock('crowned', true);
-    msg('the throne', 'The crown is yours!', withPurse(`<p>${H.name}’s champion is down. The hall goes quiet, then roars. You are ${seat === 'king' ? 'King' : 'Queen'} of the realm. Bonus ${fmtMoney(5000)}.</p>`), [['Take the seat', toTitle, true]]);
-  } else msg('the throne', 'The crown stays', withPurse(`<p>Not this time. ${H.name} keeps the ${seat === 'king' ? 'King’s' : 'Queen’s'} seat. The Great Hall will be here when you’re ready to try again.</p>`), [['Try again', () => throneFight(seat)], ['Back to the realm', toTitle, true]]);
+  msg('the throne', 'Crown duel unavailable', withPurse('<p>The title only changes hands in a one-on-one online fight with its current holder.</p>'), [['Back to the realm', toTitle, true]]);
 }
 
 // ===================================================================
@@ -40787,6 +40807,31 @@ const BOARDS = {
 };
 const BOARDS_URL = BOS_URL + '/functions/v1/steeltape-boards';
 
+function boardCrownStatues() {
+  if (!TOWN.root || !THRONE.seats) return;
+  for (const seat of ['king', 'queen']) {
+    const holder = THRONE.seats[seat], signature = JSON.stringify([holder && holder.name, holder && holder.since, holder && holder.look]);
+    if (BOARDS.statueSignatures && BOARDS.statueSignatures[seat] === signature && BOARDS.statues && BOARDS.statues[seat]?.parent === TOWN.root) continue;
+    BOARDS.statueSignatures = BOARDS.statueSignatures || {}; BOARDS.statueSignatures[seat] = signature;
+    const old = BOARDS.statues && BOARDS.statues[seat];
+    if (old) TOWN.root.remove(old);
+    const x = seat === 'king' ? -10.4 : -2.6, z = 39.5;
+    const g = new THREE.Group(); g.position.set(x, gy(x, z), z); g.rotation.y = Math.PI;
+    TOWN.root.add(g); BOARDS.statues = BOARDS.statues || {}; BOARDS.statues[seat] = g;
+    mk(g, geo('crown_statue_base', () => new THREE.CylinderGeometry(0.8, 0.95, 0.8, 8)), tmat('#8b8171'), 0, 0.4, 0);
+    const look = holder && holder.look || {};
+    const L = { b: look.b || '#6b5240', t: look.t || '#c8b99c', h: look.h || 'none', f: look.f || 'none', c: look.c || 'none', n: look.n || 'none', o: look.o || '', s: look.s || '', d: look.d || 0, e: look.e, w: look.w };
+    const J = lookPerson(L, 2.05); J.root.position.y = 0.82; g.add(J.root);
+    if (J.mixer) J.mixer.update(0.6);
+    // The crown floats above the copied outfit so the last-worn hat stays visible.
+    const crown = mk(g, geo('crown_statue_ring', () => new THREE.CylinderGeometry(0.16, 0.16, 0.08, 12, 1, true)), tmat('#e3b341'), 0, 3.04, 0);
+    crown.material.side = THREE.DoubleSide;
+    for (let i = 0; i < 6; i++) { const a = i * Math.PI / 3; mk(g, geo('crown_statue_point', () => new THREE.ConeGeometry(0.035, 0.14, 6)), tmat('#e3b341'), Math.sin(a) * 0.15, 3.14, Math.cos(a) * 0.15); }
+    const label = townLabel((seat === 'king' ? 'KING ' : 'QUEEN ') + (holder && holder.name || 'Unclaimed'), 'Current title holder', '#e3b341');
+    label.position.set(0, 3.85, 0); label.rotation.y = Math.PI; g.add(label);
+  }
+}
+
 function boardInk(ctx, kind) {
   const W = 1024, H = 720, online = kind === 'online';
   const bg = ctx.createLinearGradient(0, 0, 0, H);
@@ -40885,6 +40930,7 @@ async function boardFetch(force) {
 function boardTick() {
   if (!TOWN.on || document.hidden || G.autoflow || G.autopilot || location.hash === '#autotest') return;
   if (!BOARDS.inflight && Date.now() >= BOARDS.nextPoll) boardFetch(false);
+  throneLoad(false);
 }
 function boardOpen(kind) {
   const online = kind === 'online', rows = ((BOARDS.data || {})[online ? 'online' : 'leaderboard'] || []);
@@ -40900,9 +40946,7 @@ function boardOpen(kind) {
           h('div', null, h('b', null, (online ? '● ' : '#' + (i + 1) + '  ') + p.name),
             h('div', { class: 'muted small' }, online ? 'Level ' + p.level : p.wins + ' wins · ' + p.matches + ' matches · Level ' + p.level))))));
     }
-    box.append(h('button', { class: 'btn primary flagtape', onclick: async () => {
-      AU.click(); await boardFetch(true); if (TOWN.on && G.screen === 'townShop') boardOpen(kind);
-    } }, 'Refresh board'));
+    box.append(h('p', { class: 'muted small' }, 'Updates automatically while you are in the realm.'));
   });
 }
 
@@ -40940,6 +40984,8 @@ function buildSpawnBoards() {
     });
   }
   boardRedraw();
+  throneLoad(true);
+  boardFetch(true);
 }
 
 function boardsStartHeartbeat() {
