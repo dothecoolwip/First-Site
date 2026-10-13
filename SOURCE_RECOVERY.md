@@ -1,0 +1,1 @@
+Published source modules recovered from site commit e914499fcd7f8b146da82cd5efa8c0cfe4bd15e6. Auth repair changes only 11b_career, 13i_buhurtos, 13ia_cloudsave, 13j_roster, 13k_onboard. Remaining modules and page/assets are preserved from that publication. Rebuild dist with python build.py. Canonical authoring source remains First-Site-live-merge/steeltape/src.

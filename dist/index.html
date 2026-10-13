@@ -1,5 +1,5 @@
 <!doctype html><html><head><meta charset="utf-8"><link rel="manifest" href="manifest.webmanifest"><meta name="theme-color" content="#0f1316"><link rel="apple-touch-icon" href="icon-192.png"><meta name="apple-mobile-web-app-capable" content="yes"><meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover"></head><body>
-<script>window.BUILD_VER="steel-tape-debug-4a6a9ed601";</script><title>Buhurt: Steel &amp; Tape</title>
+<script>window.BUILD_VER="steel-tape-auth-56e90ed91fab";</script><title>Buhurt: Steel &amp; Tape</title>
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link rel="stylesheet" href="fonts/fonts.css">
@@ -32704,7 +32704,7 @@ function applyProfile() {
   const C = CLUBS.reavers, P = CAREER.club;
   C.name = C.full = P.name || 'Reavers'; C.short = (P.short || C.name.slice(0, 3)).toUpperCase().slice(0, 3); C.tabard = P.tabard; C.trim = P.trim; C.charge = P.charge;
   C.roster[0].dispNum = CAREER.num; C.bos = P.bos || null;
-  if (typeof ROSTER !== 'undefined' && !ROSTER.teams.some(t => t.slug === C.bos)) { if (ROSTER.ok) P.bos = null; P.name = 'Festival Company'; P.short = 'FST'; C.bos = null; C.name = C.full = P.name; C.short = P.short; }
+  if (typeof ROSTER !== 'undefined' && !ROSTER.teams.some(t => t.slug === C.bos)) C.bos = null; // No imported bot identity; preserve the player's own banner.
   delete _tabardCache.reavers; delete _shieldCache.reavers;
   if (FP.vm) { FP.vm.team = null; }
   updateTitlePurse();
@@ -36438,79 +36438,159 @@ function netLeave() { try { NET.unsub && NET.unsub(); NET.room && NET.room.leave
 // signed-in person may read (their own fighter link; public fighter records and career stats). Nothing is written.
 const BOS_URL = 'https://mvbxlebznlgroptwwdsm.supabase.co';
 const BOS_KEY = 'sb_publishable_u76M-dggKSsdsyhUQKveJg_5fPJ5Nan';
-const BOS = { sb: null, p: null, user: null, info: null, testAdmin: false, otpEmail: '', booting: false };
+const BOS = { sb: null, p: null, user: null, info: null, testAdmin: false, otpEmail: '', booting: false, clientPromise: null, bootPromise: null, infoPromise: null, infoUid: null, infoReady: null, recovering: false, authTimer: null };
 function loadSupabaseLib() {
   if (window.supabase && window.supabase.createClient) return Promise.resolve(window.supabase);
   if (BOS.p) return BOS.p;
   const urls = ['https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2.45.4/dist/umd/supabase.min.js', 'https://unpkg.com/@supabase/supabase-js@2.45.4/dist/umd/supabase.min.js'];
   BOS.p = new Promise((res, rej) => {
-    const next = i => { if (i >= urls.length) { BOS.p = null; rej(new Error('Could not load the BuhurtOS sign-in')); return; } const s = document.createElement('script'); s.src = urls[i]; s.async = true; s.onload = () => window.supabase ? res(window.supabase) : next(i + 1); s.onerror = () => next(i + 1); document.head.append(s); };
+    const next = i => {
+      if (i >= urls.length) { BOS.p = null; rej(new Error('Could not load the BuhurtOS sign-in')); return; }
+      const script = document.createElement('script'); script.src = urls[i]; script.async = true;
+      let settled = false;
+      const finish = ok => { if (settled) return; settled = true; clearTimeout(timer); if (ok && window.supabase) res(window.supabase); else { script.remove(); next(i + 1); } };
+      const timer = setTimeout(() => finish(false), 6000);
+      script.onload = () => finish(true); script.onerror = () => finish(false); document.head.append(script);
+    };
     next(0);
   });
   return BOS.p;
 }
+// Bound network and SDK waits; callback tokens are never logged or persisted by us.
+function bosTimeout(promise, label, ms = 15000) {
+  let timer;
+  return Promise.race([promise, new Promise((_, reject) => { timer = setTimeout(() => reject(new Error(label + ' timed out. Check your connection and retry.')), ms); })]).finally(() => clearTimeout(timer));
+}
+async function bosFetch(input, options = {}) {
+  const controller = new AbortController(), abort = () => controller.abort();
+  if (options.signal?.aborted) abort();
+  options.signal?.addEventListener('abort', abort, { once: true });
+  const timer = setTimeout(abort, 12000);
+  try { return await fetch(input, { ...options, signal: controller.signal }); }
+  finally { clearTimeout(timer); options.signal?.removeEventListener('abort', abort); }
+}
+function bosCallback() {
+  const url = new URL(location.href), hash = new URLSearchParams(url.hash.slice(1));
+  const params = hash.has('access_token') || hash.has('error') ? hash : url.searchParams;
+  const present = params.has('access_token') || params.has('code') || params.has('error');
+  return { url, params, hash: params === hash, present };
+}
+function bosCleanCallback(callback) {
+  if (!callback.present) return;
+  // Preserve unrelated query parameters, route hashes and history state.
+  for (const key of ['access_token', 'refresh_token', 'expires_in', 'expires_at', 'token_type', 'provider_token', 'provider_refresh_token', 'code', 'error', 'error_code', 'error_description', 'type']) callback.params.delete(key);
+  if (callback.hash) callback.url.hash = callback.params.toString();
+  history.replaceState(history.state, '', callback.url.href);
+}
+function bosRecovery(error) {
+  BOS.booting = false; BOS.recovering = true; ONB.awaitingAuth = false;
+  startupDone();
+  msg('sign-in', 'Could not finish sign-in', '<p>' + escTxt(error.message || String(error)) + '</p><p>Your saved progress is still on this device.</p>',
+    [['Retry', () => { BOS.recovering = false; BOS.bootPromise = null; BOS.infoReady = null; ONB.awaitingAuth = true; bosBoot(true); }, true],
+      ['Back to sign-in', () => { BOS.recovering = false; openBosSignIn(onbAfterAccount); }]]);
+}
 async function bosClient() {
   if (BOS.sb) return BOS.sb;
-  const lib = await loadSupabaseLib();
-  // Keep the login for reloads and OAuth redirects in this tab, but not for a new game launch.
-  // Remove the old persistent token so an earlier release cannot silently sign the player back in.
-  try { localStorage.removeItem('buhurt-game-buhurtos'); } catch (e) { }
-  BOS.sb = lib.createClient(BOS_URL, BOS_KEY, { auth: { persistSession: true, storage: sessionStorage,
-    autoRefreshToken: true, detectSessionInUrl: true, storageKey: 'buhurt-game-buhurtos' } });
-  BOS.sb.auth.onAuthStateChange((evt, session) => {
-    const previous = BOS.user;
-    BOS.user = session ? session.user : null;
-    if (previous && BOS.user && previous.id !== BOS.user.id) {
-      creatorReset();
-      BOS.testAdmin = false;
-      if (typeof playtestAuthReset === 'function') playtestAuthReset();
-      if (typeof testAdminRefresh === 'function') testAdminRefresh();
-    }
-    if (BOS.user) bosLoadInfo();
-    else {
-      creatorReset();
-      BOS.testAdmin = false;
-      if (typeof playtestAuthReset === 'function') playtestAuthReset();
-      if (typeof testAdminRefresh === 'function') testAdminRefresh();
-      if (typeof cloudOnSignOut === 'function') cloudOnSignOut();
-      BOS.info = null; bosApply();
-      if (evt === 'SIGNED_OUT' && previous && typeof onbAccountRequired === 'function' && onbAccountRequired()) {
-        // No guest gameplay is allowed after tutorial, including after a logout.
-        setTimeout(() => {
-          if (BOS.user) return;
-          if (typeof TOWN !== 'undefined' && TOWN.on) leaveTown(() => toTitle({home:true}));
-          else toTitle();
-        }, 0);
-      }
-    }
-  });
-  return BOS.sb;
+  if (BOS.clientPromise) return BOS.clientPromise;
+  BOS.clientPromise = (async () => {
+    const lib = await bosTimeout(loadSupabaseLib(), 'Loading sign-in');
+    // Retain the existing tab-session policy. Do not delete another stored login
+    // as a side effect of merely constructing the client.
+    const sb = lib.createClient(BOS_URL, BOS_KEY, { global: { fetch: bosFetch }, auth: {
+      persistSession: true, storage: sessionStorage, autoRefreshToken: true,
+      flowType: 'implicit', detectSessionInUrl: false, storageKey: 'buhurt-game-buhurtos' } });
+    BOS.sb = sb;
+    sb.auth.onAuthStateChange((evt, session) => {
+      const previous = BOS.user;
+      BOS.user = session ? session.user : null;
+      if (previous?.id !== BOS.user?.id || evt === 'USER_UPDATED') BOS.infoReady = null;
+      // Supabase holds its auth lock while dispatching this callback. All
+      // profile/cloud/auth work runs in a later task, never inside that lock.
+      clearTimeout(BOS.authTimer);
+      BOS.authTimer = setTimeout(() => {
+        if (BOS.user) {
+          if (previous && previous.id !== BOS.user.id) { creatorReset(); BOS.testAdmin = false; if (typeof playtestAuthReset === 'function') playtestAuthReset(); }
+          if (!BOS.booting && !BOS.recovering) bosLoadInfo().catch(bosRecovery);
+        } else {
+          creatorReset(); BOS.testAdmin = false;
+          if (typeof playtestAuthReset === 'function') playtestAuthReset();
+          if (typeof testAdminRefresh === 'function') testAdminRefresh();
+          if (typeof cloudOnSignOut === 'function') cloudOnSignOut();
+          BOS.info = null; bosApply();
+          if (evt === 'SIGNED_OUT' && previous && onbAccountRequired()) {
+            if (typeof TOWN !== 'undefined' && TOWN.on) leaveTown(() => toTitle({ home: true }));
+            else toTitle();
+          }
+        }
+      }, 0);
+    });
+    return sb;
+  })().catch(error => { BOS.clientPromise = null; throw error; });
+  return BOS.clientPromise;
 }
-// on start: pick up a saved sign-in (or one coming back from Google / Discord) without loading anything otherwise
-function bosBoot() {
-  let saved = false; try { saved = !!sessionStorage.getItem('buhurt-game-buhurtos'); localStorage.removeItem('buhurt-game-buhurtos'); } catch (e) { }
-  const back = /access_token=|[?&]code=/.test(location.hash + location.search);
-  if (!saved && !back) return;
-  BOS.booting = true;
-  bosClient().then(sb => sb.auth.getSession()).then(async r => {
-    const s = r && r.data && r.data.session;
-    if (s) { BOS.user = s.user; await bosLoadInfo(); }
-  }).catch(() => { }).finally(() => {
-    BOS.booting = false;
-    if (ONB.awaitingAuth && !CLOUD.applying) {
-      if (BOS.user && (CLOUD.ready || CLOUD.offline)) onbResumeAfterAuth();
-      else toTitle();
-    }
-  });
+// Handle the explicitly configured implicit callback once. Also accept an
+// existing PKCE code return, without letting the SDK exchange it a second time.
+function bosBoot(force = false) {
+  if (BOS.bootPromise) return BOS.bootPromise;
+  const callback = bosCallback(), intent = onbReadAuthReturn();
+  let saved = false; try { saved = !!sessionStorage.getItem('buhurt-game-buhurtos'); } catch (e) { }
+  if (!force && !saved && !callback.present && !intent) return Promise.resolve();
+  BOS.booting = true; BOS.recovering = false; ONB.awaitingAuth = true;
+  BOS.bootPromise = (async () => {
+    try {
+      if (callback.params.has('error')) throw Error(callback.params.get('error_description') || callback.params.get('error'));
+      const sb = await bosClient();
+      let result;
+      if (callback.params.has('access_token')) {
+        if (!callback.params.get('refresh_token')) throw Error('The sign-in return was incomplete. Please sign in again.');
+        result = await bosTimeout(sb.auth.setSession({ access_token: callback.params.get('access_token'), refresh_token: callback.params.get('refresh_token') }), 'Restoring sign-in');
+      } else if (callback.params.has('code')) result = await bosTimeout(sb.auth.exchangeCodeForSession(callback.params.get('code')), 'Completing sign-in');
+      else result = await bosTimeout(sb.auth.getSession(), 'Restoring sign-in');
+      if (result.error) throw result.error;
+      const session = result.data?.session;
+      if (!session) throw Error('Sign-in was cancelled or the session expired. Please sign in again.');
+      BOS.user = session.user;
+      // Clean before cloud restoration: its one intentional reload must not
+      // replay a token or a single-use authorization code.
+      bosCleanCallback(callback);
+      await bosLoadInfo();
+      if (CLOUD.applying) return;
+      BOS.booting = false;
+      onbResumeAfterAuth();
+    } catch (error) { bosCleanCallback(callback); bosRecovery(error); }
+    finally { BOS.booting = false; }
+  })();
+  return BOS.bootPromise;
 }
-async function bosLoadInfo() {
+async function bosOAuth(provider, say) {
+  if (BOS.oauthOpening) return;
+  BOS.oauthOpening = true; say('Opening ' + provider + '…');
+  try {
+    onbSaveAuthReturn();
+    const { error } = await bosTimeout((await bosClient()).auth.signInWithOAuth({ provider, options: { redirectTo: location.origin + location.pathname } }), 'Opening ' + provider);
+    if (error) throw error;
+  } catch (error) { say('Couldn’t open ' + provider + ': ' + (error.message || error)); }
+  finally { BOS.oauthOpening = false; }
+}
+function bosLoadInfo() {
+  const uid = BOS.user?.id;
+  if (!uid) return Promise.resolve();
+  if (BOS.infoPromise && BOS.infoUid === uid) return BOS.infoPromise;
+  if (BOS.infoReady === uid) return Promise.resolve();
+  BOS.infoUid = uid;
+  const promise = bosLoadInfoOnce().then(() => { if (BOS.user?.id === uid && !CLOUD.applying) BOS.infoReady = uid; });
+  BOS.infoPromise = promise.finally(() => { if (BOS.infoPromise === done) BOS.infoPromise = null; });
+  const done = BOS.infoPromise;
+  return done;
+}
+async function bosLoadInfoOnce() {
   const sb = BOS.sb, u = BOS.user; if (!sb || !u) return;
   // Fetch the user from Auth instead of trusting editable local session data.
   // If Auth is temporarily offline, preserve the existing offline-save flow,
   // but never grant testing powers from an unverified cached session.
   let verifiedUser = null;
   try {
-    const verified = await sb.auth.getUser();
+    const verified = await bosTimeout(sb.auth.getUser(), 'Verifying your account');
     if (!verified.error) verifiedUser = verified.data && verified.data.user;
   } catch (e) { }
   if (!BOS.user || BOS.user.id !== u.id || (verifiedUser && verifiedUser.id !== u.id)) return;
@@ -36534,14 +36614,14 @@ async function bosLoadInfo() {
   if (!BOS.user || BOS.user.id !== u.id) return;
   if (BOS.testAdmin && typeof testAdminApply === 'function') testAdminApply();
   const info = { name: '', team: '', fighter: null, gender: null, m: 0, w: 0, l: 0, golds: 0, podiums: 0, wins_t: 0 };
-  try { const { data } = await sb.from('profiles').select('display_name').eq('id', u.id).maybeSingle(); if (data && data.display_name) info.name = data.display_name; } catch (e) { }
+  try { const { data } = await bosTimeout(sb.from('profiles').select('display_name').eq('id', u.id).maybeSingle(), 'Loading your profile'); if (data && data.display_name) info.name = data.display_name; } catch (e) { }
   try {
-    const { data: link } = await sb.from('fighter_accounts').select('fighter_id').eq('user_id', u.id).limit(1).maybeSingle();
+    const { data: link } = await bosTimeout(sb.from('fighter_accounts').select('fighter_id').eq('user_id', u.id).limit(1).maybeSingle(), 'Loading your fighter record');
     if (link && link.fighter_id) {
       info.fighter = link.fighter_id;
-      const { data: dir } = await sb.from('fighter_directory').select('display_name, team_name, gender').eq('id', link.fighter_id).maybeSingle();
+      const { data: dir } = await bosTimeout(sb.from('fighter_directory').select('display_name, team_name, gender').eq('id', link.fighter_id).maybeSingle(), 'Loading your fighter record');
       if (dir) { info.name = dir.display_name || info.name; info.team = dir.team_name || ''; info.gender = dir.gender || null; }
-      const { data: st } = await sb.from('fighter_career_stats').select('matches, wins, losses, golds, podiums, tournament_victories').eq('fighter_id', link.fighter_id).maybeSingle();
+      const { data: st } = await bosTimeout(sb.from('fighter_career_stats').select('matches, wins, losses, golds, podiums, tournament_victories').eq('fighter_id', link.fighter_id).maybeSingle(), 'Loading your fighter record');
       if (st) Object.assign(info, { m: st.matches || 0, w: st.wins || 0, l: st.losses || 0, golds: st.golds || 0, podiums: st.podiums || 0, wins_t: st.tournament_victories || 0 });
     }
   } catch (e) { }
@@ -36549,7 +36629,7 @@ async function bosLoadInfo() {
   BOS.info = info; bosApply();
   if (typeof testAdminRefresh === 'function') testAdminRefresh();
   if (typeof eventIdentify === 'function') eventIdentify(); // claim this device's earlier guest sessions only after verified sign-in
-  if (typeof onbResumeAfterAuth === 'function') onbResumeAfterAuth();
+  if (!BOS.booting && !BOS.interactive) onbResumeAfterAuth();
 }
 // your BuhurtOS name becomes your fighter's name; everyone online sees the BuhurtOS tick and your real record
 function bosApply() {
@@ -36584,17 +36664,18 @@ function openBosSignIn(back) {
   $('#bosCode').onclick = async () => {
     const email = ($('#bosEmail').value || '').trim(); if (!email) { say('Type your email first.'); return; }
     say('Sending…');
-    try { const { error } = await (await bosClient()).auth.signInWithOtp({ email, options: { shouldCreateUser: false } }); if (error) throw error; BOS.otpEmail = email; openBosCode(ret); } catch (e) { say('Couldn’t send a code: ' + (e.message || e)); }
+    try { const { error } = await bosTimeout((await bosClient()).auth.signInWithOtp({ email, options: { shouldCreateUser: false } }), 'Sending your email code'); if (error) throw error; BOS.otpEmail = email; openBosCode(ret); } catch (e) { say('Couldn’t send a code: ' + (e.message || e)); }
   };
-  const oauth = provider => async () => { say('Opening ' + provider + '…'); try { await (await bosClient()).auth.signInWithOAuth({ provider, options: { redirectTo: location.origin + location.pathname } }); } catch (e) { say('Couldn’t open ' + provider + ': ' + (e.message || e)); } };
+  const oauth = provider => () => bosOAuth(provider, say);
   $('#bosGoogle').onclick = oauth('google'); $('#bosDiscord').onclick = oauth('discord');
 }
 async function bosPassword(ret) {
   const email = ($('#bosEmail').value || '').trim(), password = $('#bosPass').value || '', say = t => { const m = $('#bosMsg'); if (m) m.textContent = t; };
   if (!email || !password) { say('Type your email and password.'); return; }
-  say('Signing in…');
-  try { const { data, error } = await (await bosClient()).auth.signInWithPassword({ email, password }); if (error) throw error; BOS.user = data.user; await bosLoadInfo(); if (CLOUD.applying) return; toastMenu(`Signed in as ${myName()}`); ret(); }
+  say('Signing in…'); BOS.interactive = true;
+  try { const { data, error } = await bosTimeout((await bosClient()).auth.signInWithPassword({ email, password }), 'Signing in'); if (error) throw error; BOS.user = data.user; await bosLoadInfo(); if (CLOUD.applying) return; toastMenu(`Signed in as ${myName()}`); ret(); }
   catch (e) { say(/invalid/i.test(e.message || '') ? 'Wrong email or password. (Signed up with Google or Discord? Use those buttons.)' : 'Couldn’t sign in: ' + (e.message || e)); }
+  finally { BOS.interactive = false; }
 }
 function openBosCode(ret) {
   msg('buhurtos', 'Check your email', `<p>We sent a sign-in email to <b>${escTxt(BOS.otpEmail)}</b>. Type the code from it here.</p>
@@ -36602,7 +36683,8 @@ function openBosCode(ret) {
     <p class="muted small" id="bosMsg">If the email only has a link, open it on this device instead.</p>`,
     [['Sign in', async () => {
       const token = ($('#bosOtp').value || '').trim(), say = t => { $('#bosMsg').textContent = t; };
-      try { const { data, error } = await (await bosClient()).auth.verifyOtp({ email: BOS.otpEmail, token, type: 'email' }); if (error) throw error; BOS.user = data.user; await bosLoadInfo(); if (CLOUD.applying) return; toastMenu(`Signed in as ${myName()}`); ret(); } catch (e) { say('That code didn’t work: ' + (e.message || e)); }
+      BOS.interactive = true;
+      try { const { data, error } = await bosTimeout((await bosClient()).auth.verifyOtp({ email: BOS.otpEmail, token, type: 'email' }), 'Checking your email code'); if (error) throw error; BOS.user = data.user; await bosLoadInfo(); if (CLOUD.applying) return; toastMenu(`Signed in as ${myName()}`); ret(); } catch (e) { say('That code didn’t work: ' + (e.message || e)); } finally { BOS.interactive = false; }
     }, true], ['Back', () => openBosSignIn(ret)]]);
 }
 
@@ -36665,7 +36747,7 @@ function cloudWriteMeta(uid, revision, hash) {
 function cloudSnapshot() {
   // All persistent gameplay keys (including ones added in later releases) form ONE
   // atomic versioned snapshot. Never silently omit a key that cannot be read.
-  if (typeof CAREER !== 'undefined') {
+  if (typeof CAREER !== 'undefined' && !CLOUD.applying) {
     const career = JSON.stringify(CAREER);
     if (!career) throw Error('Could not serialize your character; nothing was uploaded.');
     localStorage.setItem('st-career', career);
@@ -36779,7 +36861,8 @@ function cloudOverlay(title, description, actions) {
 }
 async function cloudRpc(name,args) {
   if (!BOS.sb) throw Error('BuhurtOS connection is unavailable');
-  const {data,error}=await BOS.sb.rpc(name,args||{});
+  const request=BOS.sb.rpc(name,args||{});
+  const {data,error}=await (typeof bosTimeout==='function' ? bosTimeout(request,'Loading your saved fighter') : request);
   if(error) throw error;
   return data;
 }
@@ -36809,6 +36892,10 @@ function cloudRestore(uid,revision,remoteSnapshot) {
     for(const key of oldKeys) if(!(key in remoteSnapshot))localStorage.removeItem(key);
     for(const [key,value] of Object.entries(remoteSnapshot)) localStorage.setItem(key,JSON.stringify(value));
     cloudWriteMeta(uid,revision,cloudHash(remoteSnapshot));
+    // The next boot legitimately adds new defaults/migrations. Acknowledge
+    // that exact restored revision once instead of restoring it forever.
+    const restored=cloudReadMeta(); restored.restoring=true;
+    localStorage.setItem(CLOUD_META,JSON.stringify(restored));
     cloudClearOfflineDirty(uid);
   } catch(error) {
     // Restore the pre-migration device save if local writes fail.
@@ -36850,24 +36937,30 @@ async function cloudStart(uid,retry) {
       cloudBackup(meta.uid, local);
       const empty={'st-career':CAREER_DEFAULT()};
       const ok=await cloudCommit(uid,0,empty);
-      if(!ok)return cloudStart(uid,true);
+      if(!ok) { if(retry)throw Error('Your cloud save changed again. Please retry.'); return cloudStart(uid,true); }
       cloudRestore(uid,CLOUD.revision,empty);
       return;
     }
     // First login for an unlinked device: adopt the existing local save.
     const ok=await cloudCommit(uid,0,local);
-    if(!ok)return cloudStart(uid,true);
+    if(!ok) { if(retry)throw Error('Your cloud save changed again. Please retry.'); return cloudStart(uid,true); }
     return;
   }
   if(remoteHashMatches(remote.snapshot,localHash)) {
     cloudReady(uid,remote.revision,local);return;
+  }
+  if(meta && meta.restoring && meta.uid===uid && Number(meta.revision)===Number(remote.revision)
+      && meta.hash===cloudHash(remote.snapshot)) {
+    const ok=await cloudCommit(uid,remote.revision,local);
+    if(!ok) { if(retry)throw Error('Your cloud save changed again. Please retry.'); return cloudStart(uid,true); }
+    return;
   }
   // An offline edit is allowed to become the cloud save ONLY when nobody
   // changed the cloud since this device's last confirmed revision.
   if(meta && meta.uid===uid && Number(meta.revision)===Number(remote.revision)
       && cloudOfflineDirty(uid) && meta.hash!==localHash) {
     const ok=await cloudCommit(uid,remote.revision,local);
-    if(!ok)return cloudStart(uid,true);
+    if(!ok) { if(retry)throw Error('Your cloud save changed again. Please retry.'); return cloudStart(uid,true); }
     return;
   }
   // Existing cloud always wins over new-device saves, other account saves,
@@ -36908,8 +37001,8 @@ async function cloudFlush() {
   finally{CLOUD.busy=false;if(CLOUD.uid===uid&&CLOUD.ready&&cloudHash(cloudSnapshot())!==CLOUD.lastHash)cloudSchedule();}
 }
 const cloudOriginalSet=store.set.bind(store),cloudOriginalDel=store.del.bind(store);
-store.set=function(k,v){cloudOriginalSet(k,v);cloudMarkOfflineChange();cloudSchedule();};
-store.del=function(k){cloudOriginalDel(k);cloudMarkOfflineChange();cloudSchedule();};
+store.set=function(k,v){if(CLOUD.applying)return;cloudOriginalSet(k,v);cloudMarkOfflineChange();cloudSchedule();};
+store.del=function(k){if(CLOUD.applying)return;cloudOriginalDel(k);cloudMarkOfflineChange();cloudSchedule();};
 setInterval(()=>{if(CLOUD.ready)cloudFlush();else if(CLOUD.uid&&CLOUD.offline&&!cloudIsOffline()&&!CLOUD.loading)cloudOnAuth(CLOUD.uid,true);},25000);
 window.addEventListener('offline',()=>{
   if(CLOUD.uid) cloudProblem(CLOUD.uid,new Error('Internet disconnected'));
@@ -37150,13 +37243,9 @@ function rosterReset() {
     for (const s of C.roster || []) { delete s.bos; delete s.rn; delete s.keep; if (!s.player) s.name = poolName(used); }
   }
   for (const L of typeof LEAGUE_EXTRA !== 'undefined' ? LEAGUE_EXTRA : []) { L.name = 'Festival Company'; L.short = 'FST'; }
-  const P = CAREER.club;
-  const team = P && ROSTER.teams.find(t => t.slug === P.bos);
-  if (P && team) { P.name = team.name; P.short = team.initial || team.name.slice(0, 3); }
-  if (P && P.bos && !team) { P.name = 'Festival Company'; P.short = 'FST'; }
-  if (P && P.bos && !team && ROSTER.ok) { P.bos = null; P.name = 'Festival Company'; P.short = 'FST'; saveCareer(); }
-  if (P && !P.bos && /^(Reavers|Bow River Wardens|Ironwood Rabble)$/.test(P.name)) { P.name = 'Festival Company'; P.short = 'FST'; }
-  if (P) { applyProfile(); if (!team) { CLUBS.reavers.name = CLUBS.reavers.full = 'Festival Company'; CLUBS.reavers.short = 'FST'; CLUBS.reavers.bos = null; } }
+  // HACSA eligibility controls generated bots, not the player's saved team.
+  // Roster loading or a removed bot affiliation must never rewrite CAREER.
+  applyProfile();
   for (const f of G.fighters || []) if (!f.isPlayer && f.spec?.bos && !rosterEligible(f.spec.bos.id)) { f.spec = { ...f.spec, bos: null, keep: false }; f.name = f.spec.name = poolName(used); fighterGlow(f); }
 }
 const POOL_FIRST = ['Aiden', 'Ava', 'Blake', 'Brooke', 'Cody', 'Cassidy', 'Dylan', 'Dakota', 'Ethan', 'Emma', 'Finn', 'Faith', 'Garrett', 'Grace', 'Hunter', 'Hailey', 'Isaac', 'Ivy', 'Jace', 'Jade', 'Kyle', 'Kaitlyn', 'Logan', 'Lily', 'Mason', 'Madison', 'Nolan', 'Nora', 'Owen', 'Olivia', 'Parker', 'Paige', 'Quinn', 'Quincy', 'Riley', 'Reese', 'Spencer', 'Sierra', 'Tanner', 'Taylor', 'Tristan', 'Tessa', 'Wyatt', 'Willow', 'Brody', 'Bailey', 'Colton', 'Chloe', 'Dawson', 'Destiny', 'Easton', 'Ella', 'Gavin', 'Gemma', 'Holden', 'Harper', 'Jaxon', 'Josie', 'Kellan', 'Kenzie', 'Landon', 'Lacey', 'Maverick', 'Mya', 'Nash', 'Nevaeh', 'Rhett', 'Raelynn', 'Sawyer', 'Sadie', 'Travis', 'Tori', 'Brennan', 'Brynn', 'Dallas', 'Darcy', 'Emmett', 'Ember', 'Grady', 'Greta', 'Hayden', 'Hope', 'Jesse', 'Jolene', 'Keegan', 'Kira', 'Lane', 'Lexi', 'Marshall', 'Maeve', 'Reid', 'Rowan', 'Shane', 'Shelby', 'Ty', 'Tamsin', 'Wade', 'Wren', 'Zane', 'Zoey'];
@@ -37361,6 +37450,19 @@ setInterval(() => { creatorIssue(); creatorRefreshCharacters(); }, 1000);
 // gets the creator (and the tour) the next time they open the game.
 // ===================================================================
 const ONB = { tour: null, awaitingAuth: false, startup: true, fresh: !store.get('career', null) };
+const ONB_AUTH_RETURN = 'steeltape-auth-return-v1';
+function onbReadAuthReturn() {
+  try {
+    const value = JSON.parse(sessionStorage.getItem(ONB_AUTH_RETURN) || 'null');
+    return value?.v === 1 && Date.now() - value.at < 60 * 60 * 1000 ? value : null;
+  } catch (e) { return null; }
+}
+function onbSaveAuthReturn() {
+  const stage = onbStage();
+  sessionStorage.setItem(ONB_AUTH_RETURN, JSON.stringify({ v: 1, at: Date.now(), stage,
+    step: stage === 'done' || stage === 'tour' ? 'game' : CAREER.teamPicked ? 'fighter' : 'team' }));
+}
+function onbClearAuthReturn() { try { sessionStorage.removeItem(ONB_AUTH_RETURN); } catch (e) { } }
 function startupStatus(text) { const el = $('#startupStatus'); if (el) el.textContent = text; }
 function startupDone() { if (!ONB.startup) return; ONB.startup = false; const el = $('#startup'); if (el) el.hidden = true; }
 function onbStage() {
@@ -37369,7 +37471,7 @@ function onbStage() {
   if (ONB.fresh) {
     // A returning account can have a session on this browser but no local game save yet.
     let session = false;
-    try { session = !!localStorage.getItem('buhurt-game-buhurtos'); } catch (e) { }
+    try { session = !!sessionStorage.getItem('buhurt-game-buhurtos'); } catch (e) { }
     return BOS.user || session ? 'create' : 'choice';
   }
   return 'fight';
@@ -37385,6 +37487,7 @@ function onbAccountRequired() {
 function onbAccountGate(forceAccount) {
   // Direct entry to the town requires a linked account even if the tutorial is unfinished.
   if (location.protocol === 'file:' && window.__steeltapeTest && !window.__onboard) return false;
+  if (BOS.recovering) return true;
   if (BOS.booting) {
     ONB.awaitingAuth = true;
     if (ONB.startup) { startupStatus('Checking your BuhurtOS sign-in…'); return true; }
@@ -37419,11 +37522,12 @@ function onbAccountGate(forceAccount) {
   return true;
 }
 function onbResumeAfterAuth() {
-  if (BOS.booting) return;
+  if (BOS.booting || BOS.interactive || BOS.recovering || CLOUD.applying) return;
   if (!ONB.awaitingAuth || (!BOS.user && !(typeof cloudIsOffline === 'function' && cloudIsOffline()))) return;
   if (typeof CLOUD !== 'undefined' && !CLOUD.ready && !CLOUD.offline && !(location.protocol === 'file:' && window.__steeltapeTest)) return;
   ONB.awaitingAuth = false;
-  toTitle();
+  if (onbReadAuthReturn()) onbAfterAccount();
+  else toTitle();
 }
 // called when the title would show: steer first-timers into the flow instead
 function onbTitle() {
@@ -37455,9 +37559,11 @@ function onbAfterAccount() {
   // Cloud restoration may replace the local career (and reload the page).
   // Never force a returning fighter through character creation again.
   const stage = onbStage();
-  if (stage === 'done' || stage === 'tour') { toTitle(); return; }
-  if (stage === 'choice') onbSet('create');
-  if (onbStage() === 'create') openCreator();
+  ONB.awaitingAuth = false;
+  onbClearAuthReturn();
+  if (stage === 'done' || stage === 'tour') { G.hub = true; toTitle(); return; }
+  if (stage === 'choice' || stage === 'fight') onbSet('create');
+  if (onbStage() === 'create') { openCreator(); startupDone(); }
   else toTitle();
 }
 // ---- the test fight: a 5 v 5, no instructions, the buttons shown once
@@ -37513,9 +37619,9 @@ function creatorSignIn() {
   $('#bosCode').onclick = async () => {
     const email = ($('#bosEmail').value || '').trim(); if (!email) { say('Type your email first.'); return; }
     say('Sending…');
-    try { const { error } = await (await bosClient()).auth.signInWithOtp({ email, options: { shouldCreateUser: true } }); if (error) throw error; BOS.otpEmail = email; openBosCode(onbAfterAccount); } catch (e) { say('Couldn’t send a code: ' + (e.message || e)); }
+    try { const { error } = await bosTimeout((await bosClient()).auth.signInWithOtp({ email, options: { shouldCreateUser: true } }), 'Sending your email code'); if (error) throw error; BOS.otpEmail = email; openBosCode(onbAfterAccount); } catch (e) { say('Couldn’t send a code: ' + (e.message || e)); }
   };
-  const oauth = provider => async () => { say('Opening ' + provider + '…'); try { await (await bosClient()).auth.signInWithOAuth({ provider, options: { redirectTo: location.origin + location.pathname } }); } catch (e) { say('Couldn’t open ' + provider + ': ' + (e.message || e)); } };
+  const oauth = provider => () => bosOAuth(provider, say);
   $('#bosGoogle').onclick = oauth('google'); $('#bosDiscord').onclick = oauth('discord');
 }
 // the team: your own if BuhurtOS knows you as a fighter, else pick one, or say you're not on a team
@@ -37617,6 +37723,7 @@ function tourTick(dt) {
 }
 function tourEnd() { const T = ONB.tour; if (!T) return; if (T.el) T.el.remove(); ONB.tour = null; TOWN.busy = false; TOWN.tour = false; TOWN.cam = null; onbSet('done'); $('#townHud').hidden = false;
   if (ONB.view) { const S = W3.scene, cam = W3.camera; if (S.fog && ONB.view.near != null) { S.fog.near = ONB.view.near; S.fog.far = ONB.view.far; } cam.far = ONB.view.cf; cam.updateProjectionMatrix(); ONB.view = null; } toastMenu('Welcome to the festival. Marshal Brenna by the gate starts your fights.'); }
+
 
 // ===================================================================
 // Report a bug or ask for a feature (pause menu and the realm map menu), and a few small events the game sends home:
