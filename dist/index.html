@@ -1,5 +1,5 @@
 <!doctype html><html><head><meta charset="utf-8"><link rel="manifest" href="manifest.webmanifest"><meta name="theme-color" content="#0f1316"><link rel="apple-touch-icon" href="icon-192.png"><meta name="apple-mobile-web-app-capable" content="yes"><meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover"></head><body>
-<script>window.BUILD_VER="steel-tape-2e07008fff";</script><title>Buhurt: Steel &amp; Tape</title>
+<script>window.BUILD_VER="steel-tape-29659c73d8";</script><title>Buhurt: Steel &amp; Tape</title>
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Barlow+Semi+Condensed:wght@400;500;600;700&family=Big+Shoulders+Display:wght@700;800;900&family=Permanent+Marker&display=swap">
@@ -841,6 +841,7 @@ body:not(.split) #pips:not([hidden]) ~ #statstrip{top:calc(var(--st) + 78px)}
 .up.shoplink{margin-top:10px}
 /* town */
 #townHud{position:absolute;inset:0;pointer-events:none;z-index:14} /* above the touch layer so Map, Leave and the talk bubble get the tap */
+body.intown #hud{display:none!important}
 #townHud .townbar{position:absolute;top:calc(10px + env(safe-area-inset-top));right:12px;left:12px;display:flex;gap:8px;align-items:center;justify-content:flex-end;pointer-events:none}
 #townHud .townbar > *{pointer-events:auto}
 #townAdmin:not([hidden]){position:fixed;top:calc(68px + env(safe-area-inset-top));right:12px;z-index:3}
@@ -33720,7 +33721,12 @@ const SCREENS = ['title', 'howto', 'settings', 'tactics', 'sheetScr', 'repair', 
 function showScreen(id) {
   if (id) { const oh = document.getElementById('onbHints'); if (oh) oh.hidden = true; }
   if (id === 'title' && G.hub && typeof TOWN !== 'undefined') { if (TOWN.on) { id = null; setTimeout(() => { refreshTouchUI(); townHudUpdate(); townPrompt(); }, 0); } else { enterTown(TOWN.returnTo); return; } } SCREENS.forEach(s => { $('#' + s).hidden = s !== id; }); G.screen = id; if (id && (IN.mode === 'pad' || IN.mode === 'kb')) setTimeout(() => { if (G.screen === id) { if (document.activeElement && document.activeElement !== document.body && !$('#' + id).contains(document.activeElement)) document.activeElement.blur(); if (IN.mode === 'pad') focusFirst(); } }, 30); updateLegend(); }
-function setHud(on) { $('#hud').hidden = !on; refreshTouchUI(); }
+function setHud(on) {
+  // Festival bouts reuse the fight simulation while the player remains in town.
+  // Their scoreboard and camera controls must never cover the town controls.
+  $('#hud').hidden = !on || (typeof TOWN !== 'undefined' && TOWN.on);
+  refreshTouchUI();
+}
 
 const STAGES = [{ opp: 'wardens', name: 'Semi-final' }, { opp: 'rabble', name: 'Final' }];
 
