@@ -1,0 +1,1620 @@
+{
+  "method": "one deterministic equipped policy seed per tier/mode; declines emergency repairs using the existing timeout outcome; not human target acceptance",
+  "rows": [
+    {
+      "seed": 1801,
+      "level": 1,
+      "mode": 1,
+      "completed": true,
+      "phase": "over",
+      "screen": "repair",
+      "repairStop": false,
+      "pendingTimers": 0,
+      "simulatedSeconds": 203,
+      "wins": [
+        2,
+        1
+      ],
+      "metrics": {
+        "start": 0.3,
+        "actions": [
+          {
+            "trip": 33,
+            "shove": 18,
+            "swing": 158
+          },
+          {
+            "tackle": 2,
+            "swing": 85
+          }
+        ],
+        "hits": [
+          125,
+          70
+        ],
+        "whiffs": [
+          5,
+          0
+        ],
+        "guards": [
+          0,
+          20
+        ]
+      },
+      "defence": {
+        "bot:1": {
+          "attempts": 34,
+          "full": 15,
+          "partial": 14,
+          "perfect": 5,
+          "failed": 0
+        }
+      },
+      "activeFightTime": 180.00000000003539,
+      "errors": []
+    },
+    {
+      "seed": 1805,
+      "level": 1,
+      "mode": 5,
+      "completed": true,
+      "phase": "over",
+      "screen": "repair",
+      "repairStop": false,
+      "pendingTimers": 0,
+      "simulatedSeconds": 50,
+      "wins": [
+        2,
+        0
+      ],
+      "metrics": {
+        "start": 202.85000000005357,
+        "actions": [
+          {
+            "tackle": 26,
+            "swing": 33,
+            "shove": 11,
+            "trip": 24,
+            "grab": 9,
+            "throw": 8,
+            "disarm": 1
+          },
+          {
+            "trip": 17,
+            "swing": 27,
+            "tackle": 30,
+            "throw": 7,
+            "shove": 6,
+            "grab": 2,
+            "knee": 1
+          }
+        ],
+        "hits": [
+          13,
+          19
+        ],
+        "whiffs": [
+          4,
+          4
+        ],
+        "guards": [
+          1,
+          1
+        ]
+      },
+      "defence": {
+        "bot:7": {
+          "attempts": 1,
+          "full": 1,
+          "partial": 0,
+          "perfect": 0,
+          "failed": 0
+        },
+        "bot:9": {
+          "attempts": 2,
+          "full": 0,
+          "partial": 2,
+          "perfect": 0,
+          "failed": 0
+        },
+        "bot:4": {
+          "attempts": 1,
+          "full": 0,
+          "partial": 0,
+          "perfect": 0,
+          "failed": 1
+        },
+        "bot:3": {
+          "attempts": 1,
+          "full": 0,
+          "partial": 0,
+          "perfect": 1,
+          "failed": 0
+        }
+      },
+      "activeFightTime": 35.49999999999927,
+      "errors": []
+    },
+    {
+      "seed": 1812,
+      "level": 1,
+      "mode": 12,
+      "completed": true,
+      "phase": "over",
+      "screen": "repair",
+      "repairStop": false,
+      "pendingTimers": 0,
+      "simulatedSeconds": 92,
+      "wins": [
+        1,
+        2
+      ],
+      "metrics": {
+        "start": 253.35000000009376,
+        "actions": [
+          {
+            "tackle": 94,
+            "trip": 69,
+            "swing": 78,
+            "shove": 26,
+            "grab": 19,
+            "throw": 28,
+            "disarm": 5,
+            "knee": 1
+          },
+          {
+            "tackle": 113,
+            "grab": 20,
+            "trip": 79,
+            "shove": 15,
+            "throw": 28,
+            "swing": 55,
+            "knee": 2
+          }
+        ],
+        "hits": [
+          41,
+          30
+        ],
+        "whiffs": [
+          17,
+          12
+        ],
+        "guards": [
+          3,
+          2
+        ]
+      },
+      "defence": {
+        "bot:17": {
+          "attempts": 2,
+          "full": 0,
+          "partial": 2,
+          "perfect": 0,
+          "failed": 0
+        },
+        "bot:5": {
+          "attempts": 2,
+          "full": 0,
+          "partial": 0,
+          "perfect": 0,
+          "failed": 2
+        },
+        "bot:19": {
+          "attempts": 1,
+          "full": 0,
+          "partial": 0,
+          "perfect": 0,
+          "failed": 1
+        },
+        "bot:23": {
+          "attempts": 2,
+          "full": 1,
+          "partial": 1,
+          "perfect": 0,
+          "failed": 0
+        },
+        "bot:22": {
+          "attempts": 2,
+          "full": 0,
+          "partial": 1,
+          "perfect": 1,
+          "failed": 0
+        },
+        "bot:6": {
+          "attempts": 2,
+          "full": 1,
+          "partial": 0,
+          "perfect": 1,
+          "failed": 0
+        },
+        "bot:11": {
+          "attempts": 1,
+          "full": 1,
+          "partial": 0,
+          "perfect": 0,
+          "failed": 0
+        }
+      },
+      "activeFightTime": 69.09999999999737,
+      "errors": []
+    },
+    {
+      "seed": 4201,
+      "level": 25,
+      "mode": 1,
+      "completed": true,
+      "phase": "over",
+      "screen": "repair",
+      "repairStop": false,
+      "pendingTimers": 0,
+      "simulatedSeconds": 135,
+      "wins": [
+        0,
+        2
+      ],
+      "metrics": {
+        "start": 345.0333333333482,
+        "actions": [
+          {
+            "trip": 33,
+            "swing": 54,
+            "shove": 14
+          },
+          {
+            "swing": 84,
+            "tackle": 3
+          }
+        ],
+        "hits": [
+          30,
+          56
+        ],
+        "whiffs": [
+          0,
+          0
+        ],
+        "guards": [
+          0,
+          17
+        ]
+      },
+      "defence": {
+        "bot:1": {
+          "attempts": 22,
+          "full": 7,
+          "partial": 5,
+          "perfect": 10,
+          "failed": 0
+        }
+      },
+      "activeFightTime": 119.99999999999447,
+      "errors": []
+    },
+    {
+      "seed": 4205,
+      "level": 25,
+      "mode": 5,
+      "completed": true,
+      "phase": "over",
+      "screen": "repair",
+      "repairStop": false,
+      "pendingTimers": 0,
+      "simulatedSeconds": 41,
+      "wins": [
+        2,
+        0
+      ],
+      "metrics": {
+        "start": 480.099999999892,
+        "actions": [
+          {
+            "tackle": 27,
+            "trip": 25,
+            "shove": 6,
+            "swing": 34,
+            "throw": 6,
+            "grab": 6
+          },
+          {
+            "trip": 22,
+            "tackle": 20,
+            "shove": 5,
+            "grab": 4,
+            "throw": 7,
+            "knee": 1,
+            "swing": 15,
+            "disarm": 1
+          }
+        ],
+        "hits": [
+          16,
+          10
+        ],
+        "whiffs": [
+          6,
+          2
+        ],
+        "guards": [
+          0,
+          0
+        ]
+      },
+      "defence": {
+        "bot:6": {
+          "attempts": 3,
+          "full": 0,
+          "partial": 1,
+          "perfect": 0,
+          "failed": 2
+        },
+        "bot:4": {
+          "attempts": 1,
+          "full": 0,
+          "partial": 1,
+          "perfect": 0,
+          "failed": 0
+        }
+      },
+      "activeFightTime": 25.81666666666648,
+      "errors": []
+    },
+    {
+      "seed": 4212,
+      "level": 25,
+      "mode": 12,
+      "completed": true,
+      "phase": "over",
+      "screen": "repair",
+      "repairStop": false,
+      "pendingTimers": 0,
+      "simulatedSeconds": 386,
+      "wins": [
+        2,
+        1
+      ],
+      "metrics": {
+        "start": 520.9833333331882,
+        "actions": [
+          {
+            "tackle": 101,
+            "swing": 156,
+            "trip": 91,
+            "shove": 173,
+            "grab": 19,
+            "throw": 22,
+            "disarm": 12,
+            "knee": 8
+          },
+          {
+            "tackle": 122,
+            "trip": 112,
+            "shove": 71,
+            "grab": 20,
+            "swing": 160,
+            "throw": 23,
+            "knee": 10,
+            "disarm": 9
+          }
+        ],
+        "hits": [
+          80,
+          100
+        ],
+        "whiffs": [
+          45,
+          25
+        ],
+        "guards": [
+          9,
+          9
+        ]
+      },
+      "defence": {
+        "bot:14": {
+          "attempts": 2,
+          "full": 1,
+          "partial": 0,
+          "perfect": 0,
+          "failed": 1
+        },
+        "bot:9": {
+          "attempts": 4,
+          "full": 0,
+          "partial": 1,
+          "perfect": 1,
+          "failed": 2
+        },
+        "bot:19": {
+          "attempts": 3,
+          "full": 0,
+          "partial": 0,
+          "perfect": 0,
+          "failed": 3
+        },
+        "bot:2": {
+          "attempts": 4,
+          "full": 0,
+          "partial": 1,
+          "perfect": 0,
+          "failed": 3
+        },
+        "bot:21": {
+          "attempts": 2,
+          "full": 0,
+          "partial": 0,
+          "perfect": 0,
+          "failed": 2
+        },
+        "bot:13": {
+          "attempts": 3,
+          "full": 1,
+          "partial": 1,
+          "perfect": 1,
+          "failed": 0
+        },
+        "bot:18": {
+          "attempts": 2,
+          "full": 0,
+          "partial": 0,
+          "perfect": 0,
+          "failed": 2
+        },
+        "bot:23": {
+          "attempts": 1,
+          "full": 0,
+          "partial": 0,
+          "perfect": 0,
+          "failed": 1
+        },
+        "bot:22": {
+          "attempts": 3,
+          "full": 0,
+          "partial": 0,
+          "perfect": 0,
+          "failed": 3
+        },
+        "bot:5": {
+          "attempts": 3,
+          "full": 0,
+          "partial": 1,
+          "perfect": 1,
+          "failed": 1
+        },
+        "bot:7": {
+          "attempts": 29,
+          "full": 2,
+          "partial": 15,
+          "perfect": 5,
+          "failed": 7
+        },
+        "bot:12": {
+          "attempts": 20,
+          "full": 4,
+          "partial": 5,
+          "perfect": 2,
+          "failed": 9
+        }
+      },
+      "activeFightTime": 362.91666666666526,
+      "errors": []
+    },
+    {
+      "seed": 6701,
+      "level": 50,
+      "mode": 1,
+      "completed": true,
+      "phase": "over",
+      "screen": "repair",
+      "repairStop": false,
+      "pendingTimers": 0,
+      "simulatedSeconds": 135,
+      "wins": [
+        0,
+        2
+      ],
+      "metrics": {
+        "start": 906.4999999995042,
+        "actions": [
+          {
+            "trip": 36,
+            "swing": 32,
+            "shove": 17
+          },
+          {
+            "tackle": 2,
+            "swing": 86
+          }
+        ],
+        "hits": [
+          10,
+          61
+        ],
+        "whiffs": [
+          0,
+          0
+        ],
+        "guards": [
+          0,
+          5
+        ]
+      },
+      "defence": {
+        "bot:1": {
+          "attempts": 5,
+          "full": 1,
+          "partial": 0,
+          "perfect": 4,
+          "failed": 0
+        }
+      },
+      "activeFightTime": 119.99999999999447,
+      "errors": []
+    },
+    {
+      "seed": 6705,
+      "level": 50,
+      "mode": 5,
+      "completed": true,
+      "phase": "over",
+      "screen": "repair",
+      "repairStop": false,
+      "pendingTimers": 0,
+      "simulatedSeconds": 62,
+      "wins": [
+        2,
+        1
+      ],
+      "metrics": {
+        "start": 1041.5666666660481,
+        "actions": [
+          {
+            "shove": 12,
+            "tackle": 35,
+            "swing": 22,
+            "trip": 27,
+            "throw": 12,
+            "grab": 4
+          },
+          {
+            "tackle": 31,
+            "swing": 40,
+            "trip": 31,
+            "shove": 7,
+            "grab": 4,
+            "throw": 11
+          }
+        ],
+        "hits": [
+          8,
+          16
+        ],
+        "whiffs": [
+          3,
+          7
+        ],
+        "guards": [
+          1,
+          0
+        ]
+      },
+      "defence": {
+        "bot:1": {
+          "attempts": 2,
+          "full": 1,
+          "partial": 0,
+          "perfect": 0,
+          "failed": 1
+        },
+        "bot:6": {
+          "attempts": 1,
+          "full": 0,
+          "partial": 0,
+          "perfect": 0,
+          "failed": 1
+        },
+        "bot:3": {
+          "attempts": 1,
+          "full": 0,
+          "partial": 1,
+          "perfect": 0,
+          "failed": 0
+        }
+      },
+      "activeFightTime": 38.96666666666574,
+      "errors": []
+    },
+    {
+      "seed": 6712,
+      "level": 50,
+      "mode": 12,
+      "completed": true,
+      "phase": "over",
+      "screen": "repair",
+      "repairStop": false,
+      "pendingTimers": 0,
+      "simulatedSeconds": 108,
+      "wins": [
+        1,
+        2
+      ],
+      "metrics": {
+        "start": 1103.1333333326588,
+        "actions": [
+          {
+            "swing": 98,
+            "tackle": 102,
+            "trip": 63,
+            "shove": 29,
+            "grab": 23,
+            "knee": 7,
+            "throw": 37,
+            "disarm": 17
+          },
+          {
+            "tackle": 110,
+            "trip": 113,
+            "swing": 160,
+            "shove": 32,
+            "throw": 39,
+            "grab": 25,
+            "knee": 12,
+            "disarm": 4
+          }
+        ],
+        "hits": [
+          55,
+          37
+        ],
+        "whiffs": [
+          22,
+          25
+        ],
+        "guards": [
+          2,
+          1
+        ]
+      },
+      "defence": {
+        "bot:1": {
+          "attempts": 2,
+          "full": 0,
+          "partial": 1,
+          "perfect": 0,
+          "failed": 1
+        },
+        "bot:17": {
+          "attempts": 2,
+          "full": 0,
+          "partial": 0,
+          "perfect": 1,
+          "failed": 1
+        },
+        "bot:19": {
+          "attempts": 3,
+          "full": 0,
+          "partial": 1,
+          "perfect": 0,
+          "failed": 2
+        },
+        "bot:5": {
+          "attempts": 1,
+          "full": 1,
+          "partial": 0,
+          "perfect": 0,
+          "failed": 0
+        },
+        "bot:2": {
+          "attempts": 1,
+          "full": 0,
+          "partial": 0,
+          "perfect": 0,
+          "failed": 1
+        },
+        "bot:18": {
+          "attempts": 1,
+          "full": 0,
+          "partial": 0,
+          "perfect": 0,
+          "failed": 1
+        },
+        "bot:7": {
+          "attempts": 1,
+          "full": 0,
+          "partial": 0,
+          "perfect": 1,
+          "failed": 0
+        },
+        "bot:13": {
+          "attempts": 2,
+          "full": 0,
+          "partial": 0,
+          "perfect": 0,
+          "failed": 2
+        },
+        "bot:23": {
+          "attempts": 1,
+          "full": 0,
+          "partial": 1,
+          "perfect": 0,
+          "failed": 0
+        }
+      },
+      "activeFightTime": 85.81666666666308,
+      "errors": []
+    },
+    {
+      "seed": 9201,
+      "level": 75,
+      "mode": 1,
+      "completed": true,
+      "phase": "over",
+      "screen": "repair",
+      "repairStop": false,
+      "pendingTimers": 0,
+      "simulatedSeconds": 135,
+      "wins": [
+        0,
+        2
+      ],
+      "metrics": {
+        "start": 1211.5499999992269,
+        "actions": [
+          {
+            "trip": 38,
+            "swing": 47,
+            "shove": 16
+          },
+          {
+            "swing": 93,
+            "tackle": 1
+          }
+        ],
+        "hits": [
+          18,
+          63
+        ],
+        "whiffs": [
+          0,
+          0
+        ],
+        "guards": [
+          0,
+          12
+        ]
+      },
+      "defence": {
+        "bot:1": {
+          "attempts": 16,
+          "full": 6,
+          "partial": 4,
+          "perfect": 6,
+          "failed": 0
+        }
+      },
+      "activeFightTime": 119.99999999999447,
+      "errors": []
+    },
+    {
+      "seed": 9205,
+      "level": 75,
+      "mode": 5,
+      "completed": true,
+      "phase": "over",
+      "screen": "repair",
+      "repairStop": false,
+      "pendingTimers": 0,
+      "simulatedSeconds": 38,
+      "wins": [
+        2,
+        0
+      ],
+      "metrics": {
+        "start": 1346.6166666657707,
+        "actions": [
+          {
+            "swing": 17,
+            "tackle": 29,
+            "trip": 20,
+            "grab": 6,
+            "throw": 8,
+            "shove": 6
+          },
+          {
+            "tackle": 25,
+            "trip": 21,
+            "swing": 14,
+            "grab": 3,
+            "throw": 5,
+            "shove": 1
+          }
+        ],
+        "hits": [
+          10,
+          7
+        ],
+        "whiffs": [
+          0,
+          2
+        ],
+        "guards": [
+          0,
+          1
+        ]
+      },
+      "defence": {
+        "bot:4": {
+          "attempts": 1,
+          "full": 0,
+          "partial": 0,
+          "perfect": 0,
+          "failed": 1
+        },
+        "bot:7": {
+          "attempts": 3,
+          "full": 1,
+          "partial": 1,
+          "perfect": 0,
+          "failed": 1
+        },
+        "bot:3": {
+          "attempts": 1,
+          "full": 0,
+          "partial": 1,
+          "perfect": 0,
+          "failed": 0
+        }
+      },
+      "activeFightTime": 22.966666666666644,
+      "errors": []
+    },
+    {
+      "seed": 9212,
+      "level": 75,
+      "mode": 12,
+      "completed": true,
+      "phase": "over",
+      "screen": "repair",
+      "repairStop": false,
+      "pendingTimers": 0,
+      "simulatedSeconds": 353,
+      "wins": [
+        2,
+        1
+      ],
+      "metrics": {
+        "start": 1384.6499999990695,
+        "actions": [
+          {
+            "tackle": 190,
+            "trip": 74,
+            "swing": 59,
+            "grab": 8,
+            "throw": 33,
+            "shove": 44,
+            "knee": 2,
+            "disarm": 8
+          },
+          {
+            "tackle": 120,
+            "shove": 24,
+            "trip": 83,
+            "throw": 31,
+            "swing": 72,
+            "grab": 28,
+            "knee": 1,
+            "disarm": 10
+          }
+        ],
+        "hits": [
+          27,
+          23
+        ],
+        "whiffs": [
+          13,
+          13
+        ],
+        "guards": [
+          1,
+          1
+        ]
+      },
+      "defence": {
+        "bot:9": {
+          "attempts": 1,
+          "full": 0,
+          "partial": 0,
+          "perfect": 0,
+          "failed": 1
+        },
+        "bot:4": {
+          "attempts": 1,
+          "full": 0,
+          "partial": 1,
+          "perfect": 0,
+          "failed": 0
+        },
+        "bot:15": {
+          "attempts": 1,
+          "full": 0,
+          "partial": 0,
+          "perfect": 1,
+          "failed": 0
+        },
+        "bot:7": {
+          "attempts": 2,
+          "full": 0,
+          "partial": 0,
+          "perfect": 1,
+          "failed": 1
+        }
+      },
+      "activeFightTime": 329.9166666666953,
+      "errors": []
+    },
+    {
+      "seed": 9701,
+      "level": 80,
+      "mode": 1,
+      "completed": true,
+      "phase": "over",
+      "screen": "repair",
+      "repairStop": false,
+      "pendingTimers": 0,
+      "simulatedSeconds": 135,
+      "wins": [
+        0,
+        2
+      ],
+      "metrics": {
+        "start": 1737.1666666654155,
+        "actions": [
+          {
+            "trip": 35,
+            "shove": 20,
+            "swing": 51
+          },
+          {
+            "tackle": 2,
+            "trip": 1,
+            "swing": 80
+          }
+        ],
+        "hits": [
+          31,
+          59
+        ],
+        "whiffs": [
+          0,
+          0
+        ],
+        "guards": [
+          0,
+          27
+        ]
+      },
+      "defence": {
+        "bot:1": {
+          "attempts": 29,
+          "full": 14,
+          "partial": 2,
+          "perfect": 13,
+          "failed": 0
+        }
+      },
+      "activeFightTime": 119.99999999999447,
+      "errors": []
+    },
+    {
+      "seed": 9705,
+      "level": 80,
+      "mode": 5,
+      "completed": true,
+      "phase": "over",
+      "screen": "repair",
+      "repairStop": false,
+      "pendingTimers": 0,
+      "simulatedSeconds": 44,
+      "wins": [
+        2,
+        0
+      ],
+      "metrics": {
+        "start": 1872.2333333319593,
+        "actions": [
+          {
+            "swing": 12,
+            "trip": 15,
+            "shove": 7,
+            "tackle": 24,
+            "grab": 5,
+            "throw": 8,
+            "disarm": 1
+          },
+          {
+            "tackle": 22,
+            "trip": 16,
+            "throw": 8,
+            "swing": 18,
+            "shove": 1,
+            "grab": 1
+          }
+        ],
+        "hits": [
+          6,
+          7
+        ],
+        "whiffs": [
+          2,
+          1
+        ],
+        "guards": [
+          1,
+          1
+        ]
+      },
+      "defence": {
+        "bot:3": {
+          "attempts": 1,
+          "full": 0,
+          "partial": 0,
+          "perfect": 1,
+          "failed": 0
+        },
+        "bot:7": {
+          "attempts": 1,
+          "full": 1,
+          "partial": 0,
+          "perfect": 0,
+          "failed": 0
+        }
+      },
+      "activeFightTime": 29.24999999999962,
+      "errors": []
+    },
+    {
+      "seed": 9712,
+      "level": 80,
+      "mode": 12,
+      "completed": true,
+      "phase": "over",
+      "screen": "repair",
+      "repairStop": false,
+      "pendingTimers": 0,
+      "simulatedSeconds": 128,
+      "wins": [
+        0,
+        2
+      ],
+      "metrics": {
+        "start": 1916.5499999985857,
+        "actions": [
+          {
+            "swing": 129,
+            "tackle": 84,
+            "trip": 54,
+            "shove": 35,
+            "throw": 30,
+            "grab": 19,
+            "disarm": 3,
+            "knee": 3
+          },
+          {
+            "tackle": 118,
+            "swing": 136,
+            "shove": 42,
+            "trip": 83,
+            "grab": 15,
+            "throw": 27,
+            "knee": 6,
+            "disarm": 8
+          }
+        ],
+        "hits": [
+          89,
+          45
+        ],
+        "whiffs": [
+          12,
+          37
+        ],
+        "guards": [
+          1,
+          52
+        ]
+      },
+      "defence": {
+        "bot:23": {
+          "attempts": 1,
+          "full": 0,
+          "partial": 0,
+          "perfect": 1,
+          "failed": 0
+        },
+        "bot:3": {
+          "attempts": 1,
+          "full": 0,
+          "partial": 1,
+          "perfect": 0,
+          "failed": 0
+        },
+        "bot:7": {
+          "attempts": 1,
+          "full": 0,
+          "partial": 1,
+          "perfect": 0,
+          "failed": 0
+        },
+        "bot:12": {
+          "attempts": 4,
+          "full": 1,
+          "partial": 0,
+          "perfect": 1,
+          "failed": 2
+        },
+        "bot:13": {
+          "attempts": 9,
+          "full": 2,
+          "partial": 1,
+          "perfect": 1,
+          "failed": 5
+        },
+        "bot:19": {
+          "attempts": 48,
+          "full": 27,
+          "partial": 2,
+          "perfect": 18,
+          "failed": 1
+        },
+        "bot:2": {
+          "attempts": 3,
+          "full": 0,
+          "partial": 2,
+          "perfect": 0,
+          "failed": 1
+        },
+        "local": {
+          "attempts": 1,
+          "full": 0,
+          "partial": 1,
+          "perfect": 0,
+          "failed": 0
+        },
+        "bot:22": {
+          "attempts": 1,
+          "full": 0,
+          "partial": 0,
+          "perfect": 0,
+          "failed": 1
+        },
+        "bot:5": {
+          "attempts": 1,
+          "full": 1,
+          "partial": 0,
+          "perfect": 0,
+          "failed": 0
+        },
+        "bot:14": {
+          "attempts": 1,
+          "full": 0,
+          "partial": 0,
+          "perfect": 1,
+          "failed": 0
+        },
+        "bot:8": {
+          "attempts": 1,
+          "full": 0,
+          "partial": 1,
+          "perfect": 0,
+          "failed": 0
+        },
+        "bot:21": {
+          "attempts": 1,
+          "full": 0,
+          "partial": 0,
+          "perfect": 0,
+          "failed": 1
+        }
+      },
+      "activeFightTime": 112.61666666666156,
+      "errors": []
+    },
+    {
+      "seed": 10701,
+      "level": 90,
+      "mode": 1,
+      "completed": true,
+      "phase": "over",
+      "screen": "repair",
+      "repairStop": false,
+      "pendingTimers": 0,
+      "simulatedSeconds": 135,
+      "wins": [
+        0,
+        2
+      ],
+      "metrics": {
+        "start": 2044.233333331803,
+        "actions": [
+          {
+            "trip": 34,
+            "swing": 85,
+            "shove": 16
+          },
+          {
+            "tackle": 2,
+            "swing": 79
+          }
+        ],
+        "hits": [
+          52,
+          53
+        ],
+        "whiffs": [
+          7,
+          0
+        ],
+        "guards": [
+          0,
+          34
+        ]
+      },
+      "defence": {
+        "bot:1": {
+          "attempts": 37,
+          "full": 20,
+          "partial": 3,
+          "perfect": 14,
+          "failed": 0
+        }
+      },
+      "activeFightTime": 119.99999999999447,
+      "errors": []
+    },
+    {
+      "seed": 10705,
+      "level": 90,
+      "mode": 5,
+      "completed": true,
+      "phase": "over",
+      "screen": "repair",
+      "repairStop": false,
+      "pendingTimers": 0,
+      "simulatedSeconds": 48,
+      "wins": [
+        0,
+        2
+      ],
+      "metrics": {
+        "start": 2179.2500000001373,
+        "actions": [
+          {
+            "swing": 13,
+            "tackle": 18,
+            "trip": 10,
+            "shove": 9,
+            "grab": 5,
+            "throw": 6,
+            "knee": 1
+          },
+          {
+            "tackle": 34,
+            "trip": 19,
+            "swing": 25,
+            "knee": 3,
+            "throw": 5,
+            "shove": 2,
+            "grab": 3
+          }
+        ],
+        "hits": [
+          5,
+          10
+        ],
+        "whiffs": [
+          0,
+          6
+        ],
+        "guards": [
+          1,
+          2
+        ]
+      },
+      "defence": {
+        "bot:3": {
+          "attempts": 2,
+          "full": 0,
+          "partial": 1,
+          "perfect": 1,
+          "failed": 0
+        },
+        "bot:7": {
+          "attempts": 3,
+          "full": 2,
+          "partial": 0,
+          "perfect": 0,
+          "failed": 1
+        }
+      },
+      "activeFightTime": 33.18333333333273,
+      "errors": []
+    },
+    {
+      "seed": 10712,
+      "level": 90,
+      "mode": 12,
+      "completed": true,
+      "phase": "over",
+      "screen": "repair",
+      "repairStop": false,
+      "pendingTimers": 0,
+      "simulatedSeconds": 63,
+      "wins": [
+        0,
+        2
+      ],
+      "metrics": {
+        "start": 2227.433333334084,
+        "actions": [
+          {
+            "swing": 42,
+            "tackle": 49,
+            "trip": 47,
+            "shove": 32,
+            "throw": 22,
+            "grab": 17,
+            "knee": 2,
+            "disarm": 1
+          },
+          {
+            "tackle": 90,
+            "trip": 45,
+            "swing": 72,
+            "shove": 25,
+            "grab": 13,
+            "throw": 22,
+            "knee": 5
+          }
+        ],
+        "hits": [
+          28,
+          19
+        ],
+        "whiffs": [
+          11,
+          19
+        ],
+        "guards": [
+          2,
+          1
+        ]
+      },
+      "defence": {
+        "bot:1": {
+          "attempts": 1,
+          "full": 1,
+          "partial": 0,
+          "perfect": 0,
+          "failed": 0
+        },
+        "bot:21": {
+          "attempts": 1,
+          "full": 0,
+          "partial": 0,
+          "perfect": 1,
+          "failed": 0
+        },
+        "bot:17": {
+          "attempts": 3,
+          "full": 0,
+          "partial": 2,
+          "perfect": 0,
+          "failed": 1
+        },
+        "bot:6": {
+          "attempts": 1,
+          "full": 0,
+          "partial": 0,
+          "perfect": 0,
+          "failed": 1
+        },
+        "bot:5": {
+          "attempts": 3,
+          "full": 0,
+          "partial": 2,
+          "perfect": 1,
+          "failed": 0
+        },
+        "bot:13": {
+          "attempts": 1,
+          "full": 0,
+          "partial": 1,
+          "perfect": 0,
+          "failed": 0
+        }
+      },
+      "activeFightTime": 47.59999999999858,
+      "errors": []
+    },
+    {
+      "seed": 11701,
+      "level": 100,
+      "mode": 1,
+      "completed": true,
+      "phase": "over",
+      "screen": "repair",
+      "repairStop": false,
+      "pendingTimers": 0,
+      "simulatedSeconds": 135,
+      "wins": [
+        0,
+        2
+      ],
+      "metrics": {
+        "start": 2290.0333333348813,
+        "actions": [
+          {
+            "swing": 100,
+            "trip": 28,
+            "shove": 12
+          },
+          {
+            "tackle": 2,
+            "swing": 73
+          }
+        ],
+        "hits": [
+          59,
+          54
+        ],
+        "whiffs": [
+          14,
+          0
+        ],
+        "guards": [
+          0,
+          50
+        ]
+      },
+      "defence": {
+        "bot:1": {
+          "attempts": 54,
+          "full": 32,
+          "partial": 4,
+          "perfect": 18,
+          "failed": 0
+        }
+      },
+      "activeFightTime": 119.99999999999447,
+      "errors": []
+    },
+    {
+      "seed": 11705,
+      "level": 100,
+      "mode": 5,
+      "completed": true,
+      "phase": "over",
+      "screen": "repair",
+      "repairStop": false,
+      "pendingTimers": 0,
+      "simulatedSeconds": 28,
+      "wins": [
+        0,
+        2
+      ],
+      "metrics": {
+        "start": 2425.0333333366,
+        "actions": [
+          {
+            "swing": 1,
+            "tackle": 17,
+            "trip": 3,
+            "grab": 4
+          },
+          {
+            "tackle": 25,
+            "trip": 12,
+            "swing": 7,
+            "throw": 4,
+            "shove": 3
+          }
+        ],
+        "hits": [
+          0,
+          1
+        ],
+        "whiffs": [
+          0,
+          0
+        ],
+        "guards": [
+          0,
+          0
+        ]
+      },
+      "defence": {},
+      "activeFightTime": 12.516666666666868,
+      "errors": []
+    },
+    {
+      "seed": 11712,
+      "level": 100,
+      "mode": 12,
+      "completed": true,
+      "phase": "over",
+      "screen": "repair",
+      "repairStop": false,
+      "pendingTimers": 0,
+      "simulatedSeconds": 37,
+      "wins": [
+        0,
+        2
+      ],
+      "metrics": {
+        "start": 2452.5500000036172,
+        "actions": [
+          {
+            "trip": 34,
+            "tackle": 43,
+            "swing": 8,
+            "grab": 10,
+            "throw": 14,
+            "shove": 6
+          },
+          {
+            "tackle": 75,
+            "trip": 53,
+            "swing": 51,
+            "shove": 17,
+            "throw": 19,
+            "grab": 6
+          }
+        ],
+        "hits": [
+          3,
+          17
+        ],
+        "whiffs": [
+          4,
+          5
+        ],
+        "guards": [
+          1,
+          0
+        ]
+      },
+      "defence": {
+        "bot:15": {
+          "attempts": 1,
+          "full": 0,
+          "partial": 0,
+          "perfect": 0,
+          "failed": 1
+        },
+        "bot:2": {
+          "attempts": 2,
+          "full": 1,
+          "partial": 0,
+          "perfect": 0,
+          "failed": 1
+        },
+        "bot:5": {
+          "attempts": 1,
+          "full": 0,
+          "partial": 0,
+          "perfect": 0,
+          "failed": 1
+        },
+        "bot:9": {
+          "attempts": 1,
+          "full": 0,
+          "partial": 1,
+          "perfect": 0,
+          "failed": 0
+        }
+      },
+      "activeFightTime": 21.58333333333339,
+      "errors": []
+    }
+  ]
+}
