@@ -1,5 +1,5 @@
 <!doctype html><html><head><meta charset="utf-8"><link rel="manifest" href="manifest.webmanifest"><meta name="theme-color" content="#0f1316"><link rel="apple-touch-icon" href="icon-192.png"><meta name="apple-mobile-web-app-capable" content="yes"><meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover"></head><body>
-<script>window.BUILD_VER="steel-tape-0a391ed9de";</script><title>Buhurt: Steel &amp; Tape</title>
+<script>window.BUILD_VER="steel-tape-7ba2c2741e";</script><title>Buhurt: Steel &amp; Tape</title>
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Barlow+Semi+Condensed:wght@400;500;600;700&family=Big+Shoulders+Display:wght@700;800;900&family=Permanent+Marker&display=swap">
@@ -40815,7 +40815,7 @@ function boardCrownStatues() {
     BOARDS.statueSignatures = BOARDS.statueSignatures || {}; BOARDS.statueSignatures[seat] = signature;
     const old = BOARDS.statues && BOARDS.statues[seat];
     if (old) TOWN.root.remove(old);
-    const x = seat === 'king' ? -10.4 : -2.6, z = 39.5;
+    const x = seat === 'king' ? -10.6 : -2.4, z = 36.7;
     const g = new THREE.Group(); g.position.set(x, gy(x, z), z); g.rotation.y = Math.PI;
     TOWN.root.add(g); BOARDS.statues = BOARDS.statues || {}; BOARDS.statues[seat] = g;
     mk(g, geo('crown_statue_base', () => new THREE.CylinderGeometry(0.8, 0.95, 0.8, 8)), tmat('#8b8171'), 0, 0.4, 0);
@@ -40827,8 +40827,8 @@ function boardCrownStatues() {
     const crown = mk(g, geo('crown_statue_ring', () => new THREE.CylinderGeometry(0.16, 0.16, 0.08, 12, 1, true)), tmat('#e3b341'), 0, 3.04, 0);
     crown.material.side = THREE.DoubleSide;
     for (let i = 0; i < 6; i++) { const a = i * Math.PI / 3; mk(g, geo('crown_statue_point', () => new THREE.ConeGeometry(0.035, 0.14, 6)), tmat('#e3b341'), Math.sin(a) * 0.15, 3.14, Math.cos(a) * 0.15); }
-    const label = townLabel((seat === 'king' ? 'KING ' : 'QUEEN ') + (holder && holder.name || 'Unclaimed'), holder?.look ? 'Last saved outfit' : 'Outfit awaiting first save', '#e3b341');
-    label.position.set(0, 3.85, 0); label.rotation.y = Math.PI; g.add(label);
+    const plaque = townSign(seat.toUpperCase(), '#8b6b2c');
+    plaque.scale.setScalar(0.55); plaque.position.set(0, 0.47, 0.92); g.add(plaque);
   }
 }
 
@@ -40955,7 +40955,7 @@ function boardOpen(kind) {
 function buildSpawnBoards() {
   BOARDS.faces = {}; BOARDS.nextPoll = 0; BOARDS.statues = {}; BOARDS.statueSignatures = {};
   TOWN.obst = TOWN.obst.filter(o => !o.crownStatue);
-  TOWN.obst.push({ x: -10.4, z: 39.5, r: 0.75, crownStatue: true }, { x: -2.6, z: 39.5, r: 0.75, crownStatue: true });
+  TOWN.obst.push({ x: -10.6, z: 36.7, r: 0.75, crownStatue: true }, { x: -2.4, z: 36.7, r: 0.75, crownStatue: true });
   const spots = [
     { kind: 'leaderboard', x: -6.5, z: 39.5, title: 'Hall of Champions', sub: 'All-time career wins', col: '#deb978' },
     { kind: 'online', x: 6.5, z: 39.5, title: 'Fighters Online', sub: 'Who is playing now', col: '#7ecb8c' },
