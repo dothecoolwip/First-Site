@@ -26,10 +26,16 @@ table{width:100%;border-collapse:collapse;font-size:.9rem}th,td{text-align:left;
 #err{color:#ff7a6a}
 
 .filters{display:flex;flex-wrap:wrap;gap:10px;align-items:center;margin:10px 0}.filters input{flex:1;min-width:180px}.filters select{flex:0 1 190px;background:#0b0e10;color:var(--ink);border:1px solid var(--line);font:inherit;padding:9px}.filters button{margin:0}.tablewrap{overflow-x:auto}#players{min-width:900px}#players tbody tr{cursor:pointer}#players tbody tr:hover{background:#292f35}.playerDetail{background:#0b0e10;border:1px solid var(--tape);padding:15px;margin:12px 0}.playerDetail b{color:var(--tape)}.info{display:flex;flex-wrap:wrap;gap:12px}.info > div{min-width:120px;flex:1}.info span{display:block;color:var(--muted);font-size:12px}.info strong{display:block;font-size:17px}.notice{padding:10px 12px;border-left:3px solid var(--tape);background:#292517;margin:14px 0}.loginhint{margin:5px 0;color:var(--muted);font-size:.8rem}.kpis{grid-template-columns:repeat(auto-fill,minmax(142px,1fr))}button:focus-visible,input:focus-visible,select:focus-visible{outline:2px solid var(--tape);outline-offset:2px}
+.back-to-game{display:inline-flex;align-items:center;gap:9px;min-height:44px;margin:0 0 16px;padding:9px 14px;background:#202931;border:1px solid #63747c;border-radius:5px;color:#fff1d1;font-weight:700;font-size:1rem;letter-spacing:.015em;text-decoration:none;transition:background .15s ease,border-color .15s ease}
+.back-to-game svg{width:19px;height:19px;flex:none;stroke:currentColor;stroke-width:2.3;fill:none;stroke-linecap:round;stroke-linejoin:round}
+.back-to-game:hover{background:#35404a;border-color:var(--tape)}
+.back-to-game:focus-visible{outline:3px solid var(--tape);outline-offset:3px}
+.playtest-grid{display:grid;grid-template-columns:minmax(220px,300px) 1fr;gap:14px}.playtest-list{max-height:560px;overflow:auto}.playtest-card{display:block;width:100%;text-align:left;background:#222a30;color:var(--ink);border:1px solid var(--line);margin:0 0 6px;text-transform:none;letter-spacing:0}.playtest-card.active{border-color:var(--tape)}.playtest-detail{min-width:0}.playtest-map{width:100%;height:260px;background:#182922;border:1px solid #405547}.playtest-note{background:#0b0e10;border:1px solid var(--line);padding:10px;margin:10px 0}.playtest-note img{width:100%;max-height:480px;object-fit:contain;background:#080a0b}.playtest-events{max-height:330px;overflow:auto}.playtest-events td:first-child{white-space:nowrap}.playtest-actions{display:flex;gap:8px;flex-wrap:wrap;align-items:center}.playtest-actions button{margin:0}@media(max-width:700px){.playtest-grid{grid-template-columns:1fr}.playtest-list{max-height:180px}}
 </style>
 </head>
 <body>
 <div class="panel">
+  <a class="back-to-game" href="/" aria-label="Back to Steel and Tape game"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="m14 5-7 7 7 7M8 12h12"/></svg>Back to Game</a>
   <h1>BUHURT: <span>Steel &amp; Tape</span> admin</h1>
   <p class="muted small">Owner command post · Complete player directory, account activity, game statistics, bug reports and feature ideas.</p>
   <div id="login">
@@ -46,11 +52,15 @@ table{width:100%;border-collapse:collapse;font-size:.9rem}th,td{text-align:left;
     <div class="bar" id="days"></div><p class="muted small">Gold: sessions per day. Pink: matches.</p>
     <h2>Reports and ideas</h2>
     <div id="reports"></div>
+    <h2>Playtest recorder</h2>
+    <p class="muted small">The super admin route, actions, screenshot notes and exact map coordinates. Use the Test tools button in the game to capture a note.</p>
+    <div class="playtest-actions"><button id="playtestRefresh" class="alt" type="button">Refresh sessions</button><button id="playtestExport" type="button">Export all notes &amp; logs</button><span id="playtestStatus" class="muted small"></span></div>
+    <div class="playtest-grid"><div id="playtestSessions" class="playtest-list"></div><div id="playtestDetail" class="playtest-detail muted">Select a session to view its route and notes.</div></div>
     <h2>Every tracked player</h2>
-    <p class="muted small">Signed-in gamers and guest browsers, with all-time activity. Select a row for details.</p>
+    <p class="muted small">Signed-in gamers and guest browsers, with all-time activity. Select a row for details. Playtime is measured from this tracking update onward; earlier hours cannot be recovered reliably.</p>
     <div class="filters"><input id="playerSearch" type="search" placeholder="Search player name"><select id="playerFilter" aria-label="Filter players"><option value="all">All players</option><option value="account">BuhurtOS players</option><option value="guest">Guest browsers</option><option value="today">Active today</option><option value="week">Active this week</option><option value="inactive">Inactive 30+ days</option></select><button type="button" id="exportCsv" class="alt">Export CSV</button></div>
     <p id="playerCount" class="muted small"></p><div class="playerDetail" id="playerDetail" hidden></div>
-    <div class="tablewrap"><table id="players"><thead><tr><th>Name</th><th>Account</th><th>First played</th><th>Last active</th><th>Sessions</th><th>Matches</th><th>Wins</th><th>Losses*</th><th>Level</th><th>Device</th></tr></thead><tbody></tbody></table></div>
+    <div class="tablewrap"><table id="players"><thead><tr><th>Name</th><th>Account</th><th>Total playtime</th><th>First played</th><th>Last active</th><th>Sessions</th><th>Matches</th><th>Wins</th><th>Losses*</th><th>Level</th><th>Device</th></tr></thead><tbody></tbody></table></div>
     <p class="muted small">*Losses are estimated as matches minus wins; recorded draws are not distinguished yet.</p>
     <h2>Matches by mode</h2>
     <table id="modes"><thead><tr><th>Mode</th><th>Played</th><th>Won by players</th></tr></thead><tbody></tbody></table>
@@ -78,10 +88,115 @@ const ago = t => { const m = (Date.now() - new Date(t)) / 60000; return m < 60 ?
 const dev = ua => /iPhone|iPad/.test(ua) ? 'iOS' : /Android/.test(ua) ? 'Android' : /Windows/.test(ua) ? 'Windows' : /Mac/.test(ua) ? 'Mac' : ua ? 'other' : '';
 
 let allTrackedPlayers = [];
+let playtestSessions = [], playtestSelected = null, playtestImages = [];
+const playtestBucket = 'steeltape-playtest';
+async function playtestPages(table, column, value, order = 'at') {
+  const all = [];
+  for (let page = 0; page < 1000; page++) {
+    let query = sb.from(table).select('*').order(order, { ascending: true }).range(page * 1000, page * 1000 + 999);
+    if (column) query = query.eq(column, value);
+    const { data, error } = await query;
+    if (error) throw error;
+    all.push(...(data || []));
+    if (!data || data.length < 1000) return all;
+  }
+  throw new Error('Too many records to export in one file.');
+}
+async function playtestLoadSessions() {
+  const status = $('#playtestStatus'); status.textContent = 'Loading sessions…';
+  try {
+    playtestSessions = (await playtestPages('steeltape_playtest_sessions', null, null, 'started_at')).reverse();
+    $('#playtestSessions').textContent = '';
+    for (const s of playtestSessions) {
+      const b = document.createElement('button'); b.className = 'playtest-card' + (playtestSelected === s.id ? ' active' : '');
+      b.textContent = new Date(s.started_at).toLocaleString() + (s.ended_at ? ' · finished' : ' · open') + '\n' + (s.build_version || 'unknown build');
+      b.onclick = () => playtestShowSession(s.id);
+      $('#playtestSessions').append(b);
+    }
+    if (!playtestSessions.length) $('#playtestSessions').textContent = 'No playtest sessions yet.';
+    status.textContent = playtestSessions.length + ' sessions';
+    if (playtestSelected && playtestSessions.some(s => s.id === playtestSelected)) await playtestShowSession(playtestSelected);
+  } catch (e) { status.textContent = 'Could not load recorder: ' + (e.message || e); }
+}
+function playtestDrawMap(canvas, entries, notes) {
+  const points = entries.filter(e => e.kind === 'position' && Number.isFinite(e.x) && Number.isFinite(e.z));
+  const all = points.concat(notes.filter(n => Number.isFinite(n.x) && Number.isFinite(n.z)));
+  const ctx = canvas.getContext('2d'), w = canvas.width, h = canvas.height;
+  ctx.fillStyle = '#182922'; ctx.fillRect(0, 0, w, h);
+  if (!all.length) { ctx.fillStyle = '#bfc9c4'; ctx.fillText('No route points yet', 18, 28); return; }
+  let minX=Infinity,maxX=-Infinity,minZ=Infinity,maxZ=-Infinity;
+  for (const p of all) { minX=Math.min(minX,p.x); maxX=Math.max(maxX,p.x); minZ=Math.min(minZ,p.z); maxZ=Math.max(maxZ,p.z); }
+  const span = Math.max(maxX - minX, maxZ - minZ, 12), scale = Math.min((w - 36) / span, (h - 36) / span);
+  const xy = p => [w / 2 + (p.x - (minX + maxX) / 2) * scale, h / 2 + (p.z - (minZ + maxZ) / 2) * scale];
+  ctx.strokeStyle = '#f2c40f'; ctx.lineWidth = 2; ctx.beginPath(); points.forEach((p, i) => { const [x,y] = xy(p); i ? ctx.lineTo(x,y) : ctx.moveTo(x,y); }); ctx.stroke();
+  for (const n of notes) { const [x,y] = xy(n); ctx.beginPath(); ctx.arc(x,y,6,0,Math.PI*2); ctx.fillStyle='#ff3d8b'; ctx.fill(); ctx.strokeStyle='#fff'; ctx.stroke(); }
+  ctx.fillStyle = '#f2ede2'; ctx.font = '12px sans-serif'; ctx.fillText('X ' + minX.toFixed(1) + '–' + maxX.toFixed(1) + '  Z ' + minZ.toFixed(1) + '–' + maxZ.toFixed(1), 12, h - 8);
+}
+async function playtestImageUrl(path) {
+  const { data, error } = await sb.storage.from(playtestBucket).download(path);
+  if (error) throw error;
+  const url = URL.createObjectURL(data); playtestImages.push(url); return url;
+}
+async function playtestShowSession(id) {
+  playtestSelected = id;
+  $('#playtestSessions').querySelectorAll('button').forEach((b, i) => b.classList.toggle('active', playtestSessions[i]?.id === id));
+  const box = $('#playtestDetail'); box.textContent = 'Loading route and screenshots…';
+  for (const url of playtestImages) URL.revokeObjectURL(url); playtestImages = [];
+  try {
+    const [entries, notes] = await Promise.all([playtestPages('steeltape_playtest_entries','session_id',id),playtestPages('steeltape_playtest_notes','session_id',id)]);
+    if (playtestSelected !== id) return;
+    const session = playtestSessions.find(s => s.id === id);
+    box.innerHTML = '<p><b>' + esc(new Date(session.started_at).toLocaleString()) + '</b> · ' + entries.length + ' route/action records · ' + notes.length + ' notes</p><canvas class="playtest-map" width="720" height="260"></canvas><h3>Screenshot notes</h3><div id="playtestNotes"></div><h3>Action log</h3><div class="playtest-events tablewrap"><table><thead><tr><th>Time</th><th>Action</th><th>Location</th><th>Detail</th></tr></thead><tbody id="playtestEvents"></tbody></table></div>';
+    playtestDrawMap(box.querySelector('canvas'), entries, notes);
+    const noteBox = box.querySelector('#playtestNotes');
+    for (const n of notes) {
+      const card = document.createElement('div'); card.className='playtest-note';
+      card.innerHTML='<b>'+esc(new Date(n.at).toLocaleString())+'</b> · X '+esc(n.x)+' Z '+esc(n.z)+' · '+esc(n.zone)+'<p>'+esc(n.body).replace(/\n/g,'<br>')+'</p>';
+      const img = document.createElement('img'); img.alt='Playtest screenshot at X '+n.x+', Z '+n.z; card.append(img); noteBox.append(card);
+      playtestImageUrl(n.screenshot_path).then(url => { if (playtestSelected === id) img.src=url; else URL.revokeObjectURL(url); }).catch(() => { img.alt='Screenshot unavailable'; });
+    }
+    if (!notes.length) noteBox.textContent='No screenshot notes in this session.';
+    const events = box.querySelector('#playtestEvents');
+    for (const e of entries.filter(e => e.kind !== 'position')) {
+      const tr=document.createElement('tr');
+      for (const v of [new Date(e.at).toLocaleTimeString(),e.kind,`X ${e.x ?? '—'}, Z ${e.z ?? '—'} · ${e.zone || ''}`,JSON.stringify(e.detail || {})]) { const td=document.createElement('td');td.textContent=v;tr.append(td); }
+      events.append(tr);
+    }
+  } catch(e) { box.textContent='Could not load session: '+(e.message||e); }
+}
+async function playtestExport() {
+  const button=$('#playtestExport'), status=$('#playtestStatus'); button.disabled=true;
+  try {
+    const sessions=await playtestPages('steeltape_playtest_sessions',null,null,'started_at');
+    const data={ format:'steel-tape-playtest-v1', exportedAt:new Date().toISOString(), sessions:[] };
+    for (let i=0;i<sessions.length;i++) {
+      const s=sessions[i]; status.textContent=`Exporting session ${i+1} of ${sessions.length}…`;
+      const [entries,notes]=await Promise.all([playtestPages('steeltape_playtest_entries','session_id',s.id),playtestPages('steeltape_playtest_notes','session_id',s.id)]);
+      for (const n of notes) {
+        const { data: blob, error }=await sb.storage.from(playtestBucket).download(n.screenshot_path);
+        if (error) throw error;
+        n.screenshotDataUrl=await new Promise((resolve,reject)=>{const reader=new FileReader();reader.onload=()=>resolve(reader.result);reader.onerror=reject;reader.readAsDataURL(blob);});
+      }
+      data.sessions.push({ ...s, entries, notes });
+    }
+    const url=URL.createObjectURL(new Blob([JSON.stringify(data)],{type:'application/json'}));
+    const a=document.createElement('a');a.href=url;a.download='steel-tape-playtest-'+new Date().toISOString().slice(0,10)+'.json';a.click();setTimeout(()=>URL.revokeObjectURL(url),5000);
+    status.textContent=`Exported ${sessions.length} sessions with route logs, notes and screenshots.`;
+  } catch(e) { status.textContent='Export failed: '+(e.message||e); }
+  finally { button.disabled=false; }
+}
+$('#playtestRefresh').onclick=playtestLoadSessions;
+$('#playtestExport').onclick=playtestExport;
 const activeWithin = (t, days) => Boolean(t && !Number.isNaN(Date.parse(t)) && Date.now() - Date.parse(t) <= days * 86400000);
 const safeDate = t => t && !Number.isNaN(Date.parse(t)) ? new Date(t).toLocaleDateString() : 'Unknown';
 const safeAgo = t => t && !Number.isNaN(Date.parse(t)) ? ago(t) : 'Unknown';
 const num = value => Number(value || 0);
+function duration(seconds) {
+  if (seconds == null || !Number.isFinite(Number(seconds))) return '—';
+  const totalMinutes = Math.floor(Math.max(0,Number(seconds)) / 60);
+  const hours = Math.floor(totalMinutes / 60);
+  return hours ? hours.toLocaleString() + 'h ' + (totalMinutes % 60) + 'm' : totalMinutes + 'm';
+}
 function playerRows() {
   const term = ($('#playerSearch').value || '').trim().toLowerCase(), filter = $('#playerFilter').value;
   return allTrackedPlayers.filter(p => {
@@ -98,6 +213,7 @@ function showPlayer(p) {
   const details = $('#playerDetail'); details.hidden = false;
   const list = [
     ['Account', p.uid ? 'BuhurtOS' : 'Guest browser'],
+    ['Total playtime', p.uid ? duration(p.playSeconds) : 'Not linked'],
     ['First played', safeDate(p.first)],
     ['Last active', safeAgo(p.last)],
     ['Account created', safeDate(p.created)],
@@ -119,17 +235,17 @@ function renderPlayerRows() {
   const tbody = $('#players tbody'); tbody.textContent = '';
   for (const p of P) {
     const tr = document.createElement('tr'); tr.tabIndex = 0; tr.setAttribute('aria-label', 'Player ' + (p.name || 'Visitor'));
-    const entries = [p.name || 'Visitor',p.uid?'BuhurtOS':'Guest',safeDate(p.first),safeAgo(p.last),num(p.sessions),num(p.matches),num(p.wins),Math.max(0,num(p.matches)-num(p.wins)),p.level==null?'–':p.level,dev(p.ua)||'Unknown'];
+    const entries = [p.name || 'Visitor',p.uid?'BuhurtOS':'Guest',p.uid ? duration(p.playSeconds) : '—',safeDate(p.first),safeAgo(p.last),num(p.sessions),num(p.matches),num(p.wins),Math.max(0,num(p.matches)-num(p.wins)),p.level==null?'–':p.level,dev(p.ua)||'Unknown'];
     for (const v of entries) { const td = document.createElement('td'); td.textContent = String(v); tr.append(td); }
     tr.onclick=()=>showPlayer(p); tr.onkeydown=e=>{if(e.key==='Enter')showPlayer(p)};
     tbody.append(tr);
   }
-  if (!P.length) { const tr=document.createElement('tr'), td=document.createElement('td'); td.colSpan=10;td.textContent=allTrackedPlayers.length?'No players match this search.':'No tracked players yet.';tr.append(td);tbody.append(tr); }
+  if (!P.length) { const tr=document.createElement('tr'), td=document.createElement('td'); td.colSpan=11;td.textContent=allTrackedPlayers.length?'No players match this search.':'No tracked players yet.';tr.append(td);tbody.append(tr); }
 }
 $('#playerSearch').oninput = renderPlayerRows;
 $('#playerFilter').onchange = renderPlayerRows;
 $('#exportCsv').onclick = () => {
-  const rows = [['Name','Account','First played','Last active','Sessions','Matches','Wins','Matches less wins','Level','Device']].concat(playerRows().map(p=>[p.name||'Visitor',p.uid?'BuhurtOS':'Guest',p.first||'',p.last||'',num(p.sessions),num(p.matches),num(p.wins),Math.max(0,num(p.matches)-num(p.wins)),p.level??'',dev(p.ua)||'']));
+  const rows = [['Name','Account','Total time played (seconds)','Total time played','First played','Last active','Sessions','Matches','Wins','Matches less wins','Level','Device']].concat(playerRows().map(p=>[p.name||'Visitor',p.uid?'BuhurtOS':'Guest',p.uid ? (p.playSeconds ?? 0) : '',p.uid ? duration(p.playSeconds) : '',p.first||'',p.last||'',num(p.sessions),num(p.matches),num(p.wins),Math.max(0,num(p.matches)-num(p.wins)),p.level??'',dev(p.ua)||'']));
   const csv=rows.map(row=>row.map(value=>'"'+String(value??'').replace(/"/g,'""')+'"').join(',')).join('\r\n');
   const blob=URL.createObjectURL(new Blob([csv],{type:'text/csv;charset=utf-8'}));
   const link=document.createElement('a');link.href=blob;link.download='steel-tape-players.csv';link.click();setTimeout(()=>URL.revokeObjectURL(blob),1500);
@@ -156,6 +272,7 @@ async function load() {
     [S.online, 'Active in last 5 min'],
     [S.active24h, 'Active in 24 hours'],
     [S.active7d, 'Active in 7 days'],
+    [duration(S.allTimePlaySeconds), 'Tracked playtime total'],
     [S.allTimeSessions, 'Game sessions all time'],
     [S.allTimeMatches, 'Matches all time'],
     [S.allTimeWins, 'Wins all time'],
@@ -169,6 +286,7 @@ async function load() {
   $('#days').innerHTML = days.map(([k, v]) => `<i style="height:${v.sessions / mx * 100}%" data-t="${k}: ${v.sessions} sessions"></i><i class="m" style="height:${v.matches / mx * 100}%" data-t="${k}: ${v.matches} matches"></i>`).join('');
   $('#reports').innerHTML = (d.reports || []).length ? d.reports.map(e => `<div class="rep ${e.data.resolved ? 'done' : ''}"><span class="k ${e.kind}">${e.kind === 'bug' ? 'Bug' : 'Feature idea'}</span> · <span class="muted small">${esc(e.name)} · ${ago(e.at)} · ${esc(dev(e.ua))} · ${esc(e.data.where || '')}${e.data.town ? ' in town' : ''}${e.data.district ? ', ' + esc(e.data.district) : ''}${e.data.stage ? ', ' + esc(e.data.stage) : ''} · level ${esc(e.data.level || '')}</span><p>${esc(e.data.text)}</p><button class="tiny alt" data-id="${e.id}">${e.data.resolved ? 'Reopen' : 'Mark done'}</button></div>`).join('') : '<p class="muted">Nothing yet.</p>';
   $('#reports').querySelectorAll('button[data-id]').forEach(b => b.onclick = async () => { await fetch(URL_ + '/functions/v1/steeltape-admin', { method: 'POST', headers: { Authorization: 'Bearer ' + session.access_token, 'Content-Type': 'application/json' }, body: JSON.stringify({ action: 'resolve', id: +b.dataset.id }) }); load(); });
+  playtestLoadSessions();
   renderPlayerRows();
   $('#modes tbody').innerHTML = Object.entries(d.modes || {}).sort((a, b) => b[1].n - a[1].n).map(([k, v]) => `<tr><td>${esc(k)}</td><td>${v.n}</td><td>${v.won} (${Math.round(v.won / v.n * 100)}%)</td></tr>`).join('') || '<tr><td colspan="3" class="muted">No matches yet.</td></tr>';
   $('#throne tbody').innerHTML = (d.throne || []).map(t => `<tr><td>${esc(t.seat)}</td><td>${esc(t.holder_name)}</td><td>${ago(t.since)}</td><td>${t.challenges}</td></tr>`).join('');
