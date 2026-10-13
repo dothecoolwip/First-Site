@@ -1,5 +1,5 @@
 <!doctype html><html><head><meta charset="utf-8"><link rel="manifest" href="manifest.webmanifest"><meta name="theme-color" content="#0f1316"><link rel="apple-touch-icon" href="icon-192.png"><meta name="apple-mobile-web-app-capable" content="yes"><meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover"></head><body>
-<script>window.BUILD_VER="steel-tape-hosted-8753053864";</script><title>Buhurt: Steel &amp; Tape</title>
+<script>window.BUILD_VER="steel-tape-hosted-ca4aced934";</script><title>Buhurt: Steel &amp; Tape</title>
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Barlow+Semi+Condensed:wght@400;500;600;700&family=Big+Shoulders+Display:wght@700;800;900&family=Permanent+Marker&display=swap">
@@ -29505,7 +29505,7 @@ function createFighter(spec, club, team, idx, kit, body) {
     weapon: spec.player ? playerWeaponDef(spec.weapon) : WEAPONS[spec.weapon], shield: spec.shield ? SHIELDS[spec.shield] : null,
     kit: kit || freshKit(spec, false), oldTape: !!spec.player,
     rec: { warnings: 0, yellows: 0, red: false }, out: false, redMatches: 0, armorStrikes: 0,
-    ai: { target: null, next: rand(0, 0.3), strafe: chance(0.5) ? 1 : -1, guardT: 0, braceT: 0, plan: 0 },
+    ai: { target: null, next: rand(0.11, 0.3), strafe: chance(0.5) ? 1 : -1, guardT: 0, braceT: 0, plan: 0 },
     move: { x: 0, z: 0 }, wantFace: 0, lastCause: null, foulVictimT: -9, returnAt: -1, walkPh: rand(0, TAU), swingSide: 1, stats: { hits: 0, takedowns: 0 },
     earlyRiseT: 0, earlyWarned: false, body, helm: HELMS[spec.helm] || HELMS.pigface, lookYaw: 0, lookPitch: 0,
     prof: spec.prof || null, stabMul: spec.stab || 1, slowT: 0, up: null
@@ -29572,11 +29572,11 @@ function standingUpdate(f, dt) {
   const fat = f.fatigue || 0;
   if (f.gas > 1 - 0.5 * fat) f.gas = Math.max(1 - 0.5 * fat, f.gas - dt * 0.08); // less breath to come back to
   const rally = !f.isPlayer && f.team === 0 && G.player && isUp(G.player) && perk(G.player, 'show.rally') ? 1.08 : 1;
-  const stab = f.arch.stab * diffStab * f.stabF * f.stabMul * (1 - 0.35 * f.bell) * (1 - 0.15 * fat) * (f.buffT > 0 ? f.buffStab || 1 : 1) * rally * (f.atRail && perk(f, 'iron.rail') ? 1.3 : 1);
+  const stab = f.arch.stab * diffStab * f.stabF * f.stabMul * botScale(f, 1.45) * (1 - 0.35 * f.bell) * (1 - 0.15 * fat) * (f.buffT > 0 ? f.buffStab || 1 : 1) * rally * (f.atRail && perk(f, 'iron.rail') ? 1.3 : 1);
   if (f.isPlayer && f.gas < 0.2 && !f.secondUsed && perk(f, 'lungs.second')) { f.secondUsed = true; f.gas += 0.35; toast('Second wind!', 'good'); }
   const swinging = f.action && f.action.kind === 'swing' && f.action.phase !== 'recover';
   // ---- locomotion ----
-  let spd = f.arch.speed * f.spdF * (0.55 + 0.45 * f.gas) * (1 - 0.28 * (f.fatigue || 0));
+  let spd = f.arch.speed * f.spdF * botScale(f, 1.30) * (0.55 + 0.45 * f.gas) * (1 - 0.28 * (f.fatigue || 0));
   const running = f.sprint && f.gas > 0.08 && !f.brace && !f.guard;
   if (running) spd *= 1.45 * (perk(f, 'lungs.sprinter') ? 1.07 : 1);
   if (f.brace) spd *= 0.42; if (f.guard) spd *= 0.75; if (swinging) spd *= 0.55; if (f.clinch) spd *= 0.3; if (f.pinned) spd *= 0.6;
@@ -29631,7 +29631,7 @@ function standingUpdate(f, dt) {
   const da = angDiff(f.facing, f.wantFace);
   f.facing += clamp(da, -turn * dt, turn * dt);
   // ---- gas ----
-  if (!f.action && !running) f.gas = Math.min(1, f.gas + dt * (f.brace ? 0.075 : 0.06) * f.helm.breath * (f.up ? 1 + 0.1 * (f.up.cardio || 0) : 1) * (1 + 0.08 * perk(f, 'lungs.breath')) * (1 + pfx(f, 'gasRec')) * (1 - 0.55 * (f.fatigue || 0)) * mod(f, 'regen'));
+  if (!f.action && !running) f.gas = Math.min(1, f.gas + dt * (f.brace ? 0.075 : 0.06) * botScale(f, 1.35) * f.helm.breath * (f.up ? 1 + 0.1 * (f.up.cardio || 0) : 1) * (1 + 0.08 * perk(f, 'lungs.breath')) * (1 + pfx(f, 'gasRec')) * (1 - 0.55 * (f.fatigue || 0)) * mod(f, 'regen'));
   if (f.clinch) f.gas = Math.max(0, f.gas - dt * 0.012);
   if (f.guard) f.gas = Math.max(0, f.gas - dt * 0.004);
   updateAction(f, dt);
@@ -29757,6 +29757,7 @@ function startAction(f, kind, o = {}) {
   if ((kind === 'swing' || kind === 'shove') && !f.weapon && !f.clinch) return false;
   if (kind === 'tackle' && f.clinch) return false;
   if (f.guard && kind === 'swing') return false;
+  if (G.match && G.match.metrics) { const actions = G.match.metrics.actions[f.team]; actions[kind] = (actions[kind] || 0) + 1; }
   f.action = { kind, t: 0, phase: 'windup', arc: o.arc || 'R2L', held: !!o.held, charge: o.charge || 0, hit: false, target: o.target || null };
   if (f.isPlayer && o.target) playerLunge(f, kind, o.target);
   if (kind === 'swing' && !o.held) f.action.wind = swingTimes(f).wind + (o.charge || 0) * 0.4;
@@ -29777,6 +29778,7 @@ function playerLunge(f, kind, t) {
 function updateAction(f, dt) {
   const a = f.action; if (!a) return; const previousT = a.t; a.t += dt;
   if (a.kind === 'swing') {
+    if (!f.weapon) { f.action = null; return; }
     const T = swingTimes(f);
     if (a.phase === 'windup') {
       if (a.feintAt && !a.held && a.t >= a.feintAt) a.cancel = true;
@@ -29791,10 +29793,10 @@ function updateAction(f, dt) {
         if (a.charge > 0.3 && chance(f.isPlayer ? 0.6 : 0.2)) AU.grunt(f.isPlayer ? 0.7 : vol(f) * 0.4);
       }
     } else if (a.phase === 'strike') {
-      if (!a.hit && G.match && G.match.duel && !CUTE.on) {
-        const target = sweptSwingTarget(f, a, clamp(previousT / T.strike, 0, 1), clamp(a.t / T.strike, 0, 1));
-        if (target) { a.hit = true; resolveSwing(f, a, target); }
-      } else if (!a.hit && a.t >= T.strike * 0.55) { a.hit = true; resolveSwing(f, a); }
+      if (!a.hit) {
+        const contact = traceSwing(f, a, clamp(previousT / T.strike, 0, 1), clamp(a.t / T.strike, 0, 1));
+        if (contact) { a.hit = true; resolveSwing(f, a, contact.blockedByAlly ? null : contact); }
+      }
       if (a.t >= T.strike && a.phase === 'strike') {
         if (!a.hit) { a.hit = true; resolveSwing(f, a, null); }
         a.phase = 'recover'; a.t = 0;
@@ -29840,7 +29842,7 @@ function updateTackle(f, a, dt) {
 }
 function resolveTackle(f, t) {
   const v = vlen(f.vel); const dir = vnorm({ x: t.pos.x - f.pos.x, z: t.pos.z - f.pos.z });
-  let imp = 0.25 * v * Math.sqrt(massF(f) / massF(t)) * (f.shield ? 1.18 : 1) * (1 + 0.2 * perk(f, 'lungs.charger')) * (v > 4 && perk(f, 'lungs.freight') ? 1.6 : 1) * (1 - 0.2 * perk(t, 'iron.anchor'));
+  let imp = 0.25 * v * Math.sqrt(massF(f) / massF(t)) * botScale(f, 1.35) * (f.shield ? 1.18 : 1) * (1 + 0.2 * perk(f, 'lungs.charger')) * (v > 4 && perk(f, 'lungs.freight') ? 1.6 : 1) * (1 - 0.2 * perk(t, 'iron.anchor'));
   if (meleeRolesOn() && f.ai.role === 'runner') imp *= 1.08;
   if (t.brace && facingDot(t, f) > 0.3) imp *= 0.55;
   applyImpulse(t, dir, imp, { type: 'tackle', by: f }); t.noStep = Math.max(t.noStep, 0.18);
@@ -29872,38 +29874,51 @@ function findTarget(f, range, cone, includeDown) {
   return best;
 }
 
-// Duels trace the striking part of the weapon through its actual arc. A
-// target has to intersect the sweep; being merely nearby is not enough.
-function sweptSwingTarget(f, a, from, to) {
-  if (!f.weapon) return null;
+// Sweep contact in duels and team fights; an ally can smother the edge.
+function traceSwing(f, a, from, to) {
   const reach = 0.6 + f.weapon.len * 0.92 + f.reachB + 0.1 * perk(f, 'steel.reaper');
-  const steps = Math.max(1, Math.ceil((to - from) / 0.035));
-  for (let i = 0; i <= steps; i++) {
-    const p = from + (to - from) * i / steps;
-    if (a.arc === 'O' && (p < 0.28 || p > 0.76)) continue;
-    const sweep = a.arc === 'O' ? 0 : (a.arc === 'R2L' ? 1 : -1) * (1.15 - 2.3 * p);
-    const dir = fwd(f.facing + sweep);
+  const count = Math.max(2, Math.ceil((to - from) * 12));
+  const forwardX = Math.sin(f.facing), forwardZ = Math.cos(f.facing);
+  for (let i = 0; i <= count; i++) {
     let best = null, nearest = Infinity;
-    for (const o of G.fighters) {
-      if (o === f || o.team === f.team || o.out || (!isUp(o) && !(a.arc === 'O' && isDown(o)))) continue;
-      const pos = isDown(o) ? o.groundPos : o.pos;
-      const dx = pos.x - f.pos.x, dz = pos.z - f.pos.z;
-      const along = dx * dir.x + dz * dir.z;
-      const side = Math.abs(dx * dir.z - dz * dir.x);
-      const radius = (isDown(o) ? 0.3 : o.radius) + 0.12;
-      if (along + radius < 0.35 || along - radius > reach || side > radius) continue;
-      if (along < nearest) { nearest = along; best = o; }
+    const u = clamp(from + (to - from) * i / count, 0, 1);
+    const side = a.arc === 'R2L' ? 1 : -1;
+    const angle = f.facing + (a.arc === 'O' ? 0 : side * (1.15 - 2.3 * u));
+    const aim = f.isPlayer && isCtl() ? FP.pitch : 0;
+    const y = a.arc === 'O' ? 2.05 - 1.25 * u : clamp(1.28 + Math.tan(aim) * 1.5, 0.55, 1.82);
+    const tip = { x: f.pos.x + Math.sin(angle) * reach, y, z: f.pos.z + Math.cos(angle) * reach };
+    const base = { x: f.pos.x + Math.sin(f.facing) * 0.45, y: 1.35, z: f.pos.z + Math.cos(f.facing) * 0.45 };
+    for (const t of G.fighters) {
+      if (t === f || t.out || (!isUp(t) && !isDown(t))) continue;
+      const down = isDown(t), h = (t.body && t.body.h || 1.8) / 1.8, p = down ? t.groundPos : t.pos;
+      if (down && a.arc !== 'O') continue;
+      if ((p.x - f.pos.x) * forwardX + (p.z - f.pos.z) * forwardZ < -0.05) continue;
+      if (dist2(f.pos, p) > reach + t.radius + 0.3) continue;
+      const right = { x: Math.cos(t.facing), z: -Math.sin(t.facing) };
+      const zones = down ? [['torso', p.x, 0.5, p.z, 0.38]] : [
+        ['helmet', p.x, 1.7 * h, p.z, 0.26], ['torso', p.x, 1.25 * h, p.z, 0.42],
+        ['armL', p.x - right.x * 0.43, 1.28 * h, p.z - right.z * 0.43, 0.24],
+        ['armR', p.x + right.x * 0.43, 1.28 * h, p.z + right.z * 0.43, 0.24],
+        ['legs', p.x, 0.57 * h, p.z, 0.34]
+      ];
+      for (const [zone, x, zy, z, radius] of zones) {
+        const vx = tip.x - base.x, vy = tip.y - base.y, vz = tip.z - base.z;
+        const q = clamp(((x - base.x) * vx + (zy - base.y) * vy + (z - base.z) * vz) / (vx * vx + vy * vy + vz * vz || 1), 0, 1);
+        const gap = Math.hypot(base.x + vx * q - x, base.y + vy * q - zy, base.z + vz * q - z);
+        if (gap < radius + 0.09 && q < nearest) { nearest = q; best = t.team === f.team ? { blockedByAlly: true } : { target: t, zone, pos: new THREE.Vector3(x, zy, z) }; }
+      }
     }
     if (best) return best;
   }
   return null;
 }
-
+function sweptSwingTarget(f, a, from, to) { const contact = traceSwing(f, a, from, to); return contact && contact.target || null; }
 function resolveSwing(f, a, contact) {
   const w = f.weapon; if (!w) return;
   const reach = 0.6 + w.len * 0.92 + f.reachB + 0.1 * perk(f, 'steel.reaper');
-  const t = contact === undefined ? findTarget(f, reach, a.arc === 'O' ? 0.55 + 0.1 * perk(f, 'steel.overhead') : 1.25, a.arc === 'O') : contact;
+  const t = contact === undefined ? findTarget(f, reach, a.arc === 'O' ? 0.55 + 0.1 * perk(f, 'steel.overhead') : 1.25, a.arc === 'O') : contact && (contact.target || contact);
   if (!t) { // whiff: over-commit
+    if (G.match && G.match.metrics) G.match.metrics.whiffs[f.team]++;
     a.whiff = true; const fw = fwd(f.facing); applyImpulse(f, fw, (0.32 + 0.4 * a.charge) * (G.player && f !== G.player && f.team !== 0 && dist2(G.player.pos, f.pos) < reach + 0.6 && perk(G.player, 'lungs.slip') ? 1.25 : 1));
     if (f.isPlayer) { toast('Miss', 'bad', a.charge > 0.5 ? 'Big swings over-commit you' : ''); ev('miss'); }
     return;
@@ -29912,7 +29927,7 @@ function resolveSwing(f, a, contact) {
   if (weaponBindPossible(f, t, gap)) { resolveWeaponBind(f, t, a); return; }
   const tipSpeed = (a.arc === 'O' ? 10.5 : 11.5) * (0.78 + 0.42 * a.charge) * Math.sqrt(0.5 + 0.5 * f.gas) * (0.82 + 0.22 * w.len) / Math.pow(w.mass, 0.3);
   const p = w.mass * tipSpeed;
-  let imp = 0.3 * Math.sqrt(p) * f.arch.power;
+  let imp = 0.3 * Math.sqrt(p) * f.arch.power * botScale(f, 1.35);
   const sp = w.special; if (sp === 'squeak') imp *= 0.22;
   imp *= (1 + 0.04 * perk(f, 'steel.heavy')) * (a.arc === 'O' ? 1 + 0.12 * perk(f, 'steel.overhead') : 1) * (f.buffT > 0 ? f.buffImp || 1 : 1);
   if (perk(f, 'steel.combo')) { f.comboN = G.simTime - (f.lastHitT || -9) < 1.2 ? Math.min(3, (f.comboN || 0) + 1) : 0; f.lastHitT = G.simTime; imp *= 1 + 0.08 * f.comboN; if (f.comboN >= 2) toast(`Combo x${f.comboN + 1}`, 'good'); }
@@ -29931,17 +29946,19 @@ function resolveSwing(f, a, contact) {
   imp *= leverage; a.smothered = leverage < 0.7;
   let dir = { x: (tp.x - f.pos.x) / dlen, z: (tp.z - f.pos.z) / dlen };
   if (a.arc !== 'O') { const s = a.arc === 'R2L' ? 1 : -1; const tan = { x: -dir.z * s, z: dir.x * s }; dir = vnorm({ x: dir.x + tan.x * 0.55, z: dir.z + tan.z * 0.55 }); }
-  const hitPos = new THREE.Vector3(tp.x - dir.x * 0.25, 1.35, tp.z - dir.z * 0.25);
+  const hitPos = contact && contact.pos ? contact.pos.clone() : new THREE.Vector3(tp.x - dir.x * 0.25, 1.35, tp.z - dir.z * 0.25);
   G.stats.hits++; f.stats.hits++;
+  if (G.match && G.match.metrics) G.match.metrics.hits[f.team]++;
   // ---- fouls ----
   if (isDown(t)) { hitPos.y = 0.7; reportFoul(f, t, 'grounded'); AU.armourHit(0.6, vol(f)); sparks(hitPos, 5); return; }
   const behind = facingDot(t, f) < -0.55;
   if (a.arc === 'O' && behind && chance(0.22)) reportFoul(f, t, 'skull');
   // ---- guard ----
   const facingAtt = facingDot(t, f) > 0.3;
-  let zone, blocked = false, go = null;
+  let zone = contact && contact.zone || null, blocked = false, go = null;
   if (t.guard && t.state === 'standing' && facingAtt) {
     blocked = true; let bf = t.shield ? t.shield.block : t.weapon && t.weapon.special === 'sign' ? 0.38 : 0.62; go = guardOutcome(f, t, a, bf); bf = go.bf; imp *= bf * (1 - 0.12 * perk(t, 'iron.wall')); zone = 'shield'; G.stats.blocks++;
+    if (G.match && G.match.metrics) G.match.metrics.guards[t.team]++;
     // perfect block: guard raised just before the blow lands. No breath spent, and the attacker is thrown off balance
     const perfect = !go.wrong && !go.mid && (G.simTime - (t.guardAt || -9) < (t.isPlayer ? 0.2 : 0.12) || go.parry);
     if (perfect) { imp *= 0.35; t.riposteT = G.simTime + 0.8; applyImpulse(f, { x: -dir.x, z: -dir.z }, 0.55); f.cd = Math.max(f.cd, 0.45); sparks(new THREE.Vector3(t.pos.x + dir.x * -0.4, 1.3 * t.body.h / 1.8, t.pos.z + dir.z * -0.4), 16, 1.3, '#fff3b0');
@@ -29952,6 +29969,9 @@ function resolveSwing(f, a, contact) {
     }
     AU.block(t.shield ? t.shield.key : (t.weapon && t.weapon.haft ? 'haft' : 'clash'), 0.6 + imp * 0.3, vol(t));
     hitPos.y = 1.25;
+  } else if (zone) {
+    if (zone === 'legs' && behind && chance(0.18)) reportFoul(f, t, 'knee');
+    if (sp === 'squeak') AU.squeak(vol(t)); else if (sp === 'bong' && zone === 'helmet') AU.bong(vol(t)); else AU.armourHit(0.55 + imp * 0.35, vol(t));
   } else {
     const r = Math.random();
     // you land where you aim: the height your view points at on them picks the zone most of the time
@@ -29964,7 +29984,7 @@ function resolveSwing(f, a, contact) {
     if (zone === 'legs' && behind && chance(0.18)) reportFoul(f, t, 'knee'); // back of the knee is off target (BR 6)
     if (sp === 'squeak') AU.squeak(vol(t)); else if (sp === 'bong' && zone === 'helmet') AU.bong(vol(t)); else AU.armourHit(0.55 + imp * 0.35, vol(t));
   }
-  hitPos.y *= t.body.h / 1.8;
+  if (!contact || !contact.pos) hitPos.y *= t.body.h / 1.8;
   if (t.brace) imp *= 0.78 * (perk(t, 'iron.brace') ? 0.85 : 1);
   applyImpulse(t, dir, imp, { type: 'hit', by: f });
   // hit stun: struck mid-wind-up and the swing is lost, unless braced
@@ -30064,7 +30084,7 @@ function resolveShove(f) {
   const P = f.isPlayer; const t = findTarget(f, 1.2 + (P ? 0.3 : 0), P ? 1.2 : 0.95, false); f.gas = Math.max(0, f.gas - 0.055 * (1 - 0.2 * perk(f, 'lungs.endure')));
   if (!t) { applyImpulse(f, fwd(f.facing), 0.25); if (P) toast('Shove missed', 'bad', 'Get closer first'); return; }
   const dir = vnorm({ x: t.pos.x - f.pos.x, z: t.pos.z - f.pos.z });
-  let imp = (f.shield ? 1.35 : 1.05) * (0.6 + 0.4 * f.gas) * Math.sqrt(massF(f) / massF(t)) * f.arch.power * (P ? 1.2 : 1) * (f.weapon && f.weapon.special === 'sweep' ? 1.45 : 1) * (1 + 0.07 * perk(f, 'grapple.shove'));
+  let imp = (f.shield ? 1.35 : 1.05) * (0.6 + 0.4 * f.gas) * Math.sqrt(massF(f) / massF(t)) * f.arch.power * botScale(f, 1.35) * (P ? 1.2 : 1) * (f.weapon && f.weapon.special === 'sweep' ? 1.45 : 1) * (1 + 0.07 * perk(f, 'grapple.shove'));
   const braced = t.brace && facingDot(t, f) > 0.2; if (braced) imp *= 0.5;
   // shield bash: a shield driven into a raised guard knocks it open
   if (f.shield && t.guard && facingDot(t, f) > 0.3) { t.guard = false; t.guardBroken = G.simTime + 0.7; if (t.ai) t.ai.guardT = -1; imp *= 1.15; if (P) toast('Shield bash!', 'big', 'Their guard is open. Hit them!'); else if (t.isPlayer) toast('Shield bash!', 'bad', 'Your guard was knocked aside'); }
@@ -30092,7 +30112,7 @@ function resolveTrip(f) {
     if (P) { hitMark('#f2c40f'); toast('Tripped!', 'big'); ev('trip', { ok: true, combo }); t.comboTrip = combo; }
     G.stats.tripsOk++;
     const dir = vnorm({ x: t.pos.x - f.pos.x + t.lean.x * 2, z: t.pos.z - f.pos.z + t.lean.z * 2 });
-    t.noStep = 0.65; applyImpulse(t, dir, 1.45, { type: 'trip', by: f });
+    t.noStep = 0.65; applyImpulse(t, dir, 1.45 * botScale(f, 1.35), { type: 'trip', by: f });
     if (t.clinch) breakClinch(t);
     AU.thud(0.6, vol(f));
   } else {
@@ -30127,7 +30147,7 @@ function resolveGrab(f) {
 function resolveKnee(f) { // free-hand punch or knee inside the clinch (BR 3.1)
   const c = f.clinch; if (!c) return; const t = c.a === f ? c.b : c.a;
   const dir = vnorm({ x: t.pos.x - f.pos.x, z: t.pos.z - f.pos.z });
-  applyImpulse(t, dir, 0.42 * f.arch.power, { type: 'hit', by: f }); t.gas = Math.max(0, t.gas - 0.045); f.gas = Math.max(0, f.gas - 0.03);
+  applyImpulse(t, dir, 0.42 * f.arch.power * botScale(f, 1.35), { type: 'hit', by: f }); t.gas = Math.max(0, t.gas - 0.045); f.gas = Math.max(0, f.gas - 0.03);
   AU.thud(0.8, vol(f)); c.idle = Math.max(0, c.idle - 1.5);
   if (f.isPlayer) { hitMark('#ffffff'); toast('Knee', 'good'); ev('knee'); }
 }
@@ -30138,7 +30158,7 @@ function resolveThrow(f) { // hip throw or trip from the clinch (BR 3.4)
     breakClinch(f);
     const side = chance(0.5) ? 1 : -1; const d = vnorm({ x: t.pos.x - f.pos.x, z: t.pos.z - f.pos.z });
     const dir = vnorm({ x: d.x - d.z * side * 0.8, z: d.z + d.x * side * 0.8 });
-    t.noStep = 0.7; applyImpulse(t, dir, 1.7 * (1 + 0.25 * perk(f, 'grapple.hiptoss')), { type: 'throw', by: f }); AU.thud(1, vol(f)); if (perk(f, 'grapple.chain')) f.chainT = G.simTime + 3;
+    t.noStep = 0.7; applyImpulse(t, dir, 1.7 * botScale(f, 1.35) * (1 + 0.25 * perk(f, 'grapple.hiptoss')), { type: 'throw', by: f }); AU.thud(1, vol(f)); if (perk(f, 'grapple.chain')) f.chainT = G.simTime + 3;
     if (f.isPlayer) { hitMark('#f2c40f'); toast('Thrown!', 'big'); ev('throw'); }
   } else { f.action.failed = true; f.noStep = 0.25; applyImpulse(f, vnorm({ x: t.pos.x - f.pos.x, z: t.pos.z - f.pos.z }), 0.38); c.idle = Math.max(0, c.idle - 1); if (f.isPlayer) toast('Throw failed', 'bad', 'Wear them down with knees first'); }
 }
@@ -30330,13 +30350,31 @@ function updateClinches(dt) {
 //  - AI tiers: fairground bots are forgiving, bailey bots parry and feint, the King's Guard mixes everything.
 // ===================================================================
 // 1 = fairground (forgiving), 2 = bailey, 3 = king's court
+const CHALLENGE_MILESTONES = [25, 50, 75, 80, 90, 100];
+const CHALLENGE_MAX = Math.pow(1.12, 3) * Math.pow(1.20, 3);
+function challengeLevel() {
+  const level = G.match && G.match.challengeLevel != null ? G.match.challengeLevel : (typeof CAREER !== 'undefined' ? CAREER.level : 1);
+  return clamp(Math.floor(Number(level) || 1), 1, 100);
+}
+function challengeStage(level = challengeLevel()) { return CHALLENGE_MILESTONES.filter(n => level >= n).length; }
+function challengeFactor(level = challengeLevel()) {
+  const stage = challengeStage(level);
+  return Math.pow(1.12, Math.min(stage, 3)) * Math.pow(1.20, Math.max(0, stage - 3));
+}
+function botChallenge(f) {
+  if (!f || f.isPlayer || f.vin || f.netUid || !G.match || G.match.training || G.match.attract || G.attract) return 0;
+  if (f.team === 0 && !G.match.online && ((!G.match.versus && !G.match.ffa) || (G.match.local && G.match.local.startsWith('coop')))) return 0;
+  return G.match.challengePressure || 0;
+}
+function botScale(f, cap) { return 1 + (cap - 1) * botChallenge(f); }
 function aiTier(f) {
   const m = G.match; if (!m) return 1;
+  if (m.training || m.attract) return 1;
+  if (f && f.team === 0 && !m.online && ((!m.versus && !m.ffa) || (m.local && m.local.startsWith('coop')))) return 1;
   if (m.aiTier) return m.aiTier;
   if (m.trial) return m.trial === 'royal' ? 3 : 2;
   if (m.townBout && typeof TOWN !== 'undefined' && TOWN.boutArena) { const A = ARENAS.find(a => a.key === TOWN.boutArena); return A && A.district === 'ward' ? 3 : A && A.district === 'bailey' ? 2 : 1; }
-  const level = typeof CAREER !== 'undefined' && CAREER.level || 1;
-  return Math.min(3, 1 + Math.floor(level / 20));
+  return Math.min(3, 1 + challengeStage());
 }
 const AI_TIER = {
   1: { read: 0.4, learn: 0.18, parry: 0.04, feint: 0, unfooled: 0, peel: 0.6 },
@@ -30344,18 +30382,16 @@ const AI_TIER = {
   3: { read: 0.72, learn: 0.28, parry: 0.24, feint: 0.2, unfooled: 0.6, peel: 1.8 }
 };
 function tierProf(prof, f) {
-  const k = aiTier(f); if (f.team === 0 && !(G.match && G.match.ffa)) return prof;
-  const level = typeof CAREER !== 'undefined' && CAREER.level || 1;
-  const growth = clamp((level - 1) / 99, 0, 1);
-  const late = level > 70 ? Math.pow(1.035, level - 70) : 1;
+  const k = aiTier(f); if (f.team === 0 && !(G.match && (G.match.ffa || G.match.online || (G.match.versus && !(G.match.local && G.match.local.startsWith('coop')))))) return prof;
+  const growth = botChallenge(f);
   const tierReact = k === 3 ? 0.82 : k === 2 ? 0.92 : 1;
   const tierGuard = k === 3 ? 0.14 : k === 2 ? 0.07 : 0;
   const tierAggr = k === 3 ? 1.1 : k === 2 ? 1.04 : 1;
   return {
     ...prof,
-    react: prof.react * tierReact * (1 - 0.18 * growth) / late,
-    guard: Math.min(0.99, prof.guard + tierGuard + 0.14 * growth + 0.08 * (late - 1)),
-    aggr: prof.aggr * tierAggr * (1 + 0.22 * growth) * late
+    react: Math.max(0.11, prof.react * tierReact * (1 - 0.35 * growth)),
+    guard: Math.min(0.92, prof.guard + tierGuard + 0.16 * growth),
+    aggr: prof.aggr * tierAggr * (1 + 0.35 * growth)
   };
 }
 // which side will this blow come from? a bot guesses, better if it has seen you favour one side
@@ -30401,7 +30437,10 @@ function feintCalled(f) {
 // team play: a bonus for going after whoever is doubling one of my mates
 function peelBonus(f, e, mates) {
   const T = AI_TIER[aiTier(f)];
-  for (const m of mates) if (e.ai && e.ai.target === m && engagedBy(m, e.team) >= 2) return T.peel;
+  for (const m of mates) if (dist2(e.pos, m.pos) < 2.5 && facingDot(e, m) > 0.25) {
+    let n = 0; for (const o of G.fighters) if (o.team === e.team && isUp(o) && dist2(o.pos, m.pos) < 2.5) n++;
+    if (n >= 2) return T.peel;
+  }
   return 0;
 }
 
@@ -30671,7 +30710,7 @@ function aiControl(f, dt) {
   const t = ai.target;
   if (t && isUp(t) && !f.clinch) f.wantFace = angTo(f.pos, t.pos);
   if (ai.next > 0) return;
-  ai.next = prof.react * rand(0.65, 1.3);
+  ai.next = Math.max(0.11, prof.react * rand(0.65, 1.3));
   think(f, prof);
 }
 
@@ -30680,6 +30719,7 @@ const TRAITS = { steady: { aggr: 1, guard: 1, want: 0 }, reckless: { aggr: 1.35,
 function traitOf(f) { if (!f.trait) { const r = seeded('trait' + f.name + f.num)(); f.trait = r < 0.34 ? 'steady' : r < 0.52 ? 'reckless' : r < 0.7 ? 'cautious' : r < 0.86 ? 'grappler' : 'showboat'; } return f.trait; }
 function think(f, prof) {
   const team = f.team, order = teamPlan(team), ai = f.ai, T = TRAITS[traitOf(f)];
+  const pressure = botChallenge(f), stage = pressure > 0 ? challengeStage() : 0;
   const role = meleeRolesOn() ? ai.role : null;
   prof = { ...prof, aggr: prof.aggr * T.aggr, guard: Math.min(0.95, prof.guard * T.guard) };
   const enemies = G.fighters.filter(o => o.team !== team && isUp(o));
@@ -30693,10 +30733,17 @@ function think(f, prof) {
     if (attacker) { ai.guardT = Math.max(ai.guardT, 0.6); ai.gdir = aiReadArc(f, attacker); }
   }
   if (!enemies.length) { f.move.x = f.move.z = 0; return; }
+  if (stage && (!ai.combatRole || G.simTime >= (ai.combatRoleUntil || 0))) {
+    const troubled = mates.find(m => enemies.filter(e => dist2(e.pos, m.pos) < 2.2).length >= 2 && dist2(m.pos, f.pos) < 6);
+    ai.combatRole = stage >= 2 && troubled ? 'rescuer' : mates.some(m => m.ai.target && isUp(m.ai.target) && dist2(m.pos, m.ai.target.pos) < 2.5) ? 'flanker' : 'engager';
+    ai.rescue = troubled || null;
+    ai.combatRoleUntil = G.simTime + 1.4 + rand(0, 0.9);
+  }
   // react to a strike being wound up at you, or a charge
   for (const e of enemies) {
     const d = dist2(e.pos, f.pos);
     if (e.action && e.action.kind === 'swing' && e.action.phase === 'windup' && d < reachOf(e) + 0.4 && facingDot(e, f) > 0.55 && chance(prof.guard)) { ai.guardT = rand(0.4, 0.7); ai.gdir = aiReadArc(f, e); }
+    if (stage >= 3 && e.action && e.action.kind === 'trip' && e.action.phase === 'windup' && d < 1.3 && facingDot(e, f) > 0.3) ai.braceT = Math.max(ai.braceT, 0.35);
     const closing = -((e.vel.x * (f.pos.x - e.pos.x) + e.vel.z * (f.pos.z - e.pos.z)) / (d || 1));
     if (closing < -2.6 && d < 2.6 && chance(0.55)) ai.braceT = 0.6;
   }
@@ -30718,7 +30765,7 @@ function think(f, prof) {
     let s = -d + 2.2 * leanRatio(e) * (order === 'hunt' ? 2 : 1);
     if (eng >= 1) s += order === 'pair' ? 1.8 : 0.6;
     if (eng >= 2) s -= 1.4;
-    if (e === ai.target) s += 1.0;
+    if (e === ai.target) s += G.simTime < (ai.targetUntil || 0) ? 4.0 : 1.0;
     if (order === 'pair' && e === pairT) s += 3;
     if (order === 'peel' && e.ai.target && engagedBy(e.ai.target, e.team) >= 2) s += 2.2;
     if (e.clinch) s += 0.8;
@@ -30732,15 +30779,18 @@ function think(f, prof) {
     if (role === 'tank') s += 1.5 * e.mass / 120 + 0.45 * e.stats.takedowns + (e.ai && mates.some(m => e.ai.target === m) ? 0.7 : 0);
     if (role === 'rook' && protect) s += e === protect.ai.target ? 3.5 : e.ai && e.ai.target === protect ? 3.2 : 0;
     if (role === 'runner') s += 2.8 * leanRatio(e) + 1.2 * (1 - e.gas) + (isolated ? 1.1 : 0) + (e.atRail ? 0.7 : 0) + (e.clinch ? 1.0 : 0);
+    if (ai.combatRole === 'rescuer' && ai.rescue && dist2(e.pos, ai.rescue.pos) < 2.2) s += 4;
+    if (ai.combatRole === 'flanker' && mates.some(m => m.ai.target === e)) s += 2.4;
     if (s > bs) { bs = s; best = e; }
   }
+  if (best !== ai.target) ai.targetUntil = G.simTime + 1.3 + pressure * 0.6;
   ai.target = best; const tg = best;
   const d = dist2(tg.pos, f.pos);
   let aggr = prof.aggr * (mates.length + 1 < enemies.length ? 1.2 : 1);
   // movement goal
   const reach = reachOf(f);
   let want = f.weapon ? (f.weapon.key === 'polearm' ? 1.8 : Math.max(0.95, reach * 0.72)) : 0.8;
-  if (f.gas < 0.25) want += 0.9;
+  if (f.gas < 0.25) want += 0.9 + pressure * 0.7;
   want += T.want; if (f.trait === 'cautious' && f.gas < 0.45) want += 1.1; // cautious fighters back off to breathe
   if (role === 'tank') want = Math.min(want, 0.82);
   if (role === 'rook') want = Math.min(want, 1.05);
@@ -30748,7 +30798,7 @@ function think(f, prof) {
   if (order === 'hold' && team === 0 && d > 3.4 && !G.autopilot) {
     gx = f.home.x; gz = f.home.z - Math.sign(f.home.z) * 4; ai.braceT = 0.5;
   } else {
-    const flank = engagedBy(tg, team, f) >= 1 && f.arch.key !== 'heavy';
+    const flank = (ai.combatRole === 'flanker' || engagedBy(tg, team, f) >= 1) && f.arch.key !== 'heavy';
     let a = angTo(tg.pos, f.pos);
     if (flank) { const behind = tg.facing + Math.PI; a = behind + clamp(angDiff(behind, a), -1.3, 1.3); }
     a += ai.strafe * 0.25;
@@ -30775,6 +30825,7 @@ function think(f, prof) {
   f.wantFace = angTo(f.pos, tg.pos);
   // actions
   if (f.cd > 0 || f.action || f.guard) return;
+  if (f.gas < 0.12 + pressure * 0.08 && !f.clinch) { ai.guardT = 0.2; return; }
   if (f.clinch) {
     const opts = [['throw', 0.35 + (f.arch.grip - 1) * 0.8 + (f.gas - (f.clinch.a === f ? f.clinch.b : f.clinch.a).gas)], ['knee', 0.45], ['disarm', f.arch.key === 'grappler' ? 0.35 : 0.1], ['shove', 0.18], ['none', 0.55]];
     if (role === 'tank') { opts[0][1] += 0.55; opts[2][1] += 0.55; opts[3][1] += 0.3; }
@@ -30787,9 +30838,9 @@ function think(f, prof) {
   const lr = leanRatio(tg), side = facingDot(tg, f) < 0.35;
   const crowdedWeapon = !!(f.weapon && swingLeverage(f.weapon, d) < 0.75);
   const opts = [['none', 0.55]];
-  if (f.weapon && d < reach + 0.1 && facingOk) opts.push(['swing', aggr * (1 + (tg.guard && !side ? -0.55 : 0.3) + (f.arch.key === 'striker' ? 0.3 : 0)) * (crowdedWeapon ? 0.25 : 1) * (role === 'tank' ? 0.22 : role ? 0.48 : 1)]);
+  if (f.weapon && d < reach + 0.1 && facingOk) opts.push(['swing', aggr * (1 + (tg.guard && !side ? -0.55 : 0.3) + (f.arch.key === 'striker' ? 0.3 : 0) + (stage >= 3 && tg.gas < 0.25 ? 0.35 : 0) + (stage >= 4 && tg.action && tg.action.whiff ? 0.5 : 0)) * (crowdedWeapon ? 0.25 : 1) * (role === 'tank' ? 0.22 : role ? 0.48 : 1)]);
   if (d < 1.05) opts.push(['trip', 0.15 + 2.6 * lr + (side ? 0.6 : 0) + (tg.clinch ? 1.2 : 0) + (order === 'hunt' ? 0.35 : 0) + (f.arch.key === 'grappler' || f.arch.key === 'runner' ? 0.3 : 0) - (tg.brace ? 0.8 : 0)]);
-  if (f.weapon && d < 1.15 && facingOk) opts.push(['shove', 0.2 + (tg.atRail ? 0.45 : 0) + lr * 1.2 + (f.shield ? 0.25 : 0) + (crowdedWeapon ? 0.8 : 0)]);
+  if (f.weapon && d < 1.15 && facingOk) opts.push(['shove', 0.2 + (tg.atRail ? 0.45 + pressure * 0.8 : 0) + lr * 1.2 + (f.shield ? 0.25 : 0) + (crowdedWeapon ? 0.8 : 0)]);
   if (d < 0.92 && !tg.clinch) opts.push(['grab', (f.arch.key === 'grappler' ? 0.85 : 0.08) + (f.trait === 'grappler' ? 0.45 : 0) + (crowdedWeapon ? 0.7 : 0)]);
   if (f.trait === 'grappler') { const tr = opts.find(o => o[0] === 'trip'); if (tr) tr[1] += 0.35; }
   if (role === 'rook' || role === 'runner') { const tr = opts.find(o => o[0] === 'trip'); if (tr) tr[1] += role === 'runner' ? 0.7 : 0.45; }
@@ -32031,7 +32082,7 @@ function updateTelegraphs(t) {
       const s = TELE.sprites[n++]; const wp = new THREE.Vector3(0, (o.weapon && o.weapon.len || 0.9) * 0.85, 0); o.model.weapon.localToWorld(wp);
       s.position.copy(wp); const k = clamp(a.t / Math.max(0.05, swingTimes(o).wind), 0, 1);
       s.scale.setScalar((mode === 'strong' ? 0.55 : 0.32) * (0.6 + 0.6 * k) * (1 + 0.15 * Math.sin(t * 40)));
-      s.material.color.set(a.arc === 'O' ? '#ff6a5a' : '#fff3b0'); s.visible = true;
+      s.material.color.set(a.arc === 'O' ? '#ff6a5a' : a.arc === 'R2L' ? '#6fc9ff' : '#ffd177'); s.visible = true;
     }
   }
   for (let i = n; i < TELE.sprites.length; i++) TELE.sprites[i].visible = false;
@@ -32447,6 +32498,8 @@ const CAREER_DEFAULT = () => ({
   ladder: { rung: 0 }, trained: false
 });
 const CAREER = (() => { const d = CAREER_DEFAULT(), s = store.get('career', null); if (!s) return d; return { ...d, ...s, club: { ...d.club, ...(s.club || {}) }, upgrades: { ...d.upgrades, ...(s.upgrades || {}) }, stats: { ...d.stats, ...(s.stats || {}) }, ladder: { ...d.ladder, ...(s.ladder || {}) }, ach: s.ach || {} }; })();
+CAREER.level = clamp(Math.floor(Number(CAREER.level) || 1), 1, 100);
+if (CAREER.level === 100) CAREER.xp = 0;
 function saveCareer() {
   if (typeof testAdminApply === 'function' && typeof BOS !== 'undefined' && BOS.testAdmin) testAdminApply(false);
   store.set('career', CAREER);
@@ -32810,6 +32863,8 @@ const SKILL_BY_ID = {}; SKILL_TREES.forEach(T => T.nodes.forEach(n => { n.tree =
 function skillsState() {
   if (!CAREER.skills) CAREER.skills = {};
   if (CAREER.xp == null) { CAREER.xp = 0; CAREER.level = 1; }
+  CAREER.level = clamp(Math.floor(Number(CAREER.level) || 1), 1, 100);
+  if (CAREER.level === 100) CAREER.xp = 0;
   // Every level grants exactly one spendable point. Keep old saves compatible
   // while making the rule explicit and repairing saves from older builds.
   const earned = Math.max(0, (CAREER.level || 1) - 1) + 3 + ((typeof shopState === 'function' && shopState().spBought) || 0);
@@ -32841,12 +32896,13 @@ function learn(n) { const why = canLearn(n); if (why) return why; const S = CARE
 const XP_FOR = { hit: 3, block: 2, trip: 8, throw: 12, disarm: 12, tackle: 6, takedown: 25, knee: 1, shove: 2, repair: 6 };
 function gainXP(amount, why) {
   if (G.autopilot || G.attract || amount <= 0) return; skillsState();
+  if (CAREER.level >= 100) return;
   amount = Math.round(amount * (1 + 0.15 * ((CAREER.skills['show.scout']) || 0)) * shopXpMult());
   CAREER.xp += amount; MT.xp = (MT.xp || 0) + amount;
   while (CAREER.level < 100 && CAREER.xp >= xpNeed(CAREER.level)) { CAREER.xp -= xpNeed(CAREER.level); CAREER.level++; CAREER.sp++; levelUp(); }
-  if (CAREER.level >= 100) CAREER.xp = 0;
+  if (CAREER.level === 100) CAREER.xp = 0;
 }
-function levelUp() { const cash = 25 * CAREER.level; CAREER.purse += cash; CAREER.stats.earned += cash; const rk = CAREER.level % 5 === 1 && CAREER.level > 1 ? ` New rank: ${rankOf(CAREER.level)}!` : ''; if (typeof applyCosmeticUnlocks === 'function') applyCosmeticUnlocks(); ACHQ.push({ name: `Level ${CAREER.level}`, desc: `Skill point and $${cash} earned.${rk}`, kicker: 'Level up' }); if (!ACHQ.busy) showAch(); AU.cheer(1.1); updateTitlePurse(); }
+function levelUp() { const cash = 25 * CAREER.level; CAREER.purse += cash; CAREER.stats.earned += cash; const rk = CAREER.level % 5 === 1 && CAREER.level > 1 ? ` New rank: ${rankOf(CAREER.level)}!` : ''; const challenge = CHALLENGE_MILESTONES.includes(CAREER.level) ? ' Your next opponents will fight at a tougher tier.' : ''; if (typeof applyCosmeticUnlocks === 'function') applyCosmeticUnlocks(); ACHQ.push({ name: `Level ${CAREER.level}`, desc: `Skill point and $${cash} earned.${rk}${challenge}`, kicker: 'Level up' }); if (!ACHQ.busy) showAch(); AU.cheer(1.1); updateTitlePurse(); }
 EV_LISTENERS.push((type, d) => {
   if (type === 'hit') { if (!d.blocked) gainXP(XP_FOR.hit + (d.big ? 5 : 0)); return; }
   if (XP_FOR[type] && (type !== 'trip' || d.ok)) gainXP(XP_FOR[type]);
@@ -32865,7 +32921,7 @@ function renderSkills(box) {
   skillsState();
   const sel = G.skillSel || 'steel.heavy';
   const head = h('div', { class: 'skhead' },
-    h('div', { class: 'sklv' }, h('span', { class: 'lvnum num' }, String(CAREER.level)), h('span', null, h('b', null, `Level ${CAREER.level}`), h('span', { class: 'xpbar' }, h('i', { style: `width:${Math.round(CAREER.xp / xpNeed(CAREER.level) * 100)}%` })), h('small', { class: 'muted num' }, `${CAREER.xp} / ${xpNeed(CAREER.level)} XP`))),
+    h('div', { class: 'sklv' }, h('span', { class: 'lvnum num' }, String(CAREER.level)), h('span', null, h('b', null, `Level ${CAREER.level}`), h('span', { class: 'xpbar' }, h('i', { style: `width:${CAREER.level >= 100 ? 100 : Math.round(CAREER.xp / xpNeed(CAREER.level) * 100)}%` })), h('small', { class: 'muted num' }, CAREER.level >= 100 ? 'Maximum level' : `${CAREER.xp} / ${xpNeed(CAREER.level)} XP`))),
     h('div', { class: 'skpts' + (CAREER.sp > 0 ? ' has' : '') }, h('b', { class: 'num' }, String(CAREER.sp)), h('span', null, CAREER.sp === 1 ? 'skill point' : 'skill points')),
     h('button', { class: 'chip', title: 'Return every spent point so you can choose a different path', onclick: () => { const n = totalSpent(); if (!n) { toastMenu('No points have been spent yet'); return; } if (!renderSkills.armed) { renderSkills.armed = true; setTimeout(() => renderSkills.armed = false, 3000); toastMenu('Press again to refund every point'); return; } CAREER.skills = {}; skillsState(); saveCareer(); renderCareer(); } }, 'Reset talents'));
   box.append(head);
@@ -33108,7 +33164,7 @@ function progressMatch(m, won) {
 // ---- the Progress tab in Your fighter
 function renderProgress(box) {
   skillsState(); const lv = CAREER.level || 1, nx = nextRankAt(lv);
-  box.append(h('div', { class: 'rankcard' }, h('span', { class: 'lvnum num' }, String(lv)), h('div', null, h('b', null, rankOf(lv)), h('span', { class: 'xpbar' }, h('i', { style: `width:${Math.round((CAREER.xp || 0) / xpNeed(lv) * 100)}%` })), h('small', { class: 'muted' }, `${CAREER.xp || 0} / ${xpNeed(lv)} XP to level ${lv + 1}${nx ? ` · next rank, ${rankOf(nx)}, at level ${nx}` : ' · top rank'}`))));
+  box.append(h('div', { class: 'rankcard' }, h('span', { class: 'lvnum num' }, String(lv)), h('div', null, h('b', null, rankOf(lv)), h('span', { class: 'xpbar' }, h('i', { style: `width:${lv >= 100 ? 100 : Math.round((CAREER.xp || 0) / xpNeed(lv) * 100)}%` })), h('small', { class: 'muted' }, lv >= 100 ? 'Maximum level · top rank' : `${CAREER.xp || 0} / ${xpNeed(lv)} XP to level ${lv + 1}${nx ? ` · next rank, ${rankOf(nx)}, at level ${nx}` : ' · top rank'}`))));
   // challenges
   const D = challenges();
   const chal = (c, i, base, done, reward) => { const pr = Math.min(c.need, chalProgress(c, base)); return h('div', { class: 'chal' + (done[i] ? ' done' : '') }, h('span', null, c.text), h('span', { class: 'xpbar' }, h('i', { style: `width:${Math.round(pr / c.need * 100)}%` })), h('small', { class: 'muted num' }, done[i] ? '✓ done' : `${pr} / ${c.need} · ${reward}`)); };
@@ -33942,7 +33998,8 @@ function setupMatch(o) {
     for (let i = 0; i < 2; i++) { const w = buildWeapon('sword', club); w.position.set(zn.x + sx * 0.95, 0.62, zn.z - 0.6 + i * 1.1); w.rotation.set(0, 0, sx * 0.22); W3.matchRoot.add(w); G.crew.push(w); G.reserveAll[t].push(w); }
   });
   buildMarshals();
-  G.match = { ...o, duelCat: o.mode === 1 && G.player ? duelStyle(G.player.spec).cat : null, category: cat, wins: [0, 0], round: 0, results: [], cards: [], takedowns: [0, 0], clock: ROUND_TIME, champion: false, playerHits: 0, duel: o.mode === 1 && !o.attract, pts: [0, 0], cute: cat === 'youth' };
+  G.match = { ...o, challengeLevel: clamp(Math.floor(Number(o.challengeLevel == null ? CAREER.level : o.challengeLevel) || 1), 1, 100), duelCat: o.mode === 1 && G.player ? duelStyle(G.player.spec).cat : null, category: cat, wins: [0, 0], round: 0, results: [], cards: [], takedowns: [0, 0], clock: ROUND_TIME, champion: false, playerHits: 0, duel: o.mode === 1 && !o.attract, pts: [0, 0], cute: cat === 'youth', metrics: { start: G.simTime, actions: [{}, {}], hits: [0, 0], whiffs: [0, 0], guards: [0, 0] } };
+  G.match.challengePressure = clamp((challengeFactor(G.match.challengeLevel) - 1) / (CHALLENGE_MAX - 1), 0, 1);
   assignMeleeRoles(0); assignMeleeRoles(1);
   $('#sbA').textContent = A.short; $('#sbB').textContent = B.short;
   buildPips();
@@ -34278,6 +34335,7 @@ function matchEnd() {
   }
   if (G.autoflow) { G.stats.matches = (G.stats.matches || 0) + 1; if (G.autoNext) G.autoNext(); return; }
   const won = m.wins[0] > m.wins[1], drawn = m.wins[0] === m.wins[1]; AU.music(true);
+  if (m.versus || (m.online && NET.role === 'host')) eventMatch(m, won);
   if (m.versus && G.bracket) { VS.on = false; document.body.classList.remove('split', 'split4'); $('#splitLabels').innerHTML = ''; bracketResult(m.wins[0] > m.wins[1] ? 0 : m.wins[1] > m.wins[0] ? 1 : (m.pts && m.pts[1] > m.pts[0] ? 1 : 0)); return; }
   if (m.versus) { VS.on = false; document.body.classList.remove('split', 'split4'); $('#splitLabels').innerHTML = ''; const k = VS.kind; const t = drawn ? 'Draw' : k === 'duel' ? (won ? 'Player 1 wins' : 'Player 2 wins') : k === 'tag' ? (won ? 'Players 1 and 3 win' : 'Players 2 and 4 win') : (won ? 'You two win' : 'The bots win'); msg('local play', t, `<p>${m.wins[0]}–${m.wins[1]} in rounds.</p>`, [['Rematch', () => startVersus(k), true], ['Couch play', openVersus], ['Title', toTitle]]); return; }
   if (m.online) { onlineMatchEnd(); return; }
@@ -35095,9 +35153,11 @@ function animateFighter(f, dt, t) {
   // ---- actions ----
   const a = f.action;
   if (a && a.kind === 'swing') {
-    if (a.phase === 'windup') { const w = WIND[a.arc] || WIND.R2L; Object.assign(P, w); P['torso.y'] = (w['torso.y'] || 0) * (1 + 0.45 * a.charge); rate = 11; }
-    else if (a.phase === 'strike') { Object.assign(P, STRIKE[a.arc] || STRIKE.R2L); rate = 34; }
-    else rate = 8;
+    const w = WIND[a.arc] || WIND.R2L, s = STRIKE[a.arc] || STRIKE.R2L, T = swingTimes(f);
+    const blend = (from, to, u) => { for (const key of new Set([...Object.keys(from), ...Object.keys(to)])) P[key] = lerp(from[key] == null ? P[key] || 0 : from[key], to[key] == null ? P[key] || 0 : to[key], ease(u)); };
+    if (a.phase === 'windup') { const base = { ...P }; blend(base, w, clamp(a.t / Math.max(0.05, a.wind || T.wind), 0, 1)); P['torso.y'] = (w['torso.y'] || 0) * (1 + 0.45 * a.charge) * clamp(a.t / Math.max(0.05, a.wind || T.wind), 0, 1); rate = 16; }
+    else if (a.phase === 'strike') { blend(w, s, clamp(a.t / T.strike, 0, 1)); rate = 40; }
+    else { const base = { ...P }; blend(s, base, clamp(a.t / T.rec, 0, 1)); rate = 18; }
     if (twoH && a.phase !== 'recover') { P['shL.x'] = P['shR.x'] * 0.92; P['shL.z'] = P['shR.z'] + 0.5; P['elL.x'] = P['elR.x']; }
   } else if (a && a.kind === 'shove') {
     if (a.phase === 'windup') { P['shp.z'] = 0.12; P['torso.x'] = -0.05; }
@@ -35343,6 +35403,7 @@ async function boot(hot) {
   window.__ST = { GAMEPLAY, SAT, YUKA, CANNON, RAPIER, BVH, gameplayShape, gameplayShapeBlocked, gameplayGroundAt, gameplayMove, G, AU, buildShield, buildWeapon, W3, startTourney, quickFight, toTitle, openRepair, kitCheck, setupMatch, toTactics, beginFight, endRound, matchEnd, CLUBS, WEAPONS, setView, toast, renderKitPicker, applyLoadout, IN, FP, showScreen, weaponIcon, startCine, startTraining, startLadder, openCareer, openModes, openLadder, CAREER, setLesson, TR, unlock, togglePause, afterRound, renderHow, selectPiece, selectTape, msg, renderSheet, setHud, endTraining, setMode, PAD, navMove, focusFirst, sparks, CUTE, THREE, BREATH, setCuteDeco, flipFx, PHOTO, UAL, raiseFlags, startVersus, startFFA, startBracket, startKid, KID, openSeason, startSeasonMatch, setVenue, VS, SPLIT, NET, buildOnlineMatch, hostLobby, joinLobby, ONL, vinControl, openRun, openDaily, openBracket, showBracket, bracketResult, ffaMatchEnd, ffaLeader, ffaWinner, endKid, openPhoto, closePhoto, startReplay, stopReplay, RP, store, startRunFight, newRun, runEnd, WX, setWeather, padVin, readVersus, applyLo, myLoadout, netDropped, netLeave, showIntro, installForged, dailyPlan, openKids, openVersus, openPicks, LESSONS, rivalClub, startGrudge, startDaily, seasonState, newSeason, refreshDaily, VENUES, COMM, hitMapHtml, resetFighterForRound, DIFF, PIN, PADS, NIN, padsUpdate, seatPads, LOBBY, MM, openOnlineHub, benchDown, benchMove, REP, squirePatch, coverage, openProfile, myProfile, BOS, updateTitlePurse, ACH, progressCheck, challenges, masteryOf, S2, rankOf, counterValue, renderCareer, progressMatch, saveCareer, shopState, shopUp, tapeLeft, shopMatchEnd, shopPrizeMult, shopXpMult, swingTimes, pieceWearMult, TABARDS, refillTape, renderShop, UPGRADES, freshKit, TAPE_STOCK, enterTown, leaveTown, TOWN, openVendor, closeVendor, openTownMap, shopFx, renderVendor, VENDORS, ITEMS, itemCost, spCost, skillRoom, sponsorIncome, BOOSTS, STALL_AT, HOMES, FURNISH, pfx, squadFx, boostKit, townCollide, townRefresh, townWalkTo, townTalk, townTeardown, lookState, WORLD, guildCheck, STATIONS, townDressMe, FOLK, updateFolk, navBlocked, buildFolk, BOUT, boutStart, boutStop, boutTick, drawTownMap, updateMiniMap, costumePerson, OUTFIT, buildSkinWeapon, skinIcon, wskinList, skinFor, buildMyWeapon, wskinFamOf, GATHER, startGather, gatherSwing, stopGather, tradeState, tradeLevel, tradeGain, give, have, craft, NODES, MATS, renderTrades, TRADE_SKILLS, ARENAS, DISTRICTS, TRAVEL, setWaypoint, clearWaypoint, realmPath, callHorse, mount, dismount, ANIMAL, districtAt, realmCull, REALM_TIERS, gateOpen, townJump, stableRows, horseAvailable, peopleCull, boutArenaFor, arenaLive, bagSlots, bagState, bagRoom, secretFound, lookOwned, SECRETS, stopSpectating, startTrial, TRIALS, tierCap, gy, tierOf, HILL, hillHouses, cliffAt, gateBlocked, arenaBlocked, localPath, NAV, rampAt, ROSTER, rosterClubs, rosterLive, rosterName, liveBoutPick, aiTier, AI_TIER, guardOutcome, fighterGlow, ONB, onbStage, onbSet, openCreator, tourStart, tourEnd, TOUR_STOPS, THRONE, throneHolder, throneChallenge, throneLoad, throneOnlineEnd, openThrone, BOARDS, boardFetch, boardCrownStatues, sideFromDrag, VOICE };
   if (location.protocol === 'file:' && window.__steeltapeTest)
     Object.assign(window.__ST, { penalize, failPiece, closeRepair, xpNeed, tierProf, runToRepairCorner, onbAfterAccount, onbAccountGate, onbResumeAfterAuth, leaveTarget, leaveScreen, CLOUD, bosLoadInfo, bosBoot, swingLeverage, weaponBindPossible, resolveSwing, sweptSwingTarget, updateAction, think, updateTownCamera, LIBRARY, LIBRARY_DATA, WEAPON_VARIANTS, playerWeaponDef, libraryModel, libraryThumb, LIST, navPushOut, townCollide, SPECT, updateArenaSeatFolk, testAdminApply, testAdminRefresh, testAdminTeleport, openTestAdmin, PLAYTEST, playtestStart, playtestStop, playtestTick, playtestAction, playtestFlush, playtestCapture, gameplayShapePush, gameplayCannonTick, gameplayFolkDirection, arenaRope, gateRefused, stationTrial, commClipName, COMM_AUDIO, SFX_FILES, castleWalkable, castleSurfaceSafe });
+  if (location.protocol === 'file:' && window.__steeltapeTest) Object.assign(window.__ST, { challengeLevel, challengeStage, challengeFactor, botScale, skillsState, traceSwing, simStep });
 }
 
 function autotest() {
@@ -35991,7 +36052,7 @@ function lobbyHumans() {
   const out = []; const seen = new Set();
   for (const p of ONL.peers) {
     const P = p.presence || {}; if (!P.uid || (P.role !== 'host' && P.role !== 'guest') || seen.has(P.uid)) continue; seen.add(P.uid);
-    out.push({ uid: P.uid, account: P.account || null, bos: !!P.bos, name: String(P.name || 'A fighter').slice(0, 20), team: P.team === 1 ? 1 : 0, lo: P.lo, ready: !!P.ready, host: P.role === 'host', me: P.uid === ONL.me, peer: p.peer });
+    out.push({ uid: P.uid, account: P.account || null, bos: !!P.bos, name: String(P.name || 'A fighter').slice(0, 20), team: P.team === 1 ? 1 : 0, lo: P.lo, level: clamp(Math.floor(Number(P.level) || 1), 1, 100), ready: !!P.ready, host: P.role === 'host', me: P.uid === ONL.me, peer: p.peer });
   }
   return out.sort((a, b) => (b.host ? 1 : 0) - (a.host ? 1 : 0)).slice(0, MAX_HUMANS);
 }
@@ -36000,7 +36061,7 @@ function teamCounts(L, hum) {
   const bots = [0, 1].map(t => { const free = n - h[t]; const b = L.bots[t]; return b == null ? free : clamp(b, 0, free); });
   return { h, n, bots, total: [h[0] + bots[0], h[1] + bots[1]] };
 }
-function myPresence(extra) { return Object.assign({ role: NET.role, uid: ONL.me, account: BOS.user && BOS.user.id || null, name: myName(), bos: !!BOS.info, lo: myLo(), team: ONL.team, ready: NET.role === 'host' ? true : ONL.ready }, extra || {}); }
+function myPresence(extra) { return Object.assign({ role: NET.role, uid: ONL.me, account: BOS.user && BOS.user.id || null, name: myName(), bos: !!BOS.info, lo: myLo(), level: clamp(CAREER.level || 1, 1, 100), team: ONL.team, ready: NET.role === 'host' ? true : ONL.ready }, extra || {}); }
 function newCode() { return Array.from({ length: 4 }, () => 'ABCDEFGHJKLMNPQRSTUVWXYZ'[(Math.random() * 24) | 0]).join(''); }
 
 // ---- host: open a lobby (open = anyone tapping Find a match may join)
@@ -36155,7 +36216,7 @@ function hostStart() {
   }
   if (C.total[0] < 1 || C.total[1] < 1) { toastMenu('Each side needs at least one fighter: add a bot.'); return; }
   const H = []; for (const t of [0, 1]) hum.filter(x => x.team === t).forEach((x, i) => H.push({ uid: x.uid, account: x.account, t, i, lo: x.lo, peer: x.peer }));
-  const S = { counts: C.total, venue: L.throne ? 'hall' : L.venue, cat: L.throne ? (L.throne.seat === 'queen' ? 'women' : 'men') : L.cat, H, roles: L.roles || [[], []], throne: L.throne || null };
+  const S = { counts: C.total, venue: L.throne ? 'hall' : L.venue, cat: L.throne ? (L.throne.seat === 'queen' ? 'women' : 'men') : L.cat, H, roles: L.roles || [[], []], throne: L.throne || null, challengeLevel: Math.max(1, ...hum.map(x => x.level)) };
   ONL.go = Date.now(); ONL.S = S; lobbySet({ look: null, st: 'in an online fight' }); LOBBY.invited = null;
   buildOnlineMatch(S);
 }
@@ -36163,7 +36224,7 @@ function buildOnlineMatch(S) {
   G.attract = false; G.tourney = null; REP.log = []; endTraining();
   const catWas = G.category; G.category = S.cat || G.category;
   const N = Math.max(S.counts[0], S.counts[1], 1);
-  setupMatch({ mode: N, opp: 'wardens', stage: `Online ${S.counts[0]} v ${S.counts[1]}`, venue: S.venue, online: true, pro: N === 1 });
+  setupMatch({ mode: N, opp: 'wardens', stage: `Online ${S.counts[0]} v ${S.counts[1]}`, venue: S.venue, online: true, challengeLevel: clamp(Number(S.challengeLevel) || 1, 1, 100), pro: N === 1 });
   G.category = catWas;
   for (const t of [0, 1]) { const team = G.fighters.filter(f => f.team === t); for (const f of team.slice(S.counts[t])) { W3.matchRoot.remove(f.model.root); G.fighters.splice(G.fighters.indexOf(f), 1); } }
   G.fighters.forEach(f => { f.isPlayer = false; f.vin = null; f.netUid = null; f.netPeer = null; }); G.player = null;
@@ -37428,7 +37489,7 @@ setInterval(eventPlayTick,5000);
 setInterval(()=>{eventPlayTick();eventPlaySync();},30000);
 
 function eventSession() { sendEvent('session', { level: CAREER.level || 1, matches: (CAREER.stats || {}).matches || 0, team: CAREER.club && CAREER.club.bos || null, touch: IS_TOUCH, w: window.innerWidth, h: window.innerHeight, ver: (window.BUILD_VER || '') }); }
-function eventMatch(m, won) { if (!m || G.attract || m.training) return; sendEvent('match', { stage: m.stage || '', mode: m.mode, won: !!won, opp: m.opp, cat: m.category, online: !!m.online, trial: m.trial || null, throne: m.throne || null }); }
+function eventMatch(m, won) { if (!m || G.attract || m.training) return; const cm = m.metrics || {}; sendEvent('match', { stage: m.stage || '', mode: m.mode, won: !!won, opp: m.opp, cat: m.category, online: !!m.online, trial: m.trial || null, throne: m.throne || null, difficulty: G.settings.difficulty, challengeLevel: challengeLevel(), challengeStage: challengeStage(), duration: Math.round(G.simTime - (cm.start == null ? G.simTime : cm.start)), takedowns: m.takedowns, hits: cm.hits, whiffs: cm.whiffs, guards: cm.guards, actions: cm.actions }); }
 // the form
 function openFeedback(back) {
   const ret = back || (() => showScreen(G.phase === 'fight' || G.phase === 'prefight' ? 'pause' : 'title'));
