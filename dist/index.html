@@ -1,5 +1,5 @@
 <!doctype html><html><head><meta charset="utf-8"><link rel="manifest" href="manifest.webmanifest"><meta name="theme-color" content="#0f1316"><link rel="apple-touch-icon" href="icon-192.png"><meta name="apple-mobile-web-app-capable" content="yes"><meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover"></head><body>
-<script>window.BUILD_VER="steel-tape-hair-d732da9833";</script><title>Buhurt: Steel &amp; Tape</title>
+<script>window.BUILD_VER="steel-tape-capes-5b6fb470c8";</script><title>Buhurt: Steel &amp; Tape</title>
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Barlow+Semi+Condensed:wght@400;500;600;700&family=Big+Shoulders+Display:wght@700;800;900&family=Permanent+Marker&display=swap">
@@ -38104,8 +38104,8 @@ function buildSpecialVendors() {
   }
 }
 
-// Tailored town capes. A curved cloth surface hangs from the shoulders and only
-// its lower rows move; every wardrobe style keeps its own cut and finish.
+// Cloth follows the upper spine. The collar is fixed; springy lower rows trail
+// torso motion and catch a slow, travelling wind.
 const CAPE_TEX = new Map();
 const CAPE_STYLE = {
   club: { length: 1.02, width: 0.43, clasp: '#a98245' },
@@ -38146,16 +38146,26 @@ function capeTexture(color, trim, style) {
 function capeCreate(J, L) {
   const style = CAPE_STYLE[L.c] || CAPE_STYLE.club;
   const color = style.color || L.b || '#5e2530', trim = style.trim || L.t || '#c3a46f';
-  const root = grp(J.root, 0, 1.52, -0.27), cols = 16, rows = 14;
+  const spine = J.bones && (J.bones.spine_03 || J.bones.spine_02);
+  const anchor = spine || J.root;
+  J.root.updateMatrixWorld(true);
+  const collarWorld = J.root.localToWorld(new THREE.Vector3(0, 1.53, -0.32));
+  const collarLocal = anchor.worldToLocal(collarWorld);
+  const root = grp(anchor, collarLocal.x, collarLocal.y, collarLocal.z), cols = 20, rows = 18;
+  // The upper-spine bind pose leans forward. Preserve a vertical cloth rest pose
+  // while still inheriting every later turn and bend of the shoulders.
+  root.quaternion.copy(anchor.getWorldQuaternion(new THREE.Quaternion()).invert().multiply(J.root.getWorldQuaternion(new THREE.Quaternion())));
+  root.name = 'capeShoulders';
   const points = [], uv = [], indices = [];
   for (let row = 0; row <= rows; row++) {
-    const v = row / rows, spread = 0.245 + (style.width - 0.245) * Math.pow(v, 0.8);
+    const v = row / rows, spread = 0.21 + (style.width - 0.21) * Math.pow(v, 0.82);
     for (let col = 0; col <= cols; col++) {
       const u = col / cols * 2 - 1;
-      const hem = row === rows ? (style.ragged ? 0.055 * Math.sin(col * 2.3) + 0.04 * Math.cos(col * 4.1) : 0.07 * u * u + 0.008 * Math.cos(u * Math.PI * 4)) : 0;
-      const neck = -0.055 * (1 - u * u) * Math.pow(1 - v, 4);
-      points.push(u * spread, -style.length * v + hem + neck,
-        -0.02 - 0.19 * v + 0.08 * u * u + 0.085 * Math.cos(u * Math.PI * 3) * Math.pow(v, 1.5));
+      const hem = row === rows ? (style.ragged ? 0.055 * Math.sin(col * 2.3) + 0.035 * Math.cos(col * 4.1) : 0.035 * u * u) : 0;
+      // Curl the top around the shoulders and sculpt broad vertical folds.
+      const fold = 0.055 * Math.cos(u * Math.PI * 5) * Math.pow(v, 0.75);
+      points.push(u * spread, -style.length * v + hem - 0.026 * (1 - u * u) * (1 - v),
+        0.025 + 0.08 * u * u * (1 - v) - 0.065 * Math.sin(v * Math.PI / 2) + 0.025 * Math.sin(v * Math.PI) + fold);
       uv.push(col / cols, 1 - v);
       if (row < rows && col < cols) {
         const a = row * (cols + 1) + col, b = a + cols + 1;
@@ -38173,22 +38183,55 @@ function capeCreate(J, L) {
     transparent: !!style.opacity, opacity: style.opacity || 1, depthWrite: !style.opacity
   });
   const cloth = new THREE.Mesh(geometry, material); cloth.castShadow = SHADOWS && !style.opacity;
-  cloth.receiveShadow = true; cloth.frustumCulled = false; root.add(cloth);
+  cloth.name = 'capeCloth'; cloth.receiveShadow = true; cloth.frustumCulled = false; root.add(cloth);
   const clasp = lmat({ color: style.clasp, metalness: L.c === 'royal' || L.c === 'courtier' ? 0.55 : 0.15, roughness: 0.55 });
   const claspGeo = geo('cape_clasp', () => new THREE.SphereGeometry(0.032, 8, 6));
-  for (const side of [-1, 1]) mk(root, claspGeo, clasp, side * 0.225, -0.012, 0.085);
-  J.cape = { root, cloth, base: new Float32Array(points), lag: 0 };
+  const strap = lmat({ color, roughness: 0.92, side: THREE.DoubleSide });
+  for (const side of [-1, 1]) {
+    const band = mk(root, geo('cape_shoulder_band', () => new THREE.BoxGeometry(0.085, 0.025, 0.11)), strap, side * 0.17, 0.002, 0.055);
+    band.rotation.y = side * 0.3;
+    mk(root, claspGeo, clasp, side * 0.19, 0.014, 0.11);
+  }
+  J.cape = { root, cloth, base: new Float32Array(points), velocity: new Float32Array(points.length),
+    lastWorld: null, motionX: 0, motionZ: 0, gust: 0 };
 }
 function capeAnimate(J, speed, time, dt) {
   const C = J.cape; if (!C) return;
-  C.lag += (Math.min(8, speed) - C.lag) * Math.min(1, dt * 5);
+  const step = Math.min(0.05, Math.max(0, dt));
+  if (!step) return;
+  // Follow the spine's position, but let gravity keep the cloth vertical as
+  // the idle and walking clips bend the spine forward.
+  C.root.quaternion.copy(C.root.parent.getWorldQuaternion(new THREE.Quaternion()).invert().multiply(J.root.getWorldQuaternion(new THREE.Quaternion())));
+  C.root.updateMatrixWorld(true);
+  const world = C.root.getWorldPosition(new THREE.Vector3());
+  if (C.lastWorld) {
+    const travel = world.clone().sub(C.lastWorld);
+    if (travel.length() < 1) {
+      const local = travel.applyQuaternion(C.root.getWorldQuaternion(new THREE.Quaternion()).invert()).divideScalar(step);
+      const blend = 1 - Math.exp(-step * 5);
+      C.motionX += (THREE.MathUtils.clamp(local.x, -7, 7) - C.motionX) * blend;
+      C.motionZ += (THREE.MathUtils.clamp(local.z, -7, 7) - C.motionZ) * blend;
+    } else { C.motionX = 0; C.motionZ = 0; }
+  }
+  C.lastWorld = world;
   const attr = C.cloth.geometry.attributes.position, src = C.base, dst = attr.array;
   const cols = C.cloth.geometry.userData.capeCols, rows = C.cloth.geometry.userData.capeRows;
   for (let i = 0; i < attr.count; i++) {
-    const v = Math.floor(i / (cols + 1)) / rows, u = i % (cols + 1) / cols * 2 - 1, loose = v * v;
-    dst[i * 3] = src[i * 3] + loose * (Math.sin(time * 2.3 + v * 2) * 0.025 + Math.sin(time * 5.1 + u * 3) * 0.012);
-    dst[i * 3 + 1] = src[i * 3 + 1] + loose * (C.lag * 0.018 + Math.sin(time * 5.5 + u * 2) * 0.014);
-    dst[i * 3 + 2] = src[i * 3 + 2] - loose * (C.lag * 0.025 + Math.sin(time * 3.7 + u * 2) * 0.025);
+    const v = Math.floor(i / (cols + 1)) / rows, u = i % (cols + 1) / cols * 2 - 1;
+    if (v <= 1 / rows) continue; // collar and shoulder seam remain fastened
+    const loose = v * v;
+    const wave = Math.sin(time * 3.8 - v * 7.5 + u * 2.4);
+    const sideWave = Math.sin(time * 2.1 - v * 4.5 + u * 4.1);
+    const targets = [
+      src[i * 3] - C.motionX * 0.038 * loose + sideWave * 0.029 * loose,
+      src[i * 3 + 1] + Math.abs(C.motionZ) * 0.009 * loose + wave * 0.017 * loose,
+      src[i * 3 + 2] - C.motionZ * 0.038 * loose - Math.max(0, speed) * 0.006 * loose + wave * 0.045 * loose
+    ];
+    for (let axis = 0; axis < 3; axis++) {
+      const j = i * 3 + axis;
+      C.velocity[j] = (C.velocity[j] + (targets[axis] - dst[j]) * (34 - 14 * v) * step) * Math.exp(-8 * step);
+      dst[j] += C.velocity[j] * step;
+    }
   }
   attr.needsUpdate = true; C.cloth.geometry.computeVertexNormals();
 }
