@@ -1,5 +1,5 @@
 <!doctype html><html><head><meta charset="utf-8"><link rel="manifest" href="manifest.webmanifest"><meta name="theme-color" content="#0f1316"><link rel="apple-touch-icon" href="icon-192.png"><meta name="apple-mobile-web-app-capable" content="yes"><meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover"></head><body>
-<script>window.BUILD_VER="steel-tape-character-28a7268e12";</script><title>Buhurt: Steel &amp; Tape</title>
+<script>window.BUILD_VER="steel-tape-hacsa-8ea0f65ea7";</script><title>Buhurt: Steel &amp; Tape</title>
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Barlow+Semi+Condensed:wght@400;500;600;700&family=Big+Shoulders+Display:wght@700;800;900&family=Permanent+Marker&display=swap">
@@ -32595,6 +32595,7 @@ function applyProfile() {
   const C = CLUBS.reavers, P = CAREER.club;
   C.name = C.full = P.name || 'Reavers'; C.short = (P.short || C.name.slice(0, 3)).toUpperCase().slice(0, 3); C.tabard = P.tabard; C.trim = P.trim; C.charge = P.charge;
   C.roster[0].dispNum = CAREER.num; C.bos = P.bos || null;
+  if (typeof ROSTER !== 'undefined' && !ROSTER.teams.some(t => t.slug === C.bos)) { C.bos = null; C.name = C.full = 'Festival Company'; C.short = 'FST'; }
   delete _tabardCache.reavers; delete _shieldCache.reavers;
   if (FP.vm) { FP.vm.team = null; }
   updateTitlePurse();
@@ -33962,11 +33963,12 @@ function setupMatch(o) {
       if (G.mod.noshield && spec.shield) spec = { ...spec, shield: null };
       if (team === 1 && o.mode === 1 && !o.pro && !o.attract && G.player) { const st = duelStyle(G.player.spec); spec = { ...spec, weapon: st.weapon, shield: st.shield }; }
       if (spec.player && team === 0 && !o.attract) spec = playerSpec(spec);
-      else if (club.key === 'rival' || spec.keep) { /* your rival (and named knights) keep their own names */ }
+      else if ((club.key === 'rival' || spec.keep) && spec.bos && rosterEligible(spec.bos.id)) { usedNames[spec.name] = 1; }
       else if (spec.ladder != null && typeof ladderWho === 'function' && ladderWho(spec.ladder, cat)) { const W = ladderWho(spec.ladder, cat); spec = { ...spec, name: W.name, bos: { id: W.id, team: W.team } }; }
-      else if (spec.ladder != null) { const L = LADDER[spec.ladder]; spec = { ...spec, name: `${L.names[cat === 'men' ? 0 : cat === 'women' ? 1 : 2]} ${L.sur}` }; }
+      else if (spec.ladder != null) { spec = { ...spec, name: poolName(usedNames), bos: null }; }
       else if (typeof rosterName === 'function' && (spec.rn = rosterName(club, spec, cat, usedNames, o))) spec = { ...spec, name: spec.rn.name, bos: spec.rn.bos };
       else { const pool = NAMES[cat]; let k = (club.key.length * 7 + spec.num * 3 + (cat === 'men' ? 0 : 5)) % pool.length; let guard = 0; while (usedNames[pool[k]] && guard++ < pool.length) k = (k + 1) % pool.length; usedNames[pool[k]] = 1; spec = { ...spec, name: pool[k] }; }
+      usedNames[spec.name] = 1;
       const body = makeBody(cat, spec.arch, club.key + spec.num + cat, spec.player && team === 0 && !o.attract ? G.loadout : null);
       let kit = null;
       if (G.tourney && team === 0) kit = G.tourney.kits[spec.num] || (G.tourney.kits[spec.num] = spec.player ? boostKit(freshKit(spec, true)) : freshKit(spec, false));
@@ -34447,11 +34449,11 @@ function openLadder() {
   G.backTo = 'title'; setHud(false); if (G.phase === 'over' || G.phase === 'between') { startAttract(); }
   const box = $('#ladderRungs'); box.innerHTML = ''; const cat = G.category; const top = CAREER.ladder.rung;
   LADDER.forEach((L, i) => {
-    const W = typeof ladderWho === 'function' ? ladderWho(i, cat) : null, nm = W ? W.name : `${L.names[cat === 'men' ? 0 : cat === 'women' ? 1 : 2]} ${L.sur}`; const done = i < top, open = i <= top;
+    const W = typeof ladderWho === 'function' ? ladderWho(i, cat) : null, nm = W ? W.name : (L.festivalName || (L.festivalName = poolName({}))); const done = i < top, open = i <= top;
     const w = WEAPONS[L.weapon];
     box.append(h('li', null, h('button', { class: 'rung' + (done ? ' done' : '') + (i === top ? ' next' : ''), disabled: open ? null : true, onclick: () => { AU.init(); startLadder(i); } },
       h('span', { class: 'rn num' }, String(i + 1)),
-      h('span', null, h('b', null, nm), h('span', { class: 'kit' }, `${L.champ ? 'Rumble champion, ' : ''}${W && CLUBS['ladder' + i].bos ? (ROSTER.teams.find(t => t.slug === CLUBS['ladder' + i].bos) || {}).name || L.from : L.from}. ${ARCH[L.arch].name}, ${w.name.toLowerCase()}${L.shield ? ' and ' + SHIELDS[L.shield].name.toLowerCase() : ''}, ${HELMS[L.helm].name.toLowerCase()}.`)),
+      h('span', null, h('b', null, nm), h('span', { class: 'kit' }, `${L.champ ? 'Rumble champion, ' : ''}${W && CLUBS['ladder' + i].bos ? (ROSTER.teams.find(t => t.slug === CLUBS['ladder' + i].bos) || {}).name || 'Festival Company' : 'Festival Company'}. ${ARCH[L.arch].name}, ${w.name.toLowerCase()}${L.shield ? ' and ' + SHIELDS[L.shield].name.toLowerCase() : ''}, ${HELMS[L.helm].name.toLowerCase()}.`)),
       h('span', { class: 'stt' }, done ? 'Beaten' : open ? `Fight · ${fmtMoney(50 * (i + 1))}` : 'Locked'))));
   });
   $('#ladderProg').textContent = `${Math.min(top, LADDER.length)} of ${LADDER.length} beaten`;
@@ -34793,13 +34795,13 @@ function rivalState() {
   if (!CAREER.rival) { const i = (Math.random() * 4) | 0; CAREER.rival = { pick: i, arch: pick(['striker', 'grappler', 'heavy', 'runner']), helm: pick(['greathelm', 'pigface', 'sallet', 'barbute']), w: 0, l: 0, brace: 0, guard: 0, react: 0, last: null, taunt: 0 }; saveCareer(); }
   return CAREER.rival;
 }
-function rivalName(cat) { const R = rivalState(); if (CLUBS.rival && CLUBS.rival.roster[0].keep) return CLUBS.rival.roster[0].name; return (RIVAL_NAMES[cat] || RIVAL_NAMES.men)[R.pick % 4]; }
+function rivalName(cat) { const R = rivalState(); if (CLUBS.rival && CLUBS.rival.roster[0].keep) return CLUBS.rival.roster[0].name; R.names = R.names || {}; if (!R.names[cat]) { R.names[cat] = poolName({}); saveCareer(); } return R.names[cat]; }
 function rivalClub() {
   const R = rivalState(), cat = G.category, nm = rivalName(cat);
   const lvl = R.w + R.l, prof = { react: Math.max(0.1, 0.26 - 0.02 * lvl - 0.04 * R.react), aggr: 1.0 + 0.04 * lvl, guard: Math.min(0.85, 0.5 + 0.08 * R.guard + 0.02 * lvl), cancel: 0.9 };
   const RT = typeof ROSTER !== 'undefined' && ROSTER.rebranded ? (() => { const r = seeded('rival' + (CAREER.club.bos || '') + R.pick); const ts = ROSTER.teams.filter(t => t.slug !== CAREER.club.bos && ROSTER.fighters.some(f => f.team === t.slug)); return ts.length ? ts[Math.floor(r() * ts.length)] : null; })() : null;
   const RB = RT && CLUBS['bos:' + RT.slug], rnm = RT ? (ROSTER.fighters.filter(f => f.team === RT.slug && (cat === 'women' ? f.g !== 'm' : f.g !== 'f'))[R.pick % 4] || ROSTER.fighters.find(f => f.team === RT.slug)) : null;
-  CLUBS.rival = { key: 'rival', name: RB ? RB.name : 'Black Hollow', full: `${rnm ? rnm.name : nm} of ${RB ? RB.full : 'Black Hollow'}`, short: RB ? RB.short : 'BLK', tabard: RB ? RB.tabard : '#231a2e', trim: RB ? RB.trim : '#c9a227', charge: RB ? RB.charge : 'saltire', flag: '#3b93ff', bos: RT ? RT.slug : null,
+  CLUBS.rival = { key: 'rival', name: RB ? RB.name : 'Festival Company', full: `${rnm ? rnm.name : nm} of ${RB ? RB.full : 'Festival Company'}`, short: RB ? RB.short : 'BLK', tabard: RB ? RB.tabard : '#231a2e', trim: RB ? RB.trim : '#c9a227', charge: RB ? RB.charge : 'saltire', flag: '#3b93ff', bos: RT ? RT.slug : null,
     roster: [{ num: 13, name: rnm ? rnm.name : nm, keep: !!rnm, bos: rnm ? { id: rnm.id, team: rnm.team } : null, arch: R.arch, weapon: 'sword', shield: 'heater', helm: R.helm, prof, stab: 1.02 + 0.03 * Math.min(6, lvl) + 0.05 * R.brace }] };
   return CLUBS.rival;
 }
@@ -34810,7 +34812,7 @@ function startGrudge() {
 function openRival() {
   const R = rivalState(), nm = rivalName(G.category), lvl = R.w + R.l;
   const read = R.last === 'trip' ? 'Since you tripped them last time, they plant their feet and brace more.' : R.last === 'hit' ? 'Since you out-struck them last time, their guard comes up faster.' : 'They have been watching your fights.';
-  msg('rival', nm, `<p><b>${nm}</b> of Black Hollow. ${ARCH[R.arch].name}, ${HELMS[R.helm].name.toLowerCase()}.</p>
+  msg('rival', nm, `<p><b>${nm}</b> of Festival Company. ${ARCH[R.arch].name}, ${HELMS[R.helm].name.toLowerCase()}.</p>
     <p>Record against you: <b class="num">${R.l} wins for you, ${R.w} for them</b>. ${lvl ? read : ''}</p>
     <p class="muted">Every grudge match they learn from how you beat them, and they get a little steadier and quicker each time. Beating them pays double.</p>`,
     [['Grudge match', startGrudge, true], ['Back', openModes]]);
@@ -35382,7 +35384,7 @@ async function boot(hot) {
   VOICE.enabled = G.settings.voice; AU.muted = !!store.get('muted', false);
   if (AU.muted) $('#muteWave').style.display = 'none';
   try { await Promise.race([Promise.all([document.fonts.load('40px "Permanent Marker"'), document.fonts.load('900 40px "Big Shoulders Display"'), document.fonts.load('600 20px "Barlow Semi Condensed"')]), new Promise(r => setTimeout(r, 1800))]); } catch (e) { }
-  buildTextures(); initThree(); buildViewmodel(); initInput(); initBench(); initMenus(); initTown(); buildOverlays(); applyProfile(); applyGfx(true); watchContext(); applyTextSize(); initPhoto(); loadUAL(); installForged(); SPLIT.on = store.get('split', true); boardsStartHeartbeat(); initLobby();
+  buildTextures(); initThree(); buildViewmodel(); initInput(); initBench(); initMenus(); initTown(); buildOverlays(); rosterReset(); applyProfile(); applyGfx(true); watchContext(); applyTextSize(); initPhoto(); loadUAL(); installForged(); SPLIT.on = store.get('split', true); boardsStartHeartbeat(); initLobby();
   try { window.claude && window.claude.hot && window.claude.hot.snapshot && window.claude.hot.snapshot(() => ({ tourney: G.tourney })); } catch (e) { }
   window.addEventListener('error', e => G.stats.errors.push(String(e.message)));
   toTitle();
@@ -35390,7 +35392,7 @@ async function boot(hot) {
   if (location.hash === '#autotest') setTimeout(autotest, 300);
   window.__ST = { GAMEPLAY, SAT, YUKA, CANNON, RAPIER, BVH, gameplayShape, gameplayShapeBlocked, gameplayGroundAt, gameplayMove, G, AU, buildShield, buildWeapon, W3, startTourney, quickFight, toTitle, openRepair, kitCheck, setupMatch, toTactics, beginFight, endRound, matchEnd, CLUBS, WEAPONS, setView, toast, renderKitPicker, applyLoadout, IN, FP, showScreen, weaponIcon, startCine, startTraining, startLadder, openCareer, openModes, openLadder, CAREER, setLesson, TR, unlock, togglePause, afterRound, renderHow, selectPiece, selectTape, msg, renderSheet, setHud, endTraining, setMode, PAD, navMove, focusFirst, sparks, CUTE, THREE, BREATH, setCuteDeco, flipFx, PHOTO, UAL, raiseFlags, startVersus, startFFA, startBracket, startKid, KID, openSeason, startSeasonMatch, setVenue, VS, SPLIT, NET, buildOnlineMatch, hostLobby, joinLobby, ONL, vinControl, openRun, openDaily, openBracket, showBracket, bracketResult, ffaMatchEnd, ffaLeader, ffaWinner, endKid, openPhoto, closePhoto, startReplay, stopReplay, RP, store, startRunFight, newRun, runEnd, WX, setWeather, padVin, readVersus, applyLo, myLoadout, netDropped, netLeave, showIntro, installForged, dailyPlan, openKids, openVersus, openPicks, LESSONS, rivalClub, startGrudge, startDaily, seasonState, newSeason, refreshDaily, VENUES, COMM, hitMapHtml, resetFighterForRound, DIFF, PIN, PADS, NIN, padsUpdate, seatPads, LOBBY, MM, openOnlineHub, benchDown, benchMove, REP, squirePatch, coverage, openProfile, myProfile, BOS, updateTitlePurse, ACH, progressCheck, challenges, masteryOf, S2, rankOf, counterValue, renderCareer, progressMatch, saveCareer, shopState, shopUp, tapeLeft, shopMatchEnd, shopPrizeMult, shopXpMult, swingTimes, pieceWearMult, TABARDS, refillTape, renderShop, UPGRADES, freshKit, TAPE_STOCK, enterTown, leaveTown, TOWN, openVendor, closeVendor, openTownMap, shopFx, renderVendor, VENDORS, ITEMS, itemCost, spCost, skillRoom, sponsorIncome, BOOSTS, STALL_AT, HOMES, FURNISH, pfx, squadFx, boostKit, townCollide, townRefresh, townWalkTo, townTalk, townTeardown, lookState, WORLD, guildCheck, STATIONS, townDressMe, FOLK, updateFolk, navBlocked, buildFolk, BOUT, boutStart, boutStop, boutTick, drawTownMap, updateMiniMap, costumePerson, OUTFIT, buildSkinWeapon, skinIcon, wskinList, skinFor, buildMyWeapon, wskinFamOf, GATHER, startGather, gatherSwing, stopGather, tradeState, tradeLevel, tradeGain, give, have, craft, NODES, MATS, renderTrades, TRADE_SKILLS, ARENAS, DISTRICTS, TRAVEL, setWaypoint, clearWaypoint, realmPath, callHorse, mount, dismount, ANIMAL, districtAt, realmCull, REALM_TIERS, gateOpen, townJump, stableRows, horseAvailable, peopleCull, boutArenaFor, arenaLive, bagSlots, bagState, bagRoom, secretFound, lookOwned, SECRETS, stopSpectating, startTrial, TRIALS, tierCap, gy, tierOf, HILL, hillHouses, cliffAt, gateBlocked, arenaBlocked, localPath, NAV, rampAt, ROSTER, rosterClubs, rosterLive, rosterName, liveBoutPick, aiTier, AI_TIER, guardOutcome, fighterGlow, ONB, onbStage, onbSet, openCreator, tourStart, tourEnd, TOUR_STOPS, THRONE, throneHolder, throneChallenge, throneLoad, throneOnlineEnd, openThrone, BOARDS, boardFetch, boardCrownStatues, sideFromDrag, VOICE };
   if (location.protocol === 'file:' && window.__steeltapeTest)
-    Object.assign(window.__ST, { penalize, failPiece, closeRepair, xpNeed, tierProf, runToRepairCorner, onbAfterAccount, onbAccountGate, onbResumeAfterAuth, leaveTarget, leaveScreen, CLOUD, bosLoadInfo, bosBoot, swingLeverage, weaponBindPossible, resolveSwing, sweptSwingTarget, updateAction, think, updateTownCamera, LIBRARY, LIBRARY_DATA, WEAPON_VARIANTS, playerWeaponDef, libraryModel, libraryThumb, LIST, navPushOut, townCollide, SPECT, updateArenaSeatFolk, testAdminApply, testAdminRefresh, testAdminTeleport, openTestAdmin, PLAYTEST, playtestStart, playtestStop, playtestTick, playtestAction, playtestFlush, playtestCapture, gameplayShapePush, gameplayCannonTick, gameplayFolkDirection, arenaRope, gateRefused, stationTrial, commClipName, COMM_AUDIO, SFX_FILES, castleWalkable, castleSurfaceSafe });
+    Object.assign(window.__ST, { rosterAccept, rosterLoad, rosterEligible, creatorReset, creatorRefreshCharacters, creatorRemote, penalize, failPiece, closeRepair, xpNeed, tierProf, runToRepairCorner, onbAfterAccount, onbAccountGate, onbResumeAfterAuth, leaveTarget, leaveScreen, CLOUD, bosLoadInfo, bosBoot, swingLeverage, weaponBindPossible, resolveSwing, sweptSwingTarget, updateAction, think, updateTownCamera, LIBRARY, LIBRARY_DATA, WEAPON_VARIANTS, playerWeaponDef, libraryModel, libraryThumb, LIST, navPushOut, townCollide, SPECT, updateArenaSeatFolk, testAdminApply, testAdminRefresh, testAdminTeleport, openTestAdmin, PLAYTEST, playtestStart, playtestStop, playtestTick, playtestAction, playtestFlush, playtestCapture, gameplayShapePush, gameplayCannonTick, gameplayFolkDirection, arenaRope, gateRefused, stationTrial, commClipName, COMM_AUDIO, SFX_FILES, castleWalkable, castleSurfaceSafe });
 }
 
 function autotest() {
@@ -35573,10 +35575,10 @@ const NET = { on: false, role: null, room: null, code: '', vin: newVin(), remote
 function netEvent(...e) { if (NET.on && NET.role === 'host') { NET.ev.push([++NET.seq, ...e]); if (NET.ev.length > 10) NET.ev.shift(); } }
 // Claude's room when the game runs on claude.ai and this viewer may use it; otherwise peer-to-peer
 async function getRoom() { let r = null; try { r = window.claude && window.claude.use ? await window.claude.use('room') : null; } catch (e) { r = null; } return r || p2pRoom(); }
-function myLoadout() { const L = G.loadout, w = loadoutWeapon(); return { helm: L.helm, weapon: w.key, base: w.base || null, shield: w.hands === 2 ? null : (L.shield === 'none' ? null : L.shield), height: L.height, build: L.build, heightValue: L.heightValue, massValue: L.massValue, gender: L.gender, sh: typeof lookLite === 'function' ? lookLite().sh : null, name: CAREER.name || 'Rival', bf: (typeof BOS !== 'undefined' && BOS.info && BOS.info.fighter) || null }; }
+function myLoadout() { const L = G.loadout, w = loadoutWeapon(); return { creatorProof: creatorProof('combat'), helm: L.helm, weapon: w.key, base: w.base || null, shield: w.hands === 2 ? null : (L.shield === 'none' ? null : L.shield), height: L.height, build: L.build, heightValue: L.heightValue, massValue: L.massValue, gender: L.gender, sh: typeof lookLite === 'function' ? lookLite().sh : null, name: CAREER.name || 'Rival', bf: BOS.info && rosterEligible(BOS.info.fighter) ? BOS.info.fighter : null }; }
 function applyLo(f, lo, cat) {
   if (!lo) return; const wk = WEAPONS[lo.weapon] && lo.weapon !== 'custom' ? lo.weapon : (WEAPONS[lo.base] ? lo.base : 'sword'); f.spec = { ...f.spec, helm: lo.helm, weapon: wk, shield: lo.shield }; f.weapon = WEAPONS[wk]; f.shield = lo.shield ? SHIELDS[lo.shield] : null;
-  f.body = makeBody(cat, f.spec.arch, 'net' + lo.name, { height: lo.height, build: lo.build, heightValue: lo.heightValue, massValue: lo.massValue, gender: lo.gender }); f.appearance = { sh: lo.sh }; f.name = String(lo.name || 'Rival').slice(0, 20); f.bosReal = lo.bf ? { id: lo.bf } : null; resetFighterForRound(f);
+  f.body = makeBody(cat, f.spec.arch, 'net' + lo.name, { height: lo.height, build: lo.build, heightValue: lo.heightValue, massValue: lo.massValue, gender: lo.gender }); f.appearance = { sh: lo.sh }; f.name = String(lo.name || 'Rival').slice(0, 20); f.bosReal = rosterEligible(lo.bf) ? { id: lo.bf } : null; f.creatorProof = lo.creatorProof || null; f.creatorVerified = false; resetFighterForRound(f);
 }
 async function openOnline() { return openOnlineHub(); }
 const ST_CODE = ['standing', 'posting', 'falling', 'grounded', 'rising', 'kneeling'], AK = [null, 'swing', 'shove', 'trip', 'grab', 'knee', 'throw', 'disarm', 'tackle'], PH = ['windup', 'strike', 'recover', 'lunge'], ARC = ['R2L', 'L2R', 'O'];
@@ -35706,7 +35708,7 @@ function myProfile() {
   const s = CAREER.stats || {}, shop = typeof shopState === 'function' ? shopState() : {};
   const items = typeof bagState === 'function' ? bagState().items || {} : {};
   const talents = Object.entries(CAREER.skills || {}).filter(([, v]) => v > 0).map(([k, v]) => `${k}:${v}`);
-  return { m: s.matches || 0, w: s.wins || 0, td: s.takedowns || 0, hits: s.hits || 0, rw: s.rumbleWins || 0, t: Math.round(CAREER.playSec || 0), on: SESSION_START, wpn: (WEAPONS[G.loadout.weapon] || WEAPONS.mace).name, club: CAREER.club && CAREER.club.name || '', ach: Object.keys(CAREER.ach || {}).length, bos: bosRecord(), lv: CAREER.level || 1, rank: rankOf(CAREER.level || 1), talents, inventory: items, purchases: shop.owned || {}, spent: shop.spent || 0, purse: CAREER.purse || 0 };
+  return { creatorProof: creatorProof('town'), m: s.matches || 0, w: s.wins || 0, td: s.takedowns || 0, hits: s.hits || 0, rw: s.rumbleWins || 0, t: Math.round(CAREER.playSec || 0), on: SESSION_START, wpn: (WEAPONS[G.loadout.weapon] || WEAPONS.mace).name, club: CAREER.club && CAREER.club.name || '', ach: Object.keys(CAREER.ach || {}).length, bos: bosRecord(), lv: CAREER.level || 1, rank: rankOf(CAREER.level || 1), talents, inventory: items, purchases: shop.owned || {}, spent: shop.spent || 0, purse: CAREER.purse || 0 };
 }
 async function claudeRoom() { try { return window.claude && window.claude.use ? await window.claude.use('room') : null; } catch (e) { return null; } }
 function lobbySet(patch) { try { LOBBY.room && LOBBY.room.presence(patch); } catch (e) { } }
@@ -35770,7 +35772,7 @@ function openProfile(p, back) {
   const talentHtml = Array.isArray(R.talents) && R.talents.length ? `<p class="small"><b>Talents:</b> ${R.talents.map(escTxt).join(', ')}</p>` : '<p class="muted small">No talents spent yet.</p>';
   const invHtml = R.inventory && Object.keys(R.inventory).length ? `<p class="small"><b>Inventory:</b> ${Object.entries(R.inventory).map(([k, v]) => `${escTxt(k)} × ${escTxt(v)}`).join(', ')}</p>` : '<p class="muted small"><b>Inventory:</b> empty</p>';
   const buyHtml = R.purchases && Object.keys(R.purchases).length ? `<p class="small"><b>Purchases:</b> ${Object.keys(R.purchases).map(escTxt).join(', ')} · ${fmtMoney(R.spent || 0)} spent</p>` : '<p class="muted small"><b>Purchases:</b> none</p>';
-  const B = R.bos; // their BuhurtOS account and real record, if they signed in with it
+  const B = R.bos && rosterEligible(R.bos.id) ? R.bos : null; // their BuhurtOS account and real record, if they signed in with it
   const bosHtml = B ? `<div class="bosrec"><b><span class="bostick">✓</span> BuhurtOS: ${escTxt(B.name)}</b><span>${B.linked ? `${B.team ? escTxt(B.team) + ' · ' : ''}${B.m} real matches, ${B.w} wins${B.l ? ', ' + B.l + ' losses' : ''}${B.g ? ' · ' + B.g + ' gold' : ''}${B.p ? ' · ' + B.p + ' podiums' : ''}${B.tv ? ' · ' + B.tv + ' tournaments won' : ''}` : 'Signed in, no fighter record linked yet'}</span></div>` : '';
   const canJoin = /^[A-Z]{4}$/.test(String(P.look || ''));
   const btns = [];
@@ -36217,7 +36219,9 @@ function buildOnlineMatch(S) {
   G.fighters.forEach(f => { f.isPlayer = false; f.vin = null; f.netUid = null; f.netPeer = null; }); G.player = null;
   for (const hm of S.H) {
     const f = G.fighters.filter(x => x.team === hm.t)[hm.i]; if (!f) continue;
-    applyLo(f, hm.lo, G.match.category); f.netUid = hm.uid; f.netPeer = hm.peer;
+    applyLo(f, hm.lo, G.match.category); f.netUid = hm.uid; f.netPeer = hm.peer; f.isPlayer = hm.uid === ONL.me; f.spec.player = f.isPlayer;
+    const identityPeer = ONL.peers.find(p => p.presence?.uid === hm.uid);
+    f.creatorVerified = !f.isPlayer && !!identityPeer && creatorRemote(f.creatorProof, 'combat', identityPeer.peer);
     W3.matchRoot.remove(f.model.root); buildFighterModel(f); W3.matchRoot.add(f.model.root);
     if (hm.uid === ONL.me) { f.isPlayer = true; G.player = f; }
     else if (NET.role === 'host') f.vin = ONL.vins[hm.uid] = ONL.vins[hm.uid] || newVin();
@@ -36317,12 +36321,14 @@ async function bosClient() {
     const previous = BOS.user;
     BOS.user = session ? session.user : null;
     if (previous && BOS.user && previous.id !== BOS.user.id) {
+      creatorReset();
       BOS.testAdmin = false;
       if (typeof playtestAuthReset === 'function') playtestAuthReset();
       if (typeof testAdminRefresh === 'function') testAdminRefresh();
     }
     if (BOS.user) bosLoadInfo();
     else {
+      creatorReset();
       BOS.testAdmin = false;
       if (typeof playtestAuthReset === 'function') playtestAuthReset();
       if (typeof testAdminRefresh === 'function') testAdminRefresh();
@@ -36367,8 +36373,12 @@ async function bosLoadInfo() {
     const verified = await sb.auth.getUser();
     if (!verified.error) verifiedUser = verified.data && verified.data.user;
   } catch (e) { }
-  if (verifiedUser && verifiedUser.id !== u.id) return;
+  if (!BOS.user || BOS.user.id !== u.id || (verifiedUser && verifiedUser.id !== u.id)) return;
   if (verifiedUser) BOS.user = verifiedUser;
+  BOS.creator = !!(verifiedUser && verifiedUser.email_confirmed_at && verifiedUser.email?.trim().toLowerCase() === 'garrettrobson95@gmail.com');
+  BOS.creatorUser = BOS.creator ? verifiedUser.id : null;
+  if (!BOS.creator) CREATOR_IDENTITY.proofs = {};
+  creatorIssue(); creatorRefreshCharacters();
   BOS.testAdmin = !!(verifiedUser && verifiedUser.app_metadata?.steel_tape_test_admin === true);
   if (BOS.testAdmin && typeof playtestResume === 'function') playtestResume();
   // Do not leave a verified test administrator at the local save's old level
@@ -36410,14 +36420,14 @@ function bosApply() {
   const t = $('#bosStatus'); if (t) t.textContent = I ? `Signed in with BuhurtOS as ${I.name}` : 'Not signed in';
   if (G.screen === 'msgScr' && $('#bosBox')) renderBosBox();
 }
-function bosRecord() { const I = BOS.info; return I ? { name: I.name, team: I.team, m: I.m, w: I.w, l: I.l, g: I.golds, p: I.podiums, tv: I.wins_t, linked: !!I.fighter } : null; }
+function bosRecord() { const I = BOS.info; return I && rosterEligible(I.fighter) ? { id: I.fighter, name: I.name, team: I.team, m: I.m, w: I.w, l: I.l, g: I.golds, p: I.podiums, tv: I.wins_t, linked: !!I.fighter } : null; }
 // the sign-in box (shown in Play online and Settings)
 function renderBosBox() {
   const box = $('#bosBox'); if (!box) return; box.innerHTML = '';
   const I = BOS.info;
   if (I) {
-    box.append(h('div', { class: 'bosme' }, h('span', { class: 'bostick' }, '✓'), h('div', null, h('b', null, I.name), h('small', null, I.fighter ? `${I.team ? I.team + ' · ' : ''}${I.m} matches, ${I.w} wins${I.golds ? ', ' + I.golds + ' gold' : ''} on BuhurtOS` : 'BuhurtOS account (no fighter linked yet)'))),
-      h('button', { class: 'btn tape small', onclick: async () => { AU.click(); if (typeof presenceOffline === 'function') presenceOffline(); try { await (await bosClient()).auth.signOut({ scope: 'local' }); } catch (e) { } BOS.user = null; BOS.info = null; bosApply(); } }, 'Sign out'));
+    box.append(h('div', { class: 'bosme' }, h('span', { class: 'bostick' }, '✓'), h('div', null, h('b', null, I.name), h('small', null, rosterEligible(I.fighter) ? `${I.team ? I.team + ' · ' : ''}${I.m} matches, ${I.w} wins${I.golds ? ', ' + I.golds + ' gold' : ''} on BuhurtOS` : 'BuhurtOS account (no fighter linked yet)'))),
+      h('button', { class: 'btn tape small', onclick: async () => { AU.click(); if (typeof presenceOffline === 'function') presenceOffline(); try { await (await bosClient()).auth.signOut({ scope: 'local' }); } catch (e) { } BOS.user = null; BOS.info = null; creatorReset(); bosApply(); } }, 'Sign out'));
     return;
   }
   box.append(h('button', { class: 'btn primary flagtape bosbtn', onclick: () => { AU.click(); openBosSignIn(); } }, 'Sign in with BuhurtOS'));
@@ -36968,23 +36978,53 @@ window.addEventListener('pagehide', () => { if (PLAYTEST.id && PLAYTEST.pending.
 // ===================================================================
 const ROSTER_URL = BOS_URL + '/functions/v1/steeltape-roster';
 const ROSTER = { teams: [], fighters: [], live: [], at: 0, loading: false, ok: false };
+const ROSTER_VERSION = 2;
+function rosterEligible(id) { return ROSTER.ok && ROSTER.fighters.some(f => f.id === id); }
+function rosterAccept(d) {
+  if (!d || d.version !== ROSTER_VERSION || d.scope !== 'hacsa' || !Array.isArray(d.teams) || !Array.isArray(d.fighters)) return false;
+  const teams = d.teams.filter(t => t && typeof t.slug === 'string' && typeof t.name === 'string' && !/(?:^|[\s_-])(test|demo|sandbox)(?:$|[\s_-])/i.test(t.slug + ' ' + t.name));
+  const slugs = new Set(teams.map(t => t.slug));
+  const fighters = d.fighters.filter(f => f && typeof f.id === 'string' && typeof f.name === 'string' && slugs.has(f.team) && !/(?:^|[\s_-])(test|demo|sandbox)(?:$|[\s_-])/i.test(f.name));
+  const ids = new Set(fighters.map(f => f.id));
+  const live = (Array.isArray(d.live) ? d.live : []).filter(l => [l.a, l.b].every(s => s && slugs.has(s.team) && Array.isArray(s.fighters) && s.fighters.every(f => ids.has(f.id))));
+  Object.assign(ROSTER, { teams, fighters, live, at: Date.now(), ok: true, rebranded: false });
+  rosterReset(); rosterClubs(); rosterRebrand(); rosterLive();
+  return true;
+}
+function rosterReset() {
+  // Clear derived identities before rebuilding. Keep gameplay equipment and progress.
+  const used = {};
+  for (const [key, C] of Object.entries(CLUBS)) {
+    if (key.startsWith('bos:') || key.startsWith('live:')) { delete CLUBS[key]; continue; }
+    delete C.who; C.bos = null;
+    if (key !== 'reavers') { C.name = C.full = 'Festival ' + (key.startsWith('ladder') ? 'Challengers' : 'Company'); C.short = 'FST'; }
+    for (const s of C.roster || []) { delete s.bos; delete s.rn; delete s.keep; if (!s.player) s.name = poolName(used); }
+  }
+  for (const L of typeof LEAGUE_EXTRA !== 'undefined' ? LEAGUE_EXTRA : []) { L.name = 'Festival Company'; L.short = 'FST'; }
+  const P = CAREER.club;
+  const team = P && ROSTER.teams.find(t => t.slug === P.bos);
+  if (P && team) { P.name = team.name; P.short = team.initial || team.name.slice(0, 3); }
+  if (P && P.bos && !team) { P.name = 'Festival Company'; P.short = 'FST'; }
+  if (P && P.bos && !team && ROSTER.ok) { P.bos = null; P.name = 'Festival Company'; P.short = 'FST'; saveCareer(); }
+  if (P && !P.bos && /^(Reavers|Bow River Wardens|Ironwood Rabble)$/.test(P.name)) { P.name = 'Festival Company'; P.short = 'FST'; }
+  if (P) { applyProfile(); if (!team) { CLUBS.reavers.name = CLUBS.reavers.full = 'Festival Company'; CLUBS.reavers.short = 'FST'; CLUBS.reavers.bos = null; } }
+  for (const f of G.fighters || []) if (!f.isPlayer && f.spec?.bos && !rosterEligible(f.spec.bos.id)) { f.spec = { ...f.spec, bos: null, keep: false }; f.name = f.spec.name = poolName(used); fighterGlow(f); }
+}
 const POOL_FIRST = ['Aiden', 'Ava', 'Blake', 'Brooke', 'Cody', 'Cassidy', 'Dylan', 'Dakota', 'Ethan', 'Emma', 'Finn', 'Faith', 'Garrett', 'Grace', 'Hunter', 'Hailey', 'Isaac', 'Ivy', 'Jace', 'Jade', 'Kyle', 'Kaitlyn', 'Logan', 'Lily', 'Mason', 'Madison', 'Nolan', 'Nora', 'Owen', 'Olivia', 'Parker', 'Paige', 'Quinn', 'Quincy', 'Riley', 'Reese', 'Spencer', 'Sierra', 'Tanner', 'Taylor', 'Tristan', 'Tessa', 'Wyatt', 'Willow', 'Brody', 'Bailey', 'Colton', 'Chloe', 'Dawson', 'Destiny', 'Easton', 'Ella', 'Gavin', 'Gemma', 'Holden', 'Harper', 'Jaxon', 'Josie', 'Kellan', 'Kenzie', 'Landon', 'Lacey', 'Maverick', 'Mya', 'Nash', 'Nevaeh', 'Rhett', 'Raelynn', 'Sawyer', 'Sadie', 'Travis', 'Tori', 'Brennan', 'Brynn', 'Dallas', 'Darcy', 'Emmett', 'Ember', 'Grady', 'Greta', 'Hayden', 'Hope', 'Jesse', 'Jolene', 'Keegan', 'Kira', 'Lane', 'Lexi', 'Marshall', 'Maeve', 'Reid', 'Rowan', 'Shane', 'Shelby', 'Ty', 'Tamsin', 'Wade', 'Wren', 'Zane', 'Zoey'];
 const POOL_LAST = ['Anderson', 'Bergstrom', 'Bouchard', 'Brandt', 'Campbell', 'Chartrand', 'Dahl', 'Desjardins', 'Doucette', 'Dueck', 'Eriksen', 'Fehr', 'Fontaine', 'Friesen', 'Gagnon', 'Giesbrecht', 'Hamm', 'Halvorsen', 'Hiebert', 'Holt', 'Iverson', 'Janzen', 'Johansson', 'Klassen', 'Kowalchuk', 'Kozak', 'Lachance', 'Lindqvist', 'Loewen', 'MacLeod', 'Martens', 'McKenzie', 'Moreau', 'Neufeld', 'Nygaard', 'Olson', 'Ouellette', 'Penner', 'Petrenko', 'Pelletier', 'Quiring', 'Rempel', 'Robichaud', 'Rousseau', 'Sawatzky', 'Schmidt', 'Sorensen', 'Stewart', 'Thiessen', 'Toews', 'Tremblay', 'Unger', 'Vandale', 'Voth', 'Wiebe', 'Wozniak', 'Yaremko', 'Zacharias', 'Zimmer', 'Boychuk', 'Hrynyk', 'Melnyk', 'Sawchuk', 'Tkachuk', 'Fedoruk', 'Kostiuk', 'Prystupa', 'Shewchuk', 'Lavallee', 'Gauthier', 'Paquette', 'Beaulieu', 'Nicholson', 'Fraser', 'Gillis', 'Cameron', 'Murray', 'Ross', 'Grant', 'Bjornson', 'Magnusson', 'Thorsteinson', 'Gudmundson', 'Arnason', 'Olafson', 'Brekke', 'Haugen', 'Lunde', 'Solberg', 'Strand', 'Vik', 'Berg', 'Hagen', 'Dyck', 'Enns', 'Reimer', 'Wall', 'Harder', 'Peters', 'Krahn'];
 function poolName(used) {
-  for (let i = 0; i < 40; i++) { const n = pick(POOL_FIRST) + ' ' + pick(POOL_LAST); if (!used[n]) { used[n] = 1; return n; } }
-  return pick(POOL_FIRST) + ' ' + pick(POOL_LAST);
+  for (let i = 0; i < 40; i++) { const n = pick(POOL_FIRST) + ' ' + pick(POOL_LAST); if (!used[n] && !ROSTER.fighters.some(f => f.name === n)) { used[n] = 1; return n; } }
+  for (let i = 1; ; i++) { const n = 'Festival Fighter ' + i; if (!used[n] && !ROSTER.fighters.some(f => f.name === n)) { used[n] = 1; return n; } }
 }
 // load the roster: cached for a day, refreshed in the background; the live list refreshes every 30 s in town
 function rosterLoad(force) {
-  try { const c = store.get('bosRoster', null); if (c && c.teams && !ROSTER.ok) { Object.assign(ROSTER, c, { live: [], ok: true }); rosterClubs(); rosterRebrand(); } } catch (e) { }
+  if (!ROSTER.ok) { try { const c = store.get('bosRoster', null); if (!c || Date.now() - c.at > 86400000 || !rosterAccept(c)) { store.set('bosRoster', null); rosterReset(); } else ROSTER.at = c.at; } catch (e) { rosterReset(); } }
   const stale = Date.now() - (ROSTER.at || 0) > (force ? 30000 : 86400000);
   if (!stale || ROSTER.loading || typeof fetch !== 'function') return;
   ROSTER.loading = true;
   fetch(ROSTER_URL, { cache: 'no-store' }).then(r => r.ok ? r.json() : null).then(d => {
-    ROSTER.loading = false; if (!d || !Array.isArray(d.teams)) return;
-    ROSTER.teams = d.teams; ROSTER.fighters = d.fighters || []; ROSTER.live = d.live || []; ROSTER.at = Date.now(); ROSTER.ok = true;
-    try { store.set('bosRoster', { teams: ROSTER.teams, fighters: ROSTER.fighters, at: ROSTER.at }); } catch (e) { }
-    rosterClubs(); rosterRebrand(); rosterLive();
+    ROSTER.loading = false; if (!rosterAccept(d)) return;
+    try { store.set('bosRoster', { version: ROSTER_VERSION, scope: 'hacsa', teams: ROSTER.teams, fighters: ROSTER.fighters, at: ROSTER.at }); } catch (e) { }
   }).catch(() => { ROSTER.loading = false; });
 }
 // a colour per team: their own if they set one, otherwise one picked from their name
@@ -37010,8 +37050,9 @@ function rosterRebrand() {
   if (!ROSTER.ok || !ROSTER.teams.length) return;
   const mine = (CAREER.club && CAREER.club.bos) || null, rnd = seeded('rebrand:' + (mine || 'none'));
   const count = T => ROSTER.fighters.filter(f => f.team === T.slug).length;
-  const pool = ROSTER.teams.filter(T => T.slug !== mine && count(T) >= 1).sort((a, b) => count(b) - count(a) || a.slug.localeCompare(b.slug));
-  if (pool.length < 2) return;
+  let pool = ROSTER.teams.filter(T => T.slug !== mine).sort((a, b) => count(b) - count(a) || a.slug.localeCompare(b.slug));
+  if (!pool.length) pool = ROSTER.teams.slice();
+  if (!pool.length) return;
   const shuffled = pool.slice(); for (let i = shuffled.length - 1; i > 0; i--) { const j = Math.floor(rnd() * (i + 1)); [shuffled[i], shuffled[j]] = [shuffled[j], shuffled[i]]; }
   const brand = (key, T) => { const C = CLUBS[key]; if (!C || !T) return; rosterClubs(); const B = CLUBS['bos:' + T.slug]; if (!B) return; Object.assign(C, { name: B.name, full: B.full, short: B.short, tabard: B.tabard, trim: B.trim, charge: B.charge, bos: T.slug }); };
   const pickT = i => shuffled[i % shuffled.length];
@@ -37021,18 +37062,18 @@ function rosterRebrand() {
   const used = {};
   LADDER.forEach((L, i) => {
     const T = pickT(5 + i), who = {};
-    for (const g of ['m', 'f']) { let list = ROSTER.fighters.filter(f => f.team === T.slug && (f.g === g || f.g == null) && !used[f.name]); if (!list.length) list = ROSTER.fighters.filter(f => (f.g === g || f.g == null) && !used[f.name]); if (!list.length) continue; const F = list[Math.floor(rnd() * list.length)]; used[F.name] = 1; who[g] = F; }
+    for (const g of ['m', 'f']) { let list = ROSTER.fighters.filter(f => f.team === T.slug && (f.g === g || f.g == null) && !used[f.name]); if (!list.length) continue; const F = list[Math.floor(rnd() * list.length)]; used[F.name] = 1; who[g] = F; }
     const C = CLUBS['ladder' + i]; if (!C || (!who.m && !who.f)) return;
     brand('ladder' + i, T); C.who = who; C.name = (who.m || who.f).name.split(' ').slice(-1)[0]; C.full = `${(who.m || who.f).name} of ${C.full || T.name}`;
   });
   ROSTER.rebranded = true;
 }
 // the ladder rung's real fighter for this category (null if the roster isn't known)
-function ladderWho(i, cat) { const C = CLUBS['ladder' + i]; if (!C || !C.who) return null; return cat === 'women' ? (C.who.f || C.who.m) : (C.who.m || C.who.f); }
+function ladderWho(i, cat) { const C = CLUBS['ladder' + i]; if (!C || !C.who) return null; return cat === 'women' ? (C.who.f || null) : (C.who.m || null); }
 function rosterClubKeys(min) { return Object.keys(CLUBS).filter(k => k.startsWith('bos:') && ROSTER.fighters.filter(f => f.team === CLUBS[k].bos).length >= (min || 1)); }
 // a name for a bot: a real fighter (their own club's first), else the pool. Returns { name, bos }
 function rosterName(club, spec, cat, used, o) {
-  if (!ROSTER.ok || !ROSTER.fighters.length || (o && (o.online || o.daily || o.versus || o.kids)) || cat === 'youth') return null;
+  if (!ROSTER.ok || !ROSTER.fighters.length || (o && (o.online || o.daily || o.versus || o.kids)) || cat === 'youth') return { name: poolName(used), bos: null };
   const g = cat === 'women' ? 'f' : 'm', fits = F => !used[F.name] && (F.g === g || F.g == null);
   let list = club.bos ? ROSTER.fighters.filter(F => F.team === club.bos && fits(F)) : [];
   const taken = o ? [o.clubA, o.opp].map(k => CLUBS[k] && CLUBS[k].bos).filter(Boolean) : []; // the teams in this match keep their own fighters
@@ -37050,19 +37091,30 @@ function glowTex() {
 }
 function fighterGlow(f) {
   const J = f.model; if (!J || !J.root) return;
-  const real = !!(f.bosReal || (f.isPlayer && typeof BOS !== 'undefined' && BOS.info && BOS.info.fighter && f.spec && f.spec.player));
-  if (!real && !f.spec.bos) return;
-  const col = new THREE.Color(f.club && f.club.tabard || '#f2c40f').lerp(new THREE.Color('#ffffff'), real ? 0.25 : 0.35);
+  const creator = !!(f.creatorVerified || (f.isPlayer && f.spec?.player && creatorLocal()));
+  const real = creator || !!((f.bosReal && rosterEligible(f.bosReal.id)) || (f.isPlayer && BOS.info && rosterEligible(BOS.info.fighter) && f.spec?.player));
+  const bot = !!(f.spec?.bos && rosterEligible(f.spec.bos.id));
+  const key = JSON.stringify([creator, real, bot, f.name, f.club?.tabard]);
+  if (J.identityKey === key) return;
+  J.identityKey = key; f.realGlow = false;
+  for (const child of [...J.root.children]) if (child.userData.identity) { J.root.remove(child); child.geometry?.dispose(); if (child.material?.map && child.material.map !== GLOW_TEX) child.material.map.dispose(); child.material?.dispose(); }
+  J.glow = J.banner = null;
+  if (!real && !bot) return;
+  const col = new THREE.Color(creator ? '#ffd45c' : f.club && f.club.tabard || '#f2c40f').lerp(new THREE.Color('#ffffff'), creator ? 0.1 : real ? 0.25 : 0.35);
   const m = new THREE.SpriteMaterial({ map: glowTex(), color: col, transparent: true, depthWrite: false, blending: THREE.AdditiveBlending, opacity: real ? 0.75 : 0.32 });
   const s = new THREE.Sprite(m); s.position.y = 1.05; s.scale.set(real ? 2.6 : 1.7, real ? 3.4 : 2.4, 1); s.renderOrder = 2; J.root.add(s); J.glow = s;
+  s.userData.identity = true;
   if (real) {
-    const t0 = Math.random() * 6; s.onBeforeRender = () => { const k = performance.now() / 1000 + t0; m.opacity = 0.6 + 0.25 * Math.sin(k * 3); s.scale.set(2.6 + 0.25 * Math.sin(k * 2), 3.4 + 0.3 * Math.sin(k * 2), 1); };
+    const t0 = Math.random() * 6; s.onBeforeRender = () => { const k = performance.now() / 1000 + t0; m.opacity = creator ? 0.3 + 0.07 * Math.sin(k * 2) : 0.6 + 0.25 * Math.sin(k * 3); s.scale.set((creator ? 2.1 : 2.6) + 0.15 * Math.sin(k * 2), (creator ? 2.7 : 3.4) + 0.2 * Math.sin(k * 2), 1); };
     // a pillar of light and a banner with their name
     const beam = new THREE.Mesh(new THREE.CylinderGeometry(0.42, 0.55, 4.2, 14, 1, true), new THREE.MeshBasicMaterial({ color: col, transparent: true, opacity: 0.16, blending: THREE.AdditiveBlending, depthWrite: false, side: THREE.DoubleSide }));
-    beam.position.y = 2.1; J.root.add(beam);
+    beam.position.y = 2.1; if (!creator) J.root.add(beam); else { beam.geometry.dispose(); beam.material.dispose(); }
+    beam.userData.identity = true;
     const c = cvs(512, 128), x = c.getContext('2d'); x.fillStyle = f.club && f.club.tabard || '#6d1b28'; x.fillRect(0, 0, 512, 128); x.strokeStyle = '#f2c40f'; x.lineWidth = 8; x.strokeRect(4, 4, 504, 120);
-    x.fillStyle = '#fff'; x.font = '900 54px "Big Shoulders Display", sans-serif'; x.textAlign = 'center'; x.textBaseline = 'middle'; x.fillText(String(f.name || '').toUpperCase().slice(0, 18), 256, 54); x.font = '700 26px system-ui'; x.fillStyle = '#f2c40f'; x.fillText('★ THE REAL ONE ★', 256, 100);
+    x.fillStyle = '#fff'; x.font = '900 42px "Big Shoulders Display", sans-serif'; x.textAlign = 'center'; x.textBaseline = 'middle'; x.fillText(String(creator ? 'Garrett Robson' : f.name || '').toUpperCase().slice(0, 18), 256, 38, 480); x.font = creator ? '800 44px system-ui' : '700 26px system-ui'; x.fillStyle = '#f2c40f'; x.fillText(creator ? 'Creator' : '★ THE REAL ONE ★', 256, 94, 480);
     const ban = new THREE.Sprite(new THREE.SpriteMaterial({ map: texFrom(c), transparent: true, depthWrite: false })); ban.scale.set(1.4, 0.35, 1); ban.position.y = 2.75; ban.renderOrder = 6; J.root.add(ban); J.banner = ban;
+    ban.userData.identity = true; ban.userData.label = creator ? 'Creator' : 'THE REAL ONE';
+    if (creator) { ban.scale.set(1.8, 0.45, 1); ban.position.y = 2.65; }
     f.realGlow = true;
   }
 }
@@ -37085,6 +37137,74 @@ function liveBoutPick(A) {
   const n = Math.max(1, Math.min(5, Math.max(L.a.fighters.length, L.b.fighters.length) || 1));
   return { mode: n === 4 ? 5 : n, clubA: mk2(L.a, 'live:a'), opp: mk2(L.b, 'live:b'), category: /wom|fem/i.test(L.category) ? 'women' : 'men', label: `LIVE · ${L.comp || L.event}`, live: L };
 }
+
+// Cosmetic identity is verified separately from player names and permissions.
+const CREATOR_IDENTITY = { proofs: {}, pending: false, nextAttempt: 0, remote: new Map() };
+function creatorLocal() { return !!(BOS.creator && BOS.user && BOS.creatorUser === BOS.user.id); }
+function creatorProof(audience) {
+  const p = CREATOR_IDENTITY.proofs[audience];
+  const subject = audience === 'town' ? LOBBY.me : ONL.peers.find(x => x.isMe && x.sameTab)?.peer;
+  return creatorLocal() && p && p.subject === subject && p.exp > Date.now() ? p.proof : null;
+}
+function creatorReset() {
+  BOS.creator = false; BOS.creatorUser = null; CREATOR_IDENTITY.proofs = {}; CREATOR_IDENTITY.nextAttempt = 0;
+  creatorRefreshCharacters();
+}
+async function creatorIssue() {
+  if (!creatorLocal() || !BOS.sb || CREATOR_IDENTITY.pending) return;
+  if (Date.now() < CREATOR_IDENTITY.nextAttempt) return;
+  CREATOR_IDENTITY.nextAttempt = Date.now()+30000;
+  CREATOR_IDENTITY.pending = true;
+  const uid = BOS.user.id;
+  try {
+    const { data } = await BOS.sb.auth.getSession();
+    if (!data.session?.access_token) return;
+    const combatPeer = ONL.peers.find(p => p.isMe && p.sameTab)?.peer;
+    for (const [audience, subject] of [['town', LOBBY.me], ['combat', combatPeer]]) {
+      if (!subject) continue;
+      const old = CREATOR_IDENTITY.proofs[audience];
+      if (old && old.subject === subject && old.exp > Date.now()+60000) continue;
+      const r = await fetch(BOS_URL+'/functions/v1/steeltape-identity', {method:'POST',headers:{'Content-Type':'application/json',Authorization:'Bearer '+data.session.access_token},body:JSON.stringify({action:'issue',audience,subject})});
+      if (!r.ok) continue;
+      const result = await r.json();
+      if (!creatorLocal() || BOS.user.id !== uid) return;
+      if (result.role === 'Creator' && result.proof) CREATOR_IDENTITY.proofs[audience] = {...result,subject};
+    }
+    lobbySet({pr:myProfile()});
+    if (NET.room) NET.room.presence({lo:myLo()});
+  } catch (e) { /* An unavailable identity service never grants a remote badge. */ }
+  finally { CREATOR_IDENTITY.pending = false; }
+}
+function creatorRemote(proof, audience, subject) {
+  if (!proof || typeof proof !== 'string' || proof.length > 2048 || !subject) return false;
+  const key = audience + ':' + subject + ':' + proof, now = Date.now(), cached = CREATOR_IDENTITY.remote.get(key);
+  if (cached && cached.until > now) return cached.role === 'Creator';
+  if (CREATOR_IDENTITY.remote.size >= 128) CREATOR_IDENTITY.remote.delete(CREATOR_IDENTITY.remote.keys().next().value);
+  CREATOR_IDENTITY.remote.set(key,{until:now+10000,role:null});
+  fetch(BOS_URL+'/functions/v1/steeltape-identity',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({action:'verify',proof,audience,subject})})
+    .then(r => r.ok ? r.json() : null).then(d => {
+      CREATOR_IDENTITY.remote.set(key,{role:d?.role === 'Creator' && d.exp > Date.now() ? 'Creator' : null,until:d?.exp > Date.now() ? Math.min(d.exp,Date.now()+120000) : Date.now()+30000});
+      creatorRefreshCharacters();
+    }).catch(() => { CREATOR_IDENTITY.remote.set(key,{role:null,until:Date.now()+30000}); });
+  return false;
+}
+function creatorRefreshCharacters() {
+  if (typeof TOWN !== 'undefined' && TOWN.me) fighterGlow({model:TOWN.me,isPlayer:true,spec:{player:true},name:myName(),club:CLUBS.reavers});
+  if (typeof WORLD !== 'undefined') for (const O of Object.values(WORLD.others)) {
+    const p = O.p, creator = creatorRemote(p?.presence?.pr?.creatorProof,'town',p?.peer);
+    fighterGlow({model:O.J,spec:{},creatorVerified:creator,name:p?.presence?.name,club:null});
+  }
+  if (typeof G !== 'undefined') for (const f of G.fighters || []) {
+    if (f.netUid && f.netUid !== ONL.me) {
+      const peer = ONL.peers.find(p => p.presence?.uid === f.netUid);
+      const proof = peer ? peer.presence?.lo?.creatorProof : f.creatorProof;
+      f.creatorVerified = !!peer && creatorRemote(proof,'combat',peer.peer);
+    }
+    fighterGlow(f);
+  }
+}
+setInterval(() => { creatorIssue(); creatorRefreshCharacters(); }, 1000);
+
 
 // ===================================================================
 // First time in: a 5 v 5 test fight with nothing but the button hints, then "want some help learning?", then the
@@ -37274,8 +37394,9 @@ function creatorTeam() {
 }
 function creatorJoin(slug, name) {
   const P = CAREER.club;
+  if (!ROSTER.teams.some(t => t.slug === slug)) slug = null;
   if (slug) { const T = (ROSTER.teams || []).find(t => t.slug === slug), [tab, trim] = T ? teamColours(T) : [P.tabard, P.trim]; P.name = (name || slug).replace(/^The /, '').slice(0, 22); P.short = ((T && T.initial) || P.name.slice(0, 1)).toUpperCase() + P.name.replace(/[^A-Za-z]/g, '').slice(1, 3).toUpperCase(); P.tabard = tab; P.trim = trim; P.bos = slug; }
-  else { P.bos = null; if (!P.name || P.name === 'Reavers') P.name = 'Festival Company'; }
+  else { P.bos = null; P.name = 'Festival Company'; P.short = 'FST'; }
   CAREER.teamPicked = true; saveCareer(); applyProfile();
 }
 function creatorFighter() {
@@ -37632,6 +37753,7 @@ function buildStatue() {
 function buildAvatar() {
   if (TOWN.me) TOWN.root.remove(TOWN.me.root);
   const L = lookLite(); const J = lookPerson(L, L.ht); TOWN.me = J; TOWN.root.add(J.root);
+  fighterGlow({model:J,isPlayer:true,spec:{player:true},name:myName(),club:CLUBS.reavers});
   if (G.guildLabel !== false && guildTag()) { const gl = townLabel(`[${guildTag()}]`, (guildState() || {}).name || '', (guildState() || {}).col); gl.scale.multiplyScalar(0.7); gl.position.y = 2.3; J.root.add(gl); }
   const ring = mk(J.root, geo('t_ring', () => new THREE.RingGeometry(0.42, 0.5, 24)), new THREE.MeshBasicMaterial({ color: '#f2c40f', transparent: true, opacity: 0.7, depthWrite: false }), 0, 0.04, 0, false); ring.rotation.x = -Math.PI / 2;
 }
