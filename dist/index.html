@@ -1,5 +1,5 @@
 <!doctype html><html><head><meta charset="utf-8"><link rel="manifest" href="manifest.webmanifest"><meta name="theme-color" content="#0f1316"><link rel="apple-touch-icon" href="icon-192.png"><meta name="apple-mobile-web-app-capable" content="yes"><meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover"></head><body>
-<script>window.BUILD_VER="steel-tape-hosted-3e032b36d2";</script><title>Buhurt: Steel &amp; Tape</title>
+<script>window.BUILD_VER="steel-tape-hosted-5922a16eb5";</script><title>Buhurt: Steel &amp; Tape</title>
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Barlow+Semi+Condensed:wght@400;500;600;700&family=Big+Shoulders+Display:wght@700;800;900&family=Permanent+Marker&display=swap">
@@ -914,6 +914,15 @@ body.intown #hud{display:none!important}
 #townShopBody .vtop{display:flex;gap:10px;align-items:flex-start}
 #townShopBody .vthumb{flex:none;display:grid;place-items:center;min-width:56px;min-height:56px;max-width:120px;background:radial-gradient(circle,#2b343a,#151a1d 75%);border:1px solid var(--rule)}
 #townShopBody .vthumb canvas{display:block;max-width:120px;height:auto}
+#townShopBody .barber-section{grid-template-columns:minmax(0,1fr) 230px;align-items:start}
+#townShopBody .barber-section > .barber-mirror{grid-column:2;grid-row:1/span 6;position:sticky;top:48px;display:flex;flex-wrap:wrap;flex-direction:row;align-items:center;justify-content:center;gap:10px;min-height:0;box-shadow:0 4px 10px #0008}
+#townShopBody .barber-mirror canvas{display:block;background:#111518;border:1px solid #8e714a;border-radius:8px}
+#townShopBody .barber-body{width:90px;height:120px}
+#townShopBody .barber-face{width:80px;height:80px;border-radius:50%!important}
+#townShopBody .barber-mirror p{max-width:180px;margin:5px 0 0}
+#townShopBody .barber-section > .barber-choice{grid-column:1;justify-content:flex-start;gap:9px}
+#townShopBody .barber-choice b{font-size:.94rem}
+@media(max-width:640px){#townShopBody .barber-section{grid-template-columns:1fr}#townShopBody .barber-section > .barber-mirror{grid-column:1;grid-row:1;position:static}#townShopBody .barber-body{width:76px;height:101px}#townShopBody .barber-face{width:70px;height:70px}}
 #townShopBody .vtxt{min-width:0;flex:1}
 #townShopBody .vtxt b{font-size:1rem}
 #townShopBody .vfoot{display:flex;align-items:center;justify-content:space-between;gap:8px}
@@ -33242,6 +33251,7 @@ const VENDORS = [
   { key: 'guild', name: 'Guildmaster Osric', role: 'Club guild', col: '#2a2d33', awn: '#6d1b28', hi: 'Build the club and the club builds you. Sponsors are waiting.', icon: '🏰' },
   { key: 'estate', name: 'Wendell Deeds', role: 'Land agent', col: '#5a4a2a', awn: '#6b5a2a', hi: 'Every champion needs a home. Location, location, location!', icon: '🏠' },
   { key: 'wardrobe', name: 'Madame Velour', role: 'Wardrobe', col: '#8c1f4f', awn: '#b0306a', hi: 'Darling! You cannot walk around town looking like THAT. Let me dress you.', icon: '👗', custom: true },
+  { key: 'barber', name: 'Marta the Barber', role: 'Barber', col: '#7b5540', awn: '#ad734d', hi: 'Take a seat. New hair, a beard, or a whole new look? The mirror is yours.', icon: '✂️', custom: true },
   { key: 'artificer', name: 'Ysolde Gleamwright', role: 'Artificer', col: '#4b2a5a', awn: '#2a2340', hi: 'Your steel fights exactly the same. It just looks like it ate a dragon. Looks only, mind: the marshals still weigh the real thing.', icon: '🗡️' },
   { key: 'ghost', name: 'Sir Reginald the Restless', role: 'Ghost (spooky goods)', col: '#cfe3f7', awn: '#3a5a7a', hi: 'Ooooo… a living customer. I sell things from beyond. Pumpkin heads, shrouds, pets that are not quite alive.', icon: '👻', custom: true }
 ];
@@ -33281,7 +33291,7 @@ function renderVendor(box, key, again) {
       secs.forEach((S, i) => tabs.append(h('button', { 'data-i': String(i), role: 'tab', 'aria-pressed': String(i === ai), onclick: () => { AU.click(); TOWN.vtab[key] = i; tabs.querySelectorAll('button').forEach(b => b.setAttribute('aria-pressed', String(b === tabs.children[i]))); secs.forEach((T, j) => { T.el.hidden = j !== i; }); box.scrollTop = 0; } }, S.t, S.n ? h('small', null, String(S.n)) : null)));
       box.append(tabs);
     }
-    secs.forEach((S, i) => { S.el.dataset.i = String(i); S.el.classList.add('vsec'); S.el.hidden = secs.length > 1 && i !== ai; box.append(S.el); });
+    secs.forEach((S, i) => { S.el.dataset.i = String(i); S.el.classList.add('vsec'); if (key === 'barber') S.el.classList.add('barber-section'); S.el.hidden = secs.length > 1 && i !== ai; box.append(S.el); });
     if (typeof applyVendorTier === 'function') applyVendorTier(box, vtier);
   };
   const head = t => newSec(t);
@@ -33360,6 +33370,7 @@ function renderVendor(box, key, again) {
         () => { if (on) s.title = ''; else if (have) s.title = t; else { if (!spend(cost, 'That title')) return false; s.owned['title:' + t] = 1; s.title = t; } saveCareer(); updateTitlePurse(); });
     }
   } else if (key === 'wardrobe') { renderWardrobe(list, again, false, row);
+  } else if (key === 'barber') { renderBarber(list, again);
   } else if (key === 'ghost') { renderWardrobe(list, again, true, row);
   } else if (key === 'artificer') { renderArtificer(list, row, head);
   } else if (key === 'guild') {
@@ -33395,7 +33406,7 @@ function renderShop(box) {
   const list = h('div', { class: 'ups shop' }); box.append(list);
   for (const V of VENDORS) list.append(h('div', { class: 'up' }, h('div', null, h('div', { class: 'uph' }, h('span', { class: 'vicon' }, V.icon), h('b', null, V.name), h('span', { class: 'tier' }, V.role)), h('div', { class: 'muted' }, vendorBlurb(V.key))), h('button', { class: 'btn tape small', onclick: () => { AU.click(); enterTown(V.key); } }, 'Walk there')));
 }
-function vendorBlurb(k) { const VV = VENDOR_BY[k]; if (VV && VV.as) return (VV.tier === 3 ? 'The King’s own work: ' : 'Garrison work, further up the bar: ') + vendorBlurb(VV.as); return { smith: 'Weapon quality, pommels, grips, hafts, custom forging.', armour: 'Armour quality, kit upgrades to 10, straps, repairs.', quarter: 'Tape rolls, gold-thread tape, the tape sponsor, bench gear.', wizard: 'Skill points, 8 runes, potions.', tavern: 'Food and drink boosts, a room, a fight agent, squires.', trainer: 'Training yard, 5 kinds of drills, coaching.', herald: '12 tabard colours, 8 trims.', bard: 'Ballads and 15 titles.', guild: 'Club hall, squad training camp, sponsors that pay every match.', estate: 'Your house, furniture, a statue (and gold leaf).', wardrobe: 'Outfits, colours, hats, capes, things to carry, pets.', artificer: 'Cosmetic weapon skins: orc and fantasy looks, stats unchanged.', ghost: 'Spooky wardrobe: pumpkin head, ghostly shroud, scythe, undead pets.' }[k]; }
+function vendorBlurb(k) { const VV = VENDOR_BY[k]; if (VV && VV.as) return (VV.tier === 3 ? 'The King’s own work: ' : 'Garrison work, further up the bar: ') + vendorBlurb(VV.as); return { smith: 'Weapon quality, pommels, grips, hafts, custom forging.', armour: 'Armour quality, kit upgrades to 10, straps, repairs.', quarter: 'Tape rolls, gold-thread tape, the tape sponsor, bench gear.', wizard: 'Skill points, 8 runes, potions.', tavern: 'Food and drink boosts, a room, a fight agent, squires.', trainer: 'Training yard, 5 kinds of drills, coaching.', herald: '12 tabard colours, 8 trims.', bard: 'Ballads and 15 titles.', guild: 'Club hall, squad training camp, sponsors that pay every match.', estate: 'Your house, furniture, a statue (and gold leaf).', wardrobe: 'Outfits, colours, hats, capes, things to carry, pets.', barber: 'Hair, beard, eyes, skin tone and body style. Changes are free.', artificer: 'Cosmetic weapon skins: orc and fantasy looks, stats unchanged.', ghost: 'Spooky wardrobe: pumpkin head, ghostly shroud, scythe, undead pets.' }[k]; }
 shopState(); shopApplyOwned();
 
 // ===================================================================
@@ -37290,8 +37301,8 @@ function openFeedback(back) {
 const TOWN = { on: false, root: null, me: null, people: false, pos: { x: 0, z: 26 }, face: 0, yaw: Math.PI, pitch: 0.36, dist: 7.5, prevVenue: null, near: null, stalls: [], obst: [], actPrev: true, home: null, statue: null, cam: null, look: null, fpYaw: 0, vendor: null };
 // where everything is: a medieval festival around the lists (see 14d_festival.js for the plan)
 const TOWN_RX = 620, TOWN_RZ = 640; // room to ride beyond the settled festival; the castle footprint is unchanged
-const STALL_AT = { quarter: [-11, 35], herald: [-11, 45], wardrobe: [-12.5, 56], estate: [11, 50], smith: [-38, 22], armour: [-38, 10], guild: [-38, -2], artificer: [-38, -13], trainer: [-38, -30], wizard: [-24, -46], tavern: [36, 20], bard: [37, 5], ghost: [44, -47.4] };
-const STALL_FACE = { quarter: Math.PI / 2, herald: Math.PI / 2, wardrobe: Math.PI / 2, estate: -Math.PI / 2, smith: Math.PI / 2, armour: Math.PI / 2, guild: Math.PI / 2, artificer: Math.PI / 2, trainer: Math.PI / 2, tavern: -Math.PI / 2, bard: -Math.PI / 2, ghost: 0 };
+const STALL_AT = { quarter: [-11, 35], herald: [-11, 45], wardrobe: [-12.5, 56], barber: [-23, 56], estate: [11, 50], smith: [-38, 22], armour: [-38, 10], guild: [-38, -2], artificer: [-38, -13], trainer: [-38, -30], wizard: [-24, -46], tavern: [36, 20], bard: [37, 5], ghost: [44, -47.4] };
+const STALL_FACE = { quarter: Math.PI / 2, herald: Math.PI / 2, wardrobe: Math.PI / 2, barber: Math.PI / 2, estate: -Math.PI / 2, smith: Math.PI / 2, armour: Math.PI / 2, guild: Math.PI / 2, artificer: Math.PI / 2, trainer: Math.PI / 2, tavern: -Math.PI / 2, bard: -Math.PI / 2, ghost: 0 };
 const HOME_AT = [-42, 54], STATUE_AT = [0, 58];
 const LIST_BLOCK = { x: LIST.W / 2 + 4, z: LIST.L / 2 + 4 }; // field venue's visible rope
 
@@ -38017,8 +38028,7 @@ function renderWardrobe(list, again, spooky, row) {
     }
     list.append(h('h4', null, 'Colours'));
     const sw = (arr, k2, dflt) => { const r = h('div', { class: 'swatches' }); for (const c of arr) r.append(h('button', { class: 'sw', style: `--c:${c}`, 'aria-pressed': String((L[k2] || dflt) === c), 'aria-label': c, onclick: () => { L[k2] = c; saveCareer(); townDressMe(); again(); } })); return r; };
-    list.append(h('div', { class: 'up vcard vwide' }, h('div', null, h('b', null, 'Body (and outfit dye)'), sw(TABARDS, 'body', CAREER.club.tabard))), h('div', { class: 'up vcard vwide' }, h('div', null, h('b', null, 'Trim'), sw(TRIMS, 'trim', CAREER.club.trim))),
-      h('div', { class: 'up vcard vwide' }, h('div', null, h('b', null, 'Skin tone'), sw(SKIN_TONES, 'skin', SKIN_TONES[2]))));
+    list.append(h('div', { class: 'up vcard vwide' }, h('div', null, h('b', null, 'Clothing colour'), sw(TABARDS, 'body', CAREER.club.tabard))), h('div', { class: 'up vcard vwide' }, h('div', null, h('b', null, 'Trim'), sw(TRIMS, 'trim', CAREER.club.trim))));
     { const on = !!L.dye; row('Dye my outfit', on ? 'On' : null, 'Tints your outfit with your body colour. Free.', on ? 'Undye' : 'Dye it', true, () => { L.dye = !on; saveCareer(); townDressMe(); }); }
   }
   for (const slot of ['hat', 'foot', 'cape', 'hand', 'pet']) {
@@ -38030,6 +38040,34 @@ function renderWardrobe(list, again, spooky, row) {
         () => { if (!own) { if (!spend(cost, name)) return false; s.owned['wd:' + slot + ':' + key] = 1; } L[slot] = key; saveCareer(); townDressMe(); }, on ? ' cur' : '', packClothingThumb(slot, key));
     }
   }
+}
+function renderBarber(list, again) {
+  const L = lookState(), lo = G.loadout || (G.loadout = {}), outfit = L.outfit || 'none';
+  const change = (key, value, body = false) => {
+    if (body) { lo[key] = value; store.set('loadout', lo); }
+    else L[key] = value;
+    saveCareer(); townDressMe(); AU.click(); again();
+  };
+  const choice = (label, options, current, key, body = false) => h('div', { class: 'up vcard vwide barber-choice' },
+    h('b', null, label), h('div', { class: 'seg small' }, ...options.map(([value, name]) => h('button', { 'aria-pressed': String(current === value), onclick: () => change(key, value, body) }, name))));
+  const colours = (label, options, current, key) => h('div', { class: 'up vcard vwide barber-choice' }, h('b', null, label),
+    h('div', { class: 'swatches' }, ...options.map(c => h('button', { class: 'sw', style: `--c:${c}`, 'aria-label': c, 'aria-pressed': String(current === c), onclick: () => change(key, c) }))));
+  const mirror = () => {
+    for (const size of ['170', 'face']) delete PORTRAITS[`${outfit}:${size}`];
+    const full = outfitThumb(outfit, true), face = outfitThumb(outfit, 'face');
+    full.className = 'barber-body'; face.className = 'barber-face';
+    return h('div', { class: 'up vcard vwide barber-mirror' }, full, face, h('div', null, h('b', null, CAREER.name === 'You' ? 'Your fighter' : CAREER.name), h('p', { class: 'muted small' }, 'Changes appear here and on your fighter in town.')));
+  };
+  list.append(h('h4', null, 'Hair & face'), mirror(),
+    choice('Hair style', FIGHTER_HAIR, L.hair || 'crop', 'hair'),
+    colours('Hair colour', FIGHTER_HAIR_COLORS, L.hairColor || FIGHTER_HAIR_COLORS[1], 'hairColor'),
+    choice('Facial hair', FIGHTER_BEARDS, L.beard || 'none', 'beard'),
+    colours('Eye colour', FIGHTER_EYES, L.eyes || FIGHTER_EYES[0], 'eyes'));
+  list.append(h('h4', null, 'Body'), mirror(),
+    choice('Body style', [['male', 'Masculine'], ['female', 'Feminine']], L.frame || (BOS.info && BOS.info.gender === 'female' ? 'female' : 'male'), 'frame'),
+    colours('Skin tone', SKIN_TONES, L.skin || SKIN_TONES[2], 'skin'),
+    choice('Height', [['short', 'Short'], ['avg', 'Average'], ['tall', 'Tall']], lo.height || 'avg', 'height', true),
+    choice('Build', [['light', 'Light'], ['medium', 'Medium'], ['heavy', 'Heavy']], lo.build || 'medium', 'build', true));
 }
 function townDressMe() { if (!TOWN.on) return; buildAvatar(); buildMyPet(); }
 // the wardrobe tent and the ghost in the graveyard are vendors with their own little buildings
@@ -38044,6 +38082,14 @@ function buildSpecialVendors() {
       const mirror = mk(g, geo('wd_mirror', () => new THREE.PlaneGeometry(0.8, 1.7)), tmat('#cfe3f7', { metalness: 0.9, roughness: 0.05 }), 2.3, 1.1, -0.8); mirror.rotation.y = -0.6;
       npc = costumeOr({ main: V.col, joints: '#e3b341', h: 1.72, anim: 'Idle_Loop' }, vendorOutfit(V)); npc.root.position.set(0, 0, -0.6); g.add(npc.root);
       TOWN.obst.push({ x: x - Math.sin(ry) * 1.6, z: z - Math.cos(ry) * 1.6, r: 2.4 });
+    } else if (V.key === 'barber') {
+      kpiece(g, 'tent_detailedOpen', 0, 0, -1.2, Math.PI, 2.8);
+      const mirror = mk(g, geo('barber_mirror', () => new THREE.PlaneGeometry(1, 1.6)), tmat('#cfe3f7', { metalness: 0.9, roughness: 0.05 }), -2.1, 1.25, -0.8); mirror.rotation.y = 0.65;
+      mk(g, geo('barber_chair', () => new THREE.CylinderGeometry(0.42, 0.45, 0.5, 10)), tmat('#603e30'), 1.5, 0.45, -0.6);
+      mk(g, geo('barber_pole', () => new THREE.CylinderGeometry(0.1, 0.1, 2.1, 12)), tmat('#e6e2d8'), 2.4, 1.1, 0.3);
+      for (let i = 0; i < 7; i++) mk(g, geo('barber_stripe', () => new THREE.TorusGeometry(0.105, 0.018, 5, 14)), tmat(i % 2 ? '#a92932' : '#285d88'), 2.4, 0.35 + i * 0.24, 0.3).rotation.x = Math.PI / 2;
+      npc = costumeOr({ main: V.col, joints: '#e3b341', h: 1.7, anim: 'Idle_Loop' }, vendorOutfit(V)); npc.root.position.set(0, 0, -0.6); g.add(npc.root);
+      TOWN.obst.push({ x: x - Math.sin(ry) * 1.3, z: z - Math.cos(ry) * 1.3, r: 2.1 });
     } else {
       kpiece(g, 'gravestoneDecorative', -1.2, 0, -0.6, 0, 1.8); kpiece(g, 'lanternCandle', 1.1, 0, -0.4, 0, 2);
       npc = { root: kpiece(g, 'ghost', 0, 1.2, -0.5, 0, 2.2) || new THREE.Group(), ghost: true }; WORLD.bob.push({ o: npc.root, k: 'float', ph: 9, cx: 0, cz: -0.5 });
@@ -39008,7 +39054,7 @@ function kettleHat(J) {
   mk(g, geo('f_kbrim', () => new THREE.CylinderGeometry(0.22, 0.22, 0.015, 18)), st, 0, 0, 0);
 }
 // vendors wear their stall's colour over the outfit (half-strength, so the cloth still reads)
-const VENDOR_FIT = { smith: 'Male_Peasant', artificer: 'Female_Ranger', armour: 'Female_Ranger', quarter: 'Female_Peasant', wizard: 'Male_Ranger', tavern: 'Male_Peasant', trainer: 'Female_Ranger', herald: 'Female_Peasant', bard: 'Male_Ranger', guild: 'Male_Peasant', estate: 'Male_Peasant', wardrobe: 'Female_Peasant', ghost: 'Male_Ranger' };
+const VENDOR_FIT = { smith: 'Male_Peasant', artificer: 'Female_Ranger', armour: 'Female_Ranger', quarter: 'Female_Peasant', wizard: 'Male_Ranger', tavern: 'Male_Peasant', trainer: 'Female_Ranger', herald: 'Female_Peasant', bard: 'Male_Ranger', guild: 'Male_Peasant', estate: 'Male_Peasant', wardrobe: 'Female_Peasant', barber: 'Female_Peasant', ghost: 'Male_Ranger' };
 function vendorOutfit(V) {
   const o = VENDOR_FIT[V.key] || 'Male_Peasant', c = new THREE.Color('#ffffff').lerp(new THREE.Color(V.col || '#888888'), 0.4);
   return { outfit: o, tex: o.includes('Ranger') ? 'ranger' : (V.key === 'smith' || V.key === 'guild' ? 'peasant2' : 'peasant'), tint: '#' + c.getHexString() };
