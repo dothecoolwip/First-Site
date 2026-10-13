@@ -43,7 +43,13 @@
     toast.hidden = false;
   }
   later.addEventListener('click', () => { dismissed = available; toast.hidden = true; });
-  update.addEventListener('click', () => window.location.reload());
+  update.addEventListener('click', () => {
+    // Use a fresh URL so an older cache-first worker cannot serve its old page
+    // again while the replacement worker finishes installing.
+    const url = new URL(window.location.href);
+    url.searchParams.set('update', available);
+    window.location.assign(url.href);
+  });
 
   async function check() {
     if (checking || document.hidden || navigator.onLine === false) return;
