@@ -1,5 +1,5 @@
 <!doctype html><html><head><meta charset="utf-8"><link rel="manifest" href="manifest.webmanifest"><meta name="theme-color" content="#0f1316"><link rel="apple-touch-icon" href="icon-192.png"><meta name="apple-mobile-web-app-capable" content="yes"><meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover"></head><body>
-<script>window.BUILD_VER="steel-tape-hosted-d534bda35b";</script><title>Buhurt: Steel &amp; Tape</title>
+<script>window.BUILD_VER="steel-tape-hosted-0f5d5260d9";</script><title>Buhurt: Steel &amp; Tape</title>
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Barlow+Semi+Condensed:wght@400;500;600;700&family=Big+Shoulders+Display:wght@700;800;900&family=Permanent+Marker&display=swap">
@@ -1021,8 +1021,12 @@ body.intown #hud{display:none!important}
 .onbhints[hidden]{display:none}
 .onbhints .onbh{display:flex;justify-content:space-between;align-items:center;margin-bottom:6px}
 .onbhints .ctrlgrid{font-size:.74rem}
-.crpv{display:flex;flex-direction:column;align-items:center;gap:6px;min-width:140px}
-.crportrait{width:108px;height:144px;image-rendering:auto;background:rgba(0,0,0,.25);border-radius:8px}
+.crpv{display:flex;flex-direction:column;align-items:center;gap:8px;min-width:190px;padding:12px;background:rgba(0,0,0,.24);border:1px solid var(--rule);align-self:start;position:sticky;top:0}
+.crportrait{width:170px;height:226px;image-rendering:auto;background:rgba(0,0,0,.35);border:1px solid #91754d;border-radius:8px}
+.crface{position:absolute;top:162px;right:1px;width:78px;height:78px;border:2px solid #c5a466;border-radius:50%;background:#1c1c1b;box-shadow:0 3px 10px #0009}
+#creatorBody .profgrid{grid-template-columns:minmax(0,1fr) 200px;gap:18px}
+#creatorBody .stack>h3{margin:8px 0 0;font-family:var(--display);font-size:1.35rem;text-transform:uppercase;color:var(--marshal)}
+@media(max-width:700px){#creatorBody .profgrid{grid-template-columns:1fr}#creatorBody .crpv{position:static;grid-row:1;min-width:0;flex-direction:row;justify-content:center;flex-wrap:wrap}#creatorBody .crportrait{width:102px;height:136px}}
 .tour{position:fixed;left:0;right:0;bottom:calc(24px + env(safe-area-inset-bottom));display:flex;justify-content:center;align-items:flex-end;gap:12px;padding:0 16px;z-index:40;pointer-events:none}
 .tour>*{pointer-events:auto}
 .tourcap{background:rgba(10,13,15,.86);padding:10px 16px;max-width:640px;box-shadow:0 2px 12px rgba(0,0,0,.5)}
@@ -37071,7 +37075,7 @@ function creatorFighter() {
   numIn.oninput = () => { const v = clamp(parseInt(numIn.value || '4', 10) || 4, 1, 99); CAREER.num = v; saveCareer(); applyProfile(); prev(); };
   const seg = (opts, get, set) => { const s = h('div', { class: 'seg small' }); for (const [v, t] of opts) s.append(h('button', { 'aria-pressed': String(get() === v), onclick: () => { set(v); AU.click(); s.querySelectorAll('button').forEach(b => b.setAttribute('aria-pressed', String(b.textContent === t))); prev(); } }, t)); return s; };
   const sw = (list, get, set) => { const row = h('div', { class: 'swatches' }); for (const c of list) row.append(h('button', { class: 'sw', style: `--c:${c}`, 'aria-pressed': String(get() === c), 'aria-label': c, onclick: () => { set(c); AU.click(); row.querySelectorAll('.sw').forEach(b => b.setAttribute('aria-pressed', String(b.style.getPropertyValue('--c') === c))); prev(); } })); return row; };
-  const pv = h('div', { class: 'crpv' }), prev = () => { pv.innerHTML = ''; delete PORTRAITS.none; if (L.outfit) delete PORTRAITS[L.outfit]; const c = outfitThumb(L.outfit || 'none'); c.className = 'crportrait'; pv.append(c, shieldPreview(P, 72), h('b', null, `${CAREER.name === 'You' ? 'Your fighter' : CAREER.name} · #${CAREER.num}`), h('span', { class: 'muted' }, P.name)); };
+  const pv = h('div', { class: 'crpv' }), prev = () => { pv.innerHTML = ''; for (const size of ['170', 'face']) delete PORTRAITS[`${L.outfit || 'none'}:${size}`]; const c = outfitThumb(L.outfit || 'none', true), f = outfitThumb(L.outfit || 'none', 'face'); c.className = 'crportrait'; f.className = 'crface'; pv.append(c, f, shieldPreview(P, 72), h('b', null, `${CAREER.name === 'You' ? 'Your fighter' : CAREER.name} · #${CAREER.num}`), h('span', { class: 'muted' }, P.name)); };
   const own = !P.bos, clubIn = h('input', { type: 'text', maxlength: '22', value: P.name, placeholder: 'Your banner’s name', autocomplete: 'off' });
   clubIn.oninput = () => { P.name = clubIn.value.trim() || 'Festival Company'; P.short = P.name.slice(0, 3).toUpperCase(); saveCareer(); applyProfile(); prev(); };
   const left = h('div', { class: 'stack' },
@@ -38884,37 +38888,41 @@ function fighterAppearance(J, L) {
   const style = FIGHTER_HAIR.some(([key]) => key === L.ha) ? L.ha : 'crop';
   const beard = FIGHTER_BEARDS.some(([key]) => key === L.be) ? L.be : 'none';
   const skinMat = tmat(skin), hairMat = tmat(hair), eyeMat = tmat(eyes);
-  const face = grp(head, 0, 0, 0);
+  if (J.costume) J.root.traverse(n => { if (n.userData && n.userData.outfitBaseHead) n.visible = false; });
+  const face = grp(head, 0, 0.16, 0);
   face.name = 'fighterAppearance';
+  const base = mk(face, geo('fighter_head', () => new THREE.SphereGeometry(0.13, 18, 14)), skinMat, 0, 0, 0);
+  base.scale.set(0.88, 1.1, 0.92);
+  mk(face, geo('fighter_neck', () => new THREE.CylinderGeometry(0.052, 0.065, 0.16, 12)), skinMat, 0, -0.16, 0);
   for (const side of [-1, 1]) {
     const ear = mk(face, geo('face_ear', () => new THREE.SphereGeometry(0.029, 10, 8)), skinMat, side * 0.113, -0.014, 0);
     ear.scale.set(0.55, 1, 0.55);
-    mk(face, geo('face_eye_white', () => new THREE.SphereGeometry(0.017, 10, 8)), tmat('#f3eadb'), side * 0.043, 0.025, 0.105);
-    mk(face, geo('face_iris', () => new THREE.SphereGeometry(0.010, 10, 8)), eyeMat, side * 0.043, 0.025, 0.119);
-    const brow = mk(face, geo('face_brow', () => new THREE.BoxGeometry(0.047, 0.009, 0.009)), hairMat, side * 0.045, 0.053, 0.113);
+    mk(face, geo('face_eye_white', () => new THREE.SphereGeometry(0.017, 10, 8)), tmat('#f3eadb'), side * 0.043, 0.025, 0.16);
+    mk(face, geo('face_iris', () => new THREE.SphereGeometry(0.010, 10, 8)), eyeMat, side * 0.043, 0.025, 0.175);
+    const brow = mk(face, geo('face_brow', () => new THREE.BoxGeometry(0.047, 0.009, 0.009)), hairMat, side * 0.045, 0.053, 0.17);
     brow.rotation.z = side * 0.12;
   }
-  mk(face, geo('face_nose', () => new THREE.ConeGeometry(0.019, 0.054, 8)), skinMat, 0, -0.021, 0.125).rotation.x = Math.PI / 2;
-  const mouth = mk(face, geo('face_mouth', () => new THREE.BoxGeometry(0.043, 0.006, 0.008)), tmat('#784d43'), 0, -0.072, 0.111);
+  mk(face, geo('face_nose', () => new THREE.ConeGeometry(0.019, 0.054, 8)), skinMat, 0, -0.021, 0.18).rotation.x = Math.PI / 2;
+  const mouth = mk(face, geo('face_mouth', () => new THREE.BoxGeometry(0.043, 0.006, 0.008)), tmat('#784d43'), 0, -0.072, 0.16);
   mouth.rotation.z = -0.06;
   if (style !== 'none') {
-    const cap = mk(face, geo('face_hair_cap', () => new THREE.SphereGeometry(0.119, 16, 10, 0, TAU, 0, Math.PI * 0.58)), hairMat, 0, 0.094, -0.006);
+    const cap = mk(face, geo('face_hair_cap', () => new THREE.SphereGeometry(0.14, 16, 10, 0, TAU, 0, Math.PI * 0.58)), hairMat, 0, 0.094, 0.055);
     cap.scale.set(1.04, style === 'crop' ? 0.67 : 0.92, 1.05);
     if (style === 'swept') {
-      const fringe = mk(face, geo('face_hair_fringe', () => new THREE.SphereGeometry(0.082, 12, 8)), hairMat, -0.037, 0.108, 0.086);
+      const fringe = mk(face, geo('face_hair_fringe', () => new THREE.SphereGeometry(0.082, 12, 8)), hairMat, -0.037, 0.108, 0.15);
       fringe.scale.set(1.3, 0.43, 0.65); fringe.rotation.z = -0.25;
     }
     if (style === 'long' || style === 'braid') for (const side of [-1, 1]) {
-      const lock = mk(face, geo('face_hair_lock', () => new THREE.CapsuleGeometry(0.036, 0.15, 5, 8)), hairMat, side * 0.102, -0.097, -0.018);
+      const lock = mk(face, geo('face_hair_lock', () => new THREE.CapsuleGeometry(0.036, 0.15, 5, 8)), hairMat, side * 0.102, -0.097, 0.1);
       lock.rotation.z = side * 0.1;
     }
     if (style === 'braid') for (let i = 0; i < 4; i++) mk(face, geo('face_braid', () => new THREE.SphereGeometry(0.035, 9, 7)), hairMat, 0.055, -0.055 - i * 0.061, -0.125);
     if (style === 'bun') mk(face, geo('face_bun', () => new THREE.SphereGeometry(0.074, 14, 10)), hairMat, 0, 0.104, -0.135);
   }
   if (beard !== 'none') {
-    const chin = mk(face, geo('face_beard', () => new THREE.SphereGeometry(0.075, 14, 9)), hairMat, 0, -0.085, 0.063);
+    const chin = mk(face, geo('face_beard', () => new THREE.SphereGeometry(0.075, 14, 9)), hairMat, 0, -0.085, 0.13);
     chin.scale.set(beard === 'stubble' ? 1.13 : 1.2, beard === 'full' ? 1.15 : 0.65, 0.75);
-    if (beard !== 'stubble') for (const side of [-1, 1]) mk(face, geo('face_beard_side', () => new THREE.SphereGeometry(0.034, 10, 8)), hairMat, side * 0.077, -0.073, 0.072);
+    if (beard !== 'stubble') for (const side of [-1, 1]) mk(face, geo('face_beard_side', () => new THREE.SphereGeometry(0.034, 10, 8)), hairMat, side * 0.077, -0.073, 0.13);
   }
   return J;
 }
@@ -38965,7 +38973,7 @@ function costumePerson(o) {
   const parts = OUTFIT_GEO.outfits[o.outfit]; if (!parts) return null;
   const skin = o.skin || pick(SKIN_TONES);
   const J = ualPerson({ main: new THREE.Color(skin).convertSRGBToLinear(), joints: new THREE.Color(skin).convertSRGBToLinear(), h: o.h || 1.78, anim: o.anim || 'Idle_Loop' });
-  let skm = null; J.root.traverse(n => { if (n.isSkinnedMesh) { if (!skm) skm = n; n.geometry = mannequinHead(n.geometry); } });
+  let skm = null; J.root.traverse(n => { if (n.isSkinnedMesh) { if (!skm) skm = n; n.geometry = mannequinHead(n.geometry); n.userData.outfitBaseHead = true; } });
   if (!skm) return J;
   const cloth = o.tex || (o.outfit.includes('Ranger') ? 'ranger' : 'peasant'), female = o.outfit.startsWith('Female');
   const ibm = o.ownBind && OUTFIT.ibm[female ? 'Female' : 'Male'] ? OUTFIT.ibm[female ? 'Female' : 'Male'] : skm.skeleton.boneInverses;
@@ -39061,17 +39069,17 @@ function lookPerson(L, ht) {
 }
 // a little portrait of an outfit for the wardrobe card, rendered once off-screen with the game's own renderer
 const PORTRAITS = {};
-function outfitThumb(key) {
-  const W = 72, H = 96, c = cvs(W, H);
+function outfitThumb(key, large = false) {
+  const face = large === 'face', W = face ? 96 : large ? 170 : 72, H = face ? 96 : large ? 226 : 96, c = cvs(W, H), cacheKey = `${key}:${face ? 'face' : W}`;
   const draw = src => c.getContext('2d').drawImage(src, 0, 0);
-  if (PORTRAITS[key]) { draw(PORTRAITS[key]); return c; }
+  if (PORTRAITS[cacheKey]) { draw(PORTRAITS[cacheKey]); return c; }
   try {
     if (!W3.renderer || typeof UAL === 'undefined' || !UAL.ready) return c;
     const L = lookLite(), J = lookPerson({ ...L, o: key === 'none' ? '' : key, h: 'none', c: 'none', n: 'none' }, L.ht || 1.8);
     if (!J) return c;
     J.mixer.update(0.01);
     const sc = new THREE.Scene(); sc.add(new THREE.HemisphereLight('#ffffff', '#6b5a48', 1.1)); const dl = new THREE.DirectionalLight('#ffffff', 1.3); dl.position.set(1.5, 3, 4); sc.add(dl); sc.add(J.root);
-    const cam = new THREE.PerspectiveCamera(30, W / H, 0.1, 20); cam.position.set(0, 1.05, 4.1); cam.lookAt(0, 0.95, 0);
+    const cam = new THREE.PerspectiveCamera(30, W / H, 0.1, 20); cam.position.set(0, face ? 1.68 : 1.05, face ? 1.5 : 4.1); cam.lookAt(0, face ? 1.68 : 0.95, 0);
     const rt = new THREE.WebGLRenderTarget(W * 2, H * 2), R = W3.renderer, prev = R.getRenderTarget(), pc = R.getClearColor(new THREE.Color()), pa = R.getClearAlpha();
     R.setRenderTarget(rt); R.setClearColor(0x000000, 0); R.clear(); R.render(sc, cam);
     const px = new Uint8Array(W * 2 * H * 2 * 4); R.readRenderTargetPixels(rt, 0, 0, W * 2, H * 2, px);
@@ -39079,7 +39087,7 @@ function outfitThumb(key) {
     const big = cvs(W * 2, H * 2), bx = big.getContext('2d'), id = bx.createImageData(W * 2, H * 2);
     for (let y = 0; y < H * 2; y++) for (let x = 0; x < W * 2; x++) { const s = ((H * 2 - 1 - y) * W * 2 + x) * 4, d = (y * W * 2 + x) * 4; for (let k = 0; k < 3; k++) id.data[d + k] = Math.round(Math.pow(px[s + k] / 255, 1 / 2.2) * 255); id.data[d + 3] = px[s + 3]; }
     bx.putImageData(id, 0, 0);
-    const small = cvs(W, H); small.getContext('2d').drawImage(big, 0, 0, W, H); PORTRAITS[key] = small; draw(small);
+    const small = cvs(W, H); small.getContext('2d').drawImage(big, 0, 0, W, H); PORTRAITS[cacheKey] = small; draw(small);
   } catch (e) { console.warn('portrait', e); }
   return c;
 }
