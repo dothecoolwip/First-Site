@@ -101,9 +101,12 @@ function folkPopulationTick(dt) {
 
 // Sitting is a reserved placement. Walking starts in a real aisle beside the row.
 function folkSeatAisle(S) {
-  for (const side of [S.sx, -S.sx]) {
-    const x = S.x + side * 0.95;
-    if (!navBlocked(x, S.z, FOLK_RADIUS) && !navBlocked(x, S.A.z + S.exit * (LIST.L * 0.5 + 0.7), FOLK_RADIUS)) return x;
+  const exitZ = S.A.z + S.exit * (LIST.L * 0.5 + 0.7);
+  // The front bench sits between the rope and another bench. Probe actual
+  // clearances rather than assuming that a fixed 0.95 m offset is an aisle.
+  for (const offset of [1.2, 1.5, 1.8, 2.7, 3.4, 4.5, 5.6, 7.8]) for (const side of [S.sx, -S.sx]) {
+    const x = S.x + side * offset;
+    if (!navBlocked(x, S.z, FOLK_RADIUS) && !navBlocked(x, exitZ, FOLK_RADIUS) && folkLineFree(x, S.z, x, exitZ)) return x;
   }
   return null;
 }

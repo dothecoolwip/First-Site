@@ -175,11 +175,14 @@ function squireTownTick(dt) {
   C.group.visible = Math.hypot(P.x - TOWN.pos.x, P.z - TOWN.pos.z) < (IS_TOUCH ? 50 : 70);
   if (C.model.ual && C.group.visible) C.model.mixer.update(dt);
   if (!S.recruited || S.departed) return;
-  if (!['follow', 'home'].includes(S.command) || G.screen || TOWN.spec || GATHER.on || TOWN.mineOn) return;
+  if (!['follow', 'home'].includes(S.command) || G.screen || TOWN.spec || GATHER.on || TOWN.mineOn) {
+    if (C.model.ual && C.anim !== 'Idle_Talking_Loop') { C.model.play('Idle_Talking_Loop', 0.2); C.anim = 'Idle_Talking_Loop'; }
+    return;
+  }
   const home = S.lodging === 'home' ? { x: HOME_AT[0], z: HOME_AT[1] - 6 } : { x: 33, z: 29 };
   const tx = S.command === 'home' ? home.x : TOWN.pos.x - Math.sin(TOWN.face) * 2, tz = S.command === 'home' ? home.z : TOWN.pos.z - Math.cos(TOWN.face) * 2;
-  const d = Math.hypot(P.x - tx, P.z - tz); const anim = d < 1 ? 'Idle_Talking_Loop' : 'Walking_A_Loop';
-  if (C.model.ual && C.anim !== anim) { C.model.play(UAL.clips[anim] ? anim : 'Idle_Loop', 0.2); C.anim = anim; }
+  const d = Math.hypot(P.x - tx, P.z - tz); const anim = d < 1 ? 'Idle_Talking_Loop' : 'Walk_Loop';
+  if (C.model.ual && C.anim !== anim) { C.model.play(anim, 0.2); C.anim = anim; }
   if (d < 1) return;
   if (S.command === 'follow' && d > 65 && !navBlocked(TOWN.pos.x, TOWN.pos.z, 0.4)) { const f = navFree(tx, tz); if (f) { P.set(f.x, gy(f.x, f.z), f.z); C.route = []; } }
   C.routeT -= dt;

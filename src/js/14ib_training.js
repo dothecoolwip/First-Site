@@ -57,13 +57,13 @@ function trainingTownTick(before, walking, sprint) {
   const t = trainingState();
   const rank = shopState().lv[t.active] || 0;
   const fairYard = rank < 3 && Math.hypot(TOWN.pos.x + 58, TOWN.pos.z + 56) < 36;
-  const northYard = Math.hypot(TOWN.pos.x, TOWN.pos.z + 1030) < 92;
+  const northYard = Math.hypot(TOWN.pos.x, TOWN.pos.z + 690) < 92;
   if (!TOWN.mounted && (fairYard || northYard)) {
     if (t.active === 'd_sprint' && sprint) trainingCredit('d_sprint', distance);
     if (t.active === 'd_lungs') trainingCredit('d_lungs', distance);
   }
   const riding = CAREER.riding;
-  if (TOWN.mounted && riding && riding.paid > riding.rank && Math.hypot(TOWN.pos.x + 90, TOWN.pos.z - 850) < 100) {
+  if (TOWN.mounted && riding && riding.paid > riding.rank && Math.hypot(TOWN.pos.x + 90, TOWN.pos.z - 570) < 100) {
     riding.distance = (riding.distance || 0) + distance;
     if (riding.distance >= 200 + riding.rank * 150) {
       riding.distance = 0; riding.rank++; saveCareer(); toastMenu(`Riding lesson ${riding.rank} complete. Your horse responds more quickly to turns.`);

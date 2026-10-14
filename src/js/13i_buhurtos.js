@@ -3,6 +3,7 @@
 // signed-in person may read (their own fighter link; public fighter records and career stats). Nothing is written.
 const BOS_URL = 'https://mvbxlebznlgroptwwdsm.supabase.co';
 const BOS_KEY = 'sb_publishable_u76M-dggKSsdsyhUQKveJg_5fPJ5Nan';
+const BOS_SESSION_KEY = 'buhurt-game-buhurtos';
 const BOS = { sb: null, p: null, user: null, info: null, testAdmin: false, otpEmail: '', booting: false, clientPromise: null, bootPromise: null, infoPromise: null, infoUid: null, infoReady: null, recovering: false, authTimer: null };
 function loadSupabaseLib() {
   if (window.supabase && window.supabase.createClient) return Promise.resolve(window.supabase);
@@ -54,16 +55,31 @@ function bosRecovery(error) {
     [['Retry', () => { BOS.recovering = false; BOS.bootPromise = null; BOS.infoReady = null; ONB.awaitingAuth = true; bosBoot(true); }, true],
       ['Back to sign-in', () => { BOS.recovering = false; openBosSignIn(onbAfterAccount); }]]);
 }
+function bosStoredSession() {
+  try { return localStorage.getItem(BOS_SESSION_KEY) || sessionStorage.getItem(BOS_SESSION_KEY); }
+  catch (e) { return null; }
+}
+function bosMigrateSession() {
+  // Earlier builds used tab-only storage. Copy an existing session before the
+  // SDK initializes, but never replace a newer persistent account session.
+  try {
+    if (!localStorage.getItem(BOS_SESSION_KEY)) {
+      const old = sessionStorage.getItem(BOS_SESSION_KEY);
+      if (old) localStorage.setItem(BOS_SESSION_KEY, old);
+    }
+    // A stale tab copy must never resurrect an account after explicit logout.
+    if (localStorage.getItem(BOS_SESSION_KEY)) sessionStorage.removeItem(BOS_SESSION_KEY);
+  } catch (e) { /* Storage may be unavailable in private browsing. */ }
+}
 async function bosClient() {
   if (BOS.sb) return BOS.sb;
   if (BOS.clientPromise) return BOS.clientPromise;
   BOS.clientPromise = (async () => {
     const lib = await bosTimeout(loadSupabaseLib(), 'Loading sign-in');
-    // Retain the existing tab-session policy. Do not delete another stored login
-    // as a side effect of merely constructing the client.
+    bosMigrateSession();
     const sb = lib.createClient(BOS_URL, BOS_KEY, { global: { fetch: bosFetch }, auth: {
-      persistSession: true, storage: sessionStorage, autoRefreshToken: true,
-      flowType: 'implicit', detectSessionInUrl: false, storageKey: 'buhurt-game-buhurtos' } });
+      persistSession: true, storage: localStorage, autoRefreshToken: true,
+      flowType: 'implicit', detectSessionInUrl: false, storageKey: BOS_SESSION_KEY } });
     BOS.sb = sb;
     sb.auth.onAuthStateChange((evt, session) => {
       const previous = BOS.user;
@@ -98,7 +114,7 @@ async function bosClient() {
 function bosBoot(force = false) {
   if (BOS.bootPromise) return BOS.bootPromise;
   const callback = bosCallback(), intent = onbReadAuthReturn();
-  let saved = false; try { saved = !!sessionStorage.getItem('buhurt-game-buhurtos'); } catch (e) { }
+  const saved = !!bosStoredSession();
   if (!force && !saved && !callback.present && !intent) return Promise.resolve();
   BOS.booting = true; BOS.recovering = false; ONB.awaitingAuth = true;
   BOS.bootPromise = (async () => {
@@ -212,7 +228,7 @@ function renderBosBox() {
   const I = BOS.info;
   if (I) {
     box.append(h('div', { class: 'bosme' }, h('span', { class: 'bostick' }, '✓'), h('div', null, h('b', null, I.name), h('small', null, rosterEligible(I.fighter) ? `${I.team ? I.team + ' · ' : ''}${I.m} matches, ${I.w} wins${I.golds ? ', ' + I.golds + ' gold' : ''} on BuhurtOS` : 'BuhurtOS account (no fighter linked yet)'))),
-      h('button', { class: 'btn tape small', onclick: async () => { AU.click(); if (typeof presenceOffline === 'function') presenceOffline(); try { await (await bosClient()).auth.signOut({ scope: 'local' }); } catch (e) { } BOS.user = null; BOS.info = null; creatorReset(); bosApply(); } }, 'Sign out'));
+      h('button', { class: 'btn tape small', onclick: async () => { AU.click(); if (typeof presenceOffline === 'function') presenceOffline(); try { await (await bosClient()).auth.signOut({ scope: 'local' }); } catch (e) { } localStorage.removeItem(BOS_SESSION_KEY); sessionStorage.removeItem(BOS_SESSION_KEY); BOS.user = null; BOS.info = null; BOS.infoReady = null; BOS.testAdmin = false; creatorReset(); if (typeof cloudOnSignOut === 'function') cloudOnSignOut(); bosApply(); } }, 'Sign out'));
     return;
   }
   box.append(h('button', { class: 'btn primary flagtape bosbtn', onclick: () => { AU.click(); openBosSignIn(); } }, 'Sign in with BuhurtOS'));

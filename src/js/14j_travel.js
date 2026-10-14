@@ -45,8 +45,10 @@ function realmTick(dt) {
 // It's only re-planned if you wander well off it. Autowalk follows the route with a look-ahead, so it rounds corners.
 // a waypoint on something solid (a wall, the list) snaps to the nearest open ground
 function freeNear(x, z) {
-  if (!navBlocked(x, z, 0.5)) return [x, z];
-  for (let r = 2; r <= 40; r += 2) for (let k = 0; k < 16; k++) { const a = k / 16 * TAU, nx = x + Math.cos(a) * r, nz = z + Math.sin(a) * r; if (!navBlocked(nx, nz, 0.6)) return [nx, nz]; }
+  // Use the same one-metre clearance as route segment validation. A point can
+  // be free for the player yet too close to a rope for the planner's path.
+  if (!navBlocked(x, z, 1.0)) return [x, z];
+  for (let r = 2; r <= 40; r += 2) for (let k = 0; k < 16; k++) { const a = k / 16 * TAU, nx = x + Math.cos(a) * r, nz = z + Math.sin(a) * r; if (!navBlocked(nx, nz, 1.0)) return [nx, nz]; }
   return [x, z];
 }
 function setWaypoint(x, z, label) {
@@ -54,10 +56,10 @@ function setWaypoint(x, z, label) {
   if (typeof playtestAction === 'function') playtestAction('waypoint', { x, z, label: label || 'Waypoint' });
   TOWN.wp = { x, z, label: label || 'Waypoint' }; AU.click && AU.click();
   travelPlan();
-  toastMenu(`Waypoint: ${TOWN.wp.label}. Follow the gold markers${IS_TOUCH ? ', or tap Walk there' : ' (R walks you there)'}.`);
+  toastMenu(TRAVEL.unreachable ? `No clear walking route to ${TOWN.wp.label}. Move closer or choose another spot.` : `Waypoint: ${TOWN.wp.label}. Follow the gold markers${IS_TOUCH ? ', or tap Walk there' : ' (R walks you there)'}.`);
   compassHud();
 }
-function clearWaypoint() { TOWN.wp = null; TRAVEL.path = []; TRAVEL.marks = []; TRAVEL.auto = false; TRAVEL.stuck = 0; if (TRAVEL.dots) TRAVEL.dots.count = 0; if (TRAVEL.beam) TRAVEL.beam.visible = false; compassHud(); }
+function clearWaypoint() { TOWN.wp = null; TRAVEL.path = []; TRAVEL.marks = []; TRAVEL.auto = false; TRAVEL.stuck = 0; TRAVEL.unreachable = false; if (TRAVEL.dots) TRAVEL.dots.count = 0; if (TRAVEL.beam) TRAVEL.beam.visible = false; compassHud(); }
 // the walk-to of old: now it marks the way instead of moving you
 function townWalkTo(key) { const S = TOWN.stalls.find(s => s.V.key === key); if (!S) return; setWaypoint(S.ax, S.az, S.V.name); }
 // for tests and debugging only: stand at someone's counter straight away
@@ -72,7 +74,9 @@ function buildWaypoint() {
 // plan the route from where you stand and lay the markers along it
 function travelPlan() {
   const W = TOWN.wp; if (!W || !TOWN.pos) return;
-  TRAVEL.path = realmRoute(TOWN.pos.x, TOWN.pos.z, W.x, W.z);
+  TRAVEL.path = realmRoute(TOWN.pos.x, TOWN.pos.z, W.x, W.z) || [];
+  TRAVEL.unreachable = !TRAVEL.path.length;
+  if (TRAVEL.unreachable) { TRAVEL.auto = false; TRAVEL.failedAt = { x: TOWN.pos.x, z: TOWN.pos.z }; }
   TRAVEL.marks = []; TRAVEL.stuck = 0; TRAVEL.replans = (TRAVEL.replans || 0) + 1;
   let px = TOWN.pos.x, pz = TOWN.pos.z, s = 0, carry = 2;
   for (const [x, z] of TRAVEL.path) { const seg = Math.hypot(x - px, z - pz); while (carry <= seg) { const t = carry / seg; TRAVEL.marks.push([px + (x - px) * t, pz + (z - pz) * t, s + carry]); carry += 3; } carry -= seg; s += seg; px = x; pz = z; }
@@ -96,10 +100,22 @@ function updateWaypoint(dt) {
   const W = TOWN.wp; if (!W || !TOWN.pos) { if (TRAVEL.beam) TRAVEL.beam.visible = false; return; }
   const d = Math.hypot(W.x - TOWN.pos.x, W.z - TOWN.pos.z);
   if (d < 3) { toastMenu(`You’re there: ${W.label}.`); clearWaypoint(); return; }
-  if (!TRAVEL.path.length) travelPlan();
+  if (!TRAVEL.path.length && (!TRAVEL.unreachable || Math.hypot(TOWN.pos.x - TRAVEL.failedAt.x, TOWN.pos.z - TRAVEL.failedAt.z) > 6)) travelPlan();
+  if (!TRAVEL.path.length) { TRAVEL.auto = false; if (TRAVEL.dots) TRAVEL.dots.count = 0; compassHud(d); return; }
   const pr = travelProgress(); TRAVEL.progress = Math.max(TRAVEL.progress || 0, pr.s); TRAVEL.off = pr.off;
   // wandered well off the route (or autowalk is stuck on something): plan again from here
-  if (pr.off > 12 || TRAVEL.stuck > 1.4) { TRAVEL.stuckLog = (TRAVEL.stuckLog || []).concat([[Math.round(TOWN.pos.x), Math.round(TOWN.pos.z)]]); TRAVEL.startX = TOWN.pos.x; TRAVEL.startZ = TOWN.pos.z; travelPlan(); }
+  if (pr.off > 12 || TRAVEL.stuck > 1.4) {
+    const now = performance.now();
+    if (!TRAVEL.lastReplanAt || now - TRAVEL.lastReplanAt > 1200) {
+      TRAVEL.lastReplanAt = now;
+      TRAVEL.stuckLog = (TRAVEL.stuckLog || []).concat([[Math.round(TOWN.pos.x), Math.round(TOWN.pos.z)]]);
+      const moved = TRAVEL.lastReplanPos ? Math.hypot(TOWN.pos.x - TRAVEL.lastReplanPos.x, TOWN.pos.z - TRAVEL.lastReplanPos.z) : Infinity;
+      TRAVEL.noProgress = moved < 1 ? (TRAVEL.noProgress || 0) + 1 : 0;
+      TRAVEL.lastReplanPos = { x: TOWN.pos.x, z: TOWN.pos.z };
+      if (TRAVEL.noProgress >= 3) { TRAVEL.auto = false; TRAVEL.unreachable = true; TRAVEL.failedAt = TRAVEL.lastReplanPos; TRAVEL.path = []; TRAVEL.marks = []; toastMenu('Walk there stopped: no clear route from here. Move or choose another waypoint.'); }
+      else travelPlan();
+    }
+  }
   // markers from just behind you to 60 m ahead; they're fixed points, only which ones show changes
   const D = TRAVEL.dots, m4 = new THREE.Matrix4(); let k = 0;
   for (const [x, z, s] of TRAVEL.marks) { if (s < TRAVEL.progress - 2) continue; if (s > TRAVEL.progress + 60 || k >= D.instanceMatrix.count) break; m4.makeTranslation(x, gy(x, z) + 0.08 + 0.03 * Math.sin(G.realTime * 4 + s), z); D.setMatrixAt(k++, m4); }
@@ -110,16 +126,24 @@ function updateWaypoint(dt) {
 // the route: local legs on the grid, the roads in between
 function realmRoute(sx, sz, tx, tz) {
   TRAVEL.startX = sx; TRAVEL.startZ = sz;
+  const safe = path => path && routeSafe(sx, sz, path) ? path : null;
   const direct = Math.hypot(tx - sx, tz - sz);
-  if (direct < 70) { const L = localPath(sx, sz, tx, tz) || (direct < 40 ? localPath(sx, sz, tx, tz, 70) : null); if (L) return L; }
+  if (lineFree(sx, sz, tx, tz)) return [[tx, tz]];
+  if (direct < 70) { const L = safe(localPath(sx, sz, tx, tz) || (direct < 40 ? localPath(sx, sz, tx, tz, 70) : null)); if (L) return L; }
   const A = nearestRoad(sx, sz), Bq = nearestRoad(tx, tz);
-  if (!A || !Bq || (A.d > 60 && Bq.d > 60)) { const L = localPath(sx, sz, tx, tz, 60); return L || [[tx, tz]]; }
-  const road = roadRoute(A, Bq);
-  const leg1 = A.d < 2 ? [] : (localPath(sx, sz, A.x, A.z) || localPath(sx, sz, A.x, A.z, 70) || [[A.x, A.z]]);
+  if (!A || !Bq || (A.d > 60 && Bq.d > 60)) return safe(localPath(sx, sz, tx, tz, 60));
+  const road = roadRoute(A, { ...Bq, x: tx, z: tz });
+  if (!road) return safe(localPath(sx, sz, tx, tz, 60));
+  const leg1 = A.d < 2 ? [] : (safe(localPath(sx, sz, A.x, A.z) || localPath(sx, sz, A.x, A.z, 70)) || null);
+  if (!leg1) return safe(localPath(sx, sz, tx, tz, 60));
   { const f = road[0], p0 = leg1.length ? leg1[leg1.length - 1] : [sx, sz]; if (f && !lineFree(p0[0], p0[1], f[0], f[1])) { const L = localPath(p0[0], p0[1], f[0], f[1], 12); if (L) road.splice(0, 0, ...L); } }
-  const leg2 = Bq.d < 2 ? [] : (localPath(Bq.x, Bq.z, tx, tz) || localPath(Bq.x, Bq.z, tx, tz, 70) || [[tx, tz]]);
-  const out = [...leg1, ...road, ...leg2]; if (!out.length || out[out.length - 1][0] !== tx || out[out.length - 1][1] !== tz) out.push([tx, tz]);
-  return out;
+  const out = [...leg1, ...road]; if (!out.length || out[out.length - 1][0] !== tx || out[out.length - 1][1] !== tz) out.push([tx, tz]);
+  return safe(out) || safe(localPath(sx, sz, tx, tz, 60));
+}
+function routeSafe(sx, sz, path) {
+  let x = sx, z = sz;
+  for (const [nx, nz] of path) { if (!lineFree(x, z, nx, nz)) return false; x = nx; z = nz; }
+  return true;
 }
 // the road network as a graph (built once)
 const ROADNET = { nodes: [], adj: [] };
@@ -144,43 +168,104 @@ function nearestRoad(x, z) {
 }
 // Dijkstra over the road nodes from one projected point to another
 function roadRoute(A, B) {
-  if (A.a === B.a && A.b === B.b) return [[B.x, B.z]];
-  const N = ROADNET.nodes.length, dist = new Array(N).fill(1e9), from = new Array(N).fill(-1), done = new Array(N).fill(false);
-  dist[A.a] = A.ta; dist[A.b] = A.tb;
-  for (let it = 0; it < N; it++) {
-    let u = -1; for (let i = 0; i < N; i++) if (!done[i] && (u < 0 || dist[i] < dist[u])) u = i; if (u < 0 || dist[u] >= 1e9) break; done[u] = true;
-    for (const [v, w] of ROADNET.adj[u]) if (dist[u] + w < dist[v]) { dist[v] = dist[u] + w; from[v] = u; }
+  const N = ROADNET.nodes.length, rejected = new Set(), rejectedEnds = new Set();
+  const stamp = `${NAV.version || 0}:${gateOpen('bailey')}:${gateOpen('royal')}`;
+  if (ROADNET.cacheStamp !== stamp) { ROADNET.cacheStamp = stamp; ROADNET.edgeCache = new Map(); }
+  const routes = ROADNET.edgeCache;
+  const edge = (u, v) => {
+    const key = `${u}:${v}`; if (routes.has(key)) return routes.get(key);
+    const a = ROADNET.nodes[u], b = ROADNET.nodes[v], e = ROADNET.adj[u].find(q => q[0] === v);
+    const path = lineFree(a[0], a[1], b[0], b[1]) ? [b] : localPath(a[0], a[1], b[0], b[1], e && e[2] ? 20 : 24);
+    if (!path || !routeSafe(a[0], a[1], path)) { routes.set(key, null); return null; }
+    const result = { path }; routes.set(key, result); return result;
+  };
+  const connector = (x, z, tx, tz) => lineFree(x, z, tx, tz) ? [[tx, tz]] : localPath(x, z, tx, tz, 70);
+  const starts = [];
+  for (const u of [A.a, A.b]) {
+    const start = connector(A.x, A.z, ...ROADNET.nodes[u]);
+    if (!start || !routeSafe(A.x, A.z, start)) continue;
+    let x = A.x, z = A.z, length = 0; for (const [nx, nz] of start) { length += Math.hypot(nx - x, nz - z); x = nx; z = nz; }
+    starts.push({ u, path: start, length });
   }
-  const end = dist[B.a] + B.ta <= dist[B.b] + B.tb ? B.a : B.b;
-  const ids = []; let c = end; while (c >= 0) { ids.push(c); c = from[c]; } ids.reverse();
-  const out = [];
-  for (let k = 0; k < ids.length; k++) {
-    const n = ROADNET.nodes[ids[k]];
-    if (k > 0) { const e = ROADNET.adj[ids[k - 1]].find(x => x[0] === ids[k]), pv = ROADNET.nodes[ids[k - 1]]; if ((e && e[2]) || !lineFree(pv[0], pv[1], n[0], n[1])) { const L = localPath(pv[0], pv[1], n[0], n[1], e && e[2] ? 20 : 12); if (L) { out.push(...L); continue; } } }
-    out.push(n);
+  if (!starts.length) return null;
+  const ends = [];
+  for (let u = 0; u < N; u++) {
+    const n = ROADNET.nodes[u];
+    if ((u === B.a || u === B.b || Math.hypot(n[0] - B.x, n[1] - B.z) < 50) && Math.abs(gy(n[0], n[1]) - gy(B.x, B.z)) < 2) ends.push(u);
   }
-  // the last stretch along the road to the exit point, and the first from the entry point, may have something on them too
-  const last = out[out.length - 1]; if (!lineFree(last[0], last[1], B.x, B.z)) { const L = localPath(last[0], last[1], B.x, B.z, 12); if (L) { out.push(...L); return out; } }
-  out.push([B.x, B.z]); return out;
+  // Search optimistically; only inspect geometry on the selected route. If a
+  // road link has no safe detour, exclude it and choose the next graph route.
+  for (let attempt = 0; attempt < 32; attempt++) {
+    const dist = new Array(N).fill(Infinity), from = new Array(N).fill(-1), done = new Array(N).fill(false);
+    for (const S of starts) dist[S.u] = Math.min(dist[S.u], S.length);
+    for (let it = 0; it < N; it++) {
+      let u = -1; for (let i = 0; i < N; i++) if (!done[i] && (u < 0 || dist[i] < dist[u])) u = i;
+      if (u < 0 || !Number.isFinite(dist[u])) break; done[u] = true;
+      for (const [v, w] of ROADNET.adj[u]) if (!rejected.has(`${u}:${v}`) && dist[u] + w < dist[v]) { dist[v] = dist[u] + w; from[v] = u; }
+    }
+    let end = -1, best = Infinity;
+    for (const u of ends) {
+      if (rejectedEnds.has(u) || !Number.isFinite(dist[u])) continue;
+      const n = ROADNET.nodes[u], score = dist[u] + Math.hypot(n[0] - B.x, n[1] - B.z);
+      if (score < best) { best = score; end = u; }
+    }
+    if (end < 0) return null;
+    const ids = []; for (let c = end; c >= 0; c = from[c]) ids.push(c); ids.reverse();
+    const first = ROADNET.nodes[ids[0]], start = connector(A.x, A.z, first[0], first[1]);
+    if (!start || !routeSafe(A.x, A.z, start)) { rejectedEnds.add(end); continue; }
+    const out = [...start]; let bad = false;
+    for (let k = 1; k < ids.length; k++) {
+      const u = ids[k - 1], v = ids[k], E = edge(u, v);
+      if (!E) { rejected.add(`${u}:${v}`); rejected.add(`${v}:${u}`); bad = true; break; }
+      out.push(...E.path);
+    }
+    if (bad) continue;
+    const n = ROADNET.nodes[end], tail = connector(n[0], n[1], B.x, B.z);
+    if (!tail || !routeSafe(n[0], n[1], tail)) { rejectedEnds.add(end); continue; }
+    out.push(...tail);
+    if (routeSafe(A.x, A.z, out)) return out;
+    rejectedEnds.add(end);
+  }
+  return null;
 }
 // a bounded A* on a 2 m grid round the two ends (for the legs off the road and short trips), string-pulled
 function localPath(sx, sz, tx, tz, margin) {
+  if (navBlocked(tx, tz, 1.0)) return null;
   const C = 2, M = margin || 30, x0 = Math.min(sx, tx) - M, x1 = Math.max(sx, tx) + M, z0 = Math.min(sz, tz) - M, z1 = Math.max(sz, tz) + M;
   const ci = v => Math.floor(v / C), key = (i, j) => (i + 4096) * 8192 + (j + 4096);
-  const free = (i, j) => { const x = i * C + 1, z = j * C + 1; return x > x0 && x < x1 && z > z0 && z < z1 && !navBlocked(x, z, 1.0); };
+  const freeCache = new Map(), roadCache = new Map(), edgeCache = new Map();
+  const free = (i, j) => {
+    const k = key(i, j); if (freeCache.has(k)) return freeCache.get(k);
+    const x = i * C + 1, z = j * C + 1;
+    const ok = x > x0 && x < x1 && z > z0 && z < z1 && !navBlocked(x, z, 1.0);
+    freeCache.set(k, ok); return ok;
+  };
+  const road = (i, j) => {
+    const k = key(i, j); if (!roadCache.has(k)) roadCache.set(k, onRoad(i * C + 1, j * C + 1, 0));
+    return roadCache.get(k);
+  };
+  const edgeFree = (i, j, ni, nj, x, z, nx, nz) => {
+    const k = `${key(i, j)}:${key(ni, nj)}`;
+    if (!edgeCache.has(k)) edgeCache.set(k, lineFree(x, z, nx, nz));
+    return edgeCache.get(k);
+  };
   const si = ci(sx), sj = ci(sz), ti = ci(tx), tj = ci(tz);
-  const open = [[0, si, sj]], g = new Map([[key(si, sj), 0]]), from = new Map(); let n = 0, found = false;
+  const open = [], g = new Map([[key(si, sj), 0]]), from = new Map(); let n = 0, found = false;
   const H = (i, j) => Math.hypot(i - ti, j - tj) * 1.001;
-  while (open.length && n++ < 30000) {
-    let bi = 0; for (let q = 1; q < open.length; q++) if (open[q][0] < open[bi][0]) bi = q;
-    const [, i, j] = open.splice(bi, 1)[0]; if (i === ti && j === tj) { found = true; break; }
-    const gc = g.get(key(i, j));
+  const push = e => { let i = open.length; open.push(e); while (i) { const p = (i - 1) >> 1; if (open[p][0] <= e[0]) break; open[i] = open[p]; i = p; } open[i] = e; };
+  const pop = () => { const first = open[0], last = open.pop(); if (open.length) { let i = 0; while (i * 2 + 1 < open.length) { let c = i * 2 + 1; if (c + 1 < open.length && open[c + 1][0] < open[c][0]) c++; if (open[c][0] >= last[0]) break; open[i] = open[c]; i = c; } open[i] = last; } return first; };
+  push([0, si, sj, 0]);
+  while (open.length && n++ < 12000) {
+    const [, i, j, gc] = pop(); if (gc !== g.get(key(i, j))) continue;
+    if (i === ti && j === tj) { found = true; break; }
     for (const [di, dj] of [[1, 0], [-1, 0], [0, 1], [0, -1], [1, 1], [1, -1], [-1, 1], [-1, -1]]) {
       const ni = i + di, nj = j + dj, kk = key(ni, nj);
       if (!(ni === ti && nj === tj) && !free(ni, nj)) continue;
       if (di && dj && (!free(i + di, j) || !free(i, j + dj))) continue;
-      const ng = gc + (di && dj ? 1.414 : 1) + (onRoad(ni * C + 1, nj * C + 1, 0) ? 0 : 0.25);
-      if (ng < (g.has(kk) ? g.get(kk) : 1e9)) { g.set(kk, ng); from.set(kk, key(i, j)); open.push([ng + H(ni, nj), ni, nj]); }
+      if (!edgeFree(i, j, ni, nj, i === si && j === sj ? sx : i * C + 1, i === si && j === sj ? sz : j * C + 1,
+        ni === ti && nj === tj ? tx : ni * C + 1, ni === ti && nj === tj ? tz : nj * C + 1)) continue;
+      const ng = gc + (di && dj ? 1.414 : 1) + (road(ni, nj) ? 0 : 0.25);
+      if (ng < (g.has(kk) ? g.get(kk) : 1e9)) { g.set(kk, ng); from.set(kk, key(i, j)); push([ng + H(ni, nj), ni, nj, ng]); }
     }
   }
   if (!found) return null;
@@ -191,9 +276,9 @@ function localPath(sx, sz, tx, tz, margin) {
   return out;
 }
 function realmPath(sx, sz, tx, tz) { return realmRoute(sx, sz, tx, tz); }
-function lineFree(x0, z0, x1, z1) { const L = Math.hypot(x1 - x0, z1 - z0), n = Math.ceil(L / 1); for (let k = 1; k < n; k++) { const t = k / n; if (navBlocked(x0 + (x1 - x0) * t, z0 + (z1 - z0) * t, 1.0)) return false; } return true; }
+function lineFree(x0, z0, x1, z1) { const L = Math.hypot(x1 - x0, z1 - z0), n = Math.max(1, Math.ceil(L)); for (let k = 1; k <= n; k++) { const t = k / n; if (navBlocked(x0 + (x1 - x0) * t, z0 + (z1 - z0) * t, 1.0)) return false; } return true; }
 // autowalk: when on and you aren't steering, walk toward a point a few metres ahead along the route
-function travelAutoVel(speed) {
+function travelAutoVel(speed, dt = 1 / 60) {
   if (!TRAVEL.auto || !TOWN.wp || !TRAVEL.path.length) return null;
   const look = (TRAVEL.progress || 0) + (TOWN.mounted ? 6 : 3.5);
   let px = TRAVEL.startX, pz = TRAVEL.startZ, s = 0, tx = TOWN.wp.x, tz = TOWN.wp.z;
@@ -203,7 +288,7 @@ function travelAutoVel(speed) {
   if ((TRAVEL.stuck || 0) >= 0.5) { const side = Math.round(TRAVEL.stuck / 0.5) % 2 ? 1 : -1, px = -dz / d, pz = dx / d; dx = dx / d + px * side * 1.5; dz = dz / d + pz * side * 1.5; }
   const d2 = Math.hypot(dx, dz) || 1; dx /= d2; dz /= d2;
   // not getting anywhere along the route (pushed about by something, or walking into it): count it as stuck
-  TRAVEL.stuckT = (TRAVEL.stuckT || 0) + 1 / 60;
+  TRAVEL.stuckT = (TRAVEL.stuckT || 0) + dt;
   if (TRAVEL.stuckT >= 0.5) { TRAVEL.stuckT = 0; if ((TRAVEL.progress || 0) - (TRAVEL.lastProg || 0) < 0.4) TRAVEL.stuck = (TRAVEL.stuck || 0) + 0.5; else TRAVEL.stuck = 0; TRAVEL.lastProg = TRAVEL.progress || 0; }
   return { vx: dx * speed, vz: dz * speed };
 }
@@ -321,5 +406,9 @@ function peopleCull() {
   const rigs = [...FOLK.people.filter(N => !N.suspended).map(N => ({ J: N.J, owner: N })), ...SPECT.people.map(S => ({ J: S.J, owner: S })), ...SPECT.seated.map(S => ({ J: S.J, owner: S }))];
   rigs.sort((a, b) => a.J.root.position.distanceToSquared(c) - b.J.root.position.distanceToSquared(c));
   rigs.forEach((R, i) => { R.owner.budgetHidden = i >= (IS_TOUCH ? 44 : 80); if (R.owner.budgetHidden) R.J.root.visible = false; });
-  for (const S of TOWN.stalls || []) if (S.npc && S.npc.root && S.npc.ual) { const d = Math.hypot(S.x - c.x, S.z - c.z); S.npc.root.visible = d < F; }
+  for (const S of TOWN.stalls || []) if (S.npc && S.npc.root) {
+    const cameraDistance = Math.hypot(S.x - c.x, S.z - c.z);
+    const playerDistance = Math.hypot(S.x - TOWN.pos.x, S.z - TOWN.pos.z);
+    S.npc.root.visible = cameraDistance < F || playerDistance < 14;
+  }
 }

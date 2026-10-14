@@ -21,10 +21,10 @@ const DISTRICTS = [
   { key: 'lake', name: 'Mirror Lake', x: 200, z: 40, r: 95 },
   { key: 'bailey', name: 'The Outer Bailey', x: 0, z: -228, r: 120, gate: 'bailey' },
   { key: 'ward', name: 'The King’s Court', x: 0, z: -252, r: 46, gate: 'royal' }
-  ,{ key: 'ashmarket', name: 'Ashmarket', x: -840, z: -250, r: 120 }
-  ,{ key: 'stoneford', name: 'Stoneford', x: 890, z: 140, r: 130 }
-  ,{ key: 'southmere', name: 'Southmere', x: -90, z: 900, r: 135 }
-  ,{ key: 'northwatch', name: 'Northwatch Fortress', x: 0, z: -1030, r: 125 }
+  ,{ key: 'ashmarket', name: 'Ashmarket', x: -510, z: -250, r: 120 }
+  ,{ key: 'stoneford', name: 'Stoneford', x: 530, z: 140, r: 130 }
+  ,{ key: 'southmere', name: 'Southmere', x: -90, z: 620, r: 135 }
+  ,{ key: 'northwatch', name: 'Northwatch Fortress', x: 0, z: -690, r: 125 }
 ];
 // arenas: every one is a 20 x 30 list (LIST) so the fight engine runs unchanged; the bout plays at the nearest one
 const ARENAS = [
@@ -34,10 +34,10 @@ const ARENAS = [
   { key: 'beach', name: 'Mirror Lake Strand', x: 148, z: 78, bx: 13, bz: 18, district: 'lake', icon: '🌊', accent: '#3185ac', entry: [148, 103] },
   { key: 'castle', name: 'Bailey Stone Lists', x: -74, z: -204, bx: 14, bz: 19, district: 'bailey', gate: 'bailey', icon: '🏰', accent: '#647084', entry: [-74, -179] },
   { key: 'hall', name: 'King’s Great Hall', x: 0, z: -264, bx: 12, bz: 15, district: 'ward', gate: 'royal', indoor: true, icon: '👑', accent: '#b78a35', entry: [0, -244] }
-  ,{ key: 'foundry', name: 'Foundry Pit', x: -902, z: -260, bx: 14, bz: 19, district: 'ashmarket', icon: '⚒️', accent: '#ad6135', entry: [-902, -236] }
-  ,{ key: 'bridge', name: 'Bridge Lists', x: 947, z: 161, bx: 14, bz: 19, district: 'stoneford', icon: '🌉', accent: '#4c7290', entry: [947, 185] }
-  ,{ key: 'orchard', name: 'Orchard Lists', x: -22, z: 943, bx: 14, bz: 19, district: 'southmere', icon: '🌿', accent: '#7d9855', entry: [-22, 967] }
-  ,{ key: 'northwatch', name: 'Northwatch Yard', x: 58, z: -1060, bx: 14, bz: 19, district: 'northwatch', icon: '🏰', accent: '#536d79', entry: [58, -1036] }
+  ,{ key: 'foundry', name: 'Foundry Pit', x: -572, z: -260, bx: 14, bz: 19, district: 'ashmarket', icon: '⚒️', accent: '#ad6135', entry: [-572, -236] }
+  ,{ key: 'bridge', name: 'Bridge Lists', x: 587, z: 161, bx: 14, bz: 19, district: 'stoneford', icon: '🌉', accent: '#4c7290', entry: [587, 185] }
+  ,{ key: 'orchard', name: 'Orchard Lists', x: -22, z: 663, bx: 14, bz: 19, district: 'southmere', icon: '🌿', accent: '#7d9855', entry: [-22, 687] }
+  ,{ key: 'northwatch', name: 'Northwatch Yard', x: 58, z: -720, bx: 14, bz: 19, district: 'northwatch', icon: '🏰', accent: '#536d79', entry: [58, -696] }
 ];
 // A walk-in practice list, separate from the six competitive/spectator arenas.
 const TRAINING_GROUND = { key: 'training', name: 'Fairground Training Yard', x: -58, z: -56, bx: 12, bz: 17,

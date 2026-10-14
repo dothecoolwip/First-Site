@@ -1,5 +1,5 @@
 <!doctype html><html><head><meta charset="utf-8"><link rel="manifest" href="manifest.webmanifest"><meta name="theme-color" content="#0f1316"><link rel="apple-touch-icon" href="icon-192.png"><meta name="apple-mobile-web-app-capable" content="yes"><meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover"></head><body>
-<script>window.BUILD_VER="steel-tape-auth-14edf9973749";</script><title>Buhurt: Steel &amp; Tape</title>
+<script>window.BUILD_VER="steel-tape-auth-34fbff03e018";</script><title>Buhurt: Steel &amp; Tape</title>
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link rel="stylesheet" href="fonts/fonts.css">
@@ -32199,259 +32199,136 @@ function setOrder(o, actor = G.player || (VS.on && VS.humans[0])) {
   if (G.phase === 'fight') { feed(`Squad call: ${ORDERS[o].name}.`, '', 'var(--flag)'); const cp = perk(actor, 'show.captain'); if (cp) for (const m of G.fighters) if (m.team === team && isUp(m)) { m.buffT = Math.max(m.buffT || 0, 8); m.buffStab = Math.max(m.buffStab || 1, 1 + 0.06 * cp); } }
 }
 // ---------- controller: menus you can drive with a pad (and arrow keys), button glyphs, rumble ----------
-
 const PAD = { navT: 0, navKey: '', cursor: { x: 0.5, y: 0.5 }, legendT: 0 };
 
-
-
 function onInputMode(m) {
-
   document.body.classList.toggle('pad', m === 'pad');
-
   updateLegend();
-
-  if (m === 'pad' && G.screen) focusFirst();
-
+  if (m === 'pad' && G.screen) { PAD.navKey = ''; PAD.navT = 0; focusFirst(); }
 }
-
 function activeLayer() { return $('#steeltapeCloudOverlay') || (G.photo ? $('#photo') : G.screen ? $('#' + G.screen) : typeof TOWN !== 'undefined' && TOWN.spec ? $('#townSpec') : null); }
-
 function navItems(root) {
-
   return [...root.querySelectorAll('button, input, select, textarea, summary, a[href]')].filter(el => {
-
     if (el.disabled || el.closest('[hidden]')) return false;
-
+    if (root.id === 'title' && !el.closest('nav[aria-label="Main menu"]')) return false;
     const r = el.getBoundingClientRect(); return r.width > 0 && r.height > 0;
-
   });
-
 }
-
 function focusEl(el) { if (!el) return; try { el.focus({ preventScroll: true }); } catch (e) { } el.scrollIntoView({ block: 'nearest', inline: 'nearest' }); }
-
 function focusFirst() {
-
   const root = activeLayer(); if (!root) return;
-
   const items = navItems(root); if (!items.length) return;
-
   if (items.includes(document.activeElement)) return;
-
   const pref = ['.kcard[aria-pressed="true"]', '.rung.next', '.mode', '.pfoot .btn.primary', '.pbody .btn.primary', '.menu .btn.primary', '.kitrow'].map(q => root.querySelector(q)).find(e => e && items.includes(e));
-
   focusEl(pref || items.find(e => !e.matches('.back')) || items[0]);
-
 }
-
 // spatial navigation: the nearest control in the pushed direction, favouring the same row or column
-
 function navMove(dx, dy) {
-
   const root = activeLayer(); if (!root) return;
-
   const items = navItems(root); if (!items.length) return;
-
   const cur = document.activeElement;
-
   if (!items.includes(cur)) { focusFirst(); return; }
-
   if (cur.tagName === 'SELECT' && dx) { cur.selectedIndex = clamp(cur.selectedIndex + dx, 0, cur.options.length - 1); cur.dispatchEvent(new Event('change', { bubbles: true })); return; }
-
   if (cur.type === 'range' && dx) { const st = +cur.step || 0.1; cur.value = String(clamp(+cur.value + dx * st, +cur.min, +cur.max)); cur.dispatchEvent(new Event('input')); return; }
-
   const a = cur.getBoundingClientRect(), ax = a.left + a.width / 2, ay = a.top + a.height / 2;
-
   let best = null, bs = Infinity;
-
   for (const el of items) {
-
     if (el === cur) continue;
-
     const r = el.getBoundingClientRect(), cx = r.left + r.width / 2, cy = r.top + r.height / 2;
-
     const vx = cx - ax, vy = cy - ay, along = vx * dx + vy * dy; if (along <= 2) continue;
-
     const perp = Math.abs(vx * dy - vy * dx);
-
     const overlap = dx ? Math.min(a.bottom, r.bottom) - Math.max(a.top, r.top) : Math.min(a.right, r.right) - Math.max(a.left, r.left);
-
     const s = along + perp * (overlap > 0 ? 0.4 : 2.6);
-
     if (s < bs) { bs = s; best = el; }
-
   }
-
   if (best) { focusEl(best); AU.tone(1800, 0.025, 0.02, 'square'); }
-
 }
-
 function navBack() {
-
   const root = activeLayer(); if (!root) return;
-
   if (root.id === 'steeltapeCloudOverlay') return;
-
   if (G.photo) { closePhoto(); return; }
-
   if (root && root.id === 'townSpec') { stopSpectating(); return; }
-
   if (G.screen === 'pause') { togglePause(false); return; }
-
   if (G.screen === 'townShop' && typeof TOWN !== 'undefined' && TOWN.vendor) { closeVendor(); return; }
-
   const b = root.querySelector('[data-back], [data-leave]'); if (b && b.getBoundingClientRect().width) { b.click(); return; }
-
 }
-
 function navStart() {
-
   const layer = activeLayer(); if (layer && layer.id === 'steeltapeCloudOverlay') { focusFirst(); return; }
-
   if (G.photo) { closePhoto(); return; }
-
   if (G.screen === 'tactics') return $('#btnReady').click();
-
   if (G.screen === 'repair') return $('#btnRepairDone').click();
-
   if (G.screen === 'pause') return togglePause(false);
-
   const root = activeLayer(); const p = root && root.querySelector('.pfoot .btn.primary'); if (p) p.click();
-
 }
-
 function navTab(dir) {
-
   const root = activeLayer(); const bar = root && root.querySelector('.tabs'); if (!bar || !bar.getBoundingClientRect().width) return;
-
   const tabs = [...bar.querySelectorAll('[data-tab]')].filter(b => !b.hidden); if (tabs.length < 2) return;
-
   let i = tabs.findIndex(b => b.getAttribute('aria-pressed') === 'true'); i = (i + dir + tabs.length) % tabs.length;
-
   tabs[i].click(); setTimeout(() => { const pane = root.querySelector('.tabpane:not([hidden])') || root.querySelector('.pbody'); const it = pane && navItems(pane); focusEl(it && (it.find(e => e.getAttribute('aria-pressed') === 'true' && e.matches('.kcard')) || it[0])); }, 0);
-
 }
-
 function navActivate() { const el = document.activeElement; if (el && el !== document.body && activeLayer() && activeLayer().contains(el)) { if (el.tagName === 'INPUT' && el.type !== 'checkbox') return; el.click(); } else focusFirst(); }
 
-
-
 // called every frame from readInput when a menu is up
-
 function padMenu(gp, b, pressed, dt) {
-
+  // A held direction can reveal the pad before the menu has finished laying out.
+  // Retry focus on the next frame without disturbing a valid menu selection.
+  if (activeLayer() && !activeLayer().contains(document.activeElement)) focusFirst();
   const ax = gp.axes, lx = ax[0] || 0, ly = ax[1] || 0;
-
   // the repair bench: the left stick drives a cursor, A presses
-
   if (G.screen === 'repair' && REP.step) {
-
     const m = Math.hypot(lx, ly); if (m > 0.18) { PAD.cursor.x = clamp(PAD.cursor.x + lx * dt * 1.25, 0.02, 0.98); PAD.cursor.y = clamp(PAD.cursor.y + ly * dt * 1.6, 0.05, 0.95); benchMove({ ...PAD.cursor }, true); }
-
     if (pressed(NIN.on ? 1 : 0)) { if (REP.step === 'task' && squireBook().assisted) repairTaskInput(REP.task.targets[REP.task.index], true); else benchDown({ ...PAD.cursor }); }
-
     if (pressed(9)) navStart();
-
     return;
-
   }
-
   let dir = '';
-
   if (b[12] || ly < -0.6) dir = 'u'; else if (b[13] || ly > 0.6) dir = 'd'; else if (b[14] || lx < -0.6) dir = 'l'; else if (b[15] || lx > 0.6) dir = 'r';
-
   if (dir) {
-
     if (dir !== PAD.navKey) { PAD.navKey = dir; PAD.navT = 0.38; navDir(dir); }
-
     else { PAD.navT -= dt; if (PAD.navT <= 0) { PAD.navT = 0.12; navDir(dir); } }
-
   } else PAD.navKey = '';
-
   // right stick scrolls long lists
-
   const ry = ax[3] || 0; if (Math.abs(ry) > 0.25) { const body = activeLayer() && activeLayer().querySelector('.pbody'); if (body) body.scrollTop += ry * dt * 700; }
-
   if (pressed(NIN.on ? 1 : 0)) navActivate();
-
   if (pressed(NIN.on ? 0 : 1)) navBack();
-
   if (pressed(9)) navStart();
-
   if (pressed(4)) navTab(-1); if (pressed(5)) navTab(1);
-
 }
-
 function navDir(d) { navMove(d === 'l' ? -1 : d === 'r' ? 1 : 0, d === 'u' ? -1 : d === 'd' ? 1 : 0); }
-
 // keyboard: arrows move, Enter/Space press, Escape goes back
-
 window.addEventListener('keydown', e => {
-
   if (!activeLayer() || e.isComposing || (e.target && (e.target.isContentEditable || e.target.closest('textarea, select') || (e.target.tagName === 'INPUT' && e.target.type !== 'checkbox' && e.target.type !== 'range')))) return;
-
   const map = { ArrowUp: 'u', ArrowDown: 'd', ArrowLeft: 'l', ArrowRight: 'r' };
-
   if (map[e.key]) { e.preventDefault(); if (!activeLayer().contains(document.activeElement)) focusFirst(); else navDir(map[e.key]); }
-
   else if (e.key === 'Escape' && G.screen !== 'pause') { e.preventDefault(); navBack(); }
-
 });
 
-
-
 // ---- rumble: controller motors, or the phone's vibration motor ----
-
 function rumble(strong, weak, ms) {
-
   if (!G.settings.rumble || G.attract || G.autopilot) return;
-
   try {
-
     if (IN.mode === 'pad') { const gp = currentPad(), va = gp && gp.vibrationActuator; if (va && va.playEffect) { const r = va.playEffect('dual-rumble', { startDelay: 0, duration: ms, strongMagnitude: strong, weakMagnitude: weak }); if (r && r.catch) r.catch(() => { }); } }
-
     else if (IN.mode === 'touch' && navigator.vibrate) navigator.vibrate(Math.round(ms * (0.4 + 0.6 * Math.max(strong, weak))));
-
   } catch (e) { }
-
 }
-
-
 
 // ---- the button guide along the bottom of the screen in fights ----
-
 const LEGEND = [['RT', 'swing'], ['LT', 'guard'], ['X', 'shove'], ['B', 'trip'], ['Y', 'tackle'], ['RB', 'grab'], ['A', 'brace'], ['R3', 'target'], ['View', 'camera']];
-
 function updateLegend() {
-
   const el = $('#legend'); if (!el) return;
-
   if (!el.childElementCount) for (const [k, t] of LEGEND) el.append(h('span', null, h('i', { class: 'gp', 'data-k': k }, gpName(k)), t));
-
   const fight = G.phase === 'fight' || G.phase === 'prefight';
-
   el.hidden = !(IN.mode === 'pad' && G.settings.legend !== false && fight && !G.screen && !G.attract && G.player && !G.player.out);
-
 }
-
 window.addEventListener('gamepadconnected', () => { toastMenu('Controller connected'); });
-
 window.addEventListener('gamepaddisconnected', () => { toastMenu('Controller disconnected'); if (G.phase === 'fight' && !G.paused && IN.mode === 'pad') togglePause(true); });
 
-
-
 function rumbleFor(f, strong, weak, ms) {
-
   if (!f || !G.settings.rumble || G.attract || G.autopilot) return;
-
   if (!VS.on || f.pslot == null) { if (f.isPlayer) rumble(strong, weak, ms); return; }
-
   const pads = seatPads(), useKeyboard = pads.length < VS.humans.length;
-
   const gp = pads[useKeyboard ? f.pslot - 1 : f.pslot];
-
   try { const result = gp?.vibrationActuator?.playEffect('dual-rumble', {startDelay:0,duration:ms,strongMagnitude:strong,weakMagnitude:weak}); if (result?.catch) result.catch(()=>{}); } catch (e) { }
-
 }
 // ---------- controllers: one clean, standard-layout view of every pad, whatever the browser reports ----------
 // Browsers differ: Chrome and Safari give most pads the "standard" mapping, but Firefox (and some pads in any browser)
@@ -35759,11 +35636,14 @@ function squireTownTick(dt) {
   C.group.visible = Math.hypot(P.x - TOWN.pos.x, P.z - TOWN.pos.z) < (IS_TOUCH ? 50 : 70);
   if (C.model.ual && C.group.visible) C.model.mixer.update(dt);
   if (!S.recruited || S.departed) return;
-  if (!['follow', 'home'].includes(S.command) || G.screen || TOWN.spec || GATHER.on || TOWN.mineOn) return;
+  if (!['follow', 'home'].includes(S.command) || G.screen || TOWN.spec || GATHER.on || TOWN.mineOn) {
+    if (C.model.ual && C.anim !== 'Idle_Talking_Loop') { C.model.play('Idle_Talking_Loop', 0.2); C.anim = 'Idle_Talking_Loop'; }
+    return;
+  }
   const home = S.lodging === 'home' ? { x: HOME_AT[0], z: HOME_AT[1] - 6 } : { x: 33, z: 29 };
   const tx = S.command === 'home' ? home.x : TOWN.pos.x - Math.sin(TOWN.face) * 2, tz = S.command === 'home' ? home.z : TOWN.pos.z - Math.cos(TOWN.face) * 2;
-  const d = Math.hypot(P.x - tx, P.z - tz); const anim = d < 1 ? 'Idle_Talking_Loop' : 'Walking_A_Loop';
-  if (C.model.ual && C.anim !== anim) { C.model.play(UAL.clips[anim] ? anim : 'Idle_Loop', 0.2); C.anim = anim; }
+  const d = Math.hypot(P.x - tx, P.z - tz); const anim = d < 1 ? 'Idle_Talking_Loop' : 'Walk_Loop';
+  if (C.model.ual && C.anim !== anim) { C.model.play(anim, 0.2); C.anim = anim; }
   if (d < 1) return;
   if (S.command === 'follow' && d > 65 && !navBlocked(TOWN.pos.x, TOWN.pos.z, 0.4)) { const f = navFree(tx, tz); if (f) { P.set(f.x, gy(f.x, f.z), f.z); C.route = []; } }
   C.routeT -= dt;
@@ -38940,7 +38820,7 @@ async function boot(hot) {
   requestAnimationFrame(frame);
   if (location.hash === '#autotest') setTimeout(autotest, 300);
   if (location.protocol === 'file:' && window.__steeltapeTest) window.capeAnimate = capeAnimate;
-  window.__ST = { packF, unpackF, syncReserveRack, startRound, openGauntletRepair, BOONS, wearPiece, teamSquire, squireTeam, squireActive, squireBook, squireStage, squireFeed, squireRest, squireOutfit, squireMatchComplete, squireReconcile, squireAutomate, squireBuildTown, squireTownTick, openSquireQuest, openSquire, handReserve, reserveAllowed, prepareReserveWeapons, careerKit, equipmentState, storeCareerKit, persistPlayerKit, openWorkshop, openTownRepair, paidWorkshopRepair, workshopQuote, repairTaskInput, repairFinish, startRepairTask, REPAIR_FAULTS, GAMEPLAY, SAT, YUKA, CANNON, RAPIER, BVH, gameplayShape, gameplayShapeBlocked, gameplayGroundAt, gameplayMove, G, AU, buildShield, buildWeapon, W3, startTourney, quickFight, toTitle, openRepair, kitCheck, setupMatch, toTactics, beginFight, endRound, matchEnd, CLUBS, WEAPONS, setView, toast, renderKitPicker, applyLoadout, IN, FP, showScreen, weaponIcon, startCine, startTraining, startLadder, openCareer, openModes, openLadder, CAREER, setLesson, TR, unlock, togglePause, afterRound, renderHow, selectPiece, selectTape, msg, renderSheet, setHud, endTraining, setMode, PAD, navMove, focusFirst, sparks, CUTE, THREE, BREATH, setCuteDeco, flipFx, PHOTO, UAL, raiseFlags, startVersus, startFFA, startBracket, startKid, KID, openSeason, startSeasonMatch, setVenue, VS, SPLIT, NET, buildOnlineMatch, hostLobby, joinLobby, ONL, vinControl, openRun, openDaily, openBracket, showBracket, bracketResult, ffaMatchEnd, ffaLeader, ffaWinner, endKid, openPhoto, closePhoto, startReplay, stopReplay, RP, store, startRunFight, newRun, runEnd, WX, setWeather, padVin, readVersus, applyLo, myLoadout, netDropped, netLeave, showIntro, installForged, dailyPlan, openKids, openVersus, openPicks, LESSONS, rivalClub, startGrudge, startDaily, seasonState, newSeason, refreshDaily, VENUES, COMM, hitMapHtml, resetFighterForRound, DIFF, PIN, PADS, NIN, padsUpdate, seatPads, LOBBY, MM, openOnlineHub, benchDown, benchMove, REP, squirePatch, coverage, openProfile, myProfile, BOS, updateTitlePurse, ACH, progressCheck, challenges, masteryOf, S2, rankOf, counterValue, renderCareer, progressMatch, saveCareer, shopState, shopUp, tapeLeft, shopMatchEnd, shopPrizeMult, shopXpMult, swingTimes, pieceWearMult, TABARDS, refillTape, renderShop, UPGRADES, freshKit, TAPE_STOCK, enterTown, leaveTown, TOWN, openVendor, closeVendor, openTownMap, shopFx, renderVendor, VENDORS, ITEMS, itemCost, spCost, skillRoom, sponsorIncome, BOOSTS, STALL_AT, HOMES, FURNISH, pfx, squadFx, boostKit, townCollide, townRefresh, townWalkTo, townTalk, townTeardown, lookState, WORLD, guildCheck, STATIONS, townDressMe, FOLK, updateFolk, navBlocked, buildFolk, BOUT, boutStart, boutStop, boutTick, drawTownMap, updateMiniMap, costumePerson, OUTFIT, buildSkinWeapon, skinIcon, wskinList, skinFor, buildMyWeapon, wskinFamOf, GATHER, startGather, gatherSwing, stopGather, tradeState, tradeLevel, tradeGain, give, have, craft, NODES, MATS, renderTrades, TRADE_SKILLS, ARENAS, DISTRICTS, TRAVEL, setWaypoint, clearWaypoint, realmPath, callHorse, mount, dismount, ANIMAL, districtAt, realmCull, REALM_TIERS, gateOpen, townJump, stableRows, horseAvailable, peopleCull, boutArenaFor, arenaLive, bagSlots, bagState, bagRoom, secretFound, lookOwned, SECRETS, stopSpectating, startTrial, TRIALS, tierCap, gy, tierOf, HILL, hillHouses, cliffAt, gateBlocked, arenaBlocked, localPath, NAV, rampAt, ROSTER, rosterClubs, rosterLive, rosterName, liveBoutPick, aiTier, AI_TIER, guardOutcome, fighterGlow, ONB, onbStage, onbSet, openCreator, tourStart, tourEnd, TOUR_STOPS, THRONE, throneHolder, throneChallenge, throneLoad, throneOnlineEnd, openThrone, BOARDS, boardFetch, boardCrownStatues, sideFromDrag, VOICE };
+  window.__ST = { wearPiece, teamSquire, squireTeam, squireActive, squireBook, squireStage, squireFeed, squireRest, squireOutfit, squireMatchComplete, squireReconcile, squireAutomate, squireBuildTown, squireTownTick, openSquireQuest, openSquire, handReserve, reserveAllowed, prepareReserveWeapons, careerKit, equipmentState, storeCareerKit, persistPlayerKit, openWorkshop, openTownRepair, paidWorkshopRepair, workshopQuote, repairTaskInput, repairFinish, startRepairTask, REPAIR_FAULTS, GAMEPLAY, SAT, YUKA, CANNON, RAPIER, BVH, gameplayShape, gameplayShapeBlocked, gameplayGroundAt, gameplayMove, G, AU, buildShield, buildWeapon, W3, startTourney, quickFight, toTitle, openRepair, kitCheck, setupMatch, toTactics, beginFight, endRound, matchEnd, CLUBS, WEAPONS, setView, toast, renderKitPicker, applyLoadout, IN, FP, showScreen, weaponIcon, startCine, startTraining, startLadder, openCareer, openModes, openLadder, CAREER, setLesson, TR, unlock, togglePause, afterRound, renderHow, selectPiece, selectTape, msg, renderSheet, setHud, endTraining, setMode, PAD, navMove, focusFirst, sparks, CUTE, THREE, BREATH, setCuteDeco, flipFx, PHOTO, UAL, raiseFlags, startVersus, startFFA, startBracket, startKid, KID, openSeason, startSeasonMatch, setVenue, VS, SPLIT, NET, buildOnlineMatch, hostLobby, joinLobby, ONL, vinControl, openRun, openDaily, openBracket, showBracket, bracketResult, ffaMatchEnd, ffaLeader, ffaWinner, endKid, openPhoto, closePhoto, startReplay, stopReplay, RP, store, startRunFight, newRun, runEnd, WX, setWeather, padVin, readVersus, applyLo, myLoadout, netDropped, netLeave, showIntro, installForged, dailyPlan, openKids, openVersus, openPicks, LESSONS, rivalClub, startGrudge, startDaily, seasonState, newSeason, refreshDaily, VENUES, COMM, hitMapHtml, resetFighterForRound, DIFF, PIN, PADS, NIN, padsUpdate, seatPads, LOBBY, MM, openOnlineHub, benchDown, benchMove, REP, squirePatch, coverage, openProfile, myProfile, BOS, updateTitlePurse, ACH, progressCheck, challenges, masteryOf, S2, rankOf, counterValue, renderCareer, progressMatch, saveCareer, shopState, shopUp, tapeLeft, shopMatchEnd, shopPrizeMult, shopXpMult, swingTimes, pieceWearMult, TABARDS, refillTape, renderShop, UPGRADES, freshKit, TAPE_STOCK, enterTown, leaveTown, updateTown, TOWN, openVendor, closeVendor, openTownMap, shopFx, renderVendor, VENDORS, ITEMS, itemCost, spCost, skillRoom, sponsorIncome, BOOSTS, STALL_AT, HOMES, FURNISH, pfx, squadFx, boostKit, townCollide, townRefresh, townWalkTo, townTalk, townTeardown, townRestoredPosition, lookState, WORLD, guildCheck, STATIONS, townDressMe, FOLK, updateFolk, navBlocked, buildFolk, BOUT, boutStart, boutStop, boutTick, drawTownMap, updateMiniMap, costumePerson, OUTFIT, buildSkinWeapon, skinIcon, wskinList, skinFor, buildMyWeapon, wskinFamOf, GATHER, startGather, gatherSwing, stopGather, tradeState, tradeLevel, tradeGain, give, have, craft, NODES, MATS, renderTrades, TRADE_SKILLS, ARENAS, DISTRICTS, TRAVEL, setWaypoint, clearWaypoint, realmPath, freeNear, realmRoute, routeSafe, nearestRoad, roadRoute, lineFree, travelAutoVel, realmTick, CITY_SITES, CITY_VENDORS, LIST_BLOCK, callHorse, mount, dismount, ANIMAL, districtAt, realmCull, REALM_TIERS, gateOpen, townJump, stableRows, horseAvailable, peopleCull, boutArenaFor, arenaLive, bagSlots, bagState, bagRoom, secretFound, lookOwned, SECRETS, stopSpectating, startTrial, TRIALS, tierCap, gy, tierOf, HILL, hillHouses, cliffAt, gateBlocked, arenaBlocked, localPath, NAV, rampAt, ROSTER, rosterClubs, rosterLive, rosterName, liveBoutPick, aiTier, AI_TIER, guardOutcome, fighterGlow, ONB, onbStage, onbSet, openCreator, tourStart, tourEnd, TOUR_STOPS, THRONE, throneHolder, throneChallenge, throneLoad, throneOnlineEnd, openThrone, BOARDS, boardFetch, boardCrownStatues, sideFromDrag, VOICE };
   if (location.protocol === 'file:' && window.__steeltapeTest)
     Object.assign(window.__ST, { applyProfile, rosterAccept, rosterLoad, rosterEligible, creatorReset, creatorRefreshCharacters, creatorRemote, penalize, failPiece, closeRepair, xpNeed, tierProf, runToRepairCorner, onbAfterAccount, onbAccountGate, onbResumeAfterAuth, leaveTarget, leaveScreen, CLOUD, bosLoadInfo, bosBoot, swingLeverage, weaponBindPossible, resolveSwing, sweptSwingTarget, updateAction, think, updateTownCamera, LIBRARY, LIBRARY_DATA, WEAPON_VARIANTS, playerWeaponDef, libraryModel, libraryThumb, LIST, navPushOut, townCollide, SPECT, updateArenaSeatFolk, testAdminApply, testAdminRefresh, testAdminTeleport, openTestAdmin, PLAYTEST, playtestStart, playtestStop, playtestTick, playtestAction, playtestFlush, playtestCapture, gameplayShapePush, gameplayCannonTick, gameplayFolkDirection, arenaRope, gateRefused, stationTrial, commClipName, COMM_AUDIO, SFX_FILES, castleWalkable, castleSurfaceSafe });
   if (location.protocol === 'file:' && window.__steeltapeTest)
@@ -40363,6 +40243,7 @@ function netLeave() { try { NET.unsub && NET.unsub(); NET.room && NET.room.leave
 // signed-in person may read (their own fighter link; public fighter records and career stats). Nothing is written.
 const BOS_URL = 'https://mvbxlebznlgroptwwdsm.supabase.co';
 const BOS_KEY = 'sb_publishable_u76M-dggKSsdsyhUQKveJg_5fPJ5Nan';
+const BOS_SESSION_KEY = 'buhurt-game-buhurtos';
 const BOS = { sb: null, p: null, user: null, info: null, testAdmin: false, otpEmail: '', booting: false, clientPromise: null, bootPromise: null, infoPromise: null, infoUid: null, infoReady: null, recovering: false, authTimer: null };
 function loadSupabaseLib() {
   if (window.supabase && window.supabase.createClient) return Promise.resolve(window.supabase);
@@ -40414,16 +40295,31 @@ function bosRecovery(error) {
     [['Retry', () => { BOS.recovering = false; BOS.bootPromise = null; BOS.infoReady = null; ONB.awaitingAuth = true; bosBoot(true); }, true],
       ['Back to sign-in', () => { BOS.recovering = false; openBosSignIn(onbAfterAccount); }]]);
 }
+function bosStoredSession() {
+  try { return localStorage.getItem(BOS_SESSION_KEY) || sessionStorage.getItem(BOS_SESSION_KEY); }
+  catch (e) { return null; }
+}
+function bosMigrateSession() {
+  // Earlier builds used tab-only storage. Copy an existing session before the
+  // SDK initializes, but never replace a newer persistent account session.
+  try {
+    if (!localStorage.getItem(BOS_SESSION_KEY)) {
+      const old = sessionStorage.getItem(BOS_SESSION_KEY);
+      if (old) localStorage.setItem(BOS_SESSION_KEY, old);
+    }
+    // A stale tab copy must never resurrect an account after explicit logout.
+    if (localStorage.getItem(BOS_SESSION_KEY)) sessionStorage.removeItem(BOS_SESSION_KEY);
+  } catch (e) { /* Storage may be unavailable in private browsing. */ }
+}
 async function bosClient() {
   if (BOS.sb) return BOS.sb;
   if (BOS.clientPromise) return BOS.clientPromise;
   BOS.clientPromise = (async () => {
     const lib = await bosTimeout(loadSupabaseLib(), 'Loading sign-in');
-    // Retain the existing tab-session policy. Do not delete another stored login
-    // as a side effect of merely constructing the client.
+    bosMigrateSession();
     const sb = lib.createClient(BOS_URL, BOS_KEY, { global: { fetch: bosFetch }, auth: {
-      persistSession: true, storage: sessionStorage, autoRefreshToken: true,
-      flowType: 'implicit', detectSessionInUrl: false, storageKey: 'buhurt-game-buhurtos' } });
+      persistSession: true, storage: localStorage, autoRefreshToken: true,
+      flowType: 'implicit', detectSessionInUrl: false, storageKey: BOS_SESSION_KEY } });
     BOS.sb = sb;
     sb.auth.onAuthStateChange((evt, session) => {
       const previous = BOS.user;
@@ -40458,7 +40354,7 @@ async function bosClient() {
 function bosBoot(force = false) {
   if (BOS.bootPromise) return BOS.bootPromise;
   const callback = bosCallback(), intent = onbReadAuthReturn();
-  let saved = false; try { saved = !!sessionStorage.getItem('buhurt-game-buhurtos'); } catch (e) { }
+  const saved = !!bosStoredSession();
   if (!force && !saved && !callback.present && !intent) return Promise.resolve();
   BOS.booting = true; BOS.recovering = false; ONB.awaitingAuth = true;
   BOS.bootPromise = (async () => {
@@ -40572,7 +40468,7 @@ function renderBosBox() {
   const I = BOS.info;
   if (I) {
     box.append(h('div', { class: 'bosme' }, h('span', { class: 'bostick' }, '✓'), h('div', null, h('b', null, I.name), h('small', null, rosterEligible(I.fighter) ? `${I.team ? I.team + ' · ' : ''}${I.m} matches, ${I.w} wins${I.golds ? ', ' + I.golds + ' gold' : ''} on BuhurtOS` : 'BuhurtOS account (no fighter linked yet)'))),
-      h('button', { class: 'btn tape small', onclick: async () => { AU.click(); if (typeof presenceOffline === 'function') presenceOffline(); try { await (await bosClient()).auth.signOut({ scope: 'local' }); } catch (e) { } BOS.user = null; BOS.info = null; creatorReset(); bosApply(); } }, 'Sign out'));
+      h('button', { class: 'btn tape small', onclick: async () => { AU.click(); if (typeof presenceOffline === 'function') presenceOffline(); try { await (await bosClient()).auth.signOut({ scope: 'local' }); } catch (e) { } localStorage.removeItem(BOS_SESSION_KEY); sessionStorage.removeItem(BOS_SESSION_KEY); BOS.user = null; BOS.info = null; BOS.infoReady = null; BOS.testAdmin = false; creatorReset(); if (typeof cloudOnSignOut === 'function') cloudOnSignOut(); bosApply(); } }, 'Sign out'));
     return;
   }
   box.append(h('button', { class: 'btn primary flagtape bosbtn', onclick: () => { AU.click(); openBosSignIn(); } }, 'Sign in with BuhurtOS'));
@@ -41806,1762 +41702,910 @@ function openFeedback(back) {
   $$('#fbKind button').forEach(b => b.onclick = () => { AU.click(); $$('#fbKind button').forEach(x => x.setAttribute('aria-pressed', String(x === b))); $('#fbLabel').textContent = b.dataset.k === 'bug' ? 'What went wrong, and what were you doing?' : 'What would you like added or changed?'; });
 }
 // ---------- the town: walk around outside the list and buy from the vendors ----------
-
 // Uses the field venue (tents, cottages, the crowd at the rope) with ten market stalls around it, your house at the south end and,
-
 // if you paid for one, a statue of you in the middle. Walk with the move stick (or WASD / left stick), turn the camera with the
-
 // right stick, Q / E or a drag on the right of the screen, and press A / E / Space or tap the bubble to talk to a vendor.
-
 const TOWN = { on: false, root: null, me: null, people: false, pos: { x: 0, z: 26 }, face: 0, yaw: Math.PI, pitch: 0.36, dist: 7.5, prevVenue: null, near: null, stalls: [], obst: [], actPrev: true, home: null, statue: null, cam: null, look: null, fpYaw: 0, vendor: null };
-
 // where everything is: a medieval festival around the lists (see 14d_festival.js for the plan)
-
-const TOWN_RX = 1400, TOWN_RZ = 1300; // the linked cities sit beyond the original festival circuit
-
+const TOWN_RX = 900, TOWN_RZ = 850; // linked cities form a closer, continuous circuit
 const STALL_AT = { quarter: [-11, 35], herald: [-11, 45], wardrobe: [-12.5, 56], barber: [-23, 56], estate: [11, 50], smith: [-38, 22], armour: [-38, 10], guild: [-38, -2], artificer: [-38, -13], trainer: [-38, -30], wizard: [-24, -46], tavern: [36, 20], bard: [37, 5], ghost: [44, -47.4] };
-
 const STALL_FACE = { quarter: Math.PI / 2, herald: Math.PI / 2, wardrobe: Math.PI / 2, barber: Math.PI / 2, estate: -Math.PI / 2, smith: Math.PI / 2, armour: Math.PI / 2, guild: Math.PI / 2, artificer: Math.PI / 2, trainer: Math.PI / 2, tavern: -Math.PI / 2, bard: -Math.PI / 2, ghost: 0 };
-
 const HOME_AT = [-42, 54], STATUE_AT = [0, 58];
-
 const LIST_BLOCK = { x: LIST.W / 2 + 4, z: LIST.L / 2 + 4 }; // field venue's visible rope
 
-
-
 function townLabel(top, sub, col) {
-
   const c = cvs(512, 150), x = c.getContext('2d');
-
   x.fillStyle = 'rgba(12,14,16,.78)'; x.beginPath(); x.roundRect ? x.roundRect(6, 6, 500, 138, 22) : x.rect(6, 6, 500, 138); x.fill();
-
   x.fillStyle = col || '#f2c40f'; x.fillRect(6, 132, 500, 12);
-
   x.textAlign = 'center'; x.fillStyle = '#f4efe3'; x.font = '700 54px "Barlow Semi Condensed", sans-serif'; x.fillText(top, 256, 66);
-
   x.fillStyle = '#c9c2b2'; x.font = '600 38px "Barlow Semi Condensed", sans-serif'; x.fillText(sub, 256, 114);
-
   const sp = new THREE.Sprite(new THREE.SpriteMaterial({ map: texFrom(c), transparent: true, depthWrite: false }));
-
   sp.scale.set(2.3, 0.67, 1); return sp;
-
 }
-
 function townSign(text, col) {
-
   const c = cvs(512, 112), x = c.getContext('2d');
-
   x.fillStyle = '#3a2a1a'; x.fillRect(0, 0, 512, 112); x.fillStyle = col; x.fillRect(8, 8, 496, 96);
-
   x.fillStyle = '#f7f1e3'; x.textAlign = 'center'; x.font = '900 60px "Big Shoulders Display", sans-serif'; x.fillText(text.toUpperCase(), 256, 78);
-
   const g = new THREE.Group(), face = new THREE.PlaneGeometry(2.5, 0.55), mat = lmat({ map: texFrom(c), roughness: 0.9 });
-
   const front = new THREE.Mesh(face, mat), back = new THREE.Mesh(face, mat);
-
   front.position.z = 0.005; back.position.z = -0.005; back.rotation.y = Math.PI; g.add(front, back);
-
   return g;
-
 }
-
 const TMAT = {};
-
 // this three.js takes hex colours as linear, which washes picked colours out; the town converts them so they look as chosen
-
 function lmat(o) { if (o && (typeof o.color === 'string' || typeof o.color === 'number')) o = Object.assign({}, o, { color: new THREE.Color(o.color).convertSRGBToLinear() }); return new THREE.MeshStandardMaterial(o); }
-
 function tmat(col, o) { return TMAT[col] || (TMAT[col] = new THREE.MeshStandardMaterial(Object.assign({ color: col, roughness: 0.85 }, o || {}))); }
-
 function townPerson(o) {
-
   o = Object.assign({}, o, { main: new THREE.Color(o.main || '#1a1d21').convertSRGBToLinear(), joints: new THREE.Color(o.joints || '#2a2e33').convertSRGBToLinear() });
-
   if (typeof UAL !== 'undefined' && UAL.ready) { const J = ualPerson(o); return J; }
-
   const J = buildPerson({ top: o.main, pants: o.joints || '#22262b' }); return J;
-
 }
-
 // a market stall: counter, posts, an awning in the vendor's colour, a sign, the vendor behind the counter and a few props
-
 function buildStall(V) {
-
   if (V.siteBuilding && typeof buildCityVendor === 'function') return buildCityVendor(V);
-
   const [x, z] = STALL_AT[V.key], ry = STALL_FACE[V.key] != null ? STALL_FACE[V.key] : Math.atan2(0 - x, 22 - z);
-
   const g = new THREE.Group(); g.position.set(x, gy(x, z), z); g.rotation.y = ry; TOWN.root.add(g);
-
   const wood = tmat('#6e4d31'), dark = tmat('#4a3422');
-
   mk(g, geo('t_counter', () => new THREE.BoxGeometry(2.8, 1.0, 0.7)), wood, 0, 0.5, 0);
-
   mk(g, geo('t_top', () => new THREE.BoxGeometry(2.95, 0.08, 0.85)), dark, 0, 1.03, 0);
-
   for (const [px, pz] of [[-1.4, 0.38], [1.4, 0.38], [-1.4, -1.7], [1.4, -1.7]]) mk(g, geo('t_post', () => new THREE.CylinderGeometry(0.06, 0.07, 2.7, 6)), dark, px, 1.35, pz);
-
   const awn = mk(g, geo('t_awn', () => new THREE.BoxGeometry(3.2, 0.07, 2.6)), tmat(V.awn), 0, 2.72, -0.65); awn.rotation.x = 0.16;
-
   for (let i = 0; i < 6; i++) mk(g, geo('t_flap', () => new THREE.BoxGeometry(0.5, 0.32, 0.03)), tmat(i % 2 ? '#f1ead8' : V.awn), -1.3 + i * 0.52, 2.42, 0.62);
-
   const sign = townSign(V.role, V.awn); sign.position.set(0, 3.25, 0.5); g.add(sign);
-
   stallProps(g, V);
-
   const npc = costumeOr({ main: V.col, joints: '#2a2e33', h: V.key === 'tavern' ? 1.7 : V.key === 'trainer' ? 1.84 : 1.78, anim: 'Idle_Loop' }, vendorOutfit(V));
-
   npc.root.position.set(0, 0, -0.85); g.add(npc.root); npcProps(npc, V);
-
   const lab = townLabel(V.name, `${V.icon} ${V.role}`, V.awn); lab.position.set(0, 4.05, 0.2); g.add(lab);
-
   const fx = Math.sin(ry), fz = Math.cos(ry);
-
   const S = { V, g, npc, ry, x, z, ax: x + fx * 1.7, az: z + fz * 1.7, label: lab };
-
   TOWN.stalls.push(S);
-
   TOWN.obst.push({ x: x - fx * 0.6, z: z - fz * 0.6, r: 1.85 });
-
   return S;
-
 }
-
 function stallProps(g, V) {
-
   const k = V.as || V.key;
-
   if (k === 'smith') { const anvil = grp(g, 0.9, 1.07, 0.05); mk(anvil, geo('t_anv', () => new THREE.BoxGeometry(0.45, 0.16, 0.2)), tmat('#2b2e31', { metalness: 0.6, roughness: 0.4 }), 0, 0.08, 0); try { const w = buildWeapon('longaxe', CLUBS.reavers); w.position.set(-0.8, 1.1, 0.1); w.rotation.z = Math.PI / 2; g.add(w); } catch (e) { } const forge = mk(g, geo('t_forge', () => new THREE.BoxGeometry(1, 0.9, 0.9)), tmat('#5c514a'), -2.2, 0.45, -0.8); mk(forge, geo('t_coal', () => new THREE.BoxGeometry(0.7, 0.05, 0.6)), tmat('#ff6a1a', { emissive: '#ff4a00', emissiveIntensity: 1.2 }), 0, 0.47, 0); }
-
   else if (k === 'artificer') { [['fw_dragonfang', 'sword', -0.8], ['orc_skullsplitter', 'axe', 0], ['fw_crystal', 'mace', 0.8]].forEach(([sk, wk, x]) => { const w = buildSkinWeapon(sk, wk); if (w) { w.position.set(x - 0.2, 1.1, 0.05); w.rotation.set(0, 0, -Math.PI / 2 + 0.15); g.add(w); } }); }
-
   else if (k === 'armour') { try { const hd = grp(g, -0.7, 1.25, 0); buildHelmet(hd, 'pigface'); hd.scale.setScalar(1.1); const hd2 = grp(g, 0.6, 1.25, 0); buildHelmet(hd2, 'greathelm'); } catch (e) { } }
-
   else if (k === 'quarter') { for (let i = 0; i < 7; i++) { const t = Object.values(TAPES)[i % 8]; const r = mk(g, geo('t_roll', () => new THREE.TorusGeometry(0.09, 0.05, 6, 12)), tmat(t.color), -1.1 + i * 0.36, 1.13, 0.1); r.rotation.x = Math.PI / 2; } mk(g, geo('t_crate', () => new THREE.BoxGeometry(0.7, 0.6, 0.7)), tmat('#8a6a42'), 1.9, 0.3, -0.3); }
-
   else if (k === 'wizard') { mk(g, geo('t_orb', () => new THREE.SphereGeometry(0.16, 16, 12)), tmat('#a98bff', { emissive: '#6a3cff', emissiveIntensity: 1.1, roughness: 0.2 }), 0.7, 1.25, 0.05); for (let i = 0; i < 4; i++) mk(g, geo('t_pot', () => new THREE.CylinderGeometry(0.06, 0.08, 0.2, 8)), tmat(['#ff4d6d', '#4dd6ff', '#7cff6b', '#ffd24d'][i], { emissive: ['#5a0010', '#004a5a', '#105a00', '#5a4200'][i] }), -1.1 + i * 0.25, 1.17, 0.1); }
-
   else if (k === 'tavern') { for (const [bx, bz] of [[-2.1, -0.4], [-2.1, 0.5], [2.1, -0.2]]) { const b = mk(g, geo('t_barrel', () => new THREE.CylinderGeometry(0.4, 0.4, 0.95, 12)), tmat('#7a5230'), bx, 0.48, bz); b.castShadow = true; } for (let i = 0; i < 3; i++) mk(g, geo('t_mug', () => new THREE.CylinderGeometry(0.06, 0.06, 0.14, 8)), tmat('#c9b48a'), -0.5 + i * 0.3, 1.14, 0.1); }
-
   else if (k === 'trainer') { const pell = mk(g, geo('t_pell', () => new THREE.CylinderGeometry(0.12, 0.14, 1.8, 8)), tmat('#8a6a42'), 2.3, 0.9, 0.4); pell.castShadow = true; mk(g, geo('t_bag', () => new THREE.CylinderGeometry(0.22, 0.22, 0.9, 10)), tmat('#6b3a2a'), -2.2, 1.4, -0.4); }
-
   else if (k === 'herald') { for (let i = 0; i < 4; i++) { const c = SHOP_TABARDS[i * 2][0]; const cl = mk(g, geo('t_cloth', () => new THREE.PlaneGeometry(0.5, 0.9)), lmat({ color: c, side: THREE.DoubleSide }), -1.1 + i * 0.72, 1.85, -1.68); cl.castShadow = true; } }
-
   else if (k === 'bard') { const st = mk(g, geo('t_stool', () => new THREE.CylinderGeometry(0.22, 0.22, 0.5, 8)), tmat('#6e4d31'), 1.9, 0.25, 0.4); st.castShadow = true; }
-
   else if (k === 'guild') { const pole = mk(g, geo('t_bpole', () => new THREE.CylinderGeometry(0.04, 0.04, 4.2, 6)), tmat('#4a3422'), 2.0, 2.1, 0.3); const fl = mk(g, geo('t_bflag', () => new THREE.PlaneGeometry(1.1, 0.7)), lmat({ color: CAREER.club.tabard, side: THREE.DoubleSide }), 2.55, 3.8, 0.3); TOWN.flag = fl; }
-
   else if (k === 'estate') { const plan = mk(g, geo('t_plan', () => new THREE.PlaneGeometry(0.8, 0.55)), tmat('#e9dfc6'), 0, 1.075, 0.05); plan.rotation.x = -Math.PI / 2; }
-
 }
-
 function npcProps(J, V) {
-
   if (V.as) V = VENDOR_BY[V.as] || V;
-
   const B = J.bones || {}, head = B.Head || J.torso || J.root;
-
   if (V.key === 'wizard') { const hat = grp(head, 0, J.ual ? 0.2 : 0.75, 0); mk(hat, geo('t_hat', () => new THREE.ConeGeometry(0.16, 0.5, 14)), tmat('#2a1a5a'), 0, 0.22, 0); mk(hat, geo('t_brim', () => new THREE.CylinderGeometry(0.27, 0.27, 0.02, 18)), tmat('#2a1a5a'), 0, 0, 0); for (let i = 0; i < 3; i++) mk(hat, geo('t_star', () => new THREE.OctahedronGeometry(0.03)), tmat('#ffd24d', { emissive: '#7a5a00' }), Math.cos(i * 2) * 0.11, 0.12 + i * 0.09, Math.sin(i * 2) * 0.11); if (J.handR) { const st = grp(J.handR, 0, 0.05, 0); mk(st, geo('t_staff', () => new THREE.CylinderGeometry(0.02, 0.025, 1.6, 6)), tmat('#5a3b24'), 0, 0.3, 0); mk(st, geo('t_gem', () => new THREE.OctahedronGeometry(0.07)), tmat('#9b7bff', { emissive: '#5a2cff', emissiveIntensity: 1.2 }), 0, 1.12, 0); } }
-
   else if (V.key === 'smith' && J.handR) { const hm = grp(J.handR, 0, 0.06, 0.02); mk(hm, geo('t_hh', () => new THREE.CylinderGeometry(0.018, 0.018, 0.4, 6)), tmat('#5a3b24'), 0, 0.12, 0); mk(hm, geo('t_hhead', () => new THREE.BoxGeometry(0.1, 0.07, 0.16)), tmat('#2b2e31', { metalness: 0.6 }), 0, 0.32, 0); }
-
   else if (V.key === 'bard' && J.handR) { const lute = grp(J.handR, 0.05, 0.05, 0.05); mk(lute, geo('t_lute', () => new THREE.SphereGeometry(0.15, 12, 10)), tmat('#a8743a'), 0, 0.12, 0).scale.z = 0.4; mk(lute, geo('t_neck', () => new THREE.BoxGeometry(0.04, 0.4, 0.03)), tmat('#5a3b24'), 0, 0.4, 0); }
-
   else if (V.key === 'guild' || V.key === 'estate') { const cap = grp(head, 0, J.ual ? 0.14 : 0.7, 0); mk(cap, geo('t_cap', () => new THREE.CylinderGeometry(0.12, 0.13, 0.12, 12)), tmat(V.key === 'guild' ? '#6d1b28' : '#3a2a1a'), 0, 0.03, 0); }
-
 }
-
 // your house at the south end grows with every purchase
-
 function buildHome() {
-
   if (TOWN.home) { TOWN.root.remove(TOWN.home); TOWN.home = null; }
-
   const lv = shopState().home; const g = new THREE.Group(); g.position.set(HOME_AT[0], 0, HOME_AT[1]); TOWN.root.add(g); TOWN.home = g;
-
   const C = CAREER.club;
-
   const plot = mk(g, geo('t_plot', () => new THREE.PlaneGeometry(14, 11)), lmat({ map: venueTex('path'), color: '#a08a64', roughness: 1 }), 0, 0.03, 0, false); plot.rotation.x = -Math.PI / 2; plot.receiveShadow = true;
-
   const pole = mk(g, geo('t_hpole', () => new THREE.CylinderGeometry(0.05, 0.05, 4, 6)), tmat('#4a3422'), -5.5, 2, -4.2);
-
   const fl = mk(g, geo('t_hflag', () => new THREE.PlaneGeometry(1, 0.62)), lmat({ color: C.tabard, side: THREE.DoubleSide }), -5, 3.65, -4.2); fl.castShadow = true;
-
   const sg = townSign(lv ? 'Your ' + HOMES[lv].name : 'Plot for sale', lv ? C.tabard : '#6b5a2a'); sg.position.set(3.5, 1.2, -4.8); g.add(sg);
-
   for (const sx of [3.0, 4.0]) mk(g, geo('t_spost', () => new THREE.CylinderGeometry(0.04, 0.04, 1.2, 6)), tmat('#4a3422'), sx, 0.6, -4.85);
-
   if (lv === 1) { const mat = lmat({ color: C.tabard, roughness: 0.9, side: THREE.DoubleSide }); mk(g, geo('t_tw', () => new THREE.CylinderGeometry(2.2, 2.2, 2, 14, 1, true)), mat, 0, 1, 0); mk(g, geo('t_tr', () => new THREE.ConeGeometry(2.6, 1.8, 14)), mat, 0, 2.9, 0); }
-
   if (lv >= 2 && typeof cottage === 'function' && typeof VILLAGE_GEO !== 'undefined') {
-
     const s = lv >= 3 ? 1.25 : 1, c = cottage(g, 0, 0.5, Math.PI, 'home' + lv); c.scale.setScalar(s);
-
     if (lv >= 4) { const c2 = cottage(g, -4.6, 1.5, Math.PI, 'homeB'); c2.scale.setScalar(0.85); }
-
   } else if (lv >= 2) mk(g, geo('t_house', () => new THREE.BoxGeometry(4, 3, 5)), tmat('#d9ccb0'), 0, 1.5, 0);
-
   if (lv >= 5) { const stone = tmat('#8f877c'); const tw = mk(g, geo('t_keep', () => new THREE.CylinderGeometry(1.8, 2, 8, 12)), stone, 4.6, 4, 1.5); tw.castShadow = true; for (let i = 0; i < 8; i++) { const a = i / 8 * TAU; mk(g, geo('t_cren', () => new THREE.BoxGeometry(0.5, 0.6, 0.5)), stone, 4.6 + Math.cos(a) * 1.7, 8.3, 1.5 + Math.sin(a) * 1.7); } const kf = mk(g, geo('t_kflag', () => new THREE.PlaneGeometry(1.4, 0.8)), lmat({ color: C.tabard, side: THREE.DoubleSide }), 5.3, 10, 1.5); kf.castShadow = true; mk(g, geo('t_kpole', () => new THREE.CylinderGeometry(0.04, 0.04, 2.4, 6)), tmat('#4a3422'), 4.6, 9.5, 1.5); }
-
   TOWN.obst = TOWN.obst.filter(o => !o.home);
-
   if (lv) TOWN.obst.push({ x: HOME_AT[0], z: HOME_AT[1] + 0.5, r: lv >= 3 ? 3.6 : 3, home: true });
-
   if (lv >= 4) TOWN.obst.push({ x: HOME_AT[0] - 4.6, z: HOME_AT[1] + 1.5, r: 2.6, home: true });
-
   if (lv >= 5) TOWN.obst.push({ x: HOME_AT[0] + 4.6, z: HOME_AT[1] + 1.5, r: 2.2, home: true });
-
 }
-
 function buildStatue() {
-
   if (TOWN.statue) { TOWN.root.remove(TOWN.statue); TOWN.statue = null; }
-
   const s = shopState(); TOWN.obst = TOWN.obst.filter(o => !o.statue); if (!s.owned.statue) return;
-
   const g = new THREE.Group(); g.position.set(STATUE_AT[0], 0, STATUE_AT[1]); TOWN.root.add(g); TOWN.statue = g;
-
   mk(g, geo('t_ped', () => new THREE.BoxGeometry(1.8, 1.1, 1.8)), tmat('#8f877c'), 0, 0.55, 0);
-
   const mat = s.owned.gold ? lmat({ color: '#e3b341', metalness: 0.85, roughness: 0.25 }) : lmat({ color: '#b9b4a8', roughness: 0.95 });
-
   const J = townPerson({ main: '#b9b4a8', h: 2.2, anim: 'Idle_Loop' }); J.root.position.y = 1.1; J.root.rotation.y = Math.PI;
-
   J.root.traverse(o => { if (o.isMesh) o.material = mat; }); g.add(J.root);
-
   if (J.mixer) J.mixer.update(1.3); // strike a pose, then stay still forever
-
   try { const w = buildMyWeapon(G.loadout && G.loadout.weapon || 'sword', CLUBS.reavers); w.traverse(o => { if (o.isMesh) o.material = mat; }); if (J.handR) { w.position.set(0, 0.08, 0.02); J.handR.add(w); } } catch (e) { }
-
   const pl = townSign(CAREER.name === 'You' ? 'Our champion' : CAREER.name, '#5c514a'); pl.scale.setScalar(0.6); pl.position.set(0, 0.6, -0.91); pl.rotation.y = Math.PI; g.add(pl);
-
   TOWN.obst.push({ x: STATUE_AT[0], z: STATUE_AT[1], r: 1.4, statue: true });
-
 }
-
 function buildAvatar() {
-
   if (TOWN.me) TOWN.root.remove(TOWN.me.root);
-
   const L = lookLite(); const J = lookPerson(L, L.ht); TOWN.me = J; TOWN.root.add(J.root);
-
   fighterGlow({model:J,isPlayer:true,spec:{player:true},name:myName(),club:CLUBS.reavers});
-
   if (G.guildLabel !== false && guildTag()) { const gl = townLabel(`[${guildTag()}]`, (guildState() || {}).name || '', (guildState() || {}).col); gl.scale.multiplyScalar(0.7); gl.position.y = 2.3; J.root.add(gl); }
-
   const ring = mk(J.root, geo('t_ring', () => new THREE.RingGeometry(0.42, 0.5, 24)), new THREE.MeshBasicMaterial({ color: '#f2c40f', transparent: true, opacity: 0.7, depthWrite: false }), 0, 0.04, 0, false); ring.rotation.x = -Math.PI / 2;
-
 }
-
 function townResolveApproaches() {
-
   // Props, gather nodes and new walls are all built by this point. Give every
-
   // interaction a real standing spot, on the same terrace as its object.
-
   for (const S of TOWN.stalls) {
-
     if (S.mine || S.x == null || S.z == null || !navBlocked(S.ax, S.az, 0.42)) continue;
-
     const tier = tierOf(S.x, S.z);
-
     let best = null, score = Infinity;
-
     for (let radius = 1.8; radius <= 4.2; radius += 0.4) for (let i = 0; i < 24; i++) {
-
       const angle = i * TAU / 24, x = S.x + Math.sin(angle) * radius, z = S.z + Math.cos(angle) * radius;
-
       if (tierOf(x, z) !== tier || navBlocked(x, z, 0.42)) continue;
-
       const cost = Math.hypot(x - S.ax, z - S.az) + radius * 0.1;
-
       if (cost < score) { best = { x, z }; score = cost; }
-
     }
-
     if (best) { S.ax = best.x; S.az = best.z; if (S.node) { S.node.ax = best.x; S.node.az = best.z; } }
-
   }
-
 }
-
 function buildTown() {
-
   gameplayStop();
-
   if (TOWN.root) W3.scene.remove(TOWN.root);
-
   TOWN.root = new THREE.Group(); W3.scene.add(TOWN.root); TOWN.stalls = []; TOWN.obst = []; TOWN.home = null; TOWN.statue = null; SPECT.seated = [];
-
   TOWN.people = typeof UAL !== 'undefined' && UAL.ready;
-
   // the venue's club tents stay (they're the visiting clubs' pavilions); its cottages and tree ring are hidden in town
-
   const RX = LIST.W / 2 + 4, RZ = LIST.L / 2 + 4;
-
   for (const [x, z] of [[-RX - 9, -10], [-RX - 10, 4], [-RX - 9, 16], [RX + 9, -14], [RX + 10, 2], [RX + 9, 15], [-8, -RZ - 10], [9, -RZ - 10]]) TOWN.obst.push({ x, z, r: 2.7 });
-
   for (const V of VENDORS) if (!V.custom) buildStall(V);
-
   buildSpecialVendors(); buildWorld(); buildSpawnBoards(); navBuild(); buildGatherNodes(TOWN.root); buildSecrets(TOWN.root); navBuild(); realmCells();
-
   buildHome(); buildStatue(); buildAvatar(); buildMyPet(); buildWaypoint(); buildAnimals(); buildArenaSeats(); buildDeepMine(); navBuild(); squireBuildTown();
-
   townResolveApproaches();
-
   folkSpots(); // approaches and reservations use the final world obstacle set
-
   gameplayStart();
-
 }
-
 // the field venue's own cottages and tree ring would sit in the middle of the festival: hide them in town
-
 function venueExtras(on) { for (const o of (W3.venueExtras || [])) o.visible = on; if (W3.venueGrass) W3.venueGrass.visible = on; if (on) townCrowd(true); }
-
 function townRefresh() { if (!TOWN.on) return; buildHome(); buildStatue(); navBuild(); }
 
-
-
 function townSavePosition(force = false) {
-
   if (!TOWN.on || TOWN.mineOn || !BOS.user || !Number.isFinite(TOWN.pos.x) || !Number.isFinite(TOWN.pos.z)) return;
-
   const old = CAREER.townPosition, now = Date.now();
-
   if (!force && old && now - old.savedAt < 10000) return;
-
   if (!force && old && Math.hypot(TOWN.pos.x - old.x, TOWN.pos.z - old.z) < 1) return;
-
   CAREER.townPosition = { x: Math.round(TOWN.pos.x * 10) / 10, z: Math.round(TOWN.pos.z * 10) / 10,
-
-    face: Math.round(TOWN.face * 100) / 100, savedAt: now };
-
+    face: Math.round(TOWN.face * 100) / 100, savedAt: now, layoutVersion: 2 };
   saveCareer();
-
 }
 
-
+function townRestoredPosition(saved) {
+  if (!saved || saved.layoutVersion >= 2 || !Number.isFinite(saved.x) || !Number.isFinite(saved.z)) return saved;
+  const oldCities = [
+    { x: -840, z: -250, dx: 330, dz: 0 },
+    { x: 890, z: 140, dx: -360, dz: 0 },
+    { x: -90, z: 900, dx: 0, dz: -280 },
+    { x: 0, z: -1030, dx: 0, dz: 340 }
+  ];
+  const city = oldCities.find(c => Math.hypot(saved.x - c.x, saved.z - c.z) < 225);
+  const restored = { ...saved, x: saved.x + (city ? city.dx : 0), z: saved.z + (city ? city.dz : 0), layoutVersion: 2 };
+  CAREER.townPosition = restored; // Persist on the next ordinary position save.
+  return restored;
+}
 
 function enterTown(vendorKey) {
-
   // Legacy saves with onboarding marked complete still require a real login.
-
   if (typeof onbAccountGate === 'function' && onbAccountGate(true)) return;
-
   initLobby();
-
   AU.init(); G.hub = true; if (typeof onbStage === 'function' && onbStage() === 'tour') setTimeout(() => { if (TOWN.on && TOWN.people) tourStart(); else setTimeout(() => TOWN.on && tourStart(), 2500); }, 1200); if (typeof LOBBY !== 'undefined' && LOBBY.pending) setTimeout(showInvite, 400);
-
   BOUT.on = false; clearMatch(); G.attract = false; G.autopilot = false; G.tourney = null; G.paused = false; G.phase = 'town'; G.match = null;
-
   setHud(false); endTraining && endTraining();
-
   TOWN.prevVenue = TOWN.prevVenue || W3.venue; setVenue('field');
-
   if (!TOWN.light) { TOWN.light = { sun: W3.sun.intensity, hemi: W3.hemi.intensity }; W3.sun.intensity = 1.6; W3.hemi.intensity = 0.75; }
-
   realmView(true); // the field's sun is tuned for steel; soften it for cloth and faces
-
   setWeather && setWeather('clear');
-
   TOWN.busy = false; GATHER.on = null; { const ge = $('#gather'); if (ge) ge.hidden = true; }
-
   buildTown(); TOWN.on = true; TOWN.actPrev = true; TOWN.vendor = null;
-
   const S0 = vendorKey && TOWN.stalls.find(s => s.V.key === vendorKey);
-
   if (S0) { TOWN.pos = { x: S0.ax + Math.sin(S0.ry) * 1.6, z: S0.az + Math.cos(S0.ry) * 1.6 }; TOWN.yaw = S0.ry; TOWN.face = S0.ry + Math.PI; }
-
   else if (TOWN.matchExit) { TOWN.pos = { ...TOWN.matchExit }; TOWN.matchExit = null; TOWN.yaw = 0; TOWN.face = Math.PI; }
-
   else {
-
-    const saved = BOS.user && CAREER.townPosition;
-
+    const saved = BOS.user && townRestoredPosition(CAREER.townPosition);
     const valid = saved && Number.isFinite(saved.x) && Number.isFinite(saved.z) &&
-
       Math.hypot(saved.x / TOWN_RX, saved.z / TOWN_RZ) < 0.95 && !navBlocked(saved.x, saved.z, 0.5);
-
     TOWN.pos = valid ? { x: saved.x, z: saved.z } : { x: 0, z: 31 };
-
     TOWN.yaw = 0; TOWN.face = valid && Number.isFinite(saved.face) ? saved.face : Math.PI;
-
   }
-
   squireBuildTown();
-
   TOWN.cam = null; TOWN.fpYaw = FP.yaw;
-
   document.body.classList.add('intown'); venueExtras(false); showScreen(null); $('#townHud').hidden = false; townHudUpdate(); refreshTouchUI();
-
   AU.music && AU.music(false); AU.market && AU.market(true); AU.setCrowd && AU.setCrowd(0.02);
-
   setTimeout(() => { if (TOWN.on && !BOUT.on) boutStart(); }, 1200); // there's always a fight on in the list
-
   if (!store.get('townSeen', false)) { store.set('townSeen', true); setTimeout(() => toastMenu('Walk up to a stall and talk to the vendor. Map shows who sells what.'), 600); }
-
 }
-
 // leave without going anywhere (a match is starting)
-
 function townTeardown() {
-
   if (!TOWN.on) return; boutStop(); GATHER.on = null; TOWN.busy = false; { const ge = $('#gather'); if (ge) ge.hidden = true; }
-
   townSavePosition(true);
-
   gameplayStop();
-
   AU.market && AU.market(false);
-
   TOWN.mineOn = false;
-
   if (TOWN.light) { W3.sun.intensity = TOWN.light.sun; W3.hemi.intensity = TOWN.light.hemi; TOWN.light = null; }
-
   realmView(false);
-
   TOWN.on = false; G.phase = ''; document.body.classList.remove('intown'); venueExtras(true); $('#townHud').hidden = true; $('#townPrompt').hidden = true;
-
   if (TOWN.root) { W3.scene.remove(TOWN.root); TOWN.root = null; } TOWN.me = null; TOWN.stalls = [];
-
   try { lobbySet({ tw: null }); WORLD.lastTw = 0; } catch (e) { }
-
   if (TOWN.prevVenue) { setVenue(TOWN.prevVenue); TOWN.prevVenue = null; }
-
 }
-
 function leaveTown(next) {
-
   if (!TOWN.on) { if (next) next(); return; }
-
   townSavePosition(true);
-
   boutStop(); GATHER.on = null; TOWN.busy = false; { const ge = $('#gather'); if (ge) ge.hidden = true; }
-
   gameplayStop();
-
   AU.market && AU.market(false);
-
   TOWN.mineOn = false;
-
   if (TOWN.light) { W3.sun.intensity = TOWN.light.sun; W3.hemi.intensity = TOWN.light.hemi; TOWN.light = null; }
-
   realmView(false);
-
   try { lobbySet({ tw: null }); WORLD.lastTw = 0; } catch (e) { }
-
   TOWN.on = false; G.phase = ''; document.body.classList.remove('intown'); venueExtras(true); $('#townHud').hidden = true; $('#townPrompt').hidden = true;
-
   if (TOWN.root) { W3.scene.remove(TOWN.root); TOWN.root = null; }
-
   TOWN.me = null; TOWN.stalls = [];
-
   if (TOWN.prevVenue) { setVenue(TOWN.prevVenue); TOWN.prevVenue = null; }
-
   refreshTouchUI();
-
   if (next) next(); else { G.hub = false; toTitle({ home: true }); }
-
 }
-
 function townHudUpdate() { const p = $('#townPurse'); if (p) p.textContent = typeof BOS !== 'undefined' && BOS.testAdmin ? '∞' : fmtMoney(CAREER.purse); }
-
 // walking, camera, who you're next to
-
 function updateTown(dt) {
-
   if (!TOWN.on) return; updateMiniMap(dt);
-
   boardTick();
-
   if (!TOWN.people && !TOWN.mineOn && typeof UAL !== 'undefined' && UAL.ready) { const keep = { ...TOWN.pos }; buildTown(); TOWN.pos = keep; }
-
   updateGather(dt);
-
   const walking = !G.screen && !G.paused && !TOWN.busy;
-
   const k = IN.keys;
-
   if (walking) {
-
     TOWN.yaw -= (PIN.rx || 0) * 2.6 * dt;
-
     TOWN.pitch = clamp(TOWN.pitch + (PIN.ry || 0) * 1.2 * dt * (G.settings.invert ? -1 : 1), 0.12, 0.95);
-
     if (k.KeyQ) TOWN.yaw += 2 * dt; if (k.KeyE && !TOWN.near) TOWN.yaw -= 2 * dt;
-
     if (FP.yaw !== TOWN.fpYaw) { TOWN.yaw += (FP.yaw - TOWN.fpYaw); } // a drag on the look pad turns the camera
-
   }
-
   TOWN.fpYaw = FP.yaw;
-
   let mx = walking ? PIN.raw.x : 0, my = walking ? PIN.raw.y : 0;
-
   if (isCtl() && IN.mode === 'kb' && walking) { mx = (k.KeyD || k.ArrowRight ? 1 : 0) - (k.KeyA || k.ArrowLeft ? 1 : 0); my = (k.KeyW || k.ArrowUp ? 1 : 0) - (k.KeyS || k.ArrowDown ? 1 : 0); }
-
   const m = Math.min(1, Math.hypot(mx, my)), sy = Math.sin(TOWN.yaw), cy = Math.cos(TOWN.yaw);
-
   let vx = 0, vz = 0;
-
   const sprint = (PIN.sprint || k.ShiftLeft || k.ShiftRight || m > 0.95 && IN.mode === 'pad' && my > 0.9) && !(TOWN.winded && !TOWN.mounted && !(typeof BOS !== 'undefined' && BOS.testAdmin));
-
   const base = (TOWN.mounted ? (sprint ? 9 : 5) : (sprint ? 5.4 : 2.7)) * (typeof BOS !== 'undefined' && BOS.testAdmin ? (TOWN.testRunSpeed || 1) : 1);
-
   if (m > 0.05 && TOWN.spec) stopSpectating();
-
   if (m > 0.05) {
-
     const spd = base * m; if (TRAVEL.auto) TRAVEL.auto = false;
-
     vx = (-sy * my + cy * mx); vz = (-cy * my - sy * mx); const l = Math.hypot(vx, vz) || 1; vx = vx / l * spd; vz = vz / l * spd;
-
-  } else if (walking) { const a = travelAutoVel(TOWN.mounted ? 7 : 4.2); if (a) { vx = a.vx; vz = a.vz; } }
-
+  } else if (walking) { const speed = (TOWN.mounted ? 7 : 4.2) * (typeof BOS !== 'undefined' && BOS.testAdmin ? (TOWN.testRunSpeed || 1) : 1); const a = travelAutoVel(speed, dt); if (a) { vx = a.vx; vz = a.vz; } }
   const beforeMove = { x: TOWN.pos.x, z: TOWN.pos.z };
-
   if (vx || vz) {
-
-    gameplayMove(TOWN.pos, vx * dt, vz * dt);
-
-    const want = Math.atan2(vx, vz); let d = want - TOWN.face; d = Math.atan2(Math.sin(d), Math.cos(d)); TOWN.face += d * Math.min(1, dt * (TOWN.mounted ? 5 * (1 + 0.1 * (CAREER.riding?.rank || 0)) : 10));
-
-  }
-
-  townCollide(beforeMove);
-
-  if (typeof trainingTownTick === 'function') trainingTownTick(beforeMove, walking, sprint);
-
-  if (walking && (vx || vz)) townSavePosition();
-
-  if (typeof playtestTick === 'function') playtestTick();
-
-  const J = TOWN.me, sp = Math.hypot(vx, vz); TOWN.speed = sp;
-
-  realmTick(dt); updateAnimals(dt);
-
-  if (walking && TOWN.keyPrev !== undefined) { if (k.KeyH && !TOWN.keyPrev.h) callHorse(); if (k.KeyR && !TOWN.keyPrev.r && TOWN.wp) { TRAVEL.auto = !TRAVEL.auto; compassHud(); } }
-
-  TOWN.keyPrev = { h: !!k.KeyH, r: !!k.KeyR };
-
-  if (J && !TOWN.mounted) {
-
-    J.root.position.set(TOWN.pos.x, mineGroundY(TOWN.pos.x, TOWN.pos.z), TOWN.pos.z); J.root.rotation.y = TOWN.spec ? -TOWN.spec.side * Math.PI / 2 : TOWN.face;
-
-    if (J.ual) { J.play(TOWN.spec ? 'Sitting_Idle_Loop' : sp > 3.5 ? 'Jog_Fwd_Loop' : sp > 0.3 ? 'Walk_Loop' : 'Idle_Loop', 0.2); J.mixer.update(dt); }
-
-  }
-
-  // the nearest vendor within reach turns to you and talks
-
-  let best = null, bd = 5;
-
-  for (const S of TOWN.stalls) {
-
-    if (!!S.mine !== !!TOWN.mineOn) continue;
-
-    const d = Math.hypot(S.ax - TOWN.pos.x, S.az - TOWN.pos.z); if (d < (S.reach || 2.8) && d < bd) { bd = d; best = S; }
-
-    const N = S.npc; if (N && N.ual) { const talk = S === TOWN.near || S.V.key === TOWN.vendor; N.play(talk ? 'Idle_Talking_Loop' : 'Idle_Loop', 0.4); if (N.root.visible) N.mixer.update(dt); }
-
-    const dd = Math.hypot(S.x - TOWN.pos.x, S.z - TOWN.pos.z); S.label.visible = dd < 30 && !(S.node && S.node.until);
-
-    if (N && N.root && !S.player && dd < 9) { const lx = TOWN.pos.x - S.x, lz = TOWN.pos.z - S.z; const local = Math.atan2(lx, lz) - S.ry; const t = clamp(Math.atan2(Math.sin(local), Math.cos(local)), -1.1, 1.1); N.root.rotation.y += (t - N.root.rotation.y) * Math.min(1, dt * 4); }
-
-  }
-
-  if (best !== TOWN.near) { TOWN.near = best; townPrompt(); }
-
-  if (TOWN.flag) TOWN.flag.rotation.y = Math.sin(G.realTime * 2) * 0.15;
-
-  // talk: A / E / Space / Enter
-
-  const act = !!(PIN.brace || k.KeyE || k.Enter || k.Space || (typeof NIN !== 'undefined' && NIN.on && IN.edges.has('trip')));
-
-  IN.edges.delete('trip');
-
-  if (walking && act && !TOWN.actPrev && TOWN.near && !TOWN.spec) townTalk(TOWN.near);
-
-  TOWN.actPrev = act;
-
-  if (walking && TOWN.frame++ % 20 === 0) townHudUpdate();
-
-  updateWorld(dt);
-
-}
-
-function townTalk(S) { if (typeof playtestAction === 'function') playtestAction('interact', { target: S.V.name, role: S.V.role || '' }); if (typeof questEvent === 'function') questEvent('talk', { key: S.V.key }); if (S.open) S.open(); else openVendor(S.V.key); }
-
-function townPushRect(P, x, z, hx, hz, r) {
-
-  const dx = P.x - x, dz = P.z - z, px = hx + r - Math.abs(dx), pz = hz + r - Math.abs(dz);
-
-  if (px <= 0 || pz <= 0) return;
-
-  if (px < pz) P.x = x + Math.sign(dx || 1) * (hx + r);
-
-  else P.z = z + Math.sign(dz || 1) * (hz + r);
-
-}
-
-function townCollide(beforeMove) {
-
-  const P = TOWN.pos, r = 0.42;
-
-  if (TOWN.spec) return; // the spectator is seated above the blocked bleacher footprint
-
-  if (TOWN.mineOn) { mineCollide(P, r); return; }
-
-  for (let it = 0; it < 2; it++) {
-
-    for (const A of ARENAS) {
-
-      // The rope, not just the wooden list, is the public boundary.
-
-      townPushRect(P, A.x, A.z, LIST_BLOCK.x, LIST_BLOCK.z, r);
-
-      // Bench collision comes from the same prop footprints as civilian navigation.
-
+    // At Creator speeds a single frame can cross a thin wall or gate. Resolve
+    // each short leg before proceeding so movement cannot tunnel through it.
+    const steps = Math.max(1, Math.ceil(Math.hypot(vx, vz) * dt / 0.4));
+    for (let i = 0; i < steps; i++) {
+      const prior = { x: TOWN.pos.x, z: TOWN.pos.z };
+      gameplayMove(TOWN.pos, vx * dt / steps, vz * dt / steps);
+      townCollide(prior);
     }
-
+    const want = Math.atan2(vx, vz); let d = want - TOWN.face; d = Math.atan2(Math.sin(d), Math.cos(d)); TOWN.face += d * Math.min(1, dt * (TOWN.mounted ? 5 * (1 + 0.1 * (CAREER.riding?.rank || 0)) : 10));
+  }
+  if (!vx && !vz) townCollide(beforeMove);
+  if (typeof trainingTownTick === 'function') trainingTownTick(beforeMove, walking, sprint);
+  if (walking && (vx || vz)) townSavePosition();
+  if (typeof playtestTick === 'function') playtestTick();
+  const J = TOWN.me, sp = Math.hypot(vx, vz); TOWN.speed = sp;
+  realmTick(dt); updateAnimals(dt);
+  if (walking && TOWN.keyPrev !== undefined) { if (k.KeyH && !TOWN.keyPrev.h) callHorse(); if (k.KeyR && !TOWN.keyPrev.r && TOWN.wp) { TRAVEL.auto = !TRAVEL.auto; compassHud(); } }
+  TOWN.keyPrev = { h: !!k.KeyH, r: !!k.KeyR };
+  if (J && !TOWN.mounted) {
+    J.root.position.set(TOWN.pos.x, mineGroundY(TOWN.pos.x, TOWN.pos.z), TOWN.pos.z); J.root.rotation.y = TOWN.spec ? -TOWN.spec.side * Math.PI / 2 : TOWN.face;
+    if (J.ual) { J.play(TOWN.spec ? 'Sitting_Idle_Loop' : sp > 3.5 ? 'Jog_Fwd_Loop' : sp > 0.3 ? 'Walk_Loop' : 'Idle_Loop', 0.2); J.mixer.update(dt); }
+  }
+  // the nearest vendor within reach turns to you and talks
+  let best = null, bd = 5;
+  for (const S of TOWN.stalls) {
+    if (!!S.mine !== !!TOWN.mineOn) continue;
+    const d = Math.hypot(S.ax - TOWN.pos.x, S.az - TOWN.pos.z); if (d < (S.reach || 2.8) && d < bd) { bd = d; best = S; }
+    const N = S.npc; if (N && N.ual && !S.squireNPC) { const talk = S === TOWN.near || S.V.key === TOWN.vendor; N.play(talk ? 'Idle_Talking_Loop' : 'Idle_Loop', 0.4); if (N.root.visible) N.mixer.update(dt); }
+    const dd = Math.hypot(S.x - TOWN.pos.x, S.z - TOWN.pos.z); S.label.visible = dd < 30 && !(S.node && S.node.until);
+    if (N && N.root && !S.player && dd < 9) { const lx = TOWN.pos.x - S.x, lz = TOWN.pos.z - S.z; const local = Math.atan2(lx, lz) - S.ry; const t = clamp(Math.atan2(Math.sin(local), Math.cos(local)), -1.1, 1.1); N.root.rotation.y += (t - N.root.rotation.y) * Math.min(1, dt * 4); }
+  }
+  if (best !== TOWN.near) { TOWN.near = best; townPrompt(); }
+  if (TOWN.flag) TOWN.flag.rotation.y = Math.sin(G.realTime * 2) * 0.15;
+  // talk: A / E / Space / Enter
+  const act = !!(PIN.brace || k.KeyE || k.Enter || k.Space || (typeof NIN !== 'undefined' && NIN.on && IN.edges.has('trip')));
+  IN.edges.delete('trip');
+  if (walking && act && !TOWN.actPrev && TOWN.near && !TOWN.spec) townTalk(TOWN.near);
+  TOWN.actPrev = act;
+  if (walking && TOWN.frame++ % 20 === 0) townHudUpdate();
+  updateWorld(dt);
+}
+function townTalk(S) { if (typeof playtestAction === 'function') playtestAction('interact', { target: S.V.name, role: S.V.role || '' }); if (typeof questEvent === 'function') questEvent('talk', { key: S.V.key }); if (S.open) S.open(); else openVendor(S.V.key); }
+function townPushRect(P, x, z, hx, hz, r) {
+  const dx = P.x - x, dz = P.z - z, px = hx + r - Math.abs(dx), pz = hz + r - Math.abs(dz);
+  if (px <= 0 || pz <= 0) return;
+  if (px < pz) P.x = x + Math.sign(dx || 1) * (hx + r);
+  else P.z = z + Math.sign(dz || 1) * (hz + r);
+}
+function townCollide(beforeMove) {
+  const P = TOWN.pos, r = 0.42;
+  if (TOWN.spec) return; // the spectator is seated above the blocked bleacher footprint
+  if (TOWN.mineOn) { mineCollide(P, r); return; }
+  for (let it = 0; it < 2; it++) {
+    for (const A of ARENAS) {
+      // The rope, not just the wooden list, is the public boundary.
+      townPushRect(P, A.x, A.z, LIST_BLOCK.x, LIST_BLOCK.z, r);
+      // Bench collision comes from the same prop footprints as civilian navigation.
+    }
     const ci = Math.floor(P.x / NAV.cell), cj = Math.floor(P.z / NAV.cell);
-
     for (let i = ci - 1; i <= ci + 1; i++) for (let j = cj - 1; j <= cj + 1; j++) for (const o of (NAV.grid.get(i + ',' + j) || NAV.none)) { const dx = P.x - o.x, dz = P.z - o.z, d = Math.hypot(dx, dz), m = o.r + r; if (d < m && d > 1e-4) { P.x = o.x + dx / d * m; P.z = o.z + dz / d * m; } }
-
     gameplayShapePush(P, r);
-
     lakePush(P, r);
-
+    stonefordWaterPush(P, r);
     realmGateCollide(P, r);
-
     const e = Math.hypot(P.x / TOWN_RX, P.z / TOWN_RZ); if (e > 1) { P.x /= e; P.z /= e; }
-
   }
-
   if (beforeMove && !castleWalkable(beforeMove.x, beforeMove.z, P.x, P.z, r)) {
-
     const x = P.x, z = P.z;
-
     P.x = beforeMove.x; P.z = beforeMove.z;
-
     if (castleWalkable(beforeMove.x, beforeMove.z, x, beforeMove.z, r)) P.x = x;
-
     if (castleWalkable(P.x, beforeMove.z, P.x, z, r)) P.z = z;
-
   }
-
 }
-
 function updateTownCamera(dt) {
-
   const cam = W3.camera, wantFov = TOWN.spec ? 50 / SPEC.zoom : 55; if (cam.near !== 0.15 || Math.abs(cam.fov - wantFov) > 0.1) { cam.near = 0.15; cam.fov = wantFov; cam.updateProjectionMatrix(); }
-
   if (ONB.tour && tourTick(dt)) return;
-
   if (TOWN.spec) { specCamera(dt); return; }
-
   if (TOWN.peek > 0) { TOWN.peek -= dt; cam.position.set(-104, 2.4, -200); cam.lookAt(-60, 3, -190); if (TOWN.peek <= 0) TOWN.cam = null; return; }
-
   const aspect = window.innerWidth / window.innerHeight, dist = TOWN.dist * (aspect < 0.8 ? 1.3 : 1);
-
   const tx = TOWN.pos.x, tz = TOWN.pos.z, cp = Math.cos(TOWN.pitch);
-
   const gY = mineGroundY(tx, tz), cxp = tx + Math.sin(TOWN.yaw) * cp * dist, czp = tz + Math.cos(TOWN.yaw) * cp * dist;
-
   let want = new THREE.Vector3(cxp, Math.max(gY, mineGroundY(cxp, czp)) + 1.4 + Math.sin(TOWN.pitch) * dist, czp);
-
   if (TOWN.mineOn) { const M = DEEP_MINE; want.set(clamp(want.x, M.x - M.halfX + 2, M.x + M.halfX - 2), Math.min(want.y, M.y + 5.8), clamp(want.z, M.z - M.halfZ + 2, M.z + M.halfZ - 2)); }
-
   const look = new THREE.Vector3(tx, gY + 1.35, tz);
-
   if (!TOWN.cam) { TOWN.cam = want.clone(); TOWN.look = look.clone(); }
-
   const kk = 1 - Math.exp(-8 * dt); TOWN.cam.lerp(want, kk); TOWN.look.lerp(look, kk);
-
   cam.position.copy(TOWN.cam); cam.lookAt(TOWN.look);
-
 }
-
 function townPrompt() {
-
   const b = $('#townPrompt'); if (!b) return;
-
   const S = TOWN.near; if (!S || G.screen || TOWN.busy || TOWN.spec) { b.hidden = true; return; }
-
   const key = IN.mode === 'pad' ? (NIN && NIN.on ? 'A' : 'A') : IN.mode === 'touch' ? 'Tap' : 'E';
-
   b.innerHTML = ''; b.append(h('kbd', null, key), h('span', null, `${S.verb || 'Talk to'} ${S.V.name}`), h('small', null, `${S.V.icon} ${S.V.role}`)); b.hidden = false;
-
 }
-
 // a vendor's counter: a screen over the town, so the controller and Back work as in every menu
-
 function openVendor(key) {
-
   if (typeof playtestAction === 'function') playtestAction('vendor', { vendor: key });
-
   TOWN.vendor = key; AU.click();
-
   const V = VENDOR_BY[key], box = $('#townShopBody');
-
   $('#townShopHead').innerHTML = '';
-
   $('#townShopHead').append(h('button', { class: 'back', 'data-back': '', 'data-gp': 'B', 'aria-label': 'Back', onclick: e => { e.stopPropagation(); AU.click(); closeVendor(); } }, h('span', null, '‹ Back')), h('h2', { class: 'ttape tape mk' }, V.role));
-
   const again = () => { const st = box.scrollTop; renderVendor(box, key, again); box.scrollTop = st; townHudUpdate(); };
-
   renderVendor(box, key, again); box.scrollTop = 0;
-
   showScreen('townShop'); $('#townPrompt').hidden = true; refreshTouchUI();
-
 }
-
 function closeVendor() { TOWN.vendor = null; TOWN.actPrev = true; showScreen(null); townHudUpdate(); townPrompt(); refreshTouchUI(); }
-
 // the realm map: waypoints (no teleporting), and a way home
-
 function openTownMap() {
-
   if (TOWN.mineOn) { openDeepMineMap(); return; }
-
   AU.click(); TOWN.vendor = null;
-
   const box = $('#townShopBody'); box.innerHTML = '';
-
   $('#townShopHead').innerHTML = '';
-
   $('#townShopHead').append(h('button', { class: 'back', 'data-back': '', 'data-gp': 'B', 'aria-label': 'Back', onclick: e => { e.stopPropagation(); AU.click(); closeVendor(); } }, h('span', null, '‹ Back')), h('h2', { class: 'ttape tape mk' }, 'Realm map'));
-
   box.append(townMapCanvas());
-
   box.append(h('button', { class: 'btn primary flagtape', onclick: () => openQuestJournal() }, 'Quest journal'));
-
   box.append(h('div', { class: 'row townrow' },
-
     h('button', { class: 'btn tape', onclick: () => { AU.click(); openCareer(); } }, 'Your fighter'),
-
     h('button', { class: 'btn tape', onclick: () => { AU.click(); G.backTo = 'title'; showScreen('settings'); } }, 'Settings'),
-
     h('button', { class: 'btn tape', onclick: () => { AU.click(); G.backTo = 'title'; showScreen('howto'); } }, 'How to play'),
-
     h('button', { class: 'btn tape', onclick: () => { AU.click(); openFeedback(() => { showScreen(null); openTownMap(); }); } }, 'Report a bug / idea'),
-
     h('button', { class: 'btn primary flagtape', onclick: () => { AU.click(); leaveTown(); } }, 'Main menu')));
-
   showScreen('townShop'); $('#townPrompt').hidden = true; refreshTouchUI();
-
 }
-
 function initTown() {
-
   $('#townPrompt').onclick = () => { if (TOWN.near) townTalk(TOWN.near); };
-
   $('#btnFight').onclick = () => { AU.init(); AU.click(); G.hub = true; enterTown(); };
-
   $('#townMap').onclick = () => openTownMap();
-
   $('#townBag').onclick = () => { if (!G.screen) townPanel('Inventory', box => renderInventory(box)); };
-
   $('#townAdmin').onclick = () => { if (!G.screen && typeof openTestAdmin === 'function') openTestAdmin(); };
-
   $('#townMini').onclick = () => { if (!G.screen) openTownMap(); };
-
   $('#townHorse').onclick = e => { e.stopPropagation(); if (!G.screen) callHorse(); };
-
   $('#townLeave').onclick = () => { AU.click(); leaveTown(); };
-
 }
-
 TOWN.frame = 0;
 // ---------- the living town: Kenney props, the gate (giant, marshal, notice board, crier), the wardrobe, pets, a haunted graveyard,
-
 // a windmill, townsfolk, and other players walking around online. Models: Kenney Fantasy Town, Nature and Graveyard kits (CC0).
-
 const KMAT = {};
-
 function kmat(m) {
-
   const key = m.n + m.c.join(',') + m.a;
-
   return KMAT[key] || (KMAT[key] = lmat({ color: new THREE.Color(m.c[0], m.c[1], m.c[2]).convertSRGBToLinear(), roughness: 0.85, flatShading: true, transparent: m.a < 1, opacity: m.a, emissive: /water/i.test(m.n) ? '#0a3a4a' : /flame|fire|light|candle|glow/i.test(m.n) ? '#ff8a20' : '#000000' }));
-
 }
-
 const PMAT = { m: null };
-
 const SRGB_LIN = Array.from({ length: 256 }, (_, i) => { const c = i / 255; return c <= 0.04045 ? c / 12.92 : Math.pow((c + 0.055) / 1.055, 2.4); });
-
 function b64(s, T) { const bin = atob(s), u = new Uint8Array(bin.length); for (let i = 0; i < bin.length; i++) u[i] = bin.charCodeAt(i); return new T(u.buffer); }
-
 function kpiece(parent, key, x, y, z, ry = 0, s = 1) {
-
   const pk = (typeof PACK_GEO !== 'undefined' && PACK_GEO[key]) || (typeof DECOR_GEO !== 'undefined' && DECOR_GEO[key]) || (typeof REALM_GEO !== 'undefined' && REALM_GEO[key]) || (typeof CASTLE_GEO !== 'undefined' && CASTLE_GEO[key]);
-
   if (pk) { // Slavic World / PolygonSight models: one mesh with vertex colours
-
     const g = new THREE.Group(); g.position.set(x, y, z); g.rotation.y = ry; g.scale.setScalar(s); g.userData.assetKey = key; parent.add(g);
-
     const gg = geo('pack:' + key, () => { const b = new THREE.BufferGeometry(); const P = b64(pk.p, Int16Array), F = new Float32Array(P.length); for (let i = 0; i < P.length; i++) F[i] = P[i] / 1000; b.setAttribute('position', new THREE.BufferAttribute(F, 3)); const C8 = b64(pk.c, Uint8Array), CF = new Float32Array(C8.length); for (let i = 0; i < C8.length; i++) CF[i] = SRGB_LIN[C8[i]]; b.setAttribute('color', new THREE.BufferAttribute(CF, 3)); b.setIndex(new THREE.BufferAttribute(b64(pk.i, pk.b ? Uint32Array : Uint16Array), 1)); b.computeVertexNormals(); b.computeBoundingSphere(); return b; });
-
     PMAT.m = PMAT.m || lmat({ vertexColors: true, roughness: 0.9, flatShading: true });
-
     const me = new THREE.Mesh(gg, PMAT.m); me.castShadow = SHADOWS; me.receiveShadow = true; g.add(me); return g;
-
   }
-
   const src = typeof KENNEY_GEO !== 'undefined' && KENNEY_GEO[key]; if (!src) return null;
-
   const g = new THREE.Group(); g.position.set(x, y, z); g.rotation.y = ry; g.scale.setScalar(s); g.userData.assetKey = key; parent.add(g);
-
   src.mats.forEach((m, i) => {
-
     const gg = geo('ken:' + key + i, () => { const b = new THREE.BufferGeometry(); b.setAttribute('position', new THREE.Float32BufferAttribute(m.v.map(q => q / 1000), 3)); b.setIndex(m.i); const nb = b.toNonIndexed(); nb.computeVertexNormals(); return nb; });
-
     const me = new THREE.Mesh(gg, kmat(m)); me.castShadow = SHADOWS && m.a >= 1; me.receiveShadow = true; g.add(me);
-
   });
-
   return g;
-
 }
-
 const WORLD = { spin: [], bob: [], flick: [], walkers: [], others: {}, pet: null, lastTw: 0 };
 
-
-
 // ---- the wardrobe: what you wear walking around town (free basics; the rest is for sale)
-
 const LOOKS = {
-
   hat: [['none', 'No hat', 0], ['cap', 'Flat cap', 0], ['helm', 'Your fight helmet', 0], ['hood', 'Hood', 200], ['straw', 'Woven straw hat', 850], ['flowers', 'Flower crown', 800], ['wizard', 'Wizard hat', 1500], ['horns', 'Horned helmet', 3000], ['crown', 'Golden crown', 25000], ['pumpkin', 'Pumpkin head', 2500, 'ghost']],
-
   foot: [['none', 'Outfit footwear', 0], ['workboots', 'Festival work boots', 1100]],
-
   cape: [['none', 'No cape', 0], ['club', 'Club cape', 0], ['royal', 'Royal cape', 2000], ['shadow', 'Shadow cape', 5000], ['shroud', 'Ghostly shroud', 7000, 'ghost']],
-
   hand: [['weapon', 'Your weapon', 0], ['none', 'Empty hands', 0], ['torch', 'Torch', 300], ['lantern', 'Candle lantern', 400], ['banner', 'Club banner', 600], ['lute', 'Lute', 900], ['scythe', 'Scythe', 4000, 'ghost']],
-
     outfit: [['none', 'Club tunic', 0, '', 'Light linen in your club colours. Free.'], ['Male_Peasant|peasant_light', 'Festival linen', 900, '', 'A brighter shirt and breeches.'], ['Female_Peasant|peasant_light', 'Festival linen dress', 900, '', 'A brighter bodice and skirt.'], ['Male_Peasant|peasant', 'Linen shirt and breeches', 1200, '', 'A festival classic. Boots, belt and rolled sleeves.'], ['Female_Peasant|peasant', 'Leather bodice and skirt', 1200, '', 'Laced bodice, long skirt, practical boots.'], ['Male_Peasant|peasant2', 'Smith\u2019s dark garb', 1800, '', 'Dark shirt and breeches. Hides soot and mead.'], ['Female_Peasant|peasant2', 'Dark bodice dress', 1800, '', 'The evening version, for the tavern.'], ['Male_Ranger|ranger', 'Ranger leathers', 4500, '', 'Layered leathers, shoulder guard and belts.'], ['Female_Ranger|ranger', 'Ranger leathers (fitted)', 4500, '', 'Layered leathers, shoulder guards and belts.'], ['Male_Ranger|ranger2', 'Forest ranger', 6000, '', 'Green and brown, for blending into hedges.'], ['Female_Ranger|ranger2', 'Forest ranger (fitted)', 6000, '', 'Green and brown, fitted. Hedges beware.'], ['Male_Ranger_Scout|ranger', 'Trail scout', 3200, '', 'Light leathers without shoulder plates.'], ['Female_Ranger_Scout|ranger', 'Trail scout (fitted)', 3200, '', 'Light leathers without shoulder plates.'], ['Male_Ranger_Open|ranger2', 'Festival mercenary', 5200, '', 'Forest leathers and a broad shoulder guard.'], ['Female_Ranger_Open|ranger2', 'Festival mercenary (fitted)', 5200, '', 'Forest leathers and shoulder guards.']],
-
   pet: [['none', 'No pet', 0], ['dog', 'Dog', 2000], ['pumpkin', 'Pumpkin buddy', 1500], ['ghost', 'Little ghost', 5000, 'ghost'], ['skeleton', 'Skeleton', 4000, 'ghost'], ['zombie', 'Zombie', 6000, 'ghost'], ['vampire', 'Vampire', 8000, 'ghost']]
-
 };
-
 const LOOK_SLOT = { hat: 'Hats', foot: 'Footwear', cape: 'Capes', hand: 'In your hand', pet: 'Pets', outfit: 'Outfits' };
-
 function lookState() { const s = shopState(), d = { hat: 'none', foot: 'none', cape: 'club', hand: 'weapon', pet: 'none', body: '', trim: '', hair: 'crop', hairColor: FIGHTER_HAIR_COLORS[1], beard: 'none', eyes: FIGHTER_EYES[0] }; const L = s.look || (s.look = {}); for (const k in d) if (L[k] == null) L[k] = d[k];
-
   if (!L.shape || typeof L.shape !== 'object') L.shape = {};
-
   const lo = G.loadout || {}; if (L.shape.height == null) L.shape.height = { short: 20, avg: 50, tall: 85 }[lo.height] || 50;
-
   if (L.shape.mass == null) L.shape.mass = { light: 20, medium: 50, heavy: 85 }[lo.build] || 50;
-
   return L; }
-
 function lookOwned(slot, key) { const it = LOOKS[slot].find(x => x[0] === key); return !!it && ((it[2] === 0 && it[3] !== 'hidden') || !!shopState().owned['wd:' + slot + ':' + key]); }
-
 function lookLite() { const L = lookState(), lo = G.loadout || {}, frame = L.frame || (BOS.info && BOS.info.gender === 'female' ? 'female' : 'male'); return { b: L.body || CAREER.club.tabard, t: L.trim || CAREER.club.trim, h: L.hat, f: L.foot, c: L.cape, p: L.pet, n: L.hand, o: L.outfit && L.outfit !== 'none' ? L.outfit : '', s: L.skin || '', d: L.dye ? 1 : 0, g: frame, ha: L.hair, hc: L.hairColor, be: L.beard, ec: L.eyes, ht: fighterHeight(frame, shapeValue(L.shape, 'height')), bd: lo.build || 'medium', sh: { ...L.shape } }; }
-
 function dress(J, L) {
-
   const head = (J.bones && J.bones.Head) || J.torso || J.root, ual = !!J.ual, hy = ual ? 0.12 : 0.72;
-
   const club = { tabard: L.b, trim: L.t };
-
   const hat = grp(head, 0, hy, 0);
-
   if (L.h === 'cap') { mk(hat, geo('w_cap', () => new THREE.CylinderGeometry(0.115, 0.12, 0.08, 14)), tmat(L.t), 0, 0.04, 0); mk(hat, geo('w_brim', () => new THREE.BoxGeometry(0.2, 0.015, 0.12)), tmat(L.t), 0, 0.005, 0.1); }
-
   else if (L.h === 'straw') { const straw = new THREE.MeshStandardMaterial({ map: librarySurface('straw'), color: '#e1c28d', roughness: 1, side: THREE.DoubleSide }); mk(hat, geo('w_strawcrown', () => new THREE.CylinderGeometry(0.105, 0.125, 0.14, 20)), straw, 0, 0.08, 0); mk(hat, geo('w_strawbrim', () => new THREE.CylinderGeometry(0.23, 0.23, 0.018, 24)), straw, 0, 0, 0); }
-
   else if (L.h === 'hood') mk(hat, geo('w_hood', () => new THREE.SphereGeometry(0.15, 14, 10, 0, TAU, 0, Math.PI * 0.62)), tmat(L.b), 0, -0.02, -0.02);
-
   else if (L.h === 'flowers') for (let i = 0; i < 9; i++) { const a = i / 9 * TAU; mk(hat, geo('w_fl', () => new THREE.SphereGeometry(0.028, 8, 6)), tmat(['#ff6fa0', '#ffd24d', '#ffffff', '#9b7bff'][i % 4]), Math.cos(a) * 0.115, 0.03, Math.sin(a) * 0.115); }
-
   else if (L.h === 'helm') { try { const hd = grp(hat, 0, ual ? -0.1 : -0.7, 0); buildHelmet(hd, L.e || (G.loadout && G.loadout.helm) || 'pigface'); } catch (e) { } }
-
   else if (L.h === 'wizard') { mk(hat, geo('t_hat', () => new THREE.ConeGeometry(0.16, 0.5, 14)), tmat('#2a1a5a'), 0, 0.22, 0); mk(hat, geo('t_brim', () => new THREE.CylinderGeometry(0.27, 0.27, 0.02, 18)), tmat('#2a1a5a'), 0, 0, 0); }
-
   else if (L.h === 'horns') { const st = tmat('#9aa3a8', { metalness: 0.6, roughness: 0.4 }); mk(hat, geo('w_dome', () => new THREE.SphereGeometry(0.135, 14, 10, 0, TAU, 0, Math.PI / 2)), st, 0, 0, 0); for (const sx of [-1, 1]) { const h2 = mk(hat, geo('w_horn', () => new THREE.ConeGeometry(0.035, 0.2, 8)), tmat('#efe6cf'), sx * 0.15, 0.07, 0); h2.rotation.z = -sx * 0.9; } }
-
   else if (L.h === 'crown') { const gold = tmat('#e3b341', { metalness: 0.8, roughness: 0.25 }); mk(hat, geo('w_crown', () => new THREE.CylinderGeometry(0.12, 0.12, 0.07, 16, 1, true)), gold, 0, 0.04, 0).material.side = THREE.DoubleSide; for (let i = 0; i < 6; i++) { const a = i / 6 * TAU; mk(hat, geo('w_spk', () => new THREE.ConeGeometry(0.022, 0.07, 6)), gold, Math.cos(a) * 0.115, 0.1, Math.sin(a) * 0.115); } mk(hat, geo('w_gem', () => new THREE.OctahedronGeometry(0.022)), tmat('#ff3d5a', { emissive: '#7a0010' }), 0, 0.05, 0.122); }
-
   else if (L.h === 'hermit') { mk(hat, geo('w_hood', () => new THREE.SphereGeometry(0.15, 14, 10, 0, TAU, 0, Math.PI * 0.62)), tmat('#5a4630'), 0, -0.02, -0.02); mk(hat, geo('w_hpt', () => new THREE.ConeGeometry(0.06, 0.16, 8)), tmat('#5a4630'), 0, 0.02, -0.15).rotation.x = -1.2; }
-
   else if (L.h === 'crypt') { try { const hd = grp(hat, 0, ual ? -0.1 : -0.7, 0); buildHelmet(hd, 'greathelm'); hd.traverse(o => { if (o.isMesh) o.material = tmat('#bfe6ff', { emissive: '#3a7aa0', emissiveIntensity: 0.7, transparent: true, opacity: 0.8 }); }); } catch (e) { } }
-
   else if (L.h === 'smuggler') { mk(hat, geo('w_mask', () => new THREE.CylinderGeometry(0.118, 0.118, 0.05, 16, 1, true)), tmat('#111214'), 0, -0.06, 0).material.side = THREE.DoubleSide; }
-
   else if (L.h === 'pumpkin') { const p = kpiece(hat, 'pumpkinCarved', 0, -0.15, 0, 0, 0.55); if (p) p.traverse(o => { if (o.isMesh && /orange|pumpkin/i.test(o.material.name || '')) o.material = tmat('#ff7a1a', { emissive: '#7a2a00' }); }); }
-
   if (L.f === 'workboots' && J.bones) { const leather = new THREE.MeshStandardMaterial({ map: librarySurface('boot_leather'), color: '#9b8268', roughness: 0.95 }); for (const key of ['foot_l', 'foot_r']) { const foot = J.bones[key]; if (!foot) continue; const boot = mk(foot, geo('w_workboot', () => new THREE.BoxGeometry(0.15, 0.15, 0.29)), leather, 0, 0.02, 0.06); boot.castShadow = SHADOWS; } }
-
   if (L.c && L.c !== 'none') capeCreate(J, L);
-
   // in your hand
-
   const hand = J.handR; if (hand && L.n !== 'none') {
-
     const it = grp(hand, 0, 0.08, 0.02); J.heldItem = it;
-
     if (L.n === 'weapon') { try { it.add(buildMyWeapon(L.w || (G.loadout && G.loadout.weapon) || 'sword', CLUBS.reavers)); } catch (e) { } }
-
     else if (L.n === 'torch') { mk(it, geo('w_tst', () => new THREE.CylinderGeometry(0.025, 0.02, 0.55, 6)), tmat('#5a3b24'), 0, 0.2, 0); const fl = mk(it, geo('w_flame', () => new THREE.ConeGeometry(0.06, 0.18, 8)), tmat('#ffb02e', { emissive: '#ff6a00', emissiveIntensity: 1.6 }), 0, 0.55, 0); WORLD.flick.push(fl); }
-
     else if (L.n === 'lantern') kpiece(it, 'lanternCandle', 0, -0.25, 0, 0, 0.6);
-
     else if (L.n === 'banner') { mk(it, geo('w_bp', () => new THREE.CylinderGeometry(0.02, 0.02, 1.9, 6)), tmat('#4a3422'), 0, 0.6, 0); const f = mk(it, geo('w_bf', () => new THREE.PlaneGeometry(0.55, 0.38)), lmat({ color: L.b, side: THREE.DoubleSide }), 0.28, 1.35, 0); WORLD.bob.push({ o: f, k: 'flag' }); }
-
     else if (L.n === 'lute') { mk(it, geo('t_lute', () => new THREE.SphereGeometry(0.15, 12, 10)), tmat('#a8743a'), 0, 0.12, 0).scale.z = 0.4; mk(it, geo('t_neck', () => new THREE.BoxGeometry(0.04, 0.4, 0.03)), tmat('#5a3b24'), 0, 0.4, 0); }
-
     else if (L.n === 'driftwood') { const c = mk(it, geo('w_drift', () => new THREE.CylinderGeometry(0.035, 0.07, 0.9, 7)), tmat('#b8a98c'), 0, 0.35, 0); c.rotation.z = 0.12; mk(it, geo('w_knot', () => new THREE.SphereGeometry(0.08, 7, 5)), tmat('#a89878'), 0.03, 0.78, 0); }
-
     else if (L.n === 'goblet') kpiece(it, 'mk_Chalice', 0, -0.02, 0, 0, 0.9);
-
     else if (L.n === 'scythe') { mk(it, geo('w_sh', () => new THREE.CylinderGeometry(0.02, 0.02, 1.7, 6)), tmat('#3a2a1a'), 0, 0.5, 0); const bl = mk(it, geo('w_sb', () => new THREE.BoxGeometry(0.6, 0.08, 0.015)), tmat('#c9d2d6', { metalness: 0.8, roughness: 0.3 }), -0.28, 1.32, 0); bl.rotation.z = -0.35; }
-
   }
-
   return J;
-
 }
-
 function makePet(kind) {
-
   if (!kind || kind === 'none') return null;
-
   const g = new THREE.Group();
-
   if (kind === 'dog') {
-
     const fur = tmat('#a8743a'), dk = tmat('#5a3b24');
-
     mk(g, geo('p_body', () => new THREE.BoxGeometry(0.22, 0.2, 0.5)), fur, 0, 0.32, 0); mk(g, geo('p_head', () => new THREE.BoxGeometry(0.2, 0.2, 0.22)), fur, 0, 0.48, 0.3);
-
     mk(g, geo('p_snout', () => new THREE.BoxGeometry(0.1, 0.09, 0.1)), dk, 0, 0.44, 0.44); for (const sx of [-1, 1]) mk(g, geo('p_ear', () => new THREE.BoxGeometry(0.05, 0.1, 0.06)), dk, sx * 0.08, 0.6, 0.27);
-
     g.legs = []; for (const [lx, lz] of [[-0.08, 0.18], [0.08, 0.18], [-0.08, -0.18], [0.08, -0.18]]) { const l = mk(g, geo('p_leg', () => { const c = new THREE.CylinderGeometry(0.035, 0.035, 0.24, 6); c.translate(0, -0.12, 0); return c; }), fur, lx, 0.25, lz); g.legs.push(l); }
-
     const tail = mk(g, geo('p_tail', () => new THREE.CylinderGeometry(0.02, 0.03, 0.22, 6)), fur, 0, 0.42, -0.3); tail.rotation.x = -0.8; g.tail = tail;
-
   } else if (kind === 'pumpkin') kpiece(g, 'pumpkinCarved', 0, 0, 0, 0, 0.7);
-
   else kpiece(g, kind, 0, 0, 0, 0, kind === 'ghost' ? 0.8 : 0.85);
-
   g.kind = kind; return g;
-
 }
-
 // ---- decoration: the festival layout lives in 14d_festival.js
-
 function townDecor(R) { buildFestival(R); }
-
 // ---- the gate: a giant with the Rumble scroll, the list marshal, the notice board, the town crier; your house door
-
 const STATIONS = [
-
   { key: 'squire-guide', name: 'Ada the Corner Guide', role: 'Find your squire', icon: '🧰', at: [-4, 72], knight: true },
-
   { key: 'repair-workshop', name: 'Armourer’s workbench', role: 'Proper repairs', icon: '🛠️', at: [-32, 32], knight: true },
-
   { key: 'giant', name: 'Ulfric the Giant', role: 'Rumble herald', icon: '📜', at: [-7, 26] },
-
   { key: 'marshal', name: 'Marshal Brenna', role: 'Enter the lists', icon: '⚔️', at: [7, 26] },
-
   { key: 'board', name: 'Notice board', role: 'Daily, Gauntlet, Season', icon: '📌', at: [13.5, 26.5] },
-
   { key: 'crier', name: 'Wilf the Crier', role: 'Online fights and friends', icon: '🔔', at: [-13.5, 26.5] },
-
   { key: 'house', name: 'Your house', role: 'Your fighter', icon: '🚪', at: [HOME_AT[0], HOME_AT[1] - 5.8] },
-
   { key: 'stables', name: 'Edda the Stablehand', role: 'Hire or buy a horse', icon: '🐴', at: [9, 84], ry: -Math.PI / 2 }
-
 ];
-
 function buildStations() {
-
   for (const st of STATIONS) {
-
     const [x, z] = st.at, ry = st.ry != null ? st.ry : st.key === 'house' ? Math.PI : 0; // gate folk face the market; the house door faces the fountain
-
     const g = new THREE.Group(); g.position.set(x, gy(x, z), z); g.rotation.y = ry; TOWN.root.add(g);
-
     let npc = null, labY = 2.5, reach = 1.9;
-
     if (st.arena || st.practice) {
-
       const tall = st.service === 'giant';
-
       npc = costumeOr({ main: st.col, joints: '#302b28', h: tall ? 2.15 : 1.68 + st.look * 0.1, anim: st.service === 'crier' ? 'Idle_Talking_Loop' : 'Idle_Loop' },
-
         { outfit: st.service === 'marshal' ? 'Female_Ranger' : st.look === 2 ? 'Female_Peasant' : 'Male_Peasant', tex: st.service === 'marshal' ? 'ranger' : 'peasant', tint: st.col,
-
           skin: ['#a97453', '#d2a67e', '#8f614a'][st.look] });
-
       g.add(npc.root); TOWN.obst.push({ x, z, r: 0.5 });
-
       if (st.service === 'giant' && npc.handR) {
-
         const sc = grp(npc.handR, 0, 0.08, 0.03);
-
         mk(sc, geo('arena_scroll', () => new THREE.CylinderGeometry(0.06, 0.06, 0.38, 10)), tmat('#e9dfc6'), 0, 0, 0);
-
       }
-
       if (st.service === 'crier' && npc.handR) {
-
         const bell = grp(npc.handR, 0, 0.06, 0);
-
         mk(bell, geo('arena_bell', () => new THREE.ConeGeometry(0.08, 0.14, 10)), tmat('#d2aa54'), 0, 0.14, 0);
-
       }
-
       labY = tall ? 2.9 : 2.5;
-
+    } else if (st.district) {
+      npc = costumeOr({ main: '#695747', joints: '#30353a', h: 1.72, anim: 'Idle_Loop' },
+        { outfit: st.key === 'southmere:riding' ? 'Female_Ranger' : 'Female_Peasant', tex: st.key === 'southmere:riding' ? 'ranger' : 'peasant', tint: st.key === 'southmere:riding' ? '#71884c' : '#b6a181' });
+      g.add(npc.root); TOWN.obst.push({ x, z, r: 0.5 });
     } else if (st.key === 'giant') {
-
       npc = costumeOr({ main: '#5a4632', joints: '#3a2a1a', h: 4.4, anim: 'Idle_Loop' }, { outfit: 'Male_Peasant', tex: 'peasant', tint: '#e8d2b0', skin: '#c68a62' }); g.add(npc.root);
-
       if (npc.handR) { const sc = grp(npc.handR, 0, 0.1, 0.05); mk(sc, geo('g_scroll', () => new THREE.CylinderGeometry(0.07, 0.07, 0.42, 12)), tmat('#e9dfc6'), 0, 0, 0); for (const sy of [-0.23, 0.23]) mk(sc, geo('g_knob', () => new THREE.SphereGeometry(0.045, 8, 6)), tmat('#7a1f2a'), 0, sy, 0); mk(sc, geo('g_seal', () => new THREE.CylinderGeometry(0.035, 0.035, 0.02, 10)), tmat('#b0182a'), 0.07, 0, 0).rotation.z = Math.PI / 2; }
-
       const beard = mk((npc.bones && npc.bones.Head) || npc.root, geo('g_beard', () => new THREE.ConeGeometry(0.11, 0.25, 10)), tmat('#d9c9a8'), 0, npc.ual ? 0.0 : 0.6, 0.09); beard.rotation.x = Math.PI;
-
       labY = 5.3; reach = 2.6; TOWN.obst.push({ x, z, r: 1.1 });
-
     } else if (st.key === 'marshal') {
-
       npc = typeof UAL !== 'undefined' && UAL.ready ? ualMarshal('knight') : townPerson({ main: '#26344d' }); g.add(npc.root); TOWN.obst.push({ x, z, r: 0.5 });
-
     } else if (st.key === 'board') {
-
       for (const sx of [-0.9, 0.9]) mk(g, geo('b_post', () => new THREE.CylinderGeometry(0.07, 0.08, 2.4, 6)), tmat('#4a3422'), sx, 1.2, 0);
-
       const c = cvs(512, 340), cx = c.getContext('2d'); cx.fillStyle = '#7a5a36'; cx.fillRect(0, 0, 512, 340); cx.fillStyle = '#f1e8cf';
-
       [[30, 40, 200, 130], [260, 30, 220, 150], [60, 200, 180, 110], [280, 210, 190, 100]].forEach(([a, b, w, hh]) => { cx.fillRect(a, b, w, hh); }); cx.fillStyle = '#3a2a1a'; cx.font = '900 34px "Big Shoulders Display", sans-serif';
-
       cx.fillText('RUMBLE OF', 44, 90); cx.fillText('THE DAY', 44, 128); cx.fillText('GAUNTLET', 280, 85); cx.fillText('RUN', 280, 125); cx.fillText('SUMMER', 75, 250); cx.fillText('SEASON', 75, 288); cx.fillText('WANTED:', 295, 255); cx.fillText('FIGHTERS', 295, 290);
-
       mk(g, geo('b_board', () => new THREE.BoxGeometry(2.2, 1.5, 0.08)), lmat({ map: texFrom(c), roughness: 0.9 }), 0, 1.75, 0);
-
       labY = 3.0; reach = 1.6; TOWN.obst.push({ x, z, r: 1.1 });
-
     } else if (st.key === 'crier') {
-
       npc = costumeOr({ main: '#7a1f2a', joints: '#e3b341', h: 1.76, anim: 'Idle_Talking_Loop' }, { outfit: 'Male_Peasant', tex: 'peasant', tint: '#ffb8b0' }); g.add(npc.root); TOWN.obst.push({ x, z, r: 0.5 });
-
       if (npc.handR) { const b = grp(npc.handR, 0, 0.06, 0.02); mk(b, geo('c_bell', () => new THREE.ConeGeometry(0.08, 0.14, 12, 1, true)), tmat('#e3b341', { metalness: 0.8, roughness: 0.3 }), 0, 0.16, 0).material.side = THREE.DoubleSide; }
-
       const hat = grp((npc.bones && npc.bones.Head) || npc.root, 0, npc.ual ? 0.13 : 0.72, 0); mk(hat, geo('c_tri', () => new THREE.ConeGeometry(0.2, 0.12, 3)), tmat('#111214'), 0, 0.04, 0);
-
     } else if (st.key === 'house') { labY = 3.3; reach = 1.5; }
-
     else if (st.key === 'repair-workshop') {
-
       mk(g, geo('workshop_top', () => new THREE.BoxGeometry(2.1, 0.15, 0.8)), tmat('#765431'), 0, 0.85, 0);
-
       for (const lx of [-0.8, 0.8]) for (const lz of [-0.25, 0.25]) mk(g, geo('workshop_leg', () => new THREE.BoxGeometry(0.1, 0.8, 0.1)), tmat('#493220'), lx, 0.4, lz);
-
       mk(g, geo('workshop_tools', () => new THREE.BoxGeometry(0.3, 0.12, 0.16)), tmat('#949c9f'), 0.4, 0.99, 0);
-
       gameplayShape(x, z, 1.05, 0.4, 0); labY = 2.2;
-
     }
-
     else if (st.knight) { npc = typeof UAL !== 'undefined' && UAL.ready ? ualMarshal('knight') : townPerson({ main: '#26344d' }); g.add(npc.root); TOWN.obst.push({ x, z, r: 0.5 }); }
-
     else if (st.key === 'stables') {
-
       npc = costumeOr({ main: '#6a5a3a', joints: '#3a2a1a', h: 1.7, anim: 'Idle_Loop' }, { outfit: 'Female_Peasant', tex: 'peasant', tint: '#d8c6a0' }); g.add(npc.root); TOWN.obst.push({ x, z, r: 0.5 });
-
       landmark(TOWN.root, () => { const b = kpiece(TOWN.root, 'fb_openbarn', x + 9, 0, z, -Math.PI / 2, 1.4); if (b) TOWN.obst.push({ x: x + 9, z, r: 4.5 }); });
-
       kpiece(TOWN.root, 'fb_fence', x + 3, 0, z + 6, 0, 1.2); kpiece(TOWN.root, 'fb_fence', x + 3, 0, z - 6, 0, 1.2);
-
     }
-
     const lab = townLabel(st.name, `${st.icon} ${st.role}`, st.key === 'giant' ? '#e3b341' : '#f2c40f'); lab.position.set(0, labY, 0); g.add(lab);
-
     const fx = Math.sin(ry), fz = Math.cos(ry);
-
     TOWN.stalls.push({ V: st, g, npc, ry, x, z, ax: x + fx * reach, az: z + fz * reach, label: lab, open: () => openStation(st.key), station: true });
-
   }
-
 }
-
 // townsfolk with things to do: see 14c_folk.js
-
 function buildWalkers() { buildFolk(); }
-
 function freeSpot() {
-
   for (let t = 0; t < 60; t++) {
-
     const a = rand(0, TAU), r = rand(22, 80), x = Math.cos(a) * r, z = Math.sin(a) * r;
-
     if (arenaBlocked(x, z, 1.5)) continue;
-
     if (Math.hypot(x / FAIR_RX, z / FAIR_RZ) > 0.92) continue;
-
     if (!folkSpawnSafe(x, z)) continue;
-
     return { x, z };
-
   }
-
   return navFree(0, 30);
-
 }
-
 function buildWorld() {
-
   WORLD.spin = []; WORLD.bob = []; WORLD.flick = []; WORLD.others = {}; WORLD.pet = null;
-
   townDecor(TOWN.root); buildStations(); buildWalkers();
-
 }
-
 // ---- every frame: sails, flames, ghosts, walkers, your pet, other players
-
 function updateWorld(dt) {
-
   squireTownTick(dt);
-
   const t = G.realTime;
-
   for (const s of WORLD.spin) s.rotation.z += dt * 0.6;
-
   for (const f of WORLD.flick) { const k = 0.85 + Math.sin(t * 17 + f.id) * 0.08 + Math.sin(t * 29 + f.id * 3) * 0.07; f.scale.set(k, k * (1 + Math.sin(t * 11 + f.id) * 0.12), k); }
-
   for (const b of WORLD.bob) {
-
     if (b.k === 'float') { b.o.position.y = 1 + Math.sin(t * 1.3 + b.ph) * 0.35; b.o.position.x = b.cx + Math.sin(t * 0.4 + b.ph) * 2.2; b.o.position.z = b.cz + Math.cos(t * 0.33 + b.ph) * 1.6; b.o.rotation.y = t * 0.5 + b.ph; }
-
     else if (b.k === 'sway') b.o.rotation.z = Math.sin(t * 1.4 + b.ph) * 0.08;
-
     else if (b.k === 'flag') b.o.rotation.y = Math.sin(t * 2.2) * 0.25;
-
   }
-
   updateFolk(dt);
-
   gameplayCannonTick(dt);
-
   // The shoulders stay fastened while the lower cloth responds to walking and wind.
-
   const me = TOWN.me; if (me && me.cape) capeAnimate(me, TOWN.speed || 0, t, dt);
-
   const P = WORLD.pet; if (P) {
-
     const back = TOWN.face + Math.PI, tx = TOWN.pos.x + Math.sin(back) * 1.2 + Math.sin(TOWN.face + Math.PI / 2) * 0.7, tz = TOWN.pos.z + Math.cos(back) * 1.2 + Math.cos(TOWN.face + Math.PI / 2) * 0.7;
-
     const dx = tx - P.position.x, dz = tz - P.position.z, d = Math.hypot(dx, dz), mv = d > 0.15;
-
     if (d > 12) { P.position.x = tx; P.position.z = tz; }
-
     else if (mv) { const sp = Math.min(d * 3.2, 7); P.position.x += dx / d * sp * dt; P.position.z += dz / d * sp * dt; P.rotation.y += (Math.atan2(dx, dz) - P.rotation.y + Math.PI * 3) % TAU - Math.PI > 0 ? 0 : 0; P.rotation.y = Math.atan2(dx, dz); }
-
     if (P.kind === 'ghost') P.position.y = 0.6 + Math.sin(t * 2) * 0.15;
-
     else if (P.kind === 'pumpkin') P.position.y = mv ? Math.abs(Math.sin(t * 9)) * 0.3 : 0;
-
     else if (P.kind === 'dog') { P.legs.forEach((l, i) => { l.rotation.x = mv ? Math.sin(t * 14 + (i % 2 ? 0 : Math.PI) + (i > 1 ? Math.PI : 0)) * 0.6 : 0; }); P.tail.rotation.z = Math.sin(t * 12) * 0.5; }
-
     else P.rotation.z = mv ? Math.sin(t * 8) * 0.12 : 0;
-
   }
-
   updateOthers(dt);
-
 }
-
 function buildMyPet() { if (WORLD.pet) TOWN.root.remove(WORLD.pet); WORLD.pet = makePet(lookState().pet); if (WORLD.pet) { WORLD.pet.position.set(TOWN.pos.x - 1, gy(TOWN.pos.x, TOWN.pos.z), TOWN.pos.z - 1); TOWN.root.add(WORLD.pet); } }
-
 // ---- other players online, walking around their own town: shown here as they move
-
 function townPresence() {
-
   if (!TOWN.on) { if (WORLD.lastTw) { lobbySet({ tw: null }); WORLD.lastTw = 0; } return; }
-
   if (G.realTime - WORLD.lastTw < 1) return; WORLD.lastTw = G.realTime;
-
   lobbySet({ tw: { x: Math.round(TOWN.pos.x * 10) / 10, z: Math.round(TOWN.pos.z * 10) / 10, f: Math.round(TOWN.face * 100) / 100, mine: !!TOWN.mineOn, l: lookLite(), g: guildTag() } });
-
 }
-
 function updateOthers(dt) {
-
   townPresence();
-
   const seen = {};
-
   for (const p of (LOBBY.peers || [])) {
-
     const tw = p.presence && p.presence.tw; if (!tw || typeof tw.x !== 'number') continue;
-
     seen[p.peer] = 1; let O = WORLD.others[p.peer];
-
     if (!O) {
-
       const L = tw.l || {}; const J = lookPerson(L, L.ht || 1.8);
-
       const nm = String(p.presence.name || 'A fighter').slice(0, 20), lab = townLabel(nm, (tw.g ? `[${tw.g}] ` : '') + 'online now', '#7fb6ff'); lab.position.y = 2.35; J.root.add(lab);
-
       J.root.position.set(tw.x, tw.mine ? DEEP_MINE.y : gy(tw.x, tw.z), tw.z); TOWN.root.add(J.root);
-
       O = WORLD.others[p.peer] = { J, x: tw.x, z: tw.z, mine: !!tw.mine, f: tw.f || 0, p, lk: JSON.stringify(tw.l || {}) };
-
       TOWN.stalls.push({ V: { key: 'p:' + p.peer, name: nm, role: 'Online player', icon: '🟢' }, g: J.root, npc: null, ry: 0, x: tw.x, z: tw.z, ax: tw.x, az: tw.z, label: lab, mine: !!tw.mine, open: () => { AU.click(); openProfile(O.p, () => { showScreen(null); refreshTouchUI(); townPrompt(); }); }, player: p.peer });
-
     }
-
     if (O.lk !== JSON.stringify(tw.l || {})) { TOWN.root.remove(O.J.root); delete WORLD.others[p.peer]; TOWN.stalls = TOWN.stalls.filter(s2 => s2.player !== p.peer); continue; } // they changed clothes: rebuild next frame
-
     O.p = p; if (O.mine !== !!tw.mine) { O.x = tw.x; O.z = tw.z; O.mine = !!tw.mine; } const k = Math.min(1, dt * 4), ox = O.x, oz = O.z;
-
     O.x += (tw.x - O.x) * k; O.z += (tw.z - O.z) * k; O.f = tw.f || O.f;
-
     O.J.root.position.set(O.x, O.mine ? DEEP_MINE.y : gy(O.x, O.z), O.z); O.J.root.rotation.y = O.f; O.J.root.visible = O.mine === !!TOWN.mineOn;
-
     const sp = Math.hypot(O.x - ox, O.z - oz) / Math.max(dt, 1e-3);
-
     if (O.J.ual) { O.J.play(sp > 3.5 ? 'Jog_Fwd_Loop' : sp > 0.3 ? 'Walk_Loop' : 'Idle_Loop', 0.25); O.J.mixer.update(dt); }
-
     if (O.J.cape) capeAnimate(O.J, sp, G.realTime, dt);
-
     const S = TOWN.stalls.find(s => s.player === p.peer); if (S) { S.x = S.ax = O.x; S.z = S.az = O.z; S.mine = O.mine; }
-
   }
-
   for (const id in WORLD.others) if (!seen[id]) { TOWN.root.remove(WORLD.others[id].J.root); delete WORLD.others[id]; TOWN.stalls = TOWN.stalls.filter(s => s.player !== id); }
-
 }
-
 // ---- what the gate folk say and offer
-
 function townPanel(title, fill, silent = false) {
-
   if (typeof playtestAction === 'function' && title !== 'Test tools' && title !== 'Screenshot note') playtestAction('panel', { title });
-
   if (!silent) AU.click(); TOWN.vendor = null;
-
   const box = $('#townShopBody'); box.innerHTML = '';
-
   $('#townShopHead').innerHTML = '';
-
   $('#townShopHead').append(h('button', { class: 'back', 'data-back': '', 'data-gp': 'B', 'aria-label': 'Back', onclick: e => { e.stopPropagation(); AU.click(); closeVendor(); } }, h('span', null, '‹ Back')), h('h2', { class: 'ttape tape mk' }, title));
-
   fill(box); box.scrollTop = 0;
-
   showScreen('townShop'); $('#townPrompt').hidden = true; refreshTouchUI();
-
 }
-
 function stationRows(box, hi, rows) {
-
   box.append(h('p', { class: 'vhi' }, hi));
-
   const list = h('div', { class: 'ups shop' }); box.append(list);
-
   for (const [name, desc, label, fn, hidden] of rows) { if (hidden) continue; list.append(h('div', { class: 'up' }, h('div', null, h('div', { class: 'uph' }, h('b', null, name)), h('div', { class: 'muted' }, desc)), h('button', { class: 'btn primary flagtape small', onclick: () => { AU.click(); fn(); } }, label))); }
-
   return list;
-
 }
-
 // leave town and press one of the (hidden) title buttons: every mode keeps working exactly as before
-
 function townGo(btn, from) { if (typeof playtestAction === 'function') playtestAction('leave_for_mode', { button: btn, station: from || '' }); TOWN.returnTo = from; leaveTown(() => launchActivity(btn)); }
-
 function openStation(key) {
-
   if (typeof openCityStation === 'function' && openCityStation(key)) return;
-
   if (key === 'squire-guide') return openSquireQuest();
-
   if (key === 'repair-workshop') return openWorkshop();
-
   if (key === 'house') { const S = teamSquire(); if (S.stage === 3 && shopState().home) return townPanel('A bed for ' + S.name, box => { box.append(h('button', { class: 'btn', onclick: () => { if (squireRest(S, 'home')) squireStage(S, 3); openSquire(); } }, 'Prepare his bed · free')); }); }
-
   const S = STATIONS.find(s => s.key === key);
-
   const service = S && S.service || key;
-
   const go = btn => { if (S && S.arena) G.quickVenue = S.arena === 'dome' ? 'field' : S.arena; townGo(btn, key); };
-
   if (key === 'stables') { townPanel('The stables', box => stableRows(box)); return; }
-
   if (key === 'sergeant') { stationTrial('bailey'); return; }
-
   if (key === 'captain') { stationTrial('royal'); return; }
-
   if (service === 'training') { townPanel('Coach Sigrid · Fairground Training Yard', box => stationRows(box,
-
     '“Step through the practice gate. Pells first, then a sparring partner. No clock, no cards.”',
-
     [['Start lessons', 'Learn movement, guard, strikes, clinch and throws in the practice list.', 'Train', () => townGo('btnTrain', key)]])); return; }
-
   if (service === 'giant') townPanel(S && S.arena ? S.name + ' · ' + ARENAS.find(a => a.key === S.arena).name : 'The Red Deer Rumble', box => stationRows(box, 'Sign the scroll and enter the tournament. Two fights, one title, all the glory!', [
-
     ['Sign up for the Rumble', 'A semi-final and a final, with repair breaks and a kit check. The big prize money is here.', 'Sign the scroll', () => go('btnRumble')],
-
     ['Continue the Rumble', 'Pick up where you left off.', 'Continue', () => go('btnContinue'), !store.get('tourney', null)],
-
     ['Rumble of the Day', 'One fight, the same for everyone today. Keep your streak going.', 'Fight today’s', () => go('btnDaily')]]));
-
   else if (service === 'marshal') townPanel(S && S.arena ? S.name + ' · ' + ARENAS.find(a => a.key === S.arena).name : 'Enter the lists', box => stationRows(box, '“Kit checked? Straps taped? Then step into the lists. Pick your fight.”', [
-
     ['Quick fight', '1v1 up to 12v12, any arena, any weapons.', 'Quick fight', () => go('btnQuick')],
-
     ['Duel Ladder', 'Climb the rungs one duel at a time. Each rung pays more.', 'Duel Ladder', () => go('btnLadder')],
-
     ['Training Yard', 'Learn the moves against the pells and a sparring partner.', 'Train', () => go('btnTrain')],
-
     ['Gauntlet run', 'Five fights in a row. Your kit damage carries over.', 'Run it', () => go('btnRun')],
-
     ['Summer season', 'Six stops around central Alberta and a league table.', 'Season', () => go('btnSeason')]]));
-
   else if (key === 'board') townPanel('Notice board', box => {
-
     stationRows(box, 'Notices pinned with daggers. Someone has drawn a moustache on the Wanted poster.', [
-
       ['Rumble of the Day', 'Today’s fight is the same for everyone.', 'Fight', () => townGo('btnDaily', 'board')],
-
       ['Gauntlet run', 'Five fights, damage carries, boons between fights.', 'Run', () => townGo('btnRun', 'board')],
-
       ['Summer season', 'Sign veterans, tape well, top the table.', 'Season', () => townGo('btnSeason', 'board')]]);
-
     try { const C = challenges(); const all = [...(C.daily || []), ...(C.weekly || [])]; if (all.length) { box.append(h('h4', null, 'Challenges')); for (const c of all) box.append(h('p', { class: 'muted small' }, `${c.done ? '✓ ' : ''}${c.text || c.desc || ''}`)); } } catch (e) { }
-
   });
-
   else if (service === 'crier') townPanel(S && S.arena ? S.name + ' · Online' : 'Online', box => {
-
     const n = (LOBBY.peers || []).length, inTown = Object.keys(WORLD.others).length;
-
     stationRows(box, `“HEAR YE! ${n ? `${n} fighter${n === 1 ? '' : 's'} online right now${inTown ? `, ${inTown} of them here in town` : ''}!` : 'Nobody else online just now, but they’ll come!'} Fight them, invite your friends, start a guild!”`, [
-
       ['Play online', 'Find a match, open a lobby for up to 20, invite a friend by link.', 'Go online', () => { TOWN.returnTo = key; openOnlineHub(); }],
-
       ['Find a match', 'Join an open lobby, or open one and wait.', 'Find a match', () => { TOWN.returnTo = key; findMatch(); }],
-
       ['Start a guild with friends', 'Guildmaster Osric on the west side handles guilds.', 'Show me', () => { closeVendor(); townWalkTo('guild'); }]]);
-
     if (n) { box.append(h('h4', null, 'Online now')); for (const p of LOBBY.peers) box.append(h('div', { class: 'up' }, h('div', null, h('b', null, String(p.presence.name || 'A fighter').slice(0, 20)), h('div', { class: 'muted' }, `${p.presence.tw ? 'in town' : String(p.presence.st || 'online')}${p.presence.tw && p.presence.tw.g ? ` · [${p.presence.tw.g}]` : ''}`)), h('button', { class: 'btn tape small', onclick: () => openProfile(p, () => openStation(key)) }, 'Profile'))); }
-
   });
-
   else if (key === 'house') townPanel(shopState().home ? 'Your ' + HOMES[shopState().home].name.toLowerCase() : 'Your plot', box => stationRows(box, shopState().home ? 'Home sweet home. Your trophies, your skills, your record.' : 'An empty plot with your name on it. Wendell the land agent can build you a house.', [
-
     ['Your fighter', 'Skills, profile, progress, awards and your record.', 'Open', () => { TOWN.returnTo = 'house'; openCareer(); }],
-
     ['Settings', 'Controls, sound, graphics, your BuhurtOS account.', 'Settings', () => { TOWN.returnTo = 'house'; G.backTo = 'title'; showScreen('settings'); }],
-
     ['How to play', 'Every move and rule.', 'Read', () => { TOWN.returnTo = 'house'; G.backTo = 'title'; showScreen('howto'); }]]));
-
   else if (S) toastMenu(S.name);
-
 }
-
 // ---- guilds with friends: made at the Guildmaster, shared over the online lobby
-
 function guildState() { return CAREER.guild || null; }
-
 function guildTag() { const g = guildState(); return g ? g.tag : ''; }
-
 function guildCreate(name, tag) {
-
   name = String(name || '').trim().slice(0, 24); tag = String(tag || '').trim().toUpperCase().replace(/[^A-Z0-9]/g, '').slice(0, 4);
-
   if (name.length < 3 || tag.length < 2) { toastMenu('A guild needs a name (3+ letters) and a tag (2–4 letters).'); return false; }
-
   if (!spend(2000, 'A guild charter')) return false;
-
   CAREER.guild = { id: Math.random().toString(36).slice(2, 10), name, tag, col: CAREER.club.tabard, owner: true, members: [myName()], since: Date.now() }; saveCareer();
-
   lobbySet({ gd: { id: CAREER.guild.id, name, tag, col: CAREER.guild.col } }); toastMenu(`[${tag}] ${name} is founded!`); return true;
-
 }
-
 function guildInvite(p) { const g = guildState(); if (!g) return; lobbySet({ ginv: { to: p.peer, id: g.id, name: g.name, tag: g.tag, col: g.col, from: myName(), at: Date.now() } }); toastMenu(`Guild invite sent to ${String(p.presence.name || 'them').slice(0, 20)}.`); }
-
 function guildLeave() { CAREER.guild = null; saveCareer(); lobbySet({ gd: null }); toastMenu('You left the guild.'); }
-
 // called from the lobby when presences change: guild invites to me, and who's in my guild
-
 function guildCheck(peers) {
-
   const g = guildState();
-
   for (const p of peers) {
-
     const pr = p.presence || {}, inv = pr.ginv;
-
     if (inv && inv.to === LOBBY.me && inv.id && (!g || g.id !== inv.id)) {
-
       const key = 'g' + p.peer + inv.id + inv.at; if (LOBBY.seen[key]) continue; LOBBY.seen[key] = 1;
-
       const from = String(inv.from || pr.name || 'A friend').slice(0, 20), nm = String(inv.name).slice(0, 24), tag = String(inv.tag).slice(0, 4);
-
       msg('guild', `Join [${escTxt(tag)}] ${escTxt(nm)}?`, `<p><b>${escTxt(from)}</b> invited you to their guild.${g ? ` You'll leave [${escTxt(g.tag)}] ${escTxt(g.name)}.` : ''}</p>`,
-
         [['Join the guild', () => { CAREER.guild = { id: inv.id, name: nm, tag, col: inv.col || '#6d1b28', owner: false, members: [from, myName()], since: Date.now() }; saveCareer(); lobbySet({ gd: { id: inv.id, name: nm, tag, col: inv.col } }); toastMenu(`Welcome to [${tag}] ${nm}!`); if (TOWN.on) { showScreen(null); refreshTouchUI(); } else leaveScreen(); }, true], ['No thanks', () => { if (TOWN.on) { showScreen(null); refreshTouchUI(); } else leaveScreen(); }]]);
-
     }
-
     if (g && pr.gd && pr.gd.id === g.id) { const nm = String(pr.name || '').slice(0, 20); if (nm && !g.members.includes(nm)) { g.members.push(nm); saveCareer(); } }
-
   }
-
 }
-
 function guildOnline() { const g = guildState(); return g ? (LOBBY.peers || []).filter(p => p.presence && p.presence.gd && p.presence.gd.id === g.id) : []; }
-
 function renderGuildSection(list, again) {
-
   const g = guildState();
-
   list.append(h('h4', null, 'Your guild (with friends)'));
-
   if (!g) {
-
     list.append(h('p', { class: 'muted small' }, 'Found a guild, then invite friends who are online. Your tag shows over your head in town.'));
-
     const nm = h('input', { class: 'smithname', maxlength: 24, placeholder: 'Guild name, e.g. The Tape Wolves' }), tg = h('input', { class: 'smithname', maxlength: 4, placeholder: 'TAG', style: 'text-transform:uppercase;max-width:90px' });
-
     list.append(h('div', { class: 'up' }, h('div', null, h('div', { class: 'uph' }, h('b', null, 'Found a guild')), h('div', { class: 'row fields' }, nm, tg), h('div', { class: 'muted' }, 'A guild charter costs $2,000.')),
-
       h('button', { class: 'btn primary flagtape small', onclick: () => { if (guildCreate(nm.value, tg.value)) again(); } }, 'Found it')));
-
     return;
-
   }
-
   const on = guildOnline();
-
   list.append(h('div', { class: 'up' }, h('div', null, h('div', { class: 'uph' }, h('span', { class: 'sw mini', style: `--c:${g.col}` }), h('b', null, `[${g.tag}] ${g.name}`), h('span', { class: 'tier' }, g.owner ? 'Founder' : 'Member')), h('div', { class: 'muted' }, `Members: ${g.members.join(', ')}. ${on.length} online now.`)),
-
     h('button', { class: 'btn tape small', onclick: () => { guildLeave(); again(); } }, 'Leave')));
-
   const others = (LOBBY.peers || []).filter(p => !(p.presence.gd && p.presence.gd.id === g.id));
-
   list.append(h('p', { class: 'muted small' }, others.length ? 'Invite someone who is online:' : 'Nobody else is online to invite right now. Send a friend the game link and invite them when they show up.'));
-
   for (const p of others.slice(0, 19)) list.append(h('div', { class: 'up' }, h('div', null, h('b', null, String(p.presence.name || 'A fighter').slice(0, 20)), h('div', { class: 'muted' }, p.presence.gd ? `In [${String(p.presence.gd.tag).slice(0, 4)}]` : 'No guild')), h('button', { class: 'btn primary flagtape small', onclick: () => guildInvite(p) }, 'Invite')));
-
 }
-
 // ---- the wardrobe counter (Madame Velour) and the ghost's spooky stock (Sir Reginald)
-
 function packClothingThumb(slot, key) {
-
   const src = slot === 'hat' && key === 'straw' ? LIBRARY_DATA.surfaces.straw : slot === 'foot' && key === 'workboots' ? LIBRARY_DATA.surfaces.boot_leather : null;
-
   if (!src) return null;
-
   const c = cvs(96, 96), x = c.getContext('2d'), img = new Image();
-
   img.onload = () => {
-
     x.clearRect(0, 0, 96, 96);
-
     x.save(); x.beginPath();
-
     if (slot === 'hat') {
-
       x.ellipse(48, 69, 41, 9, 0, 0, TAU); x.rect(29, 30, 38, 38);
-
     } else {
-
       x.moveTo(15, 26); x.lineTo(38, 26); x.lineTo(39, 62); x.lineTo(53, 69); x.lineTo(53, 82); x.lineTo(12, 82); x.lineTo(12, 70); x.lineTo(18, 64); x.closePath();
-
       x.moveTo(54, 26); x.lineTo(76, 26); x.lineTo(77, 60); x.lineTo(89, 68); x.lineTo(89, 82); x.lineTo(52, 82); x.lineTo(52, 69); x.lineTo(55, 62); x.closePath();
-
     }
-
     x.clip();
-
     if (slot === 'hat') { x.fillStyle = x.createPattern(img, 'repeat'); x.fillRect(0, 0, 96, 96); }
-
     else x.drawImage(img, 0, 0, 96, 96);
-
     x.restore();
-
     x.strokeStyle = slot === 'hat' ? '#66431e' : '#342419'; x.lineWidth = 3;
-
     if (slot === 'hat') { x.beginPath(); x.ellipse(48, 69, 41, 9, 0, 0, TAU); x.stroke(); x.strokeRect(29, 30, 38, 38); }
-
     else { x.strokeRect(15, 26, 23, 38); x.strokeRect(54, 26, 22, 36); }
-
   };
-
   img.src = src;
-
   return c;
-
 }
-
 function renderWardrobe(list, again, spooky, row) {
-
   const L = lookState(), s = shopState();
-
   if (!spooky) {
-
     list.append(h('h4', null, 'Outfits'));
-
     list.append(h('p', { class: 'muted small' }, 'Real clothes for walking round the festival. Everyone in town sees what you wear.'));
-
     for (const [key, name, cost, , desc] of LOOKS.outfit) {
-
       const own = lookOwned('outfit', key), on = (L.outfit || 'none') === key;
-
       row(name, on ? 'Wearing' : own && cost ? 'Owned' : null, desc || (cost ? 'Buy once, wear any time.' : 'Free.'), on ? 'Wearing' : own ? 'Wear it' : `Buy ${fmtMoney(cost)}`, !on && (own || CAREER.purse >= cost),
-
         () => { if (!own) { if (!spend(cost, name)) return false; s.owned['wd:outfit:' + key] = 1; } L.outfit = key; saveCareer(); townDressMe(); }, on ? ' cur' : '', outfitThumb(key),
-
         own || !cost ? null : { skill: 'artificing', R: outfitMats(cost), apply: () => { s.owned['wd:outfit:' + key] = 1; L.outfit = key; townDressMe(); }, label: 'Sew it' });
-
     }
-
     list.append(h('h4', null, 'Colours'));
-
     const sw = (arr, k2, dflt) => { const r = h('div', { class: 'swatches' }); for (const c of arr) r.append(h('button', { class: 'sw', style: `--c:${c}`, 'aria-pressed': String((L[k2] || dflt) === c), 'aria-label': c, onclick: () => { L[k2] = c; saveCareer(); townDressMe(); again(); } })); return r; };
-
     list.append(h('div', { class: 'up vcard vwide' }, h('div', null, h('b', null, 'Clothing colour'), sw(TABARDS, 'body', CAREER.club.tabard))), h('div', { class: 'up vcard vwide' }, h('div', null, h('b', null, 'Trim'), sw(TRIMS, 'trim', CAREER.club.trim))));
-
     { const on = !!L.dye; row('Dye my outfit', on ? 'On' : null, 'Tints your outfit with your body colour. Free.', on ? 'Undye' : 'Dye it', true, () => { L.dye = !on; saveCareer(); townDressMe(); }); }
-
   }
-
   for (const slot of ['hat', 'foot', 'cape', 'hand', 'pet']) {
-
     const items = LOOKS[slot].filter(it => spooky ? it[3] === 'ghost' : it[3] !== 'ghost' && (it[3] !== 'hidden' || lookOwned(slot, it[0]))); if (!items.length) continue;
-
     list.append(h('h4', null, LOOK_SLOT[slot]));
-
     for (const [key, name, cost] of items) {
-
       const own = lookOwned(slot, key), on = L[slot] === key;
-
       row(name, on ? 'Wearing' : own && cost ? 'Owned' : null, cost ? (own ? 'Yours.' : 'Buy once, wear any time.') : 'Free.', on ? 'Wearing' : own ? 'Wear' : `Buy ${fmtMoney(cost)}`, !on && (own || CAREER.purse >= cost),
-
         () => { if (!own) { if (!spend(cost, name)) return false; s.owned['wd:' + slot + ':' + key] = 1; } L[slot] = key; saveCareer(); townDressMe(); }, on ? ' cur' : '', packClothingThumb(slot, key));
-
     }
-
   }
-
 }
-
 function renderBarber(list, again) {
-
   const L = lookState(), lo = G.loadout || (G.loadout = {}), outfit = L.outfit || 'none';
-
   const mirrors = [], selections = [];
-
   const refreshMirrors = () => {
-
     for (const size of ['170', 'face']) delete PORTRAITS[`${outfit}:${size}`];
-
     for (const old of mirrors.flatMap(panel => [...panel.querySelectorAll('.barber-body, .barber-face')])) {
-
       const next = outfitThumb(outfit, old.classList.contains('barber-face') ? 'face' : true);
-
       next.className = old.className; old.replaceWith(next);
-
     }
-
   };
-
   const rebuild = () => {
-
     const host = mirrors[0] && mirrors[0].closest('#townShopBody, .appearance-editor');
-
     const scrolls = host ? [host, ...host.querySelectorAll('.barber-controls')].map(el => [el.scrollTop, el.scrollLeft]) : [];
-
     const focused = document.activeElement;
-
     const key = focused && focused.dataset.barberKey, value = focused && focused.dataset.barberValue;
-
     again();
-
     if (!host) return;
-
     const target = [...host.querySelectorAll('[data-barber-key]')].find(el => el.dataset.barberKey === key && el.dataset.barberValue === value);
-
     if (target) target.focus({ preventScroll: true });
-
     [host, ...host.querySelectorAll('.barber-controls')].forEach((el, i) => { if (scrolls[i]) { el.scrollTop = scrolls[i][0]; el.scrollLeft = scrolls[i][1]; } });
-
   };
-
   const change = (key, value, body = false) => {
-
     if (body) { lo[key] = value; store.set('loadout', lo); }
-
     else L[key] = value;
-
     if (key === 'frame') { lo.gender = value; if (value === 'female') L.beard = 'none'; store.set('loadout', lo); }
-
     saveCareer(); townDressMe(); AU.click();
-
     if (key === 'frame') rebuild();
-
     else { selections.forEach(update => update()); refreshMirrors(); }
-
   };
-
   const group = (label, options, current, key, body, colour) => {
-
     const buttons = options.map(([value, name]) => h('button', {
-
       class: colour ? 'sw' : null, style: colour ? `--c:${value}` : null,
-
       'aria-label': colour ? name : null, 'aria-pressed': String(current === value),
-
       'data-barber-key': key, 'data-barber-value': String(value),
-
       onclick: () => change(key, value, body)
-
     }, colour ? null : name));
-
     selections.push(() => buttons.forEach((b, i) => b.setAttribute('aria-pressed', String((body ? lo[key] : L[key]) === options[i][0]))));
-
     return h('div', { class: 'up vcard vwide barber-choice' }, h('b', null, label), h('div', { class: colour ? 'swatches' : 'seg small' }, ...buttons));
-
   };
-
   const choice = (label, options, current, key, body = false) => group(label, options, current, key, body, false);
-
   const colours = (label, options, current, key) => group(label, options.map(c => [c, c]), current, key, false, true);
-
   const mirror = () => {
-
     for (const size of ['170', 'face']) delete PORTRAITS[`${outfit}:${size}`];
-
     const full = outfitThumb(outfit, true), face = outfitThumb(outfit, 'face');
-
     full.className = 'barber-body'; face.className = 'barber-face';
-
     const panel = h('div', { class: 'up vcard vwide barber-mirror' }, face, full, h('div', null, h('b', null, CAREER.name === 'You' ? 'Your fighter' : CAREER.name), h('p', { class: 'muted small' }, 'Changes appear here and on your fighter in town.')));
-
     mirrors.push(panel);
-
     return panel;
-
   };
-
   list.append(h('h4', null, 'Hair & face'), mirror(),
-
     choice('Hair style', FIGHTER_HAIR, L.hair || 'crop', 'hair'),
-
     colours('Hair colour', FIGHTER_HAIR_COLORS, L.hairColor || FIGHTER_HAIR_COLORS[1], 'hairColor'),
-
     colours('Eye colour', FIGHTER_EYES, L.eyes || FIGHTER_EYES[0], 'eyes'));
-
   if ((L.frame || (BOS.info && BOS.info.gender)) !== 'female') list.append(choice('Facial hair', FIGHTER_BEARDS, L.beard || 'none', 'beard'));
-
   list.append(h('h4', null, 'Body'), mirror(),
-
     choice('Body style', [['male', 'Masculine'], ['female', 'Feminine']], L.frame || (BOS.info && BOS.info.gender === 'female' ? 'female' : 'male'), 'frame'),
-
     colours('Skin tone', SKIN_TONES, L.skin || SKIN_TONES[2], 'skin'));
-
   let shapeTimer = null;
-
   const refreshShape = immediate => {
-
     if (shapeTimer) clearTimeout(shapeTimer);
-
     shapeTimer = setTimeout(() => {
-
       townDressMe();
-
       for (const size of ['170', 'face']) delete PORTRAITS[`${outfit}:${size}`];
-
       for (const old of mirrors.flatMap(panel => [...panel.querySelectorAll('.barber-body, .barber-face')])) {
-
         const next = outfitThumb(outfit, old.classList.contains('barber-face') ? 'face' : true);
-
         next.className = old.className; old.replaceWith(next);
-
       }
-
     }, immediate ? 0 : 90);
-
   };
-
   const shapeKeys = FIGHTER_SHAPES.filter(([key]) => (L.frame || (BOS.info && BOS.info.gender)) === 'female' || !['bust', 'breast', 'butt'].includes(key));
-
   list.append(h('p', { class: 'muted small' }, 'Move each slider to shape your fighter. Height and body mass affect combat; the others change appearance.'));
-
   for (const [key, label] of shapeKeys) list.append(fighterShapeControl(L, key, label, refreshShape));
-
 }
-
 function townDressMe() { if (!TOWN.on) return; buildAvatar(); buildMyPet(); }
-
 // the wardrobe tent and the ghost in the graveyard are vendors with their own little buildings
-
 function buildSpecialVendors() {
-
   for (const V of VENDORS.filter(v => v.custom)) {
-
     const [x, z] = STALL_AT[V.key], ry = STALL_FACE[V.key] != null ? STALL_FACE[V.key] : Math.atan2(0 - x, 30 - z);
-
     const g = new THREE.Group(); g.position.set(x, gy(x, z), z); g.rotation.y = ry; TOWN.root.add(g);
-
     let npc;
-
     if (V.key === 'wardrobe') {
-
       gameplayPropFootprint(kpiece(g, 'tent_detailedOpen', 0, 0, -1.4, Math.PI, 3.2), true);
-
       for (let i = 0; i < 3; i++) { const rack = grp(g, -1.6 + i * 1.6, 0, -2.4); mk(rack, geo('wd_rack', () => new THREE.BoxGeometry(1.2, 0.05, 0.05)), tmat('#4a3422'), 0, 1.8, 0); for (let j = 0; j < 3; j++) mk(rack, geo('wd_cl', () => new THREE.PlaneGeometry(0.32, 0.8)), lmat({ color: SHOP_TABARDS[(i * 3 + j) % SHOP_TABARDS.length][0], side: THREE.DoubleSide }), -0.4 + j * 0.4, 1.38, 0); }
-
       const mirror = mk(g, geo('wd_mirror', () => new THREE.PlaneGeometry(0.8, 1.7)), tmat('#cfe3f7', { metalness: 0.9, roughness: 0.05 }), 2.3, 1.1, -0.8); mirror.rotation.y = -0.6;
-
       npc = costumeOr({ main: V.col, joints: '#e3b341', h: 1.72, anim: 'Idle_Loop' }, vendorOutfit(V)); npc.root.position.set(0, 0, -0.6); g.add(npc.root);
-
       // Tent walls are registered from the rendered asset, preserving its entrance.
-
     } else if (V.key === 'barber') {
-
       gameplayPropFootprint(kpiece(g, 'tent_detailedOpen', 0, 0, -1.2, Math.PI, 2.8), true);
-
       const mirror = mk(g, geo('barber_mirror', () => new THREE.PlaneGeometry(1, 1.6)), tmat('#cfe3f7', { metalness: 0.9, roughness: 0.05 }), -2.1, 1.25, -0.8); mirror.rotation.y = 0.65;
-
       mk(g, geo('barber_chair', () => new THREE.CylinderGeometry(0.42, 0.45, 0.5, 10)), tmat('#603e30'), 1.5, 0.45, -0.6);
-
       mk(g, geo('barber_pole', () => new THREE.CylinderGeometry(0.1, 0.1, 2.1, 12)), tmat('#e6e2d8'), 2.4, 1.1, 0.3);
-
       for (let i = 0; i < 7; i++) mk(g, geo('barber_stripe', () => new THREE.TorusGeometry(0.105, 0.018, 5, 14)), tmat(i % 2 ? '#a92932' : '#285d88'), 2.4, 0.35 + i * 0.24, 0.3).rotation.x = Math.PI / 2;
-
       npc = costumeOr({ main: V.col, joints: '#e3b341', h: 1.7, anim: 'Idle_Loop' }, vendorOutfit(V)); npc.root.position.set(0, 0, -0.6); g.add(npc.root);
-
       gameplayShape(x + Math.cos(ry) * 1.5 - Math.sin(ry) * 0.6, z - Math.sin(ry) * 1.5 - Math.cos(ry) * 0.6, 0.45, 0.45, ry, 0.9);
-
     } else {
-
       kpiece(g, 'gravestoneDecorative', -1.2, 0, -0.6, 0, 1.8); kpiece(g, 'lanternCandle', 1.1, 0, -0.4, 0, 2);
-
       npc = { root: kpiece(g, 'ghost', 0, 1.2, -0.5, 0, 2.2) || new THREE.Group(), ghost: true }; WORLD.bob.push({ o: npc.root, k: 'float', ph: 9, cx: 0, cz: -0.5 });
-
       TOWN.obst.push({ x, z, r: 1.4 });
-
     }
-
     const lab = townLabel(V.name, `${V.icon} ${V.role}`, V.awn); lab.position.set(0, V.key === 'ghost' ? 3.6 : 4.4, 0); g.add(lab);
-
     const fx = Math.sin(ry), fz = Math.cos(ry);
-
     TOWN.stalls.push({ V, g, npc, ry, x, z, ax: x + fx * 1.4, az: z + fz * 1.4, label: lab });
-
   }
-
 }
 // Cloth follows the upper spine. The collar is fixed; springy lower rows trail
 // torso motion and catch a slow, travelling wind.
@@ -43745,6 +42789,7 @@ function capeAnimate(J, speed, time, dt) {
 // do the thing, then pick something else. If they can't get somewhere they give up and choose again.
 const NAV = { cell: 4, grid: new Map(), none: [] };
 function navBuild() {
+  NAV.version = (NAV.version || 0) + 1;
   NAV.grid.clear();
   for (const o of TOWN.obst) {
     if (o.r < 0.05) continue;
@@ -43760,6 +42805,7 @@ function cliffAt(x, z, r) {
 }
 function navBlocked(x, z, r) {
   if (lakeBlocked(x, z, r)) return true;
+  if (stonefordWaterBlocked(x, z, r)) return true;
   if (arenaBlocked(x, z, r)) return true;
   if (typeof gateBlocked === 'function' && gateBlocked(x, z, r)) return true;
   if (Math.hypot(x / TOWN_RX, z / TOWN_RZ) > 0.985) return true;
@@ -44284,443 +43330,225 @@ function boutHud() {
   el.append(h('small', null, (Ar ? Ar.name : 'In the list') + ' · ' + BOUT.label), h('b', null, BOUT.vs), h('span', { class: 'num' }, BOUT.live ? `Real score ${BOUT.live.score[0]}–${BOUT.live.score[1]} · ${BOUT.live.phase}` : m ? `Round ${m.round} · ${w[0]}–${w[1]}` : ''));
 }
 // ===================================================================
-
 // Town map: a top-down drawing of the festival with every vendor, station and online player on it.
-
 // The big one opens from the Map button (tap to set a waypoint); a small one sits in the corner while you walk.
-
 // North (the castle, -z) is up.
-
 // ===================================================================
-
 const TMAP = { mini: null, miniT: 0, hits: [], view: null };
-
 const TMAP_PLACES = [
-
   ['The list', 0, 0], ['Market', 0, 46], ['Forge yard', -46, 28], ['Tavern', 45, 14],
-
   ['Food stalls', 38, -8], ['Archery', 64, 10], ['Farm', 60, -16], ['Homes', -44, 48], ['Club camp', 46, 62], ['Graveyard', 44, -56], ['Pond', -56, 72], ['Festival gate', 0, 70], ['Deep Mine', -256, -42]
-
 ];
-
 function tmapSites() { return [...ARENAS, TRAINING_GROUND]; }
-
 function mapStallVisible(S) {
-
   return (!S.squireNPC || teamSquire().stage > 1) && !S.mine && !S.player && !S.node && !S.arena && (!S.secret || secretFound(S.secret.key)) &&
-
     (!S.hiddenTunnel || !!(CAREER.found && CAREER.found['tunnel:' + S.hiddenTunnel]) || !!(CAREER.bag && CAREER.bag.items && CAREER.bag.items.moon_map));
-
 }
-
 function placesDirectory(route) {
-
   const box = h('div', { class: 'places-directory' });
-
   const search = h('input', { type: 'search', placeholder: 'Search places & services', 'aria-label': 'Search places & services' });
-
   const list = h('div', { class: 'ups shop', 'aria-label': 'Places & services' });
-
   const draw = () => {
-
     list.replaceChildren(); const query = search.value.trim().toLowerCase();
-
     const rows = tmapSites().map(A => ({ name: A.name, icon: A.icon, role: A.practice ? 'Training' : 'Arena', x: A.entry[0], z: A.entry[1], description: A.gate && !gateOpen(A.gate) ? 'Gate locked' : '' }));
-
     for (const S of TOWN.stalls || []) if (mapStallVisible(S)) rows.push({ name: S.V.name, icon: S.V.icon || '•', role: S.V.role || 'Destination', x: S.ax, z: S.az, description: vendorBlurb(S.V.key) || '' });
-
     rows.sort((a, b) => Math.hypot(a.x - TOWN.pos.x, a.z - TOWN.pos.z) - Math.hypot(b.x - TOWN.pos.x, b.z - TOWN.pos.z));
-
     for (const r of rows) {
-
       if (!`${r.name} ${r.role} ${r.description}`.toLowerCase().includes(query)) continue;
-
       const district = districtAt(r.x, r.z);
-
       const desc = [r.description, district && district.name, `${Math.round(Math.hypot(r.x - TOWN.pos.x, r.z - TOWN.pos.z))} m away`].filter(Boolean).join(' · ');
-
-      list.append(h('div', { class: 'up' }, h('div', null, h('b', null, `${r.icon} ${r.name}`), h('div', { class: 'muted small' }, `${r.role} · ${desc}`)), h('button', { class: 'btn tape small', onclick: () => route(r) }, 'Route')));
-
+      list.append(h('div', { class: 'up' }, h('div', null, h('b', null, `${r.icon} ${r.name} · ${district.name}`), h('div', { class: 'muted small' }, `${r.role} · ${desc}`)), h('button', { class: 'btn tape small', 'aria-label': `Route to ${r.name}, ${r.role} in ${district.name}`, onclick: () => route(r) }, 'Route')));
     }
-
     if (!list.children.length) list.append(h('p', { class: 'muted' }, 'No matching places or services.'));
-
   };
-
   search.oninput = draw; box.append(h('h3', null, 'Places & services'), search, list); draw(); return box;
-
 }
-
 function tmapMarkers() {
-
   const out = tmapSites().map(A => ({ x: A.x, z: A.z, icon: A.icon, name: A.name, kind: 'arena', A, far: true }));
-
   for (const S of TOWN.stalls || []) {
-
     if (S.mine) continue;
-
     if (S.player) { const O = WORLD.others && WORLD.others[S.player]; out.push({ x: O ? O.x : S.x, z: O ? O.z : S.z, icon: '', name: S.V.name, kind: 'player', S }); continue; }
-
     if (S.arena || (S.secret && !secretFound(S.secret.key)) || (S.hiddenTunnel && !(CAREER.found && CAREER.found['tunnel:' + S.hiddenTunnel]) && !(CAREER.bag && CAREER.bag.items && CAREER.bag.items.moon_map))) continue;
-
     if (S.node) { out.push({ x: S.x, z: S.z, icon: '', name: S.V.name, role: S.V.role, kind: 'node', col: S.node.N.col, S }); continue; }
-
     out.push({ x: S.x, z: S.z, icon: S.V.icon || '•', name: S.V.name, role: S.V.role, kind: S.station ? 'station' : 'vendor', key: S.V.key, far: S.V.key === 'mine:enter', S });
-
   }
-
   return out;
-
 }
-
 // draw the realm into ctx. view = { cx, cz, scale (px per metre), w, h, labels, round }
-
 function drawTownMap(ctx, view) {
-
   const { w, h: H, scale: k } = view, cx = view.cx, cz = view.cz;
-
   const X = x => w / 2 + (x - cx) * k, Y = z => H / 2 + (z - cz) * k;
-
   ctx.save(); ctx.clearRect(0, 0, w, H);
-
   if (view.round) { ctx.beginPath(); ctx.arc(w / 2, H / 2, Math.min(w, H) / 2 - 1, 0, Math.PI * 2); ctx.clip(); }
-
   ctx.fillStyle = '#3f6630'; ctx.fillRect(0, 0, w, H);
-
   // the realm's open country, then the fairground's trodden meadow
-
   ctx.fillStyle = '#6f9a4e'; ctx.beginPath(); ctx.ellipse(X(0), Y(0), TOWN_RX * k, TOWN_RZ * k, 0, 0, Math.PI * 2); ctx.fill();
-
   // Broad elevation bands and forest belts reflect the actual heightfield and
-
   // wooded travel corridors instead of treating the expanded realm as empty lawn.
-
   const step = 40;
-
   for (let z = -TOWN_RZ; z < TOWN_RZ; z += step) for (let x = -TOWN_RX; x < TOWN_RX; x += step) {
-
     if ((x / TOWN_RX) ** 2 + (z / TOWN_RZ) ** 2 > 0.97) continue;
-
     const y = realmHeight(x + step / 2, z + step / 2);
-
     if (y < 3) continue;
-
     ctx.fillStyle = y > 10 ? 'rgba(116,119,91,.42)' : y > 6 ? 'rgba(128,151,92,.25)' : 'rgba(156,172,99,.15)';
-
     ctx.fillRect(X(x), Y(z), step * k + 1, step * k + 1);
-
   }
-
   ctx.fillStyle = 'rgba(36,75,38,.48)';
-
   COUNTRY_FORESTS.forEach(([x, z, r], j) => {
-
     ctx.beginPath();
-
     for (let i = 0; i <= 40; i++) {
-
       const a = i / 40 * Math.PI * 2;
-
       const uneven = 0.83 + 0.1 * Math.sin(a * 3 + j * 1.7) + 0.07 * Math.cos(a * 5 - j * 0.8);
-
       const px = X(x + Math.cos(a) * r * uneven), py = Y(z + Math.sin(a) * r * uneven);
-
       if (i) ctx.lineTo(px, py); else ctx.moveTo(px, py);
-
     }
-
     ctx.closePath(); ctx.fill();
-
   });
-
   ctx.fillStyle = '#7ea65a'; ctx.beginPath(); ctx.ellipse(X(0), Y(0), FAIR_RX * k, FAIR_RZ * k, 0, 0, Math.PI * 2); ctx.fill();
-
   // the woods
-
   ctx.fillStyle = 'rgba(38,70,34,.75)'; ctx.beginPath(); ctx.ellipse(X(-215), Y(-70), 72 * k, 92 * k, 0, 0, Math.PI * 2); ctx.fill();
-
   // the lake
-
   ctx.fillStyle = '#4f8fb8'; ctx.beginPath(); ctx.ellipse(X(LAKE.x), Y(LAKE.z), LAKE.rx * k, LAKE.rz * k, 0, 0, Math.PI * 2); ctx.fill();
-
   ctx.fillStyle = '#d8c690'; ctx.fillRect(X(LAKE.x - LAKE.rx - 14), Y(LAKE.z + 10), 16 * k, 60 * k);
-
   // regional landmarks follow the same footprints as the village fields, quarry and lake docks.
-
   for (const [x0, z0, ww, hh, col] of [[-270, 200, 34, 10, '#bdab55'], [-138, 196, 26, 20, '#a39a4a'], [-276, -64, 40, 44, '#a89a86']]) {
-
     ctx.fillStyle = col; ctx.fillRect(X(x0), Y(z0), ww * k, hh * k);
-
     ctx.strokeStyle = 'rgba(58,55,42,.5)'; ctx.lineWidth = Math.max(1, k); ctx.strokeRect(X(x0), Y(z0), ww * k, hh * k);
-
   }
-
   ctx.strokeStyle = '#715f43'; ctx.lineWidth = Math.max(2, 4 * k);
-
   for (const [x0, z0, x1] of [[168, 20, 185], [172, 70, 186]]) { ctx.beginPath(); ctx.moveTo(X(x0), Y(z0)); ctx.lineTo(X(x1), Y(z0)); ctx.stroke(); }
-
   // roads
-
   ctx.strokeStyle = '#c2ac80'; ctx.lineCap = 'round'; ctx.lineJoin = 'round';
-
   for (const R of ROADS) { ctx.lineWidth = Math.max(1.5, R.w * k * 0.8); ctx.beginPath(); R.pts.forEach(([x, z], i) => i ? ctx.lineTo(X(x), Y(z)) : ctx.moveTo(X(x), Y(z))); ctx.stroke(); }
-
   // paths, yards and squares
-
   for (const [x0, x1, z0, z1, col] of TOWN.mapRects || []) { ctx.fillStyle = col || '#b9a37c'; ctx.fillRect(X(x0), Y(z0), (x1 - x0) * k, (z1 - z0) * k); }
-
   // the castle: the outer curtain, the inner ward, the Great Hall
-
   const wall = (B, col, lw) => { ctx.strokeStyle = col; ctx.lineWidth = Math.max(2, lw * k); ctx.strokeRect(X(B.x0), Y(B.z0), (B.x1 - B.x0) * k, (B.z1 - B.z0) * k); };
-
   HILL_T.forEach((T, i) => { ctx.fillStyle = ['rgba(160,150,130,.35)', 'rgba(175,162,128,.4)', 'rgba(190,172,122,.45)', 'rgba(205,186,130,.5)'][i]; ctx.beginPath(); ctx.ellipse(X(T.cx), Y(T.cz), T.rx * k, T.rz * k, 0, 0, Math.PI * 2); ctx.fill(); ctx.strokeStyle = i ? '#7d776e' : '#6d6a66'; ctx.lineWidth = Math.max(1.5, 2 * k); ctx.stroke(); });
-
   void wall; ctx.fillStyle = '#8a8378'; ctx.fillRect(X(HALL.x0), Y(HALL.z0), (HALL.x1 - HALL.x0) * k, (HALL.z1 - HALL.z0) * k);
-
   for (const Gt of TOWN.gates || []) { const open = gateOpen(Gt.key); ctx.fillStyle = open ? '#d9c49a' : '#a8342c'; ctx.beginPath(); ctx.arc(X(Gt.x), Y(Gt.z), Math.max(3, 2.4 * k), 0, Math.PI * 2); ctx.fill(); }
-
   // The arena footprints match the actual world geometry. Their entry markers sit outside the rails.
-
   for (const A of tmapSites()) {
-
     ctx.fillStyle = A.indoor ? '#bdb2a0' : A.key === 'dome' ? '#cbb994' : '#d9c49a'; ctx.fillRect(X(A.x - A.bx), Y(A.z - A.bz), A.bx * 2 * k, A.bz * 2 * k);
-
     ctx.strokeStyle = A.accent; ctx.lineWidth = Math.max(1.5, k); ctx.strokeRect(X(A.x - A.bx), Y(A.z - A.bz), A.bx * 2 * k, A.bz * 2 * k);
-
     const live = arenaLive(A);
-
     if (live) { const r = Math.max(6, A.bx * k) * (1 + 0.15 * Math.sin(G.realTime * 5)); ctx.strokeStyle = '#ff4b3a'; ctx.lineWidth = 2.5; ctx.beginPath(); ctx.arc(X(A.x), Y(A.z), r, 0, Math.PI * 2); ctx.stroke(); }
-
   }
-
   // fighters in the bout right now
-
   if (typeof BOUT !== 'undefined' && BOUT.on) { const o = W3.matchRoot ? W3.matchRoot.position : { x: 0, z: 0 }; for (const f of G.fighters || []) { if (f.out) continue; ctx.fillStyle = f.club && f.club.tabard ? f.club.tabard : '#888'; ctx.beginPath(); ctx.arc(X(f.pos.x + o.x), Y(f.pos.z + o.z), Math.max(1.4, k * 0.5), 0, Math.PI * 2); ctx.fill(); } }
-
   if (typeof GRAVE !== 'undefined') { ctx.fillStyle = '#5d6b55'; ctx.fillRect(X(GRAVE.x - 7), Y(GRAVE.z - 6), 14 * k, 12 * k); }
-
   // your waypoint
-
   if (TOWN.wp) { ctx.strokeStyle = '#f2c40f'; ctx.lineWidth = 2; ctx.setLineDash([4, 4]); ctx.beginPath(); ctx.moveTo(X(TRAVEL.startX != null ? TRAVEL.startX : TOWN.pos.x), Y(TRAVEL.startZ != null ? TRAVEL.startZ : TOWN.pos.z)); for (const [x, z] of TRAVEL.path || []) ctx.lineTo(X(x), Y(z)); if (!(TRAVEL.path || []).length) ctx.lineTo(X(TOWN.wp.x), Y(TOWN.wp.z)); ctx.stroke(); ctx.setLineDash([]); ctx.fillStyle = '#f2c40f'; ctx.beginPath(); ctx.arc(X(TOWN.wp.x), Y(TOWN.wp.z), 5, 0, Math.PI * 2); ctx.fill(); }
-
   // place names: districts when zoomed out, the fairground's corners when zoomed in
-
   if (view.labels) {
-
     ctx.textAlign = 'center'; ctx.textBaseline = 'middle';
-
     const lab = (n, x, z, sz, col) => { ctx.font = `700 ${sz}px system-ui, sans-serif`; ctx.lineWidth = 3; ctx.strokeStyle = 'rgba(20,24,18,.75)'; ctx.strokeText(n, X(x), Y(z)); ctx.fillStyle = col; ctx.fillText(n, X(x), Y(z)); };
-
-    if (k >= 1.5) for (const D of DISTRICTS) if (D.key !== 'fair' || k < 2) lab(D.name, D.x, D.z - (D.key === 'bailey' ? 64 : D.key === 'ward' ? -4 : 0) - (D.key === 'fair' ? 0 : 22), k < 2 ? 13 : 15, '#f7e7b8');
-
+    if (k >= 1.5) { for (const D of DISTRICTS) if (D.key !== 'fair' || k < 2) lab(D.name, D.x, D.z - (D.key === 'bailey' ? 64 : D.key === 'ward' ? -4 : 0) - (D.key === 'fair' ? 0 : 22), k < 2 ? 13 : 15, '#f7e7b8'); }
+    else if (!view.round) { for (const D of DISTRICTS.slice(6)) lab(D.name, D.x, D.z + (D.key === 'northwatch' ? 120 : -140), 12, '#f7e7b8'); }
     for (const A of tmapSites()) if (k >= 1.5) lab((arenaLive(A) ? '● ' : '') + A.name, A.x, A.z + A.bz + 8, 10, arenaLive(A) ? '#ff8a7a' : '#efe6cf');
-
     if (k >= 0.42) { lab('Hunter’s Rest', -224, -340, 10, '#e5ddb9'); lab('Ridge Waystation', 113, -351, 10, '#e5ddb9'); }
-
     if (k >= 2) for (const [n, x, z] of TMAP_PLACES) lab(n, x, z, Math.round(clamp(k * 3.2, 10, 14)), '#f3ecd8');
-
   }
-
   // vendors, stations, other players (vendors only once you're zoomed in enough to tell them apart)
-
   const hits = []; const icon = Math.round(clamp(k * 4.2, 11, 22));
-
   for (const M of tmapMarkers()) {
-
     const px = X(M.x), py = Y(M.z);
-
     if (px < -20 || py < -20 || px > w + 20 || py > H + 20) continue;
-
     if (M.kind === 'arena') {
-
       const radius = view.round ? 7 : 12;
-
       ctx.fillStyle = M.A.gate && !gateOpen(M.A.gate) ? '#6b5551' : M.A.accent;
-
       ctx.strokeStyle = '#f8e6bd'; ctx.lineWidth = 2; ctx.beginPath(); ctx.arc(px, py, radius, 0, Math.PI * 2); ctx.fill(); ctx.stroke();
-
       ctx.font = `${view.round ? 10 : 16}px system-ui, "Apple Color Emoji", "Segoe UI Emoji", sans-serif`; ctx.textAlign = 'center'; ctx.textBaseline = 'middle'; ctx.fillText(M.icon, px, py + 1);
-
-      if (view.labels && k < 1.5) {
-
-        const short = { dome: 'Dome', peasant: 'Millbrook', forest: 'Old Woods', beach: 'Lakeshore', castle: 'Bailey', hall: 'Great Hall', training: 'Training' }[M.A.key];
-
+      if (view.labels && k >= 0.55 && k < 1.5 && !DISTRICTS.slice(6).some(D => D.key === M.A.district)) {
+        const short = { dome: 'Dome', peasant: 'Millbrook', forest: 'Old Woods', beach: 'Lakeshore', castle: 'Bailey', hall: 'Great Hall', training: 'Training', foundry: 'Ashmarket', bridge: 'Stoneford', orchard: 'Southmere', northwatch: 'Northwatch' }[M.A.key] || M.A.name;
         ctx.font = '700 11px system-ui, sans-serif'; ctx.lineWidth = 3; ctx.strokeStyle = '#20251c'; ctx.strokeText(short, px, py + 23); ctx.fillStyle = '#fff1d5'; ctx.fillText(short, px, py + 23);
-
       }
-
       hits.push({ px, py, M }); continue;
-
     }
-
     if (M.kind === 'node') { if (k < 0.9 && !view.round) continue; ctx.fillStyle = M.col; ctx.strokeStyle = 'rgba(0,0,0,.6)'; ctx.lineWidth = 1; ctx.beginPath(); ctx.arc(px, py, Math.max(2.2, k * 1.1), 0, Math.PI * 2); ctx.fill(); ctx.stroke(); hits.push({ px, py, M }); continue; }
-
     if (M.kind === 'player') {
-
       ctx.fillStyle = '#36c2ff'; ctx.strokeStyle = '#0b1a22'; ctx.lineWidth = 2; ctx.beginPath(); ctx.arc(px, py, Math.max(3.5, k * 1.4), 0, Math.PI * 2); ctx.fill(); ctx.stroke();
-
       if (view.labels) { ctx.font = `700 ${Math.round(icon * 0.62)}px system-ui, sans-serif`; ctx.fillStyle = '#bfeaff'; ctx.textAlign = 'center'; ctx.fillText(M.name, px, py - icon * 0.8); }
-
     } else {
-
       if (k < 1.6 && !M.far) { if (!view.round) continue; }
-
       ctx.fillStyle = 'rgba(14,16,14,.72)'; ctx.beginPath(); ctx.arc(px, py, icon * 0.68, 0, Math.PI * 2); ctx.fill();
-
       ctx.font = `${icon}px system-ui, "Apple Color Emoji", "Segoe UI Emoji", sans-serif`; ctx.textAlign = 'center'; ctx.textBaseline = 'middle'; ctx.fillText(M.icon, px, py + 1);
-
     }
-
     hits.push({ px, py, M });
-
   }
-
   // you
-
   if (TOWN.pos) {
-
     const px = X(TOWN.pos.x), py = Y(TOWN.pos.z), f = TOWN.face || 0, s = Math.max(7, Math.min(12, k * 2.6)), dx = Math.sin(f), dy = Math.cos(f);
-
     ctx.fillStyle = '#ff3d3d'; ctx.strokeStyle = '#fff'; ctx.lineWidth = 2; ctx.beginPath();
-
     ctx.moveTo(px + dx * s, py + dy * s); ctx.lineTo(px - dx * s * 0.6 + dy * s * 0.6, py - dy * s * 0.6 - dx * s * 0.6); ctx.lineTo(px - dx * s * 0.25, py - dy * s * 0.25); ctx.lineTo(px - dx * s * 0.6 - dy * s * 0.6, py - dy * s * 0.6 + dx * s * 0.6); ctx.closePath(); ctx.fill(); ctx.stroke();
-
   }
-
   if (view.round) { ctx.restore(); ctx.save(); ctx.strokeStyle = 'rgba(240,230,210,.85)'; ctx.lineWidth = 2; ctx.beginPath(); ctx.arc(w / 2, H / 2, Math.min(w, H) / 2 - 1, 0, Math.PI * 2); ctx.stroke(); ctx.fillStyle = '#f3ecd8'; ctx.font = '700 10px system-ui'; ctx.textAlign = 'center'; ctx.fillText('N', w / 2, 9); }
-
   else { ctx.fillStyle = 'rgba(18,31,25,.8)'; ctx.fillRect(w - 37, 8, 29, 33); ctx.font = '700 17px system-ui'; ctx.textAlign = 'center'; ctx.fillStyle = '#f7e7b8'; ctx.fillText('N', w - 22, 31); }
-
   ctx.restore();
-
   return hits;
-
 }
-
 // is a fight on in this arena right now? (yours, or a real BuhurtOS fight mirrored there)
-
 function arenaLive(A) { return !!((typeof BOUT !== 'undefined' && BOUT.on && TOWN.boutArena === A.key) || A.live); }
-
 // the big map: drag to pan, pinch / wheel / buttons to zoom, tap a marker (or anywhere) to set a waypoint
-
 function townMapCanvas() {
-
   const wrap = h('div', { class: 'tmapwrap' }), cv = h('canvas', { class: 'tmap', 'aria-label': 'Realm map. Drag to look around, tap to set a waypoint.' });
-
   const tip = h('div', { class: 'tmaptip muted small' }, 'Choose an arena below or tap its marker. The gold trail leads to its entrance; locked gates still require their writ.');
-
   const V = TMAP.view = TMAP.view || { cx: TOWN.pos.x, cz: TOWN.pos.z, k: 0 };
-
   const zb = (t, f) => h('button', { class: 'btn tape small', onclick: e => { e.stopPropagation(); f(); draw(); } }, t);
-
   const bar = h('div', { class: 'tmapbar' }, zb('−', () => V.k = Math.max(V.kmin, V.k / 1.5)), zb('+', () => V.k = Math.min(9, V.k * 1.5)), zb('Me', () => { V.cx = TOWN.pos.x; V.cz = TOWN.pos.z; V.k = Math.max(V.k, 2.4); }), zb('Realm', () => { V.k = V.kmin; V.cx = 0; V.cz = -5; }));
-
   const stops = placesDirectory(r => { setWaypoint(r.x, r.z, r.name); V.cx = r.x; V.cz = r.z; V.k = Math.max(V.k, 2); tip.textContent = `Waypoint set: ${r.name}. Follow the gold markers.`; draw(); });
-
   wrap.append(bar, cv, tip, h('div', { class: 'tmaplegend muted small' }, '🏟️ Arena  ·  🔴 Live bout  ·  Gold trail: route  ·  Grey marker: locked gate'), stops);
-
   let W = 0, H = 0;
-
   const draw = () => {
-
-    W = Math.max(260, Math.min(wrap.clientWidth || 640, 760)); H = Math.round(W * 0.9); const dpr = Math.min(2, window.devicePixelRatio || 1);
-
+    W = Math.max(260, Math.min(wrap.clientWidth || 640, 760)); H = Math.max(170, Math.min(Math.round(W * 0.9), window.innerHeight - 180)); const dpr = Math.min(2, window.devicePixelRatio || 1);
     V.kmin = Math.min(W / (TOWN_RX * 2 + 20), H / (TOWN_RZ * 2 + 20)); if (!V.k) { V.k = V.kmin; V.cx = 0; V.cz = -5; }
-
     cv.width = W * dpr; cv.height = H * dpr; cv.style.width = W + 'px'; cv.style.height = H + 'px';
-
     const ctx = cv.getContext('2d'); ctx.setTransform(dpr, 0, 0, dpr, 0, 0);
-
     TMAP.hits = drawTownMap(ctx, { w: W, h: H, scale: V.k, cx: V.cx, cz: V.cz, labels: true });
-
   };
-
   const pts = new Map(); let moved = 0, pinch0 = 0, k0 = 0;
-
   cv.addEventListener('pointerdown', e => { cv.setPointerCapture && cv.setPointerCapture(e.pointerId); pts.set(e.pointerId, { x: e.clientX, y: e.clientY }); moved = 0; if (pts.size === 2) { const [a, b] = [...pts.values()]; pinch0 = Math.hypot(a.x - b.x, a.y - b.y); k0 = V.k; } });
-
   cv.addEventListener('pointermove', e => {
-
     const p = pts.get(e.pointerId); if (!p) return;
-
     if (pts.size === 2) { p.x = e.clientX; p.y = e.clientY; const [a, b] = [...pts.values()]; const d = Math.hypot(a.x - b.x, a.y - b.y); V.k = clamp(k0 * d / (pinch0 || 1), V.kmin, 9); moved = 99; draw(); return; }
-
     const dx = e.clientX - p.x, dy = e.clientY - p.y; moved += Math.abs(dx) + Math.abs(dy); p.x = e.clientX; p.y = e.clientY;
-
     if (moved > 6) { V.cx -= dx / V.k; V.cz -= dy / V.k; draw(); }
-
   });
-
   const up = e => {
-
     const had = pts.has(e.pointerId); pts.delete(e.pointerId); if (!had || moved > 6) return;
-
     const r = cv.getBoundingClientRect(), x = e.clientX - r.left, y = e.clientY - r.top;
-
     let best = null, bd = 24; for (const H0 of TMAP.hits) { const d = Math.hypot(H0.px - x, H0.py - y); if (d < bd) { bd = d; best = H0; } }
-
     AU.click();
-
     if (best) {
-
       const M = best.M;
-
       if (M.kind === 'arena') setWaypoint(M.A.entry[0], M.A.entry[1], M.name);
-
       else if (M.kind === 'player') setWaypoint(M.x, M.z, M.name);
-
       else if (M.kind === 'node') setWaypoint(M.S.ax, M.S.az, M.name);
-
       else setWaypoint(M.S.ax, M.S.az, M.name);
-
     } else {
-
       const wx = V.cx + (x - W / 2) / V.k, wz = V.cz + (y - H / 2) / V.k;
-
       const A = tmapSites().find(a => Math.abs(wx - a.x) < a.bx && Math.abs(wz - a.z) < a.bz);
-
       if (A) setWaypoint(A.entry[0], A.entry[1], A.name);
-
       else if (Math.hypot(wx / TOWN_RX, wz / TOWN_RZ) < 0.98) setWaypoint(wx, wz, districtAt(wx, wz).name);
-
       else return;
-
     }
-
     tip.textContent = `Waypoint set: ${TOWN.wp.label}. Follow the gold markers.`; draw();
-
   };
-
   cv.addEventListener('pointerup', up); cv.addEventListener('pointercancel', e => pts.delete(e.pointerId));
-
   cv.addEventListener('wheel', e => { e.preventDefault(); V.k = clamp(V.k * (e.deltaY < 0 ? 1.2 : 1 / 1.2), V.kmin || 0.4, 9); draw(); }, { passive: false });
-
   requestAnimationFrame(draw); setTimeout(draw, 120);
-
   return wrap;
-
 }
-
 // the corner minimap: follows you, redrawn a few times a second
-
 function updateMiniMap(dt) {
-
   const cv = $('#townMini'); if (!cv) return;
-
   const show = TOWN.on && !G.screen && G.settings.minimap !== false; cv.hidden = !show; if (!show) return;
-
   TMAP.miniT -= dt; if (TMAP.miniT > 0) return; TMAP.miniT = 0.2;
-
   const S = cv.clientWidth || 120, dpr = Math.min(2, window.devicePixelRatio || 1);
-
   if (cv.width !== S * dpr) { cv.width = S * dpr; cv.height = S * dpr; }
-
   const ctx = cv.getContext('2d'); ctx.setTransform(dpr, 0, 0, dpr, 0, 0);
-
   if (TOWN.mineOn) drawDeepMineMap(ctx, S, S, true);
-
   else drawTownMap(ctx, { w: S, h: S, scale: S / (TOWN.mounted ? 150 : 100), cx: TOWN.pos.x, cz: TOWN.pos.z, labels: false, round: true });
-
 }
 // ===================================================================
 // Costumed townsfolk: Quaternius' Modular Character Outfits (CC0) worn on the UAL mannequin.
@@ -45446,10 +44274,10 @@ const DISTRICTS = [
   { key: 'lake', name: 'Mirror Lake', x: 200, z: 40, r: 95 },
   { key: 'bailey', name: 'The Outer Bailey', x: 0, z: -228, r: 120, gate: 'bailey' },
   { key: 'ward', name: 'The King’s Court', x: 0, z: -252, r: 46, gate: 'royal' }
-  ,{ key: 'ashmarket', name: 'Ashmarket', x: -840, z: -250, r: 120 }
-  ,{ key: 'stoneford', name: 'Stoneford', x: 890, z: 140, r: 130 }
-  ,{ key: 'southmere', name: 'Southmere', x: -90, z: 900, r: 135 }
-  ,{ key: 'northwatch', name: 'Northwatch Fortress', x: 0, z: -1030, r: 125 }
+  ,{ key: 'ashmarket', name: 'Ashmarket', x: -510, z: -250, r: 120 }
+  ,{ key: 'stoneford', name: 'Stoneford', x: 530, z: 140, r: 130 }
+  ,{ key: 'southmere', name: 'Southmere', x: -90, z: 620, r: 135 }
+  ,{ key: 'northwatch', name: 'Northwatch Fortress', x: 0, z: -690, r: 125 }
 ];
 // arenas: every one is a 20 x 30 list (LIST) so the fight engine runs unchanged; the bout plays at the nearest one
 const ARENAS = [
@@ -45459,10 +44287,10 @@ const ARENAS = [
   { key: 'beach', name: 'Mirror Lake Strand', x: 148, z: 78, bx: 13, bz: 18, district: 'lake', icon: '🌊', accent: '#3185ac', entry: [148, 103] },
   { key: 'castle', name: 'Bailey Stone Lists', x: -74, z: -204, bx: 14, bz: 19, district: 'bailey', gate: 'bailey', icon: '🏰', accent: '#647084', entry: [-74, -179] },
   { key: 'hall', name: 'King’s Great Hall', x: 0, z: -264, bx: 12, bz: 15, district: 'ward', gate: 'royal', indoor: true, icon: '👑', accent: '#b78a35', entry: [0, -244] }
-  ,{ key: 'foundry', name: 'Foundry Pit', x: -902, z: -260, bx: 14, bz: 19, district: 'ashmarket', icon: '⚒️', accent: '#ad6135', entry: [-902, -236] }
-  ,{ key: 'bridge', name: 'Bridge Lists', x: 947, z: 161, bx: 14, bz: 19, district: 'stoneford', icon: '🌉', accent: '#4c7290', entry: [947, 185] }
-  ,{ key: 'orchard', name: 'Orchard Lists', x: -22, z: 943, bx: 14, bz: 19, district: 'southmere', icon: '🌿', accent: '#7d9855', entry: [-22, 967] }
-  ,{ key: 'northwatch', name: 'Northwatch Yard', x: 58, z: -1060, bx: 14, bz: 19, district: 'northwatch', icon: '🏰', accent: '#536d79', entry: [58, -1036] }
+  ,{ key: 'foundry', name: 'Foundry Pit', x: -572, z: -260, bx: 14, bz: 19, district: 'ashmarket', icon: '⚒️', accent: '#ad6135', entry: [-572, -236] }
+  ,{ key: 'bridge', name: 'Bridge Lists', x: 587, z: 161, bx: 14, bz: 19, district: 'stoneford', icon: '🌉', accent: '#4c7290', entry: [587, 185] }
+  ,{ key: 'orchard', name: 'Orchard Lists', x: -22, z: 663, bx: 14, bz: 19, district: 'southmere', icon: '🌿', accent: '#7d9855', entry: [-22, 687] }
+  ,{ key: 'northwatch', name: 'Northwatch Yard', x: 58, z: -720, bx: 14, bz: 19, district: 'northwatch', icon: '🏰', accent: '#536d79', entry: [58, -696] }
 ];
 // A walk-in practice list, separate from the six competitive/spectator arenas.
 const TRAINING_GROUND = { key: 'training', name: 'Fairground Training Yard', x: -58, z: -56, bx: 12, bz: 17,
@@ -46214,37 +45042,47 @@ const REALM_TIERS = {
 };
 // Four authored destinations. Streets, lots and planting are deliberate; no settlement uses random prop scatter.
 const CITY_SITES = {
-  ashmarket: { x: -840, z: -250, name: 'Ashmarket', colour: '#984f31' },
-  stoneford: { x: 890, z: 140, name: 'Stoneford', colour: '#496f85' },
-  southmere: { x: -90, z: 900, name: 'Southmere', colour: '#71884c' },
-  northwatch: { x: 0, z: -1030, name: 'Northwatch Fortress', colour: '#526574' }
+  ashmarket: { x: -510, z: -250, name: 'Ashmarket', colour: '#984f31' },
+  stoneford: { x: 530, z: 140, name: 'Stoneford', colour: '#496f85' },
+  southmere: { x: -90, z: 620, name: 'Southmere', colour: '#71884c' },
+  northwatch: { x: 0, z: -690, name: 'Northwatch Fortress', colour: '#526574' }
 };
+const STONEFORD_RIVER = { x0: 607.5, x1: 642.5, z0: -70, z1: 350 };
+function stonefordWaterBlocked(x, z, r = 0) {
+  const W = STONEFORD_RIVER;
+  return x > W.x0 - r && x < W.x1 + r && z > W.z0 - r && z < W.z1 + r;
+}
+function stonefordWaterPush(P, r) {
+  if (!stonefordWaterBlocked(P.x, P.z, r)) return;
+  const W = STONEFORD_RIVER;
+  P.x = Math.abs(P.x - W.x0) < Math.abs(P.x - W.x1) ? W.x0 - r : W.x1 + r;
+}
 ROADS.push(
-  { name: 'ashmarket-road', pts: [[-333, 48], [-390, 24], [-455, -8], [-520, -52], [-585, -91], [-652, -132], [-715, -179], [-780, -220], [-840, -220], [-840, -250]], w: 6 },
-  { name: 'stoneford-road', pts: [[340, 94], [410, 100], [480, 109], [550, 112], [620, 124], [690, 131], [760, 138], [825, 140], [890, 140]], w: 6 },
-  { name: 'southmere-road', pts: [[-12, 392], [-22, 465], [-34, 535], [-45, 610], [-55, 685], [-69, 760], [-82, 830], [-90, 900]], w: 6 },
-  { name: 'northwatch-road', pts: [[27, -369], [39, -445], [34, -520], [22, -595], [13, -670], [4, -746], [0, -820], [0, -896], [0, -970], [0, -1030]], w: 6 },
-  { name: 'ashmarket-forge-street', pts: [[-840, -220], [-840, -250], [-840, -295]], w: 7 },
-  { name: 'stoneford-armour-lane', pts: [[825, 140], [890, 140], [930, 140]], w: 7 },
-  { name: 'southmere-stable-lane', pts: [[-90, 900], [-90, 850], [-90, 810]], w: 6 },
-  { name: 'northwatch-yard', pts: [[0, -970], [0, -1030], [0, -1095]], w: 7 }
+  { name: 'ashmarket-road', pts: [[-333, 48], [-369, 9], [-401, -38], [-432, -91], [-467, -143], [-500, -194], [-510, -220], [-510, -250]], w: 6 },
+  { name: 'stoneford-road', pts: [[340, 94], [392, 103], [440, 117], [490, 132], [530, 140]], w: 6 },
+  { name: 'southmere-road', pts: [[-12, 392], [-27, 451], [-48, 505], [-69, 560], [-90, 620]], w: 6 },
+  { name: 'northwatch-road', pts: [[27, -369], [29, -433], [22, -497], [12, -559], [0, -622], [0, -690]], w: 6 },
+  { name: 'ashmarket-forge-street', pts: [[-510, -220], [-510, -250], [-510, -295]], w: 7 },
+  { name: 'stoneford-armour-lane', pts: [[490, 140], [530, 140], [570, 140]], w: 7 },
+  { name: 'southmere-stable-lane', pts: [[-90, 620], [-90, 570], [-90, 530]], w: 6 },
+  { name: 'northwatch-yard', pts: [[0, -630], [0, -690], [0, -755]], w: 7 }
 );
 const CITY_VENDORS = [
-  { key: 'asmith', as: 'smith', tier: 3, siteBuilding: true, name: 'Mara Flint', role: 'Ashmarket master weapon smith', col: '#80513b', awn: '#984f31', hi: 'Bring your steel to the foundry. I can balance and finish what the fairground cannot.', icon: '⚒️', at: [-850, -271], ry: Math.PI / 2 },
-  { key: 'sarmour', as: 'armour', tier: 3, siteBuilding: true, name: 'Aldric Platewright', role: 'Stoneford master armourer', col: '#4c6473', awn: '#496f85', hi: 'A fitted harness is measured, tested and repaired at the bench.', icon: '🛡️', at: [876, 140], ry: Math.PI / 2 },
-  { key: 'ntrainer', as: 'trainer', tier: 3, siteBuilding: true, name: 'Drillmaster Kael', role: 'Northwatch master trainer', col: '#536677', awn: '#526574', hi: 'Tuition earns instruction. Practice earns the strength to use it.', icon: '🏋️', at: [-21, -1071], ry: Math.PI / 2 }
+  { key: 'asmith', as: 'smith', tier: 3, siteBuilding: true, name: 'Mara Flint', role: 'Ashmarket master weapon smith', col: '#80513b', awn: '#984f31', hi: 'Bring your steel to the foundry. I can balance and finish what the fairground cannot.', icon: '⚒️', at: [-520, -271], ry: Math.PI / 2 },
+  { key: 'sarmour', as: 'armour', tier: 3, siteBuilding: true, name: 'Aldric Platewright', role: 'Stoneford master armourer', col: '#4c6473', awn: '#496f85', hi: 'A fitted harness is measured, tested and repaired at the bench.', icon: '🛡️', at: [523, 140], ry: Math.PI / 2 },
+  { key: 'ntrainer', as: 'trainer', tier: 3, siteBuilding: true, name: 'Drillmaster Kael', role: 'Northwatch master trainer', col: '#536677', awn: '#526574', hi: 'Tuition earns instruction. Practice earns the strength to use it.', icon: '🏋️', at: [-16, -731], ry: Math.PI / 2 }
 ];
 VENDORS.push(...CITY_VENDORS);
 for (const V of CITY_VENDORS) {
   VENDOR_BY[V.key] = V; STALL_AT[V.key] = V.at; STALL_FACE[V.key] = V.ry;
   VENDOR_FIT[V.key] = V.key === 'sarmour' ? 'Male_Ranger' : V.key === 'asmith' ? 'Female_Peasant' : 'Male_Ranger';
 }
-STATIONS.push({ key: 'southmere:riding', name: 'Edda of Southmere', role: 'Riding school', icon: '🐴', at: [-103, 857], ry: Math.PI, district: 'southmere' });
+STATIONS.push({ key: 'southmere:riding', name: 'Edda of Southmere', role: 'Riding school', icon: '🐴', at: [-97, 577], ry: Math.PI, district: 'southmere' });
 for (const [arena, x, z, names, district] of [
-  ['foundry', -902, -236, ['Foundry Marshal', 'Ashmarket Herald', 'Foundry Crier'], 'ashmarket'],
-  ['bridge', 947, 185, ['Bridge Marshal', 'Stoneford Herald', 'Bridge Crier'], 'stoneford'],
-  ['orchard', -22, 967, ['Orchard Marshal', 'Southmere Herald', 'Orchard Crier'], 'southmere'],
-  ['northwatch', 58, -1036, ['Yard Marshal', 'Northwatch Herald', 'Yard Crier'], 'northwatch']
+  ['foundry', -572, -236, ['Foundry Marshal', 'Ashmarket Herald', 'Foundry Crier'], 'ashmarket'],
+  ['bridge', 587, 185, ['Bridge Marshal', 'Stoneford Herald', 'Bridge Crier'], 'stoneford'],
+  ['orchard', -22, 687, ['Orchard Marshal', 'Southmere Herald', 'Orchard Crier'], 'southmere'],
+  ['northwatch', 58, -696, ['Yard Marshal', 'Northwatch Herald', 'Yard Crier'], 'northwatch']
 ]) ['marshal', 'giant', 'crier'].forEach((service, i) => STATIONS.push({
   key: `${arena}:${service}`, service, arena, name: names[i],
   role: ['Lists marshal', 'Tournament herald', 'Online crier'][i],
@@ -46304,9 +45142,22 @@ function cityPaving(R, x, z, w, d, colour) {
   g.rotation.x = -Math.PI / 2; g.receiveShadow = true;
 }
 function buildExpandedCities(R) {
-  buildAshmarket(R); buildStoneford(R); buildSouthmere(R); buildNorthwatch(R);
+  // Preserve the authored blocks, then flatten their translated objects so
+  // realmCells indexes every building at its final world position.
+  for (const [build, dx, dz] of [[buildAshmarket, 330, 0], [buildStoneford, -360, 0], [buildSouthmere, 0, -280], [buildNorthwatch, 0, 340]]) {
+    const local = new THREE.Group(), firstObstacle = TOWN.obst.length;
+    build(local);
+    for (const child of [...local.children]) { child.position.x += dx; child.position.z += dz; R.add(child); }
+    for (let i = firstObstacle; i < TOWN.obst.length; i++) { TOWN.obst[i].x += dx; TOWN.obst[i].z += dz; }
+  }
+  for (const [key, look] of [
+    ['foundry', { floor: '#725f52', floorTex: 'dirt', bench: '#65473a', signCol: '#984f31' }],
+    ['bridge', { floor: '#a6a19a', floorTex: 'cobble', bench: '#6a6b69', signCol: '#496f85' }],
+    ['orchard', { floor: '#9eaf70', floorTex: 'forest', bench: '#8b784d', signCol: '#71884c' }],
+    ['northwatch', { floor: '#91928c', floorTex: 'dirt', bench: '#4e5861', signCol: '#526574' }]
+  ]) arenaList(R, ARENAS.find(a => a.key === key), look);
   // Plant the approaches as belts. Settled blocks stay under the explicit city layouts below.
-  for (const [x, z, r, seed] of [[-570, -95, 62, 'ashroad'], [590, 175, 75, 'riverroad'], [-115, 680, 75, 'southroad'], [115, -760, 70, 'northroad']])
+  for (const [x, z, r, seed] of [[-415, -95, 50, 'ashroad'], [420, 175, 55, 'riverroad'], [-115, 510, 50, 'southroad'], [115, -555, 55, 'northroad']])
     realmForest(R, x, z, r, IS_TOUCH ? 15 : 28, [['kf_tree_1_a', 1.1, 1], ['kf_tree_2_b', 1.1, 1], ['kf_bush_3_a', 1.2, 0.5]], seed);
 }
 function buildAshmarket(R) {
@@ -46335,7 +45186,6 @@ function buildAshmarket(R) {
   for (const [xx, zz] of [[-879, -247], [-877, -250], [-875, -253]]) cityPiece(R, 'rt_pulley_crate', xx, zz, 0, 0.9, 0.5);
   for (const [xx, zz] of [[-814, -242], [-814, -259], [-814, -277]]) cityLamp(R, xx, zz);
   citySign(R, 'ASHMARKET · WEAPON FORGES', -864, -197, 0, '#984f31');
-  arenaList(R, ARENAS.find(a => a.key === 'foundry'), { floor: '#725f52', floorTex: 'dirt', bench: '#65473a', signCol: '#984f31' });
 }
 function buildStoneford(R) {
   realmGround(R, 830, 955, 103, 198, '#a6a7a2', 'cobble');
@@ -46353,10 +45203,11 @@ function buildStoneford(R) {
   for (const zz of [100, 180]) { cityTree(R, 'kf_tree_2_b', 878, zz, 1.25); cityTree(R, 'kf_tree_2_b', 902, zz, 1.25); }
   for (const zz of [105, 174]) { cityPennant(R, 883, zz, '#355c72'); cityPennant(R, 897, zz, '#718fa0'); }
   for (const [xx, zz] of [[869, 131], [869, 151]]) cityPiece(R, 'bf_armor_rack', xx, zz, Math.PI / 2, 1, 0.7);
-  for (const [xx, zz] of [[948, 108], [948, 123], [948, 138]]) cityPiece(R, 'rt_dock_side', xx, zz, Math.PI / 2, 1.1, 1);
-  const water = mk(R, new THREE.PlaneGeometry(35, 420), lmat({ color: '#486e79', roughness: 0.3, metalness: 0.08, transparent: true, opacity: 0.88, side: THREE.DoubleSide }), 978, gy(978, 140) + 0.07, 140, false);
+  for (const [xx, zz] of [[962, 108], [962, 123], [962, 138]]) cityPiece(R, 'rt_dock_side', xx, zz, Math.PI / 2, 1.1, 1);
+  // Leave a dry strip outside Bridge Lists' rope and the spectator approach.
+  const water = mk(R, new THREE.PlaneGeometry(35, 420), lmat({ color: '#486e79', roughness: 0.3, metalness: 0.08, transparent: true, opacity: 0.88, side: THREE.DoubleSide }), 985, gy(985, 140) + 0.07, 140, false);
   water.rotation.x = -Math.PI / 2; water.receiveShadow = true;
-  cityPiece(R, 'ck_bridge_straight', 959, 140, Math.PI / 2, 1, 2);
+  cityPiece(R, 'ck_bridge_straight', 973, 140, Math.PI / 2, 1, 2);
   for (const [xx, zz] of [[934, 110], [938, 128]]) cityPiece(R, 'rt_pulley_crate', xx, zz, 0, 1, 0.6);
   for (const zz of [110, 140, 174]) cityLamp(R, 900, zz);
   // Citadel: four walls around a court, with an ungated entrance toward the market.
@@ -46365,7 +45216,6 @@ function buildStoneford(R) {
   for (const [xx, zz] of [[846, 12], [935, 12], [846, 55], [935, 55]]) castleTower(R, xx, zz, 1, '#496f85');
   cityHouse(R, 890, 30, 22, 13, 0, { h: 8, allStone: true, roof: '#4b5e70', sign: 'STONEFORD CITADEL' });
   citySign(R, 'STONEFORD · MASTER ARMOURERS', 865, 204, 0, '#496f85');
-  arenaList(R, ARENAS.find(a => a.key === 'bridge'), { floor: '#a6a19a', floorTex: 'cobble', bench: '#6a6b69', signCol: '#496f85' });
 }
 function buildSouthmere(R) {
   realmGround(R, -155, -12, 835, 990, '#b8ab83', 'path');
@@ -46387,7 +45237,6 @@ function buildSouthmere(R) {
   for (const xx of [-165, -153, -141, -129]) for (const zz of [1008, 1023, 1038]) cityTree(R, 'kf_tree_1_a', xx, zz, 1.0);
   for (const [xx, zz] of [[-107, 888], [-75, 888], [-107, 932], [-75, 932]]) cityLamp(R, xx, zz);
   citySign(R, 'SOUTHMERE · STABLES & RIDING', -114, 1006, 0, '#71884c');
-  arenaList(R, ARENAS.find(a => a.key === 'orchard'), { floor: '#9eaf70', floorTex: 'forest', bench: '#8b784d', signCol: '#71884c' });
 }
 function buildNorthwatch(R) {
   realmGround(R, -75, 98, -1108, -959, '#919694', 'cobble');
@@ -46411,7 +45260,6 @@ function buildNorthwatch(R) {
   for (const zz of [-989, -1030, -1086]) for (const xx of [-6, 13]) cityLamp(R, xx, zz);
   citySign(R, 'NORTHWATCH · FIGHTER TRAINING', -25, -949, 0, '#526574');
   for (const xx of [-113, -99, 116, 130]) for (const zz of [-987, -1012, -1040, -1072]) cityTree(R, 'kf_tree_2_b', xx, zz, 1.15);
-  arenaList(R, ARENAS.find(a => a.key === 'northwatch'), { floor: '#91928c', floorTex: 'dirt', bench: '#4e5861', signCol: '#526574' });
 }
 // Tuition teaches a discipline; successful practice earns the existing capped drill ranks.
 const TRAIN_LESSONS = [
@@ -46472,13 +45320,13 @@ function trainingTownTick(before, walking, sprint) {
   const t = trainingState();
   const rank = shopState().lv[t.active] || 0;
   const fairYard = rank < 3 && Math.hypot(TOWN.pos.x + 58, TOWN.pos.z + 56) < 36;
-  const northYard = Math.hypot(TOWN.pos.x, TOWN.pos.z + 1030) < 92;
+  const northYard = Math.hypot(TOWN.pos.x, TOWN.pos.z + 690) < 92;
   if (!TOWN.mounted && (fairYard || northYard)) {
     if (t.active === 'd_sprint' && sprint) trainingCredit('d_sprint', distance);
     if (t.active === 'd_lungs') trainingCredit('d_lungs', distance);
   }
   const riding = CAREER.riding;
-  if (TOWN.mounted && riding && riding.paid > riding.rank && Math.hypot(TOWN.pos.x + 90, TOWN.pos.z - 850) < 100) {
+  if (TOWN.mounted && riding && riding.paid > riding.rank && Math.hypot(TOWN.pos.x + 90, TOWN.pos.z - 570) < 100) {
     riding.distance = (riding.distance || 0) + distance;
     if (riding.distance >= 200 + riding.rank * 150) {
       riding.distance = 0; riding.rank++; saveCareer(); toastMenu(`Riding lesson ${riding.rank} complete. Your horse responds more quickly to turns.`);
@@ -46544,8 +45392,10 @@ function realmTick(dt) {
 // It's only re-planned if you wander well off it. Autowalk follows the route with a look-ahead, so it rounds corners.
 // a waypoint on something solid (a wall, the list) snaps to the nearest open ground
 function freeNear(x, z) {
-  if (!navBlocked(x, z, 0.5)) return [x, z];
-  for (let r = 2; r <= 40; r += 2) for (let k = 0; k < 16; k++) { const a = k / 16 * TAU, nx = x + Math.cos(a) * r, nz = z + Math.sin(a) * r; if (!navBlocked(nx, nz, 0.6)) return [nx, nz]; }
+  // Use the same one-metre clearance as route segment validation. A point can
+  // be free for the player yet too close to a rope for the planner's path.
+  if (!navBlocked(x, z, 1.0)) return [x, z];
+  for (let r = 2; r <= 40; r += 2) for (let k = 0; k < 16; k++) { const a = k / 16 * TAU, nx = x + Math.cos(a) * r, nz = z + Math.sin(a) * r; if (!navBlocked(nx, nz, 1.0)) return [nx, nz]; }
   return [x, z];
 }
 function setWaypoint(x, z, label) {
@@ -46553,10 +45403,10 @@ function setWaypoint(x, z, label) {
   if (typeof playtestAction === 'function') playtestAction('waypoint', { x, z, label: label || 'Waypoint' });
   TOWN.wp = { x, z, label: label || 'Waypoint' }; AU.click && AU.click();
   travelPlan();
-  toastMenu(`Waypoint: ${TOWN.wp.label}. Follow the gold markers${IS_TOUCH ? ', or tap Walk there' : ' (R walks you there)'}.`);
+  toastMenu(TRAVEL.unreachable ? `No clear walking route to ${TOWN.wp.label}. Move closer or choose another spot.` : `Waypoint: ${TOWN.wp.label}. Follow the gold markers${IS_TOUCH ? ', or tap Walk there' : ' (R walks you there)'}.`);
   compassHud();
 }
-function clearWaypoint() { TOWN.wp = null; TRAVEL.path = []; TRAVEL.marks = []; TRAVEL.auto = false; TRAVEL.stuck = 0; if (TRAVEL.dots) TRAVEL.dots.count = 0; if (TRAVEL.beam) TRAVEL.beam.visible = false; compassHud(); }
+function clearWaypoint() { TOWN.wp = null; TRAVEL.path = []; TRAVEL.marks = []; TRAVEL.auto = false; TRAVEL.stuck = 0; TRAVEL.unreachable = false; if (TRAVEL.dots) TRAVEL.dots.count = 0; if (TRAVEL.beam) TRAVEL.beam.visible = false; compassHud(); }
 // the walk-to of old: now it marks the way instead of moving you
 function townWalkTo(key) { const S = TOWN.stalls.find(s => s.V.key === key); if (!S) return; setWaypoint(S.ax, S.az, S.V.name); }
 // for tests and debugging only: stand at someone's counter straight away
@@ -46571,7 +45421,9 @@ function buildWaypoint() {
 // plan the route from where you stand and lay the markers along it
 function travelPlan() {
   const W = TOWN.wp; if (!W || !TOWN.pos) return;
-  TRAVEL.path = realmRoute(TOWN.pos.x, TOWN.pos.z, W.x, W.z);
+  TRAVEL.path = realmRoute(TOWN.pos.x, TOWN.pos.z, W.x, W.z) || [];
+  TRAVEL.unreachable = !TRAVEL.path.length;
+  if (TRAVEL.unreachable) { TRAVEL.auto = false; TRAVEL.failedAt = { x: TOWN.pos.x, z: TOWN.pos.z }; }
   TRAVEL.marks = []; TRAVEL.stuck = 0; TRAVEL.replans = (TRAVEL.replans || 0) + 1;
   let px = TOWN.pos.x, pz = TOWN.pos.z, s = 0, carry = 2;
   for (const [x, z] of TRAVEL.path) { const seg = Math.hypot(x - px, z - pz); while (carry <= seg) { const t = carry / seg; TRAVEL.marks.push([px + (x - px) * t, pz + (z - pz) * t, s + carry]); carry += 3; } carry -= seg; s += seg; px = x; pz = z; }
@@ -46595,10 +45447,22 @@ function updateWaypoint(dt) {
   const W = TOWN.wp; if (!W || !TOWN.pos) { if (TRAVEL.beam) TRAVEL.beam.visible = false; return; }
   const d = Math.hypot(W.x - TOWN.pos.x, W.z - TOWN.pos.z);
   if (d < 3) { toastMenu(`You’re there: ${W.label}.`); clearWaypoint(); return; }
-  if (!TRAVEL.path.length) travelPlan();
+  if (!TRAVEL.path.length && (!TRAVEL.unreachable || Math.hypot(TOWN.pos.x - TRAVEL.failedAt.x, TOWN.pos.z - TRAVEL.failedAt.z) > 6)) travelPlan();
+  if (!TRAVEL.path.length) { TRAVEL.auto = false; if (TRAVEL.dots) TRAVEL.dots.count = 0; compassHud(d); return; }
   const pr = travelProgress(); TRAVEL.progress = Math.max(TRAVEL.progress || 0, pr.s); TRAVEL.off = pr.off;
   // wandered well off the route (or autowalk is stuck on something): plan again from here
-  if (pr.off > 12 || TRAVEL.stuck > 1.4) { TRAVEL.stuckLog = (TRAVEL.stuckLog || []).concat([[Math.round(TOWN.pos.x), Math.round(TOWN.pos.z)]]); TRAVEL.startX = TOWN.pos.x; TRAVEL.startZ = TOWN.pos.z; travelPlan(); }
+  if (pr.off > 12 || TRAVEL.stuck > 1.4) {
+    const now = performance.now();
+    if (!TRAVEL.lastReplanAt || now - TRAVEL.lastReplanAt > 1200) {
+      TRAVEL.lastReplanAt = now;
+      TRAVEL.stuckLog = (TRAVEL.stuckLog || []).concat([[Math.round(TOWN.pos.x), Math.round(TOWN.pos.z)]]);
+      const moved = TRAVEL.lastReplanPos ? Math.hypot(TOWN.pos.x - TRAVEL.lastReplanPos.x, TOWN.pos.z - TRAVEL.lastReplanPos.z) : Infinity;
+      TRAVEL.noProgress = moved < 1 ? (TRAVEL.noProgress || 0) + 1 : 0;
+      TRAVEL.lastReplanPos = { x: TOWN.pos.x, z: TOWN.pos.z };
+      if (TRAVEL.noProgress >= 3) { TRAVEL.auto = false; TRAVEL.unreachable = true; TRAVEL.failedAt = TRAVEL.lastReplanPos; TRAVEL.path = []; TRAVEL.marks = []; toastMenu('Walk there stopped: no clear route from here. Move or choose another waypoint.'); }
+      else travelPlan();
+    }
+  }
   // markers from just behind you to 60 m ahead; they're fixed points, only which ones show changes
   const D = TRAVEL.dots, m4 = new THREE.Matrix4(); let k = 0;
   for (const [x, z, s] of TRAVEL.marks) { if (s < TRAVEL.progress - 2) continue; if (s > TRAVEL.progress + 60 || k >= D.instanceMatrix.count) break; m4.makeTranslation(x, gy(x, z) + 0.08 + 0.03 * Math.sin(G.realTime * 4 + s), z); D.setMatrixAt(k++, m4); }
@@ -46609,16 +45473,24 @@ function updateWaypoint(dt) {
 // the route: local legs on the grid, the roads in between
 function realmRoute(sx, sz, tx, tz) {
   TRAVEL.startX = sx; TRAVEL.startZ = sz;
+  const safe = path => path && routeSafe(sx, sz, path) ? path : null;
   const direct = Math.hypot(tx - sx, tz - sz);
-  if (direct < 70) { const L = localPath(sx, sz, tx, tz) || (direct < 40 ? localPath(sx, sz, tx, tz, 70) : null); if (L) return L; }
+  if (lineFree(sx, sz, tx, tz)) return [[tx, tz]];
+  if (direct < 70) { const L = safe(localPath(sx, sz, tx, tz) || (direct < 40 ? localPath(sx, sz, tx, tz, 70) : null)); if (L) return L; }
   const A = nearestRoad(sx, sz), Bq = nearestRoad(tx, tz);
-  if (!A || !Bq || (A.d > 60 && Bq.d > 60)) { const L = localPath(sx, sz, tx, tz, 60); return L || [[tx, tz]]; }
-  const road = roadRoute(A, Bq);
-  const leg1 = A.d < 2 ? [] : (localPath(sx, sz, A.x, A.z) || localPath(sx, sz, A.x, A.z, 70) || [[A.x, A.z]]);
+  if (!A || !Bq || (A.d > 60 && Bq.d > 60)) return safe(localPath(sx, sz, tx, tz, 60));
+  const road = roadRoute(A, { ...Bq, x: tx, z: tz });
+  if (!road) return safe(localPath(sx, sz, tx, tz, 60));
+  const leg1 = A.d < 2 ? [] : (safe(localPath(sx, sz, A.x, A.z) || localPath(sx, sz, A.x, A.z, 70)) || null);
+  if (!leg1) return safe(localPath(sx, sz, tx, tz, 60));
   { const f = road[0], p0 = leg1.length ? leg1[leg1.length - 1] : [sx, sz]; if (f && !lineFree(p0[0], p0[1], f[0], f[1])) { const L = localPath(p0[0], p0[1], f[0], f[1], 12); if (L) road.splice(0, 0, ...L); } }
-  const leg2 = Bq.d < 2 ? [] : (localPath(Bq.x, Bq.z, tx, tz) || localPath(Bq.x, Bq.z, tx, tz, 70) || [[tx, tz]]);
-  const out = [...leg1, ...road, ...leg2]; if (!out.length || out[out.length - 1][0] !== tx || out[out.length - 1][1] !== tz) out.push([tx, tz]);
-  return out;
+  const out = [...leg1, ...road]; if (!out.length || out[out.length - 1][0] !== tx || out[out.length - 1][1] !== tz) out.push([tx, tz]);
+  return safe(out) || safe(localPath(sx, sz, tx, tz, 60));
+}
+function routeSafe(sx, sz, path) {
+  let x = sx, z = sz;
+  for (const [nx, nz] of path) { if (!lineFree(x, z, nx, nz)) return false; x = nx; z = nz; }
+  return true;
 }
 // the road network as a graph (built once)
 const ROADNET = { nodes: [], adj: [] };
@@ -46643,43 +45515,104 @@ function nearestRoad(x, z) {
 }
 // Dijkstra over the road nodes from one projected point to another
 function roadRoute(A, B) {
-  if (A.a === B.a && A.b === B.b) return [[B.x, B.z]];
-  const N = ROADNET.nodes.length, dist = new Array(N).fill(1e9), from = new Array(N).fill(-1), done = new Array(N).fill(false);
-  dist[A.a] = A.ta; dist[A.b] = A.tb;
-  for (let it = 0; it < N; it++) {
-    let u = -1; for (let i = 0; i < N; i++) if (!done[i] && (u < 0 || dist[i] < dist[u])) u = i; if (u < 0 || dist[u] >= 1e9) break; done[u] = true;
-    for (const [v, w] of ROADNET.adj[u]) if (dist[u] + w < dist[v]) { dist[v] = dist[u] + w; from[v] = u; }
+  const N = ROADNET.nodes.length, rejected = new Set(), rejectedEnds = new Set();
+  const stamp = `${NAV.version || 0}:${gateOpen('bailey')}:${gateOpen('royal')}`;
+  if (ROADNET.cacheStamp !== stamp) { ROADNET.cacheStamp = stamp; ROADNET.edgeCache = new Map(); }
+  const routes = ROADNET.edgeCache;
+  const edge = (u, v) => {
+    const key = `${u}:${v}`; if (routes.has(key)) return routes.get(key);
+    const a = ROADNET.nodes[u], b = ROADNET.nodes[v], e = ROADNET.adj[u].find(q => q[0] === v);
+    const path = lineFree(a[0], a[1], b[0], b[1]) ? [b] : localPath(a[0], a[1], b[0], b[1], e && e[2] ? 20 : 24);
+    if (!path || !routeSafe(a[0], a[1], path)) { routes.set(key, null); return null; }
+    const result = { path }; routes.set(key, result); return result;
+  };
+  const connector = (x, z, tx, tz) => lineFree(x, z, tx, tz) ? [[tx, tz]] : localPath(x, z, tx, tz, 70);
+  const starts = [];
+  for (const u of [A.a, A.b]) {
+    const start = connector(A.x, A.z, ...ROADNET.nodes[u]);
+    if (!start || !routeSafe(A.x, A.z, start)) continue;
+    let x = A.x, z = A.z, length = 0; for (const [nx, nz] of start) { length += Math.hypot(nx - x, nz - z); x = nx; z = nz; }
+    starts.push({ u, path: start, length });
   }
-  const end = dist[B.a] + B.ta <= dist[B.b] + B.tb ? B.a : B.b;
-  const ids = []; let c = end; while (c >= 0) { ids.push(c); c = from[c]; } ids.reverse();
-  const out = [];
-  for (let k = 0; k < ids.length; k++) {
-    const n = ROADNET.nodes[ids[k]];
-    if (k > 0) { const e = ROADNET.adj[ids[k - 1]].find(x => x[0] === ids[k]), pv = ROADNET.nodes[ids[k - 1]]; if ((e && e[2]) || !lineFree(pv[0], pv[1], n[0], n[1])) { const L = localPath(pv[0], pv[1], n[0], n[1], e && e[2] ? 20 : 12); if (L) { out.push(...L); continue; } } }
-    out.push(n);
+  if (!starts.length) return null;
+  const ends = [];
+  for (let u = 0; u < N; u++) {
+    const n = ROADNET.nodes[u];
+    if ((u === B.a || u === B.b || Math.hypot(n[0] - B.x, n[1] - B.z) < 50) && Math.abs(gy(n[0], n[1]) - gy(B.x, B.z)) < 2) ends.push(u);
   }
-  // the last stretch along the road to the exit point, and the first from the entry point, may have something on them too
-  const last = out[out.length - 1]; if (!lineFree(last[0], last[1], B.x, B.z)) { const L = localPath(last[0], last[1], B.x, B.z, 12); if (L) { out.push(...L); return out; } }
-  out.push([B.x, B.z]); return out;
+  // Search optimistically; only inspect geometry on the selected route. If a
+  // road link has no safe detour, exclude it and choose the next graph route.
+  for (let attempt = 0; attempt < 32; attempt++) {
+    const dist = new Array(N).fill(Infinity), from = new Array(N).fill(-1), done = new Array(N).fill(false);
+    for (const S of starts) dist[S.u] = Math.min(dist[S.u], S.length);
+    for (let it = 0; it < N; it++) {
+      let u = -1; for (let i = 0; i < N; i++) if (!done[i] && (u < 0 || dist[i] < dist[u])) u = i;
+      if (u < 0 || !Number.isFinite(dist[u])) break; done[u] = true;
+      for (const [v, w] of ROADNET.adj[u]) if (!rejected.has(`${u}:${v}`) && dist[u] + w < dist[v]) { dist[v] = dist[u] + w; from[v] = u; }
+    }
+    let end = -1, best = Infinity;
+    for (const u of ends) {
+      if (rejectedEnds.has(u) || !Number.isFinite(dist[u])) continue;
+      const n = ROADNET.nodes[u], score = dist[u] + Math.hypot(n[0] - B.x, n[1] - B.z);
+      if (score < best) { best = score; end = u; }
+    }
+    if (end < 0) return null;
+    const ids = []; for (let c = end; c >= 0; c = from[c]) ids.push(c); ids.reverse();
+    const first = ROADNET.nodes[ids[0]], start = connector(A.x, A.z, first[0], first[1]);
+    if (!start || !routeSafe(A.x, A.z, start)) { rejectedEnds.add(end); continue; }
+    const out = [...start]; let bad = false;
+    for (let k = 1; k < ids.length; k++) {
+      const u = ids[k - 1], v = ids[k], E = edge(u, v);
+      if (!E) { rejected.add(`${u}:${v}`); rejected.add(`${v}:${u}`); bad = true; break; }
+      out.push(...E.path);
+    }
+    if (bad) continue;
+    const n = ROADNET.nodes[end], tail = connector(n[0], n[1], B.x, B.z);
+    if (!tail || !routeSafe(n[0], n[1], tail)) { rejectedEnds.add(end); continue; }
+    out.push(...tail);
+    if (routeSafe(A.x, A.z, out)) return out;
+    rejectedEnds.add(end);
+  }
+  return null;
 }
 // a bounded A* on a 2 m grid round the two ends (for the legs off the road and short trips), string-pulled
 function localPath(sx, sz, tx, tz, margin) {
+  if (navBlocked(tx, tz, 1.0)) return null;
   const C = 2, M = margin || 30, x0 = Math.min(sx, tx) - M, x1 = Math.max(sx, tx) + M, z0 = Math.min(sz, tz) - M, z1 = Math.max(sz, tz) + M;
   const ci = v => Math.floor(v / C), key = (i, j) => (i + 4096) * 8192 + (j + 4096);
-  const free = (i, j) => { const x = i * C + 1, z = j * C + 1; return x > x0 && x < x1 && z > z0 && z < z1 && !navBlocked(x, z, 1.0); };
+  const freeCache = new Map(), roadCache = new Map(), edgeCache = new Map();
+  const free = (i, j) => {
+    const k = key(i, j); if (freeCache.has(k)) return freeCache.get(k);
+    const x = i * C + 1, z = j * C + 1;
+    const ok = x > x0 && x < x1 && z > z0 && z < z1 && !navBlocked(x, z, 1.0);
+    freeCache.set(k, ok); return ok;
+  };
+  const road = (i, j) => {
+    const k = key(i, j); if (!roadCache.has(k)) roadCache.set(k, onRoad(i * C + 1, j * C + 1, 0));
+    return roadCache.get(k);
+  };
+  const edgeFree = (i, j, ni, nj, x, z, nx, nz) => {
+    const k = `${key(i, j)}:${key(ni, nj)}`;
+    if (!edgeCache.has(k)) edgeCache.set(k, lineFree(x, z, nx, nz));
+    return edgeCache.get(k);
+  };
   const si = ci(sx), sj = ci(sz), ti = ci(tx), tj = ci(tz);
-  const open = [[0, si, sj]], g = new Map([[key(si, sj), 0]]), from = new Map(); let n = 0, found = false;
+  const open = [], g = new Map([[key(si, sj), 0]]), from = new Map(); let n = 0, found = false;
   const H = (i, j) => Math.hypot(i - ti, j - tj) * 1.001;
-  while (open.length && n++ < 30000) {
-    let bi = 0; for (let q = 1; q < open.length; q++) if (open[q][0] < open[bi][0]) bi = q;
-    const [, i, j] = open.splice(bi, 1)[0]; if (i === ti && j === tj) { found = true; break; }
-    const gc = g.get(key(i, j));
+  const push = e => { let i = open.length; open.push(e); while (i) { const p = (i - 1) >> 1; if (open[p][0] <= e[0]) break; open[i] = open[p]; i = p; } open[i] = e; };
+  const pop = () => { const first = open[0], last = open.pop(); if (open.length) { let i = 0; while (i * 2 + 1 < open.length) { let c = i * 2 + 1; if (c + 1 < open.length && open[c + 1][0] < open[c][0]) c++; if (open[c][0] >= last[0]) break; open[i] = open[c]; i = c; } open[i] = last; } return first; };
+  push([0, si, sj, 0]);
+  while (open.length && n++ < 12000) {
+    const [, i, j, gc] = pop(); if (gc !== g.get(key(i, j))) continue;
+    if (i === ti && j === tj) { found = true; break; }
     for (const [di, dj] of [[1, 0], [-1, 0], [0, 1], [0, -1], [1, 1], [1, -1], [-1, 1], [-1, -1]]) {
       const ni = i + di, nj = j + dj, kk = key(ni, nj);
       if (!(ni === ti && nj === tj) && !free(ni, nj)) continue;
       if (di && dj && (!free(i + di, j) || !free(i, j + dj))) continue;
-      const ng = gc + (di && dj ? 1.414 : 1) + (onRoad(ni * C + 1, nj * C + 1, 0) ? 0 : 0.25);
-      if (ng < (g.has(kk) ? g.get(kk) : 1e9)) { g.set(kk, ng); from.set(kk, key(i, j)); open.push([ng + H(ni, nj), ni, nj]); }
+      if (!edgeFree(i, j, ni, nj, i === si && j === sj ? sx : i * C + 1, i === si && j === sj ? sz : j * C + 1,
+        ni === ti && nj === tj ? tx : ni * C + 1, ni === ti && nj === tj ? tz : nj * C + 1)) continue;
+      const ng = gc + (di && dj ? 1.414 : 1) + (road(ni, nj) ? 0 : 0.25);
+      if (ng < (g.has(kk) ? g.get(kk) : 1e9)) { g.set(kk, ng); from.set(kk, key(i, j)); push([ng + H(ni, nj), ni, nj, ng]); }
     }
   }
   if (!found) return null;
@@ -46690,9 +45623,9 @@ function localPath(sx, sz, tx, tz, margin) {
   return out;
 }
 function realmPath(sx, sz, tx, tz) { return realmRoute(sx, sz, tx, tz); }
-function lineFree(x0, z0, x1, z1) { const L = Math.hypot(x1 - x0, z1 - z0), n = Math.ceil(L / 1); for (let k = 1; k < n; k++) { const t = k / n; if (navBlocked(x0 + (x1 - x0) * t, z0 + (z1 - z0) * t, 1.0)) return false; } return true; }
+function lineFree(x0, z0, x1, z1) { const L = Math.hypot(x1 - x0, z1 - z0), n = Math.max(1, Math.ceil(L)); for (let k = 1; k <= n; k++) { const t = k / n; if (navBlocked(x0 + (x1 - x0) * t, z0 + (z1 - z0) * t, 1.0)) return false; } return true; }
 // autowalk: when on and you aren't steering, walk toward a point a few metres ahead along the route
-function travelAutoVel(speed) {
+function travelAutoVel(speed, dt = 1 / 60) {
   if (!TRAVEL.auto || !TOWN.wp || !TRAVEL.path.length) return null;
   const look = (TRAVEL.progress || 0) + (TOWN.mounted ? 6 : 3.5);
   let px = TRAVEL.startX, pz = TRAVEL.startZ, s = 0, tx = TOWN.wp.x, tz = TOWN.wp.z;
@@ -46702,7 +45635,7 @@ function travelAutoVel(speed) {
   if ((TRAVEL.stuck || 0) >= 0.5) { const side = Math.round(TRAVEL.stuck / 0.5) % 2 ? 1 : -1, px = -dz / d, pz = dx / d; dx = dx / d + px * side * 1.5; dz = dz / d + pz * side * 1.5; }
   const d2 = Math.hypot(dx, dz) || 1; dx /= d2; dz /= d2;
   // not getting anywhere along the route (pushed about by something, or walking into it): count it as stuck
-  TRAVEL.stuckT = (TRAVEL.stuckT || 0) + 1 / 60;
+  TRAVEL.stuckT = (TRAVEL.stuckT || 0) + dt;
   if (TRAVEL.stuckT >= 0.5) { TRAVEL.stuckT = 0; if ((TRAVEL.progress || 0) - (TRAVEL.lastProg || 0) < 0.4) TRAVEL.stuck = (TRAVEL.stuck || 0) + 0.5; else TRAVEL.stuck = 0; TRAVEL.lastProg = TRAVEL.progress || 0; }
   return { vx: dx * speed, vz: dz * speed };
 }
@@ -46820,7 +45753,11 @@ function peopleCull() {
   const rigs = [...FOLK.people.filter(N => !N.suspended).map(N => ({ J: N.J, owner: N })), ...SPECT.people.map(S => ({ J: S.J, owner: S })), ...SPECT.seated.map(S => ({ J: S.J, owner: S }))];
   rigs.sort((a, b) => a.J.root.position.distanceToSquared(c) - b.J.root.position.distanceToSquared(c));
   rigs.forEach((R, i) => { R.owner.budgetHidden = i >= (IS_TOUCH ? 44 : 80); if (R.owner.budgetHidden) R.J.root.visible = false; });
-  for (const S of TOWN.stalls || []) if (S.npc && S.npc.root && S.npc.ual) { const d = Math.hypot(S.x - c.x, S.z - c.z); S.npc.root.visible = d < F; }
+  for (const S of TOWN.stalls || []) if (S.npc && S.npc.root) {
+    const cameraDistance = Math.hypot(S.x - c.x, S.z - c.z);
+    const playerDistance = Math.hypot(S.x - TOWN.pos.x, S.z - TOWN.pos.z);
+    S.npc.root.visible = cameraDistance < F || playerDistance < 14;
+  }
 }
 // ===================================================================
 // Tiers: where you may go and what you may buy.
@@ -47240,7 +46177,10 @@ function realmHeight(x, z) {
   const north = 5 * smooth((-z - 85) / 310);
   let h = broad + folds + ridge + north;
   // Smooth land-use clearings; no building, list or water surface floats above a slope.
-  for (const [cx, cz, inner, outer] of [[0, 0, 100, 145], [-180, 135, 72, 112], [-214, -104, 38, 65], [-256, -42, 42, 72], [222, 40, 98, 136], [0, -226, 122, 155], [-840, -250, 115, 155], [890, 140, 135, 170], [-90, 900, 145, 185], [0, -1030, 135, 175]]) {
+  for (const [cx, cz, inner, outer] of [[0, 0, 100, 145], [-180, 135, 72, 112], [-214, -104, 38, 65], [-256, -42, 42, 72], [222, 40, 98, 136], [0, -226, 122, 155], [-510, -250, 115, 155], [530, 140, 135, 170], [-90, 620, 145, 185], [0, -690, 135, 175],
+    // Authored city geometry samples gy at these source coordinates before
+    // translation; keep the sampled floor level identical at both sites.
+    [-840, -250, 115, 155], [890, 140, 135, 170], [-90, 900, 145, 185], [0, -1030, 135, 175]]) {
     const d = Math.hypot(x - cx, z - cz);
     h *= smooth((d - inner) / (outer - inner));
   }
@@ -47962,9 +46902,12 @@ function folkPopulationTick(dt) {
 
 // Sitting is a reserved placement. Walking starts in a real aisle beside the row.
 function folkSeatAisle(S) {
-  for (const side of [S.sx, -S.sx]) {
-    const x = S.x + side * 0.95;
-    if (!navBlocked(x, S.z, FOLK_RADIUS) && !navBlocked(x, S.A.z + S.exit * (LIST.L * 0.5 + 0.7), FOLK_RADIUS)) return x;
+  const exitZ = S.A.z + S.exit * (LIST.L * 0.5 + 0.7);
+  // The front bench sits between the rope and another bench. Probe actual
+  // clearances rather than assuming that a fixed 0.95 m offset is an aisle.
+  for (const offset of [1.2, 1.5, 1.8, 2.7, 3.4, 4.5, 5.6, 7.8]) for (const side of [S.sx, -S.sx]) {
+    const x = S.x + side * offset;
+    if (!navBlocked(x, S.z, FOLK_RADIUS) && !navBlocked(x, exitZ, FOLK_RADIUS) && folkLineFree(x, S.z, x, exitZ)) return x;
   }
   return null;
 }
@@ -48435,11 +47378,11 @@ function openQuestJournal() {
 STATIONS.push(
   { key: 'quest:fair', name: 'Campaign herald', role: 'Quest journal', icon: '📜', at: [-8, 79] },
   { key: 'quest:reavers', name: 'Reavers Captain', role: 'Rival quest giver', icon: '⚔️', at: [34, 73] },
-  { key: 'quest:ashmarket', name: 'Foundry clerk', role: 'Quest journal', icon: '📜', at: [-833, -210] },
-  { key: 'quest:stoneford', name: 'Tessa Quay', role: 'Stoneford dock clerk', icon: '📜', at: [886, 181] },
-  { key: 'quest:southmere', name: 'Circuit steward', role: 'Quest journal', icon: '📜', at: [-86, 946] },
-  { key: 'quest:southmere-captain', name: 'Captain Lysa Vale', role: 'Southmere riding captain', icon: '🐴', at: [-75, 925] },
-  { key: 'quest:northwatch', name: 'Company scribe', role: 'Quest journal', icon: '📜', at: [7, -989] }
+  { key: 'quest:ashmarket', name: 'Foundry clerk', role: 'Quest journal', icon: '📜', at: [-503, -210], district: 'ashmarket' },
+  { key: 'quest:stoneford', name: 'Tessa Quay', role: 'Stoneford dock clerk', icon: '📜', at: [526, 181], district: 'stoneford' },
+  { key: 'quest:southmere', name: 'Circuit steward', role: 'Quest journal', icon: '📜', at: [-86, 666], district: 'southmere' },
+  { key: 'quest:southmere-captain', name: 'Captain Lysa Vale', role: 'Southmere riding captain', icon: '🐴', at: [-75, 645], district: 'southmere' },
+  { key: 'quest:northwatch', name: 'Company scribe', role: 'Quest journal', icon: '📜', at: [7, -649], district: 'northwatch' }
 );
 
 })();

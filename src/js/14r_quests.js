@@ -256,9 +256,9 @@ function openQuestJournal() {
 STATIONS.push(
   { key: 'quest:fair', name: 'Campaign herald', role: 'Quest journal', icon: '📜', at: [-8, 79] },
   { key: 'quest:reavers', name: 'Reavers Captain', role: 'Rival quest giver', icon: '⚔️', at: [34, 73] },
-  { key: 'quest:ashmarket', name: 'Foundry clerk', role: 'Quest journal', icon: '📜', at: [-833, -210] },
-  { key: 'quest:stoneford', name: 'Tessa Quay', role: 'Stoneford dock clerk', icon: '📜', at: [886, 181] },
-  { key: 'quest:southmere', name: 'Circuit steward', role: 'Quest journal', icon: '📜', at: [-86, 946] },
-  { key: 'quest:southmere-captain', name: 'Captain Lysa Vale', role: 'Southmere riding captain', icon: '🐴', at: [-75, 925] },
-  { key: 'quest:northwatch', name: 'Company scribe', role: 'Quest journal', icon: '📜', at: [7, -989] }
+  { key: 'quest:ashmarket', name: 'Foundry clerk', role: 'Quest journal', icon: '📜', at: [-503, -210], district: 'ashmarket' },
+  { key: 'quest:stoneford', name: 'Tessa Quay', role: 'Stoneford dock clerk', icon: '📜', at: [526, 181], district: 'stoneford' },
+  { key: 'quest:southmere', name: 'Circuit steward', role: 'Quest journal', icon: '📜', at: [-86, 666], district: 'southmere' },
+  { key: 'quest:southmere-captain', name: 'Captain Lysa Vale', role: 'Southmere riding captain', icon: '🐴', at: [-75, 645], district: 'southmere' },
+  { key: 'quest:northwatch', name: 'Company scribe', role: 'Quest journal', icon: '📜', at: [7, -649], district: 'northwatch' }
 );

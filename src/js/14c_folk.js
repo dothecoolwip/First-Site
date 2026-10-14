@@ -5,6 +5,7 @@
 // do the thing, then pick something else. If they can't get somewhere they give up and choose again.
 const NAV = { cell: 4, grid: new Map(), none: [] };
 function navBuild() {
+  NAV.version = (NAV.version || 0) + 1;
   NAV.grid.clear();
   for (const o of TOWN.obst) {
     if (o.r < 0.05) continue;
@@ -20,6 +21,7 @@ function cliffAt(x, z, r) {
 }
 function navBlocked(x, z, r) {
   if (lakeBlocked(x, z, r)) return true;
+  if (stonefordWaterBlocked(x, z, r)) return true;
   if (arenaBlocked(x, z, r)) return true;
   if (typeof gateBlocked === 'function' && gateBlocked(x, z, r)) return true;
   if (Math.hypot(x / TOWN_RX, z / TOWN_RZ) > 0.985) return true;

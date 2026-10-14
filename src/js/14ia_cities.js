@@ -1,36 +1,46 @@
 // Four authored destinations. Streets, lots and planting are deliberate; no settlement uses random prop scatter.
 const CITY_SITES = {
-  ashmarket: { x: -840, z: -250, name: 'Ashmarket', colour: '#984f31' },
-  stoneford: { x: 890, z: 140, name: 'Stoneford', colour: '#496f85' },
-  southmere: { x: -90, z: 900, name: 'Southmere', colour: '#71884c' },
-  northwatch: { x: 0, z: -1030, name: 'Northwatch Fortress', colour: '#526574' }
+  ashmarket: { x: -510, z: -250, name: 'Ashmarket', colour: '#984f31' },
+  stoneford: { x: 530, z: 140, name: 'Stoneford', colour: '#496f85' },
+  southmere: { x: -90, z: 620, name: 'Southmere', colour: '#71884c' },
+  northwatch: { x: 0, z: -690, name: 'Northwatch Fortress', colour: '#526574' }
 };
+const STONEFORD_RIVER = { x0: 607.5, x1: 642.5, z0: -70, z1: 350 };
+function stonefordWaterBlocked(x, z, r = 0) {
+  const W = STONEFORD_RIVER;
+  return x > W.x0 - r && x < W.x1 + r && z > W.z0 - r && z < W.z1 + r;
+}
+function stonefordWaterPush(P, r) {
+  if (!stonefordWaterBlocked(P.x, P.z, r)) return;
+  const W = STONEFORD_RIVER;
+  P.x = Math.abs(P.x - W.x0) < Math.abs(P.x - W.x1) ? W.x0 - r : W.x1 + r;
+}
 ROADS.push(
-  { name: 'ashmarket-road', pts: [[-333, 48], [-390, 24], [-455, -8], [-520, -52], [-585, -91], [-652, -132], [-715, -179], [-780, -220], [-840, -220], [-840, -250]], w: 6 },
-  { name: 'stoneford-road', pts: [[340, 94], [410, 100], [480, 109], [550, 112], [620, 124], [690, 131], [760, 138], [825, 140], [890, 140]], w: 6 },
-  { name: 'southmere-road', pts: [[-12, 392], [-22, 465], [-34, 535], [-45, 610], [-55, 685], [-69, 760], [-82, 830], [-90, 900]], w: 6 },
-  { name: 'northwatch-road', pts: [[27, -369], [39, -445], [34, -520], [22, -595], [13, -670], [4, -746], [0, -820], [0, -896], [0, -970], [0, -1030]], w: 6 },
-  { name: 'ashmarket-forge-street', pts: [[-840, -220], [-840, -250], [-840, -295]], w: 7 },
-  { name: 'stoneford-armour-lane', pts: [[825, 140], [890, 140], [930, 140]], w: 7 },
-  { name: 'southmere-stable-lane', pts: [[-90, 900], [-90, 850], [-90, 810]], w: 6 },
-  { name: 'northwatch-yard', pts: [[0, -970], [0, -1030], [0, -1095]], w: 7 }
+  { name: 'ashmarket-road', pts: [[-333, 48], [-369, 9], [-401, -38], [-432, -91], [-467, -143], [-500, -194], [-510, -220], [-510, -250]], w: 6 },
+  { name: 'stoneford-road', pts: [[340, 94], [392, 103], [440, 117], [490, 132], [530, 140]], w: 6 },
+  { name: 'southmere-road', pts: [[-12, 392], [-27, 451], [-48, 505], [-69, 560], [-90, 620]], w: 6 },
+  { name: 'northwatch-road', pts: [[27, -369], [29, -433], [22, -497], [12, -559], [0, -622], [0, -690]], w: 6 },
+  { name: 'ashmarket-forge-street', pts: [[-510, -220], [-510, -250], [-510, -295]], w: 7 },
+  { name: 'stoneford-armour-lane', pts: [[490, 140], [530, 140], [570, 140]], w: 7 },
+  { name: 'southmere-stable-lane', pts: [[-90, 620], [-90, 570], [-90, 530]], w: 6 },
+  { name: 'northwatch-yard', pts: [[0, -630], [0, -690], [0, -755]], w: 7 }
 );
 const CITY_VENDORS = [
-  { key: 'asmith', as: 'smith', tier: 3, siteBuilding: true, name: 'Mara Flint', role: 'Ashmarket master weapon smith', col: '#80513b', awn: '#984f31', hi: 'Bring your steel to the foundry. I can balance and finish what the fairground cannot.', icon: '⚒️', at: [-850, -271], ry: Math.PI / 2 },
-  { key: 'sarmour', as: 'armour', tier: 3, siteBuilding: true, name: 'Aldric Platewright', role: 'Stoneford master armourer', col: '#4c6473', awn: '#496f85', hi: 'A fitted harness is measured, tested and repaired at the bench.', icon: '🛡️', at: [876, 140], ry: Math.PI / 2 },
-  { key: 'ntrainer', as: 'trainer', tier: 3, siteBuilding: true, name: 'Drillmaster Kael', role: 'Northwatch master trainer', col: '#536677', awn: '#526574', hi: 'Tuition earns instruction. Practice earns the strength to use it.', icon: '🏋️', at: [-21, -1071], ry: Math.PI / 2 }
+  { key: 'asmith', as: 'smith', tier: 3, siteBuilding: true, name: 'Mara Flint', role: 'Ashmarket master weapon smith', col: '#80513b', awn: '#984f31', hi: 'Bring your steel to the foundry. I can balance and finish what the fairground cannot.', icon: '⚒️', at: [-520, -271], ry: Math.PI / 2 },
+  { key: 'sarmour', as: 'armour', tier: 3, siteBuilding: true, name: 'Aldric Platewright', role: 'Stoneford master armourer', col: '#4c6473', awn: '#496f85', hi: 'A fitted harness is measured, tested and repaired at the bench.', icon: '🛡️', at: [523, 140], ry: Math.PI / 2 },
+  { key: 'ntrainer', as: 'trainer', tier: 3, siteBuilding: true, name: 'Drillmaster Kael', role: 'Northwatch master trainer', col: '#536677', awn: '#526574', hi: 'Tuition earns instruction. Practice earns the strength to use it.', icon: '🏋️', at: [-16, -731], ry: Math.PI / 2 }
 ];
 VENDORS.push(...CITY_VENDORS);
 for (const V of CITY_VENDORS) {
   VENDOR_BY[V.key] = V; STALL_AT[V.key] = V.at; STALL_FACE[V.key] = V.ry;
   VENDOR_FIT[V.key] = V.key === 'sarmour' ? 'Male_Ranger' : V.key === 'asmith' ? 'Female_Peasant' : 'Male_Ranger';
 }
-STATIONS.push({ key: 'southmere:riding', name: 'Edda of Southmere', role: 'Riding school', icon: '🐴', at: [-103, 857], ry: Math.PI, district: 'southmere' });
+STATIONS.push({ key: 'southmere:riding', name: 'Edda of Southmere', role: 'Riding school', icon: '🐴', at: [-97, 577], ry: Math.PI, district: 'southmere' });
 for (const [arena, x, z, names, district] of [
-  ['foundry', -902, -236, ['Foundry Marshal', 'Ashmarket Herald', 'Foundry Crier'], 'ashmarket'],
-  ['bridge', 947, 185, ['Bridge Marshal', 'Stoneford Herald', 'Bridge Crier'], 'stoneford'],
-  ['orchard', -22, 967, ['Orchard Marshal', 'Southmere Herald', 'Orchard Crier'], 'southmere'],
-  ['northwatch', 58, -1036, ['Yard Marshal', 'Northwatch Herald', 'Yard Crier'], 'northwatch']
+  ['foundry', -572, -236, ['Foundry Marshal', 'Ashmarket Herald', 'Foundry Crier'], 'ashmarket'],
+  ['bridge', 587, 185, ['Bridge Marshal', 'Stoneford Herald', 'Bridge Crier'], 'stoneford'],
+  ['orchard', -22, 687, ['Orchard Marshal', 'Southmere Herald', 'Orchard Crier'], 'southmere'],
+  ['northwatch', 58, -696, ['Yard Marshal', 'Northwatch Herald', 'Yard Crier'], 'northwatch']
 ]) ['marshal', 'giant', 'crier'].forEach((service, i) => STATIONS.push({
   key: `${arena}:${service}`, service, arena, name: names[i],
   role: ['Lists marshal', 'Tournament herald', 'Online crier'][i],
@@ -90,9 +100,22 @@ function cityPaving(R, x, z, w, d, colour) {
   g.rotation.x = -Math.PI / 2; g.receiveShadow = true;
 }
 function buildExpandedCities(R) {
-  buildAshmarket(R); buildStoneford(R); buildSouthmere(R); buildNorthwatch(R);
+  // Preserve the authored blocks, then flatten their translated objects so
+  // realmCells indexes every building at its final world position.
+  for (const [build, dx, dz] of [[buildAshmarket, 330, 0], [buildStoneford, -360, 0], [buildSouthmere, 0, -280], [buildNorthwatch, 0, 340]]) {
+    const local = new THREE.Group(), firstObstacle = TOWN.obst.length;
+    build(local);
+    for (const child of [...local.children]) { child.position.x += dx; child.position.z += dz; R.add(child); }
+    for (let i = firstObstacle; i < TOWN.obst.length; i++) { TOWN.obst[i].x += dx; TOWN.obst[i].z += dz; }
+  }
+  for (const [key, look] of [
+    ['foundry', { floor: '#725f52', floorTex: 'dirt', bench: '#65473a', signCol: '#984f31' }],
+    ['bridge', { floor: '#a6a19a', floorTex: 'cobble', bench: '#6a6b69', signCol: '#496f85' }],
+    ['orchard', { floor: '#9eaf70', floorTex: 'forest', bench: '#8b784d', signCol: '#71884c' }],
+    ['northwatch', { floor: '#91928c', floorTex: 'dirt', bench: '#4e5861', signCol: '#526574' }]
+  ]) arenaList(R, ARENAS.find(a => a.key === key), look);
   // Plant the approaches as belts. Settled blocks stay under the explicit city layouts below.
-  for (const [x, z, r, seed] of [[-570, -95, 62, 'ashroad'], [590, 175, 75, 'riverroad'], [-115, 680, 75, 'southroad'], [115, -760, 70, 'northroad']])
+  for (const [x, z, r, seed] of [[-415, -95, 50, 'ashroad'], [420, 175, 55, 'riverroad'], [-115, 510, 50, 'southroad'], [115, -555, 55, 'northroad']])
     realmForest(R, x, z, r, IS_TOUCH ? 15 : 28, [['kf_tree_1_a', 1.1, 1], ['kf_tree_2_b', 1.1, 1], ['kf_bush_3_a', 1.2, 0.5]], seed);
 }
 function buildAshmarket(R) {
@@ -121,7 +144,6 @@ function buildAshmarket(R) {
   for (const [xx, zz] of [[-879, -247], [-877, -250], [-875, -253]]) cityPiece(R, 'rt_pulley_crate', xx, zz, 0, 0.9, 0.5);
   for (const [xx, zz] of [[-814, -242], [-814, -259], [-814, -277]]) cityLamp(R, xx, zz);
   citySign(R, 'ASHMARKET · WEAPON FORGES', -864, -197, 0, '#984f31');
-  arenaList(R, ARENAS.find(a => a.key === 'foundry'), { floor: '#725f52', floorTex: 'dirt', bench: '#65473a', signCol: '#984f31' });
 }
 function buildStoneford(R) {
   realmGround(R, 830, 955, 103, 198, '#a6a7a2', 'cobble');
@@ -139,10 +161,11 @@ function buildStoneford(R) {
   for (const zz of [100, 180]) { cityTree(R, 'kf_tree_2_b', 878, zz, 1.25); cityTree(R, 'kf_tree_2_b', 902, zz, 1.25); }
   for (const zz of [105, 174]) { cityPennant(R, 883, zz, '#355c72'); cityPennant(R, 897, zz, '#718fa0'); }
   for (const [xx, zz] of [[869, 131], [869, 151]]) cityPiece(R, 'bf_armor_rack', xx, zz, Math.PI / 2, 1, 0.7);
-  for (const [xx, zz] of [[948, 108], [948, 123], [948, 138]]) cityPiece(R, 'rt_dock_side', xx, zz, Math.PI / 2, 1.1, 1);
-  const water = mk(R, new THREE.PlaneGeometry(35, 420), lmat({ color: '#486e79', roughness: 0.3, metalness: 0.08, transparent: true, opacity: 0.88, side: THREE.DoubleSide }), 978, gy(978, 140) + 0.07, 140, false);
+  for (const [xx, zz] of [[962, 108], [962, 123], [962, 138]]) cityPiece(R, 'rt_dock_side', xx, zz, Math.PI / 2, 1.1, 1);
+  // Leave a dry strip outside Bridge Lists' rope and the spectator approach.
+  const water = mk(R, new THREE.PlaneGeometry(35, 420), lmat({ color: '#486e79', roughness: 0.3, metalness: 0.08, transparent: true, opacity: 0.88, side: THREE.DoubleSide }), 985, gy(985, 140) + 0.07, 140, false);
   water.rotation.x = -Math.PI / 2; water.receiveShadow = true;
-  cityPiece(R, 'ck_bridge_straight', 959, 140, Math.PI / 2, 1, 2);
+  cityPiece(R, 'ck_bridge_straight', 973, 140, Math.PI / 2, 1, 2);
   for (const [xx, zz] of [[934, 110], [938, 128]]) cityPiece(R, 'rt_pulley_crate', xx, zz, 0, 1, 0.6);
   for (const zz of [110, 140, 174]) cityLamp(R, 900, zz);
   // Citadel: four walls around a court, with an ungated entrance toward the market.
@@ -151,7 +174,6 @@ function buildStoneford(R) {
   for (const [xx, zz] of [[846, 12], [935, 12], [846, 55], [935, 55]]) castleTower(R, xx, zz, 1, '#496f85');
   cityHouse(R, 890, 30, 22, 13, 0, { h: 8, allStone: true, roof: '#4b5e70', sign: 'STONEFORD CITADEL' });
   citySign(R, 'STONEFORD · MASTER ARMOURERS', 865, 204, 0, '#496f85');
-  arenaList(R, ARENAS.find(a => a.key === 'bridge'), { floor: '#a6a19a', floorTex: 'cobble', bench: '#6a6b69', signCol: '#496f85' });
 }
 function buildSouthmere(R) {
   realmGround(R, -155, -12, 835, 990, '#b8ab83', 'path');
@@ -173,7 +195,6 @@ function buildSouthmere(R) {
   for (const xx of [-165, -153, -141, -129]) for (const zz of [1008, 1023, 1038]) cityTree(R, 'kf_tree_1_a', xx, zz, 1.0);
   for (const [xx, zz] of [[-107, 888], [-75, 888], [-107, 932], [-75, 932]]) cityLamp(R, xx, zz);
   citySign(R, 'SOUTHMERE · STABLES & RIDING', -114, 1006, 0, '#71884c');
-  arenaList(R, ARENAS.find(a => a.key === 'orchard'), { floor: '#9eaf70', floorTex: 'forest', bench: '#8b784d', signCol: '#71884c' });
 }
 function buildNorthwatch(R) {
   realmGround(R, -75, 98, -1108, -959, '#919694', 'cobble');
@@ -197,5 +218,4 @@ function buildNorthwatch(R) {
   for (const zz of [-989, -1030, -1086]) for (const xx of [-6, 13]) cityLamp(R, xx, zz);
   citySign(R, 'NORTHWATCH · FIGHTER TRAINING', -25, -949, 0, '#526574');
   for (const xx of [-113, -99, 116, 130]) for (const zz of [-987, -1012, -1040, -1072]) cityTree(R, 'kf_tree_2_b', xx, zz, 1.15);
-  arenaList(R, ARENAS.find(a => a.key === 'northwatch'), { floor: '#91928c', floorTex: 'dirt', bench: '#4e5861', signCol: '#526574' });
 }

@@ -54,7 +54,10 @@ function realmHeight(x, z) {
   const north = 5 * smooth((-z - 85) / 310);
   let h = broad + folds + ridge + north;
   // Smooth land-use clearings; no building, list or water surface floats above a slope.
-  for (const [cx, cz, inner, outer] of [[0, 0, 100, 145], [-180, 135, 72, 112], [-214, -104, 38, 65], [-256, -42, 42, 72], [222, 40, 98, 136], [0, -226, 122, 155], [-840, -250, 115, 155], [890, 140, 135, 170], [-90, 900, 145, 185], [0, -1030, 135, 175]]) {
+  for (const [cx, cz, inner, outer] of [[0, 0, 100, 145], [-180, 135, 72, 112], [-214, -104, 38, 65], [-256, -42, 42, 72], [222, 40, 98, 136], [0, -226, 122, 155], [-510, -250, 115, 155], [530, 140, 135, 170], [-90, 620, 145, 185], [0, -690, 135, 175],
+    // Authored city geometry samples gy at these source coordinates before
+    // translation; keep the sampled floor level identical at both sites.
+    [-840, -250, 115, 155], [890, 140, 135, 170], [-90, 900, 145, 185], [0, -1030, 135, 175]]) {
     const d = Math.hypot(x - cx, z - cz);
     h *= smooth((d - inner) / (outer - inner));
   }
