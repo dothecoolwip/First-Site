@@ -6,9 +6,9 @@ const BAND = { top: 0.42, bot: 0.6 };
 
 function openRepair(seconds, onDone, options) {
   options = options || {};
-  if (!options.emergency && CAREER.skills && CAREER.skills['show.tape']) seconds += 15; // Tape artist
-  if (!options.emergency && typeof shopFx === 'function') seconds += shopFx('repairSec'); // good scissors
-  Object.assign(REP, { piece: null, tape: null, step: null, timer: seconds, active: true, onDone, onFail: options.onFail || null, wraps: [], wrinkles: [], squire: 1 + (G.boon && G.boon.squire ? 1 : 0) + (typeof shopState === 'function' ? shopState().squires : 0), pop: null, lastSec: 99, trail: [], forcedPiece: options.forcedPiece || null, failuresOnly: !!options.failuresOnly, emergency: !!options.emergency });
+  if (!options.fixedDuration && !options.emergency && CAREER.skills && CAREER.skills['show.tape']) seconds += 15; // Tape artist
+  if (!options.fixedDuration && !options.emergency && typeof shopFx === 'function') seconds += shopFx('repairSec'); // good scissors
+  Object.assign(REP, { piece: null, tape: null, step: null, timer: seconds, active: true, onDone, onFail: options.onFail || null, wraps: [], wrinkles: [], squire: 1 + (G.boon && G.boon.squire ? 1 : 0) + (typeof shopState === 'function' ? shopState().squires : 0), pop: null, lastSec: 99, trail: [], forcedPiece: options.forcedPiece || null, failuresOnly: !!options.failuresOnly, emergency: !!options.emergency, requireSafeArmour: !!options.requireSafeArmour });
   REP.roll = REP.roll && TAPES[REP.roll] && TAPES[REP.roll].legal && tapeLeft(REP.roll) > 0 ? REP.roll : (['black', 'grey', 'white', 'pro', 'kevlar'].find(x => tapeLeft(x) > 0) || 'black');
   renderKitList(); renderDrawer(); setSteps(null);
   const worst = worstPiece();
@@ -194,7 +194,7 @@ function updateRepair(dt) {
 }
 function closeRepair() {
   if (!REP.active) return;
-  const unfixed = REP.emergency && G.player && ['helmet', 'armL', 'armR', 'legs'].filter(k => G.player.kit[k].failed);
+  let unfixed = (REP.emergency || REP.requireSafeArmour) && G.player && ['helmet', 'armL', 'armR', 'legs'].filter(k => G.player.kit[k].failed);
   if (unfixed && unfixed.length && REP.timer > 0) {
     $('#benchMsg').textContent = `Repair ${unfixed.map(k => PIECE_SHORT[k][0].toLowerCase()).join(', ')} before returning to the list.`;
     return;
@@ -202,6 +202,7 @@ function closeRepair() {
   if (REP.step === 'wrap') { REP.q.wrap = coverage() * 0.8; REP.step = 'smooth'; REP.wrinkles = [{ x: 0.5, gone: false }]; }
   if (REP.step === 'smooth') finishSmooth();
   if (REP.step === 'rip') { REP.step = null; setSteps(null); }
+  if (REP.requireSafeArmour && G.player) unfixed = ['helmet', 'armL', 'armR', 'legs'].filter(k => G.player.kit[k].failed);
   REP.active = false;
   const cb = unfixed && unfixed.length ? (REP.onFail || REP.onDone) : REP.onDone;
   REP.onDone = REP.onFail = null;
@@ -281,4 +282,3 @@ function drawPop(x, W, H, k) {
   x.font = `${Math.round(54 * k)}px "Big Shoulders Display", Impact, sans-serif`; x.textAlign = 'center'; x.textBaseline = 'middle';
   x.lineWidth = 8 * k; x.strokeStyle = 'rgba(10,13,15,.9)'; x.strokeText(P.text, 0, 0); x.fillStyle = P.col; x.fillText(P.text, 0, 0); x.restore();
 }
-

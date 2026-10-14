@@ -279,6 +279,16 @@ function afterRound() {
     else { matchEnd(); return; }
   }
   if (m.online || m.versus) { after(0.1, () => { if (!m.duel) teamRepairs(true); startRound(); beginFight(); }); G.phase = 'between'; return; } // no bench between online or versus rounds
+  if (m.run && !m.season && G.player) {
+    setHud(false);
+    openGauntletRepair(30, () => { teamRepairs(); startRound(); beginFight(); }, () => {
+      m.wins[1] = Math.max(2, m.wins[1]);
+      m.repairDone = true;
+      marshalCall('Repair time expired', 'Unsafe armour. You cannot return to the list.', 3);
+      matchEnd();
+    });
+    return;
+  }
   if (G.autoflow) { toTactics(); return; }
   const failedArmour = G.player && ['helmet', 'armL', 'armR', 'legs'].some(k => G.player.kit[k].failed);
   if (!failedArmour && !m.online && !m.versus && G.player && !G.player.out) { after(0.1, () => { startRound(); beginFight(); }); G.phase = 'between'; return; }
@@ -440,14 +450,16 @@ function tapeLogHtml(list) {
 }
 
 function matchEnd() {
+  if (G.match && G.match.run && !G.match.season && G.match.gauntletResultShown) return;
   const m = G.match; G.phase = 'over'; setHud(false);
-  if (!m.repairDone && G.player && !m.training && !m.online && !m.versus && !m.tourney && !m.test) {
+  if (!m.repairDone && G.player && !(m.run && !m.season) && !m.training && !m.online && !m.versus && !m.tourney && !m.test) {
     m.repairDone = true;
     const failed = ['helmet', 'armL', 'armR', 'legs'].some(k => G.player.kit[k].failed);
     openRepair(failed ? 30 : Math.round(45 * mod(null, 'repair') + (G.boon && G.boon.repairAdd || 0)), () => { teamRepairs(); matchEnd(); }, failed ? { failuresOnly: true, emergency: true } : {});
     return;
   }
   if (G.autoflow) { G.stats.matches = (G.stats.matches || 0) + 1; if (G.autoNext) G.autoNext(); return; }
+  if (m.run && !m.season) m.gauntletResultShown = true;
   const won = m.wins[0] > m.wins[1], drawn = m.wins[0] === m.wins[1]; AU.music(true);
   if (m.versus || (m.online && NET.role === 'host')) eventMatch(m, won);
   if (m.versus && G.bracket) { VS.on = false; document.body.classList.remove('split', 'split4'); $('#splitLabels').innerHTML = ''; bracketResult(m.wins[0] > m.wins[1] ? 0 : m.wins[1] > m.wins[0] ? 1 : (m.pts && m.pts[1] > m.pts[0] ? 1 : 0)); return; }

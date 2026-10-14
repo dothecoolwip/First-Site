@@ -75,7 +75,8 @@ function runPlan(code) {
 function openRun() {
   AU.init(); const R = store.get('run', null), best = store.get('runBest', 0);
   const steps = c => runPlan(c).map((s, i) => `<li${R && R.code === c && i < R.step ? ' class="done"' : R && R.code === c && i === R.step ? ' class="now"' : ''}><b>${i + 1}</b> ${s.mode === 1 ? 'Duel' : s.mode + ' v ' + s.mode} · ${i === 2 ? 'your rival' : CLUBS[s.opp] ? (CLUBS[s.opp].full || CLUBS[s.opp].name) : s.opp}${s.boss ? ' · the champion' : ''}</li>`).join('');
-  const body = `<div class="runbox"><p>Five fights across one weekend. Kit damage carries between fights, one loss ends the run, and every win earns a boon. Share your run code so friends can fight the exact same bracket.</p>
+  const body = `<div class="runbox"><p>Five fights across one weekend. Kit damage carries between fights, one loss ends the run, and every win earns a boon. You get 30 seconds to repair between rounds and 60 seconds after choosing your reward between fights. These timers are fixed. Share your run code so friends can fight the exact same bracket.</p>
+    ${R && R.boons.includes('tape') ? '<p class="muted">Your saved Lucky roll of tape is still recorded. Gauntlet repair windows now have fixed timers, so it no longer adds time here.</p>' : ''}
     ${R ? `<p><b>Run ${R.code}</b>, fight ${R.step + 1} of 5${R.boons.length ? ' · boons: ' + R.boons.map(k => BOONS.find(b => b.key === k).icon).join(' ') : ''}</p><ol class="runsteps">${steps(R.code)}</ol>` : ''}
     <label class="runcode"><span>Play a friend's bracket</span><input id="runCodeIn" placeholder="RDR-7F3A" maxlength="8" autocomplete="off"></label>
     <p class="muted">Best run: ${best} of 5 fights won.</p></div>`;
@@ -98,8 +99,22 @@ function startRunFight() {
   setupMatch({ mode: s.mode, opp: s.opp, stage: `Gauntlet ${R.code}, fight ${R.step + 1}${s.boss ? ' (the champion)' : ''}`, venue: s.venue, run: R.code });
   G.category = catWas; G.shareKind = 'run'; G.shareExtra = { code: R.code }; toTactics();
 }
+function openGauntletRepair(seconds, done, onFail) {
+  const m = G.match;
+  openRepair(seconds, () => { if (G.match === m) done(); }, {
+    fixedDuration: true, requireSafeArmour: true,
+    onFail: () => { if (G.match === m && onFail) onFail(); }
+  });
+}
+function gauntletRepairFailed(R) {
+  if (store.get('run', null)?.code !== R.code) return;
+  store.del('run'); store.set('runBest', Math.max(store.get('runBest', 0), R.step));
+  msg('gauntlet', 'Run over', `<p>Repair time expired after fight ${R.step}. Unsafe armour means you cannot return to the list. Your earned rewards are kept.</p>`, [['New run', openRun, true], ['Title', toTitle]]);
+}
 function runEnd(m, won, withPurse) {
+  if (m.gauntletRunEnded) return;
   const R = store.get('run', null); if (!R) { toTitle(); return; }
+  m.gauntletRunEnded = true;
   if (G.player) R.kit = JSON.parse(JSON.stringify(G.player.kit)); // the damage comes with you
   G.shareKind = 'run'; G.shareExtra = { code: R.code };
   if (!won) {
@@ -114,10 +129,16 @@ function runEnd(m, won, withPurse) {
     return;
   }
   store.set('run', R);
-  const r = seeded('boon' + R.code + R.step); const pool = BOONS.slice(); const offer = [];
+  const r = seeded('boon' + R.code + R.step); const pool = BOONS.filter(b => b.key !== 'tape'); const offer = [];
   while (offer.length < 3) offer.push(pool.splice(Math.floor(r() * pool.length), 1)[0]);
-  const choose = b => { b.apply({}, R); R.boons.push(b.key); store.set('run', R); openRepair(45 + (runBoon(R).repairAdd || 0), () => { teamRepairs(); if (G.player) { R.kit = JSON.parse(JSON.stringify(G.player.kit)); store.set('run', R); } startRunFight(); }); };
-  msg('gauntlet', `Fight ${R.step} won`, withPurse(`<p>Pick one boon for the rest of the run. Then the repair bench: your kit carries its damage into fight ${R.step + 1}.</p><div class="boons">${offer.map((b, i) => `<div class="boon"><span class="dicon">${b.icon}</span><b>${b.name}</b><span>${b.desc}</span></div>`).join('')}</div>`),
+  let chosen = false;
+  const choose = b => {
+    if (chosen || G.match !== m) return; chosen = true;
+    b.apply({}, R); R.boons.push(b.key);
+    if (G.player) G.player.kit = R.kit;
+    G.run = R; G.boon = runBoon(R); store.set('run', R);
+    openGauntletRepair(60, () => { teamRepairs(); if (G.player) { R.kit = JSON.parse(JSON.stringify(G.player.kit)); store.set('run', R); } startRunFight(); }, () => gauntletRepairFailed(R));
+  };
+  msg('gauntlet', `Fight ${R.step} won`, withPurse(`<p>Pick one boon for the rest of the run. Then you have 60 seconds at the repair bench: your kit carries its damage into fight ${R.step + 1}.</p><div class="boons">${offer.map((b, i) => `<div class="boon"><span class="dicon">${b.icon}</span><b>${b.name}</b><span>${b.desc}</span></div>`).join('')}</div>`),
     offer.map((b, i) => [b.icon + ' ' + b.name, () => choose(b), i === 0]));
 }
-

@@ -1,5 +1,9 @@
 # BUHURT: Steel & Tape — handover for the next assistant
 
+## Gauntlet repair release, 13 Oct 2026
+
+Reconciled the three-module GAUNTLET_REPAIR.patch into published version 55 without replacing other modules. Candidate build steel-tape-auth-d751d7f7e356. Equipment selection is unchanged; unfinished rounds have exact 30-second repairs, wins 1–4 show results/boons before one exact 60-second repair, and the final win has no repair. Failed armour blocks early Done and unsafe expiry ends the run. Ordinary repair bonuses remain. Exact-release desktop/phone Gauntlet and ordinary repair checks passed (16 cases), using the release page/assets plus three exports under the existing file-only test guard. Syntax and ESLint passed. Existing aim/fullscreen/crowd/auth/save/HACSA code is retained.
+
 ## 2026-10-13 — Google return / HACSA scope repair
 
 Scope: HACSA filtering is for bot teams and fighters. Do not clear a player's saved team, appearance, inventory or progress because their team is absent from the bot roster. Supabase/BuhurtOS remains project mvbxlebznlgroptwwdsm.
