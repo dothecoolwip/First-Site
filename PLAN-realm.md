@@ -1,5 +1,10 @@
 # BUHURT: Steel & Tape — "The Realm" plan
 
+## Patch 4.8: Keaton duel and crown access fixes
+
+Candidate steel-tape-auth-06ff46d37f00 changes only 06_fighter.js, 07_marshals.js, 08_ai.js and 14n_throne.js. Disarmed duel targets take no strike damage/wear/legal hit points, and the existing foul-point/marshal handling applies. Duel bots cancel windup and wait until rearm; melee behavior is retained. The Crown Herald is reachable at the hall entrance (0,-242.2), reach 3.6 m; figures remain on the dais and Royal writ/linked-fighter/online-holder/actual-duel conditions are unchanged. Syntax, ESLint and six exact-release desktop/phone checks passed, including waypoint arrival and panel opening. Current Duels Rules 26.4 section 4.5 confirmed via the official rules page. Credit: Keaton. Physical Android/controller and real crown challenge remain unverified. The former east-aisle lookahead stall near (9.4,-242.8) is a separate later travel follow-up. Private v59 is preserved.
+
+
 ## Patch 4.7 production audit integration, 14 Oct 2026
 
 Candidate steel-tape-auth-34fbff03e018 merges 15 focused runtime modules onto published source 378f4656abcaa1da08750c132a40d6a1f7df2bab. All 83 module bodies match the previously verified isolated fixes after whitespace normalization; online/networking/boards/throne/identity/roster modules are byte-exact from the published base. Syntax and ESLint passed; 12 merged-source auth units, 5 unchanged backend HACSA/identity units and merged cloud-save/account-isolation QA passed. The isolated fix implementation has 158 targeted desktop/phone passes; the broad 296-case suite was not completed. Merged browser release checks and publication are recorded in audit-release-2026-10-14. The private v59 server and frozen evidence remain unchanged: this is a production-only release. Physical Android/controller, real-account OAuth/cloud restore and WAN/crown transfer remain unverified. The reported real Creator 5× exit did not reproduce. No live authentication configuration or real player save was changed in verification.
