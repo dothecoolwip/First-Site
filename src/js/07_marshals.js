@@ -65,6 +65,7 @@ function foulVisibility(pos, off, vic) {
 
 const FOULS = {
   grounded: { text: 'strike on a grounded fighter', cite: 'BR 4.12' },
+  disarmed: { text: 'strike on a disarmed duelist', cite: 'Duels 4.5' },
   skull: { text: 'strike to the base of the skull', cite: 'BR 6' },
   knee: { text: 'strike to the back of the knee', cite: 'BR 6' },
   earlyRise: { text: 'got up before "All rise"', cite: 'REG 6.2.1' },

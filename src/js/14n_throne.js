@@ -27,7 +27,13 @@ function buildThrone(R) {
     kpiece(R, 'rp_crown', cx + dx, Y + 2.45, z, 0, 0.42);
     const lab = townLabel(seat === 'king' ? 'The King' : 'The Queen', '👑', '#e3b341'); lab.position.set(cx + dx, Y + 3.3, z); lab.userData.landmark = true; R.add(lab); THRONE.labels[seat] = lab;
   }
-  TOWN.stalls.push({ V: { key: 'throne', name: 'The Throne', role: 'Challenge for the crown', icon: '👑' }, g: new THREE.Object3D(), npc: null, ry: 0, x: cx, z, ax: cx + 7, az: z - 0.8, label: new THREE.Object3D(), open: openThrone, verb: 'Approach' });
+  // The hall list blocks the centre aisle. The Crown Herald takes challenges
+  // at the hall entrance, where every visitor can actually reach the desk.
+  const approachX = cx, approachZ = H.z1 - 2.2;
+  const herald = townLabel('Crown Herald', 'Challenge the King or Queen', '#e3b341');
+  herald.position.set(approachX, gy(approachX, approachZ) + 2.6, approachZ);
+  herald.userData.landmark = true; R.add(herald);
+  TOWN.stalls.push({ V: { key: 'throne', name: 'The Crown Herald', role: 'Challenge the King or Queen', icon: '👑' }, g: new THREE.Object3D(), npc: null, ry: 0, x: approachX, z: approachZ, ax: approachX, az: approachZ, label: herald, reach: 3.6, open: openThrone, verb: 'Challenge' });
   throneLabels(); throneLoad();
 }
 function throneLabels() {

@@ -97,7 +97,9 @@ function aiControl(f, dt) {
   f.guard = ai.guardT > 0 && !(f.action && f.action.kind !== 'swing');
   f.brace = ai.braceT > 0 && !f.guard;
   if (f.action && f.action.kind === 'swing' && f.action.phase === 'windup' && !f.action.checked) {
-    const t = f.action.target; if (t && isDown(t)) { f.action.checked = true; if (chance(prof.cancel)) f.action.cancel = true; }
+    const t = f.action.target;
+    if (t && G.match?.duel && !t.weapon) { f.action.checked = true; f.action.cancel = true; }
+    else if (t && isDown(t)) { f.action.checked = true; if (chance(prof.cancel)) f.action.cancel = true; }
   }
   if (f.guard && f.action && f.action.kind === 'swing' && f.action.phase === 'windup') f.action.cancel = true;
   const t = ai.target;
@@ -186,6 +188,12 @@ function think(f, prof) {
   }
   if (best.source !== ai.target) ai.targetUntil = G.simTime + 1.3 + pressure * 0.6;
   ai.target = best.source; const tg = best;
+  if (G.match?.duel && !tg.weapon) {
+    f.move = { x: 0, z: 0 }; f.sprint = false;
+    f.wantFace = angTo(f.pos, tg.pos);
+    if (f.action?.kind === 'swing' && f.action.phase === 'windup') f.action.cancel = true;
+    return;
+  }
   const d = dist2(tg.pos, f.pos);
   let aggr = prof.aggr * (mates.length + 1 < enemies.length ? 1.2 : 1);
   // movement goal

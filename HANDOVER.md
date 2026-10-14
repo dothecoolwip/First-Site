@@ -201,3 +201,16 @@ Rebuild with the bundled Python runtime and lint `build_cache/game.js`. Current 
 Authored road lengths before → after (excluding the existing fairground approach), at 2.7 m/s: Ashmarket 612.6 → 352.6 m (227 → 131 s), Stoneford 552.6 → 195.8 m (205 → 73 s), Southmere 514.1 → 241.3 m (190 → 89 s), Northwatch 664.2 → 323.3 m (246 → 120 s). These are calculated traversal times, not live stopwatch measurements. Final screenshots are in `First-Site-issue-fixes/evidence-2026-10-14/`.
 
 Final merged verification: 30 distinct browser cases passed after fixture-only invite corrections (20 main audit/board/city cases, 8 auth returns, 1 controller wake and 1 invite); 17 auth/identity units and cloud-save/account-isolation QA passed. Runtime and candidate bytes remained unchanged during verification. Physical-device/real-account/WAN acceptance remains open.
+
+
+## 2026-10-14 — Keaton duel and crown access follow-up (not deployed)
+
+In the same isolated `First-Site-issue-fixes/steeltape` source, `06_fighter.js` now rejects contact on a disarmed opponent in a duel before damage, kit wear, hit counts or legal hit points. It calls a new `disarmed` foul in `07_marshals.js` (Duels 4.5), awarding the victim the existing duel foul points and marshal handling. `08_ai.js` cancels an in-progress duel windup and waits while its opponent is unarmed, then resumes normal fighting after rearming. Melee behavior is unchanged. Buhurt International's published Duels Rules §4.5 explicitly prohibits strikes to an opponent who has lost their weapon.
+
+The prior throne interaction was at `(7,-285.4)`, inside the Great Hall list exclusion, so players could not enter its activation radius. `14n_throne.js` now places a clearly labeled Crown Herald at the open hall entrance `(0,-242.2)` with a 3.6 m interaction radius, which includes autowalk's roughly 3 m waypoint stopping distance. The King and Queen remain visible on the dais; challenges still require the Royal writ, eligible linked fighter, online title holder and actual duel. The crown was not transferred in testing.
+
+`build.py` rebuilt successfully (58,056 KB) and ESLint passed. New focused `test/e2e/keaton-duel-throne.spec.js` passed 6/6 desktop and Chromium phone emulation cases: no damage/score from a disarmed duel strike, foul points, bot waiting, route clearance, waypoint arrival and opening the throne panel. After a small AI conditional cleanup, the exact rebuilt output passed ESLint and the bot cases passed 2/2 again. Physical controller/Android and a real online crown duel remain unverified. No server or player save was modified.
+
+The test also exposed a separate local autowalk issue: the planner validated a route from the hall entrance around the list to the former east-aisle throne point, but lookahead movement cut the corner and stalled near `(9.4,-242.8)`. The reachable entrance Herald removes that route from the crown interaction. Review lookahead corner following separately if other hall destinations use the aisle.
+
+Merged candidate steel-tape-auth-06ff46d37f00 passed syntax, ESLint and all six focused desktop/phone duel/Herald checks against the exact hosted artifact. Current Duels Rules 26.4 section 4.5 was verified via the official rules page. Production-only release; private v59 stays frozen. The separate east-aisle autowalk lookahead stall remains a travel follow-up.
