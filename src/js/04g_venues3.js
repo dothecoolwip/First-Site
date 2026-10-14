@@ -66,4 +66,3 @@ function buildVenueHall(root) {
   for (const [c, x] of [['#5b2a86', -9], ['#8a6a12', 9], ['#1c2a5a', -15], ['#6d1b28', 15]]) { const b = new THREE.Mesh(new THREE.PlaneGeometry(2.4, 6), new THREE.MeshStandardMaterial({ color: c, roughness: 0.9, side: THREE.DoubleSide })); b.position.set(x, 8, -CZ + 1.1); root.add(b); }
   for (const z of [-10, 0, 10]) { kpiece(root, 'mk_Chandelier', 0, 9.5, z, 0, 2.4); const l = new THREE.PointLight('#ffb35a', 0.6, 26, 2); l.position.set(0, 9, z); root.add(l); }
 }
-

@@ -97,6 +97,7 @@ function craft(skill, R, what, apply) {
   if (!tradeCanPay(R.cost)) { toastMenu(`Short of materials: ${costText(R.cost)}.`); return false; }
   tradePay(R.cost); const t = tradeState(); t.made++; apply(); saveCareer(); try { AU.clang && AU.clang(0.6, 0.8); } catch (e) { }
   tradeGain(skill, R.xp);
+  if (typeof questEvent === 'function') questEvent('craft', { skill, what });
   return true;
 }
 // a card's "make it" side: label, whether you can, and a tooltip of what's missing
@@ -138,4 +139,3 @@ function renderFurnace(list, row) {
     row(`${TOOL_TIERS[tier]} ${TOOLS[k].name.toLowerCase()}`, tier >= 3 ? 'Best' : `Tier ${tier}`, R ? `Next: ${TOOL_TIERS[tier + 1].toLowerCase()} ${TOOLS[k].name.toLowerCase()}. Wider sweet spot, better yield, opens tier ${tier + 1} nodes.` : 'As good as a tool gets.', tier >= 3 ? 'Best' : null, false, null, '', h('span', { class: 'bigicon' }, TOOLS[k].icon), R ? { skill: 'forging', R, apply: () => { t.tools[k] = tier + 1; toastMenu(`${TOOL_TIERS[tier + 1]} ${TOOLS[k].name.toLowerCase()} made.`); }, label: 'Forge it' } : null);
   }
 }
-

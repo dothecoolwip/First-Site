@@ -21,6 +21,10 @@ const DISTRICTS = [
   { key: 'lake', name: 'Mirror Lake', x: 200, z: 40, r: 95 },
   { key: 'bailey', name: 'The Outer Bailey', x: 0, z: -228, r: 120, gate: 'bailey' },
   { key: 'ward', name: 'The King’s Court', x: 0, z: -252, r: 46, gate: 'royal' }
+  ,{ key: 'ashmarket', name: 'Ashmarket', x: -840, z: -250, r: 120 }
+  ,{ key: 'stoneford', name: 'Stoneford', x: 890, z: 140, r: 130 }
+  ,{ key: 'southmere', name: 'Southmere', x: -90, z: 900, r: 135 }
+  ,{ key: 'northwatch', name: 'Northwatch Fortress', x: 0, z: -1030, r: 125 }
 ];
 // arenas: every one is a 20 x 30 list (LIST) so the fight engine runs unchanged; the bout plays at the nearest one
 const ARENAS = [
@@ -30,6 +34,10 @@ const ARENAS = [
   { key: 'beach', name: 'Mirror Lake Strand', x: 148, z: 78, bx: 13, bz: 18, district: 'lake', icon: '🌊', accent: '#3185ac', entry: [148, 103] },
   { key: 'castle', name: 'Bailey Stone Lists', x: -74, z: -204, bx: 14, bz: 19, district: 'bailey', gate: 'bailey', icon: '🏰', accent: '#647084', entry: [-74, -179] },
   { key: 'hall', name: 'King’s Great Hall', x: 0, z: -264, bx: 12, bz: 15, district: 'ward', gate: 'royal', indoor: true, icon: '👑', accent: '#b78a35', entry: [0, -244] }
+  ,{ key: 'foundry', name: 'Foundry Pit', x: -902, z: -260, bx: 14, bz: 19, district: 'ashmarket', icon: '⚒️', accent: '#ad6135', entry: [-902, -236] }
+  ,{ key: 'bridge', name: 'Bridge Lists', x: 947, z: 161, bx: 14, bz: 19, district: 'stoneford', icon: '🌉', accent: '#4c7290', entry: [947, 185] }
+  ,{ key: 'orchard', name: 'Orchard Lists', x: -22, z: 943, bx: 14, bz: 19, district: 'southmere', icon: '🌿', accent: '#7d9855', entry: [-22, 967] }
+  ,{ key: 'northwatch', name: 'Northwatch Yard', x: 58, z: -1060, bx: 14, bz: 19, district: 'northwatch', icon: '🏰', accent: '#536d79', entry: [58, -1036] }
 ];
 // A walk-in practice list, separate from the six competitive/spectator arenas.
 const TRAINING_GROUND = { key: 'training', name: 'Fairground Training Yard', x: -58, z: -56, bx: 12, bz: 17,
@@ -91,29 +99,41 @@ function arenaBlocked(x, z, r) { for (const A of ARENAS) if (Math.abs(x - A.x) <
 function lakeIn(x, z, pad = 0) { const dx = (x - LAKE.x) / (LAKE.rx + pad), dz = (z - LAKE.z) / (LAKE.rz + pad); return dx * dx + dz * dz < 1; }
 function districtAt(x, z) {
   { const k = tierOf(x, z); if (k >= 3) return DISTRICTS[5]; if (k) return DISTRICTS[4]; }
-  let best = null, bd = 1e9; for (const D of DISTRICTS.slice(0, 4)) { const d = Math.hypot(x - D.x, z - D.z) / D.r; if (d < bd) { bd = d; best = D; } }
+  let best = null, bd = 1e9; for (const D of [...DISTRICTS.slice(0, 4), ...DISTRICTS.slice(6)]) { const d = Math.hypot(x - D.x, z - D.z) / D.r; if (d < bd) { bd = d; best = D; } }
   return bd < 1.25 ? best : { key: 'wild', name: 'The Open Country' };
 }
 function nearestArena(x, z) { let best = null, bd = 1e9; for (const A of ARENAS) { const d = Math.hypot(x - A.x, z - A.z); if (d < bd) { bd = d; best = A; } } return { A: best, d: bd }; }
 // ---- builders
 function buildRealmTerrain(R) {
-  const sx = TOWN_RX * 2, sz = TOWN_RZ * 2, g = new THREE.PlaneGeometry(sx, sz, 128, 128);
-  g.rotateX(-Math.PI / 2);
-  const p = g.attributes.position, colours = new Float32Array(p.count * 3), c = new THREE.Color();
-  for (let i = 0; i < p.count; i++) {
-    // This broad mesh is the country underneath the castle. Sampling gy() here
-    // pulls individual coarse vertices up onto a terrace and stretches giant
-    // grass triangles across its cliff (and over the Bailey lists).
-    const x = p.getX(i), z = p.getZ(i), y = realmHeight(x, z);
-    p.setY(i, y - 0.055);
-    const rocky = x < -230 && y > 4, farmland = z > 185 && x > -280 && x < 60;
-    c.set(rocky ? '#a6a08d' : farmland ? '#c5bf8b' : y > 7 ? '#9faa82' : '#b4c7a0').convertSRGBToLinear();
-    colours[i * 3] = c.r; colours[i * 3 + 1] = c.g; colours[i * 3 + 2] = c.b;
-  }
-  p.needsUpdate = true; g.setAttribute('color', new THREE.BufferAttribute(colours, 3)); g.computeVertexNormals();
-  const t = venueTex('grass').clone(); t.wrapS = t.wrapT = THREE.RepeatWrapping; t.repeat.set(65, 67); t.needsUpdate = true;
-  const m = mk(R, g, lmat({ map: t, vertexColors: true, roughness: 1, side: THREE.DoubleSide }), 0, 0, 0, false);
-  m.receiveShadow = true; m.userData.landmark = true; TOWN.terrain = m;
+  const makeMaterial = repeat => { const t = venueTex('grass').clone(); t.wrapS = t.wrapT = THREE.RepeatWrapping; t.repeat.set(repeat, repeat); t.needsUpdate = true; return lmat({ map: t, vertexColors: true, roughness: 1, side: THREE.DoubleSide }); };
+  const centralMat = makeMaterial(65), outerMat = makeMaterial(12);
+  const patch = (x0, x1, z0, z1, material) => {
+    const cx = (x0 + x1) / 2, cz = (z0 + z1) / 2, w = x1 - x0, d = z1 - z0;
+    const g = new THREE.PlaneGeometry(w, d, Math.ceil(w / 9.5), Math.ceil(d / 9.5)); g.rotateX(-Math.PI / 2);
+    const p = g.attributes.position, colours = new Float32Array(p.count * 3), c = new THREE.Color();
+    for (let i = 0; i < p.count; i++) {
+      const x = cx + p.getX(i), z = cz + p.getZ(i), y = realmHeight(x, z);
+      p.setY(i, y - 0.055);
+      const rocky = x < -230 && y > 4, farmland = z > 185 && x > -280 && x < 60;
+      c.set(rocky ? '#a6a08d' : farmland ? '#c5bf8b' : y > 7 ? '#9faa82' : '#b4c7a0').convertSRGBToLinear();
+      colours[i * 3] = c.r; colours[i * 3 + 1] = c.g; colours[i * 3 + 2] = c.b;
+    }
+    p.needsUpdate = true; g.setAttribute('color', new THREE.BufferAttribute(colours, 3)); g.computeVertexNormals();
+    const m = mk(R, g, material, cx, 0, cz, false); m.receiveShadow = true; m.userData.landmark = true; return m;
+  };
+  // Keep the original central collision mesh for the castle. Outer terrain is visible in nearby tiles only.
+  TOWN.terrain = patch(-620, 620, -640, 640, centralMat);
+  TOWN.terrainOuter = [];
+  const strip = (x0, x1, z0, z1) => {
+    for (let x = x0; x < x1; x += 200) for (let z = z0; z < z1; z += 200) {
+      const m = patch(x, Math.min(x + 200, x1), z, Math.min(z + 200, z1), outerMat);
+      TOWN.terrainOuter.push({ m, x: m.position.x, z: m.position.z });
+    }
+  };
+  strip(-TOWN_RX, TOWN_RX, -TOWN_RZ, -640);
+  strip(-TOWN_RX, TOWN_RX, 640, TOWN_RZ);
+  strip(-TOWN_RX, -620, -640, 640);
+  strip(620, TOWN_RX, -640, 640);
 }
 // Soft borders let worked earth, clearings and tracks settle into the grass.
 // The old opaque quads made each district look like props on a dark rectangle.
@@ -264,15 +284,16 @@ function realmHall(R, x, z, w, d, h, ry, o) {
 // a wall run of castle pieces from (x0,z0) to (x1,z1); pieces 12 m long at scale 1.5
 function castleRun(R, x0, z0, x1, z1, gapAt) {
   const L = Math.hypot(x1 - x0, z1 - z0), n = Math.round(L / 12), ry = Math.abs(z1 - z0) < 1e-3 ? Math.PI / 2 : 0;
-  for (let i = 0; i < n; i++) { const t = (i + 0.5) / n, x = x0 + (x1 - x0) * t, z = z0 + (z1 - z0) * t; if (gapAt && gapAt(x, z)) continue; kpiece(R, 'cs_wall_2x4_walkway', x, 0, z, ry, 1.5); }
+  for (let i = 0; i < n; i++) { const t = (i + 0.5) / n, x = x0 + (x1 - x0) * t, z = z0 + (z1 - z0) * t; if (gapAt && gapAt(x, z)) continue; kpiece(R, 'cs_wall_2x4_walkway', x, gy(x, z), z, ry, 1.5); }
   const k = Math.max(1, Math.round(L / 1.7));
   for (let i = 0; i <= k; i++) { const t = i / k, x = x0 + (x1 - x0) * t, z = z0 + (z1 - z0) * t; if (gapAt && gapAt(x, z, true)) continue; TOWN.obst.push({ x, z, r: 1.25 }); }
 }
 function castleTower(R, x, z, h, flagCol) {
-  kpiece(R, 'cs_tower_mid', x, 0, z, 0, 1.5); if (h > 1) { const t = kpiece(R, 'cs_tower_mid', x, 0, z, 0, 1.5); if (t) t.position.y = 6; }
-  const top = kpiece(R, 'cs_tower_top_1', x, 0, z, 0, 1.5); if (top) top.position.y = h > 1 ? 12 : 6;
-  const cone = kpiece(R, 'cs_roof_cone', x, 0, z, 0, 1.5); if (cone) cone.position.y = h > 1 ? 18.4 : 12.4;
-  if (flagCol) { const fl = mk(R, geo('rlm_flag', () => new THREE.PlaneGeometry(1.8, 1.1)), lmat({ color: flagCol, side: THREE.DoubleSide }), x + 0.9, (h > 1 ? 25.5 : 19.5), z); WORLD.bob.push({ o: fl, k: 'flag' }); mk(R, geo('rlm_pole', () => new THREE.CylinderGeometry(0.05, 0.05, 3, 6)), tmat('#2b2e31'), x, h > 1 ? 24.6 : 18.6, z); }
+  const baseY = gy(x, z);
+  kpiece(R, 'cs_tower_mid', x, baseY, z, 0, 1.5); if (h > 1) { const t = kpiece(R, 'cs_tower_mid', x, baseY, z, 0, 1.5); if (t) t.position.y = baseY + 6; }
+  const top = kpiece(R, 'cs_tower_top_1', x, baseY, z, 0, 1.5); if (top) top.position.y = baseY + (h > 1 ? 12 : 6);
+  const cone = kpiece(R, 'cs_roof_cone', x, baseY, z, 0, 1.5); if (cone) cone.position.y = baseY + (h > 1 ? 18.4 : 12.4);
+  if (flagCol) { const fl = mk(R, geo('rlm_flag', () => new THREE.PlaneGeometry(1.8, 1.1)), lmat({ color: flagCol, side: THREE.DoubleSide }), x + 0.9, baseY + (h > 1 ? 25.5 : 19.5), z); WORLD.bob.push({ o: fl, k: 'flag' }); mk(R, geo('rlm_pole', () => new THREE.CylinderGeometry(0.05, 0.05, 3, 6)), tmat('#2b2e31'), x, baseY + (h > 1 ? 24.6 : 18.6), z); }
   TOWN.obst.push({ x, z, r: 3.4 });
 }
 // the gate: a gatehouse, two towers, banners and torches; the gate itself is a gate obstacle that opens with the writ
@@ -430,6 +451,7 @@ function buildRealm(R) {
   buildVillage(R, add, face);
   buildWoods(R, add, face);
   buildLake(R, add, face);
+  buildExpandedCities(R);
   // the open country between: meadows, lone trees, rocks, hedges, a few farmsteads in the distance
   const meadow = [['kf_tree_1_a', 1.1, 1], ['kf_tree_3_a', 1.1, 1], ['kf_tree_4_a', 1, 1], ['kf_bush_3_a', 1.4, 0.6], ['kf_rock_1_e', 1.2, 0.8], ['kf_rock_3_a', 1.3, 0.9], ['kf_grass_2_a', 1.3, 0]];
   const rings = [[0, -100, 70], [-110, 60, 60], [110, -60, 70], [100, 140, 70], [-110, -150, 50], [130, -150, 60], [-240, 20, 50], [-250, 210, 50], [200, 200, 70], [250, -140, 60], [-60, 200, 60], [60, 220, 60]];
@@ -728,6 +750,7 @@ function realmCull() {
   if (!TOWN.cells) return;
   const cam = W3.camera.position, far = IS_TOUCH ? 115 : 150;
   for (const C of TOWN.cells) { const d = Math.hypot(C.x - cam.x, C.z - cam.z); C.g.visible = d < far + REALM_CELL * 0.71; }
+  for (const T of TOWN.terrainOuter || []) T.m.visible = Math.hypot(T.x - cam.x, T.z - cam.z) < far + 160;
   // the Great Hall's roof lifts away while you're inside
   if (TOWN.hallRoof && TOWN.pos) TOWN.hallRoof.visible = !(TOWN.pos.x > HALL.x0 && TOWN.pos.x < HALL.x1 && TOWN.pos.z > HALL.z0 && TOWN.pos.z < HALL.z1 + 1);
 }
@@ -735,7 +758,7 @@ function realmCull() {
 function realmDistrictTick() {
   if (!TOWN.pos) return;
   const D = districtAt(TOWN.pos.x, TOWN.pos.z);
-  if (D.key !== TOWN.district) { const first = TOWN.district == null; TOWN.district = D.key; if (!first) { const el = $('#townArea'); if (el) { el.innerHTML = ''; el.append(h('small', null, 'Now entering'), h('b', null, D.name)); el.classList.remove('on'); void el.offsetWidth; el.classList.add('on'); } } }
+  if (D.key !== TOWN.district) { const first = TOWN.district == null; TOWN.district = D.key; if (typeof questEvent === 'function') questEvent('visit', { district: D.key }); if (!first) { const el = $('#townArea'); if (el) { el.innerHTML = ''; el.append(h('small', null, 'Now entering'), h('b', null, D.name)); el.classList.remove('on'); void el.offsetWidth; el.classList.add('on'); } } }
 }
 // ---- gates: shut unless you hold the writ
 function gateOpen(key) { return realmHasWrit(key); }

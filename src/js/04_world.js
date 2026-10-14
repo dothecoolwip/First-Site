@@ -217,4 +217,3 @@ function updateFx(dt) {
   for (const p of W3.fx) { if (p.life <= 0) continue; p.life -= dt; if (p.cute) { p.v.y -= 2.2 * dt; p.v.multiplyScalar(1 - 1.5 * dt); p.s.material.opacity = clamp(p.life * 3, 0, 1); p.s.position.addScaledVector(p.v, dt); if (p.life <= 0) p.s.visible = false; continue; } p.v.y -= 9.8 * dt; p.s.position.addScaledVector(p.v, dt); if (p.s.position.y < 0.02) { p.s.position.y = 0.02; p.v.y *= -0.3; p.v.x *= 0.6; p.v.z *= 0.6; } if (p.life <= 0) p.s.visible = false; }
   for (const d of W3.dust) { if (d.life <= 0) continue; d.life -= dt; const k = 1 - d.life / d.max; d.s.scale.setScalar(0.3 + d.size * k); d.s.material.opacity = (d.breath ? (W3.venue === 'castle' ? 0.55 : 0.35) : 0.6) * (1 - k); d.s.position.y += dt * (d.breath ? 0.45 : 0.3); if (d.life <= 0) d.breath = false; if (d.life <= 0) d.s.visible = false; }
 }
-

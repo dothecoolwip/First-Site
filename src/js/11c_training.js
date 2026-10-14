@@ -88,4 +88,3 @@ function updateTraining(dt) {
   for (const f of G.fighters) if (f.team === 1 && f.ai.mode === 'still' && f.stabMul > 4 && isDown(f) && f.returnAt < 0) f.returnAt = G.simTime + 1;
 }
 function endTraining() { TR.on = false; $('#lesson').hidden = true; $('#app').classList.remove('training'); if (TR.ring) TR.ring.visible = false; }
-

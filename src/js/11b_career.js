@@ -214,4 +214,3 @@ function careerMatchEnd(m, won) {
   progressMatch(m, won);
   return { money, lines };
 }
-

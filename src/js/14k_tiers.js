@@ -10,8 +10,8 @@ VENDORS.push(
   { key: 'msmith', as: 'smith', tier: 2, name: 'Brunhild Anvilborn', role: 'Master smith', col: '#5a3b24', awn: '#8a3a1c', hi: 'The fairground lads are fine for a start. This is where steel gets serious.', icon: '⚒️' },
   { key: 'marmour', as: 'armour', tier: 2, name: 'Sir Aldric Platewright', role: 'Master armourer', col: '#46505a', awn: '#2f3d4c', hi: 'Garrison plate, fitted properly. Stand still.', icon: '🛡️' },
   { key: 'mtrainer', as: 'trainer', tier: 2, name: 'Drillmaster Kael', role: 'Barracks drillmaster', col: '#1f4a6b', awn: '#173f5c', hi: 'The garrison trains twice a day. You can join for a fee.', icon: '🏋️' },
-  { key: 'rsmith', as: 'smith', tier: 3, name: 'Odo the King’s Smith', role: 'Royal smith', col: '#5a4a2a', awn: '#8a6a12', hi: 'I forge for the king. Today, apparently, also for you.', icon: '👑' },
-  { key: 'rarmour', as: 'armour', tier: 3, name: 'Dame Ottilie', role: 'Royal armourer', col: '#3a3f5a', awn: '#5b2a86', hi: 'The King’s Guard wear my plate. It has never once been dented by an opinion.', icon: '👑' },
+  { key: 'rsmith', as: 'smith', tier: 2, name: 'Odo the King’s Smith', role: 'Royal smith', col: '#5a4a2a', awn: '#8a6a12', hi: 'I keep the court armed. Mara Flint in Ashmarket handles the highest grades of weapon work.', icon: '👑' },
+  { key: 'rarmour', as: 'armour', tier: 2, name: 'Dame Ottilie', role: 'Royal armourer', col: '#3a3f5a', awn: '#5b2a86', hi: 'I maintain the Guard’s harness. The finest new fittings come from Stoneford.', icon: '👑' },
   { key: 'rtailor', as: 'herald', tier: 3, name: 'Master Fennick', role: 'Royal tailor', col: '#5b2a86', awn: '#7a3aa6', hi: 'Silk, velvet, cloth of gold. One does not dress for court; one dresses AT it.', icon: '🧵' }
 );
 for (const V of VENDORS) VENDOR_BY[V.key] = V;
@@ -20,9 +20,9 @@ Object.assign(STALL_FACE, { msmith: 2.21, marmour: -Math.PI / 2, mtrainer: Math.
 Object.assign(VENDOR_FIT, { msmith: 'Female_Peasant', marmour: 'Male_Ranger', mtrainer: 'Male_Ranger', rsmith: 'Male_Peasant', rarmour: 'Female_Ranger', rtailor: 'Male_Ranger' });
 // how far up a bar of `max` a vendor of this tier will take you
 function tierCap(max, tier) { return tier >= 3 ? max : tier === 2 ? Math.max(1, Math.round(max * 0.8)) : Math.max(1, Math.round(max * 0.6)); }
-function vendorTierNote(tier) { return tier === 1 ? 'Better work is done in the Outer Bailey (level 15 and the Bailey writ).' : 'The rest is done only at the King’s Court (level 40 and the Royal writ).'; }
+function vendorTierNote(tier, key) { return tier === 1 ? 'Better work is done in the Outer Bailey (level 15 and the Bailey writ).' : key === 'rsmith' || key === 'msmith' ? 'The final weapon grade is forged in Ashmarket.' : key === 'rarmour' || key === 'marmour' ? 'The final armour grade is fitted in Stoneford.' : 'Advanced training is taught at Northwatch.'; }
 // grey out goods past this vendor's tier (every upgrade card carries a pips bar saying "lv of max")
-function applyVendorTier(box, tier) {
+function applyVendorTier(box, tier, key) {
   if (tier >= 3) return;
   for (const card of box.querySelectorAll('.vcard')) {
     const p = card.querySelector('.pipsN'); if (!p) continue;
@@ -30,9 +30,9 @@ function applyVendorTier(box, tier) {
     const lv = +m[1], max = +m[2]; if (lv >= max || lv < tierCap(max, tier)) continue;
     card.classList.add('vlocked');
     for (const b of card.querySelectorAll('.vbuy, .vmk')) { b.disabled = true; b.classList.remove('primary', 'flagtape'); b.classList.add('tape'); }
-    const vb = card.querySelector('.vbuy'); if (vb) vb.textContent = tier === 1 ? 'Bailey only' : 'Court only';
+    const vb = card.querySelector('.vbuy'); if (vb) vb.textContent = tier === 1 ? 'Bailey only' : key === 'rsmith' || key === 'msmith' ? 'Ashmarket only' : key === 'rarmour' || key === 'marmour' ? 'Stoneford only' : 'Northwatch only';
     const sh = card.querySelector('.vshort'); if (sh) sh.textContent = '';
-    card.querySelector('.vtxt').append(h('div', { class: 'vtiernote' }, vendorTierNote(tier)));
+    card.querySelector('.vtxt').append(h('div', { class: 'vtiernote' }, vendorTierNote(tier, key)));
   }
 }
 // ---- the gatekeepers: Sergeant Brask outside the bailey gate, the Captain of the King's Guard by the Castle arena
@@ -78,4 +78,3 @@ function trialEnd(m, won, withPurse) {
   const body = won ? `<p>You hold the ${R.name}. ${key === 'bailey' ? 'The bailey gate opens for you: the master smith, the master armourer and the barracks are inside.' : 'The inner gate opens: the royal smith, the royal armourer and the tailor are in the King’s Court.'} Bonus ${fmtMoney(T.prize)}.</p>` : `<p>Not this time. ${key === 'bailey' ? 'Sergeant Brask' : 'The King’s Guard'} will be waiting when you’re ready.</p>`;
   msg(key === 'bailey' ? 'the bailey gate' : 'the king’s guard', won ? T.title : 'Not yet', withPurse(body), won ? [['Back to the realm', toTitle, true]] : [['Try again', () => startTrial(key)], ['Back to the realm', toTitle, true]]);
 }
-

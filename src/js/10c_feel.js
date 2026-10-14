@@ -22,4 +22,3 @@ function applyFeel(cam, dt) {
   FEEL.kick.multiplyScalar(Math.exp(-dt * 11));
   FEEL.fov *= Math.exp(-dt * 9);
 }
-

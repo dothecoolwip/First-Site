@@ -32,4 +32,3 @@ function renderSmith(box) {
   wrap.append(nm, chk, h('div', { class: 'row' }, btn, S.forged ? h('span', { class: 'muted small' }, `Current: ${WEAPONS.custom ? WEAPONS.custom.name : ''}, ${S.forged.mass.toFixed(2)} kg, ${Math.round(S.forged.len * 100)} cm`) : null));
   box.append(wrap);
 }
-

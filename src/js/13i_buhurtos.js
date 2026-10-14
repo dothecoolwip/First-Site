@@ -252,4 +252,3 @@ function openBosCode(ret) {
       try { const { data, error } = await bosTimeout((await bosClient()).auth.verifyOtp({ email: BOS.otpEmail, token, type: 'email' }), 'Checking your email code'); if (error) throw error; BOS.user = data.user; await bosLoadInfo(); if (CLOUD.applying) return; toastMenu(`Signed in as ${myName()}`); ret(); } catch (e) { say('That code didn’t work: ' + (e.message || e)); } finally { BOS.interactive = false; }
     }, true], ['Back', () => openBosSignIn(ret)]]);
 }
-

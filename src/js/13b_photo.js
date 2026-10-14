@@ -59,4 +59,3 @@ function initPhoto() {
   $('#replayBtn').onclick = () => { AU.click(); RP.on ? stopReplay() : startReplay(); };
   $('#replayScrub').oninput = e => { if (!RP.on && !startReplay()) return; if (!RP.frames.length) return; const a = RP.frames[0].t, b = RP.frames[RP.frames.length - 1].t; RP.t = a + (b - a) * +e.target.value; RP.start = a; RP.end = b; };
 }
-

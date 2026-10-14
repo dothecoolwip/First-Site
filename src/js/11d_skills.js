@@ -154,4 +154,3 @@ function renderSkills(box) {
     h('div', null, h('b', null, n.name), h('span', { class: 'muted small' }, ` ${T.name}${n.cap ? ', capstone' : ''}, tier ${n.tier + 1}`), h('p', { class: 'small' }, desc)),
     h('button', { class: 'btn ' + (why ? 'tape' : 'primary flagtape') + ' small', 'data-gp': why ? null : 'A', disabled: why ? true : null, onclick: () => { if (!learn(n)) renderCareer(); } }, why || (r ? 'Rank up' : 'Learn'))));
 }
-

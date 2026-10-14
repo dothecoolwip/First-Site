@@ -170,4 +170,3 @@ async function shareInvite() {
   try { if (navigator.share) { await navigator.share({ title: 'BUHURT lobby', text }); return; } } catch (e) { if (e && e.name === 'AbortError') return; }
   try { await navigator.clipboard.writeText(text); toastMenu('Invite copied. Paste it in a message to your friend.'); } catch (e) { toastMenu(`Tell your friend the code ${NET.code}`); }
 }
-

@@ -168,12 +168,13 @@ function progressMatch(m, won) {
   if (m.online) { // online fights don't go through the offline purse; pay a little and give XP here
     gainXP(40 + (won ? 120 : 0)); pay(won ? 60 : 20);
   }
+  if (typeof questEvent === 'function') questEvent('match', { won: !!won, arena: ARENAS.find(a => Math.hypot(a.x - (TOWN.pos?.x || 0), a.z - (TOWN.pos?.z || 0)) < 65)?.key || W3.venue || '', online: !!m.online });
   saveCareer(); progressCheck();
 }
 // ---- the Progress tab in Your fighter
 function renderProgress(box) {
   skillsState(); const lv = CAREER.level || 1, nx = nextRankAt(lv);
-  box.append(h('div', { class: 'rankcard' }, h('span', { class: 'lvnum num' }, String(lv)), h('div', null, h('b', null, rankOf(lv)), h('span', { class: 'xpbar' }, h('i', { style: `width:${Math.round((CAREER.xp || 0) / xpNeed(lv) * 100)}%` })), h('small', { class: 'muted' }, `${CAREER.xp || 0} / ${xpNeed(lv)} XP to level ${lv + 1}${nx ? ` · next rank, ${rankOf(nx)}, at level ${nx}` : ' · top rank'}`))));
+  box.append(h('div', { class: 'rankcard' }, h('span', { class: 'lvnum num' }, String(lv)), h('div', null, h('b', null, rankOf(lv)), h('span', { class: 'xpbar' }, h('i', { style: `width:${lv >= 100 ? 100 : Math.round((CAREER.xp || 0) / xpNeed(lv) * 100)}%` })), h('small', { class: 'muted' }, lv >= 100 ? 'Maximum level · top rank' : `${CAREER.xp || 0} / ${xpNeed(lv)} XP to level ${lv + 1}${nx ? ` · next rank, ${rankOf(nx)}, at level ${nx}` : ' · top rank'}`))));
   // challenges
   const D = challenges();
   const chal = (c, i, base, done, reward) => { const pr = Math.min(c.need, chalProgress(c, base)); return h('div', { class: 'chal' + (done[i] ? ' done' : '') }, h('span', null, c.text), h('span', { class: 'xpbar' }, h('i', { style: `width:${Math.round(pr / c.need * 100)}%` })), h('small', { class: 'muted num' }, done[i] ? '✓ done' : `${pr} / ${c.need} · ${reward}`)); };
@@ -216,4 +217,3 @@ function recordGuardOutcome(f, outcome) {
   const row = metrics[key] || (metrics[key] = { attempts: 0, full: 0, partial: 0, perfect: 0, failed: 0 });
   row.attempts++; row[outcome]++;
 }
-

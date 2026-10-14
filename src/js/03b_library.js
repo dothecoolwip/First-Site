@@ -104,4 +104,3 @@ function libraryThumb(key, W = 96, H = 96) {
   });
   return c;
 }
-

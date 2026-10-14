@@ -112,4 +112,3 @@ function tagTexture(num, flag, isPlayer) {
   x.font = '40px "Permanent Marker", "Marker Felt", "Comic Sans MS", cursive'; x.fillText(String(num), 80, 42);
   const t = new THREE.CanvasTexture(c); t.encoding = THREE.sRGBEncoding; return t;
 }
-

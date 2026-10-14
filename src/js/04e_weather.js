@@ -54,4 +54,3 @@ function wearUpdate(f, dt) {
   const c = J.steelMat.color; c.set('#c3cacd').lerp(WEAR_COL.dull, dmg * 0.8).lerp(WX.kind === 'snow' ? WEAR_COL.snow : WEAR_COL.mud, mud * 0.55);
   J.steelMat.roughness = 0.3 + dmg * 0.35 + mud * 0.3 + (WX.kind === 'rain' ? -0.12 : 0); J.steelMat.metalness = 0.92 - mud * 0.4;
 }
-

@@ -268,4 +268,3 @@ function updateCuteDeco(t) {
   // propeller hats spin, faster when the kid is running
   for (const f of G.fighters) if (f.model && f.model.prop) f.model.prop.rotation.y += 0.016 * (6 + vlen(f.vel) * 6);
 }
-

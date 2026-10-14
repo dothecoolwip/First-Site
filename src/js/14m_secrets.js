@@ -68,4 +68,3 @@ function renderSecrets(box) {
   for (const S of SECRETS) el.append(h('div', { class: 'small ' + (secretFound(S.key) ? '' : 'muted') }, secretFound(S.key) ? `✨ ${S.name}: found.` : `❔ ${S.hint}`));
   box.append(el);
 }
-

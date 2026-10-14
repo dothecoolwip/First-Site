@@ -36,4 +36,3 @@ function buildHamlet(root0) {
   for (const [x, z, s] of [[-LIST.W / 2 - 11.5, 7, 1], [-LIST.W / 2 - 12.2, 8.2, 0.8], [LIST.W / 2 + 12.5, -6, 0.9], [LIST.W / 2 + 13.3, -5, 0.7]]) vpiece(root, 'Prop_Crate', x, 0, z, rand(0, 1.5), s);
   for (let i = 0; i < 8; i++) vpiece(root, 'Prop_WoodenFence_Single', -30 + i * 2.05, 0, -40, 0);
 }
-

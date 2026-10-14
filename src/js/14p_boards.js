@@ -241,4 +241,3 @@ function boardsStartHeartbeat() {
   BOARDS.heartbeat = setInterval(beat, 15000);
   document.addEventListener('visibilitychange', () => { if (!document.hidden) beat(); });
 }
-

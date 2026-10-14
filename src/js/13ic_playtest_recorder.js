@@ -132,4 +132,3 @@ async function playtestCapture() {
 setInterval(playtestFlush, 5000);
 window.addEventListener('online', playtestFlush);
 window.addEventListener('pagehide', () => { if (PLAYTEST.id && PLAYTEST.pending.length) playtestFlush(); });
-

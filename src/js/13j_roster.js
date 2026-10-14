@@ -162,4 +162,3 @@ function liveBoutPick(A) {
   const n = Math.max(1, Math.min(5, Math.max(L.a.fighters.length, L.b.fighters.length) || 1));
   return { mode: n === 4 ? 5 : n, clubA: mk2(L.a, 'live:a'), opp: mk2(L.b, 'live:b'), category: /wom|fem/i.test(L.category) ? 'women' : 'men', label: `LIVE · ${L.comp || L.event}`, live: L };
 }
-

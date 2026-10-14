@@ -105,4 +105,3 @@ function peelBonus(f, e, mates) {
   }
   return 0;
 }
-

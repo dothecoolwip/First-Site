@@ -274,4 +274,3 @@ function trainingAI(f, dt) {
     startAction(f, 'swing', { arc: f.swingSide > 0 ? 'R2L' : 'L2R', charge: 0.55, target: p }); // a slow, telegraphed blow
   }
 }
-

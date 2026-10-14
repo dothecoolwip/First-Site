@@ -173,4 +173,3 @@ function capeAnimate(J, speed, time, dt) {
   }
   attr.needsUpdate = true; C.cloth.geometry.computeVertexNormals();
 }
-

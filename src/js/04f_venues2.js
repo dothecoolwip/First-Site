@@ -57,4 +57,3 @@ function buildVenueStadium(root) {
   const c = cvs(1024, 256), x = c.getContext('2d'); x.fillStyle = '#0f1316'; x.fillRect(0, 0, 1024, 256); x.fillStyle = '#f2c40f'; x.fillRect(0, 0, 1024, 12); x.fillRect(0, 244, 1024, 12); x.fillStyle = '#ece8de'; x.textAlign = 'center'; x.font = '900 120px "Big Shoulders Display", Impact, sans-serif'; x.fillText('PRAIRIE CUP FINAL', 512, 160);
   const ban = new THREE.Mesh(new THREE.PlaneGeometry(16, 4), new THREE.MeshBasicMaterial({ map: texFrom(c) })); ban.position.set(0, 12, -48); root.add(ban);
 }
-

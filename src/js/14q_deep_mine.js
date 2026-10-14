@@ -187,5 +187,3 @@ function openDeepMineMap() {
       h('button', { class: 'btn primary flagtape', onclick: () => { closeVendor(); mineChange(false); } }, 'Ride the lift to the surface'));
   });
 }
-
-

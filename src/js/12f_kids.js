@@ -104,4 +104,3 @@ function endKid(quit) {
   if (P.dummies != null && P.balloons != null && P.pig != null) sticker('lolly');
   msg('little knights', `${KID_GAMES[kind].icon} ${score}!`, `<p>${KID_GAMES[kind].name}: <b>${score}</b>. Best ever: ${best}.</p>`, [['Again!', () => startKid(kind), true], ['Other games', openKids], ['Sticker book', openStickers]]);
 }
-

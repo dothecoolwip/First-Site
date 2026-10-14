@@ -323,4 +323,3 @@ window.addEventListener('online',()=>{
 });
 document.addEventListener('visibilitychange',()=>{if(document.hidden){if(typeof townSavePosition==='function')townSavePosition(true);cloudFlush();}});
 window.addEventListener('pagehide',()=>{if(typeof townSavePosition==='function')townSavePosition(true);cloudFlush();});
-

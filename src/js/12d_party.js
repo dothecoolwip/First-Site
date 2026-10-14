@@ -95,4 +95,3 @@ function bracketResult(winnerSlot) {
   if (B.match >= B.rounds[B.cur].length / 2) { const next = B.results[B.cur].slice(); if (next.length === 1) B.champion = next[0]; else { B.rounds.push(next); B.cur++; B.match = 0; } }
   VS.names = null; showBracket();
 }
-

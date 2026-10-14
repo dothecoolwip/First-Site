@@ -89,4 +89,3 @@ async function throneOnlineEnd(m) {
 async function throneEnd(m, won, withPurse) {
   msg('the throne', 'Crown duel unavailable', withPurse('<p>The title only changes hands in a one-on-one online fight with its current holder.</p>'), [['Back to the realm', toTitle, true]]);
 }
-

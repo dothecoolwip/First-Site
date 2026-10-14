@@ -158,4 +158,3 @@ function p2pLobby() {
     leave() { dead = true; try { conn && conn.close(); member && member.destroy(); hub && hub.destroy(); } catch (e) { } },
   };
 }
-

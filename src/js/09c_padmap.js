@@ -193,4 +193,3 @@ function openPadSetup(back) {
   };
   requestAnimationFrame(tick);
 }
-

@@ -82,4 +82,3 @@ function boutHud() {
   const Ar = ARENAS.find(a => a.key === TOWN.boutArena);
   el.append(h('small', null, (Ar ? Ar.name : 'In the list') + ' · ' + BOUT.label), h('b', null, BOUT.vs), h('span', { class: 'num' }, BOUT.live ? `Real score ${BOUT.live.score[0]}–${BOUT.live.score[1]} · ${BOUT.live.phase}` : m ? `Round ${m.round} · ${w[0]}–${w[1]}` : ''));
 }
-

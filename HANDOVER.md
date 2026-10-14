@@ -123,3 +123,39 @@ Busy festival limits: target 28 roaming civilians on touch devices and 48 on des
 Validation details and final command results are recorded in implementation-2026-10-13/AIM_CROWD_RESULTS.md at the workspace root. Real Android Chrome aiming, fullscreen prompts, and multi-minute frame-time/crowd acceptance remain device checks; automated phone projects are Chromium emulation. Preserve existing browser storage during those checks.
 Final local validation: build steel-tape-21654451b7 and ESLint passed. Expanded run 16/16 passed; after the final aisle widening, 6/6 exact-build desktop/phone checks passed, including player access and seeded 180-second civilian/seat routes with zero penetrations. Auth/HACSA unit checks 15/15 passed. Settings screenshots inspected in desktop and phone portrait. No publishing performed; physical Android FPS/browser notice and live service acceptance remain unverified.
 Private test-server release preparation: targeted aiming, fullscreen and ambient crowd changes rebuilt as steel-tape-auth-157bcbbef17a. Exact release artifact passed all 12 desktop/phone focused tests; ESLint and syntax checks passed. Published source assets, authentication, roster and unrelated gameplay modules retained. Hosted browser QA uses an isolated synthetic Supabase session and blocks backend writes.
+
+
+## 2026-10-14 — Team squires and persistent repair workshop
+
+The entrance now has Ada the Corner Guide and a “Find your squire” quest. Every team has a saved, fictional recruit; Red Deer Reavers use “halfling”, a happy, enthusiastic 16-year-old inspired by the owner’s real squire, with a fictional appearance. Stable team IDs govern assignment; changing a display name does not grant another team’s progress. Festival-goers get a fictional companion. Recruiting one team’s squire does not recruit another’s.
+
+### Recruitment and support
+
+Six stages: discover the recruit using Ada’s landmark hint; share a tavern meal; arrange inn/home lodging; buy clothes, shoes and a tool belt; practise a strap repair, wrap repair and safe handoff at the armourer; finish a career team match (winning is optional), return, and explicitly hire. Training uses isolated practice equipment. All objectives and supplies save. Halfling’s initial location is outside the actual bailey gate, derived from the gate position, rather than old arena coordinates. Exact directory access unlocks after meeting him.
+
+No completed quest means no personal corner squire, following, squire patches, or corner replacement weapon. There is no generic replacement attendant for the player. Flat dropped weapons remain unpickable under the existing rules. Use an already-carried legal backup or grapple without a weapon. Recruited squires supply two shared random legal reserve weapons per team per round, with no selection/reroll. Two-handed weapons stow your existing shield; a one-handed replacement can restore it. Match reserves are not permanent inventory rewards. Network protocol 3 carries recruitment availability, weapon/shield state, and authoritative reserve rack/stock; all online players must update. Recruitment is client career progress, not a server-issued entitlement.
+
+### Care and following
+
+Follow/wait/return-to-lodging commands use shared world obstacles and paths. The companion coexists with cosmetic pets, stays outside fights, waits during unsupported activities, and is culled at distance. Follow catch-up is limited to distant travel; returning to accommodation uses routes. Initial spawning runs after town activation and restored player position.
+
+Meals and rest each cover three completed career matches; clothing maintenance covers twenty. No offline, practice, local-versus or online decay. Food costs 10 coins, inn rest 20, clothing mending 25. Suitable home lodging rests for free. Optional auto-feeding/inn renewal is off by default and obeys a displayed remaining budget. Good care gives 5% repair quality. After a depleted need warning and three further neglected career matches, the squire leaves temporarily, also removing personal corner handoffs. Return to the original recruit location, feed/rest/clothe him, and apologize to restore service. He never dies or permanently disappears. Existing hired-squire purchases remain crew levels: extra field patches after recruitment and 10% labour discount per level, maximum 30%.
+
+### Equipment and repair
+
+Career armour is shared across loadouts; weapon records are separate by weapon type. Damage survives results, reloads, travel, and swapping weapons. Season/Gauntlet kit is synchronized with the career record and town servicing. Practice/local/online kits stay separate. Legacy run/season condition is imported when the new equipment record is absent. Authentication and HACSA fighter filtering are unchanged; squires are support characters, never fighter-roster entries.
+
+Fault tasks: thread torn straps, tighten buckles, secure fittings, rewrap grips, straighten dents, clean equipment, and replace a genuinely snapped haft. Touch/mouse gestures differ by task; keyboard/controller guided actions remain available and the preference saves. Layouts vary; pending fitting and wrapping work is retained. Parts are consumed once when fitted. Completing a securing step is required before equipment becomes safe; timer expiry never finishes incomplete work.
+
+Field fixes restore safety and condition up to 70%, without lowering equipment already above that limit, and remain temporary. Proper town repair is untimed and can reach 100%. Optional cleaning reduces wear by 5% for the next fight. Manual essential armour safety repairs have free basic materials, even without money. Ordinary replacement stock costs 25 per strap, 20 per fitting kit, and 40 per haft. A snapped haft cannot be repaired with tape. Public armourer service/manual benches remain usable without a recruit. Paid selected/all service shows labour, missing parts and total before purchase.
+
+Gauntlet keeps exact 30-second round breaks and 60-second between-fight breaks, none after the fifth victory. The keen-squire boon now grants an explicit free labour voucher at the workshop instead of silently restoring equipment. Spare-straps levels provide 3% less strap wear and one field spare per level rather than match-start healing. Existing tape and applicable time/quality upgrades retain their benefits; fixed Gauntlet timers stay fixed.
+
+### Source and verification
+
+New shared modules: `steeltape/src/js/11h_squires.js` (quest, care, follower and reserves) and `11ia_workshop.js` (equipment migration, fault tasks and servicing). Integration touches repair, match flow, shops, Season/Gauntlet, networking, town and map code. The final release checkout is `sites/squire-release-latest`; it preserves the published version 57 cities, training and campaign. Canonical source and the combined release rebuild with their own `build.py`.
+
+Focused tests: `squire-workshop.spec.js`, `gauntlet-repair-flow.spec.js`, and `repair.spec.js`. Reports and final deployment details are recorded in `implementation-2026-10-14/SQUIRE_WORKSHOP_RESULTS.md`. Browser phone emulation is separate from physical Android testing; real WAN multiplayer and real-account cloud restore require device/account acceptance. Test publication retains the existing owner-only audience. Live deployment is a separate handoff to “deploy live”.
+
+
+Release reconciliation: version 57 (`c8a1b94fe8ee6e43279501ee1c9caa0ae01d4a68`) had the cities/training/campaign in its compiled page while editable modules remained older. Recovered all 83 published modules and the exact published asset/body prefix and suffix, then merged the squire fixes. City vendor tiers, lessons, riding, talk events, quest-journal access and the 88 campaign chapters are preserved. The final release checkout is `sites/squire-release-latest`. Its `build.py` now recreates the complete combined release from editable source.

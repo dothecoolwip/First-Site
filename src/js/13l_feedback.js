@@ -146,7 +146,7 @@ setInterval(eventPlayTick,5000);
 setInterval(()=>{eventPlayTick();eventPlaySync();},30000);
 
 function eventSession() { sendEvent('session', { level: CAREER.level || 1, matches: (CAREER.stats || {}).matches || 0, team: CAREER.club && CAREER.club.bos || null, touch: IS_TOUCH, w: window.innerWidth, h: window.innerHeight, ver: (window.BUILD_VER || '') }); }
-function eventMatch(m, won) { if (!m || G.attract || m.training) return; sendEvent('match', { stage: m.stage || '', mode: m.mode, won: !!won, opp: m.opp, cat: m.category, online: !!m.online, trial: m.trial || null, throne: m.throne || null }); }
+function eventMatch(m, won) { if (!m || G.attract || m.training) return; const cm = m.metrics || {}; sendEvent('match', { stage: m.stage || '', mode: m.mode, won: !!won, opp: m.opp, cat: m.category, online: !!m.online, trial: m.trial || null, throne: m.throne || null, difficulty: G.settings.difficulty, challengeLevel: challengeLevel(), challengeStage: challengeStage(), duration: Math.round(G.simTime - (cm.start == null ? G.simTime : cm.start)), takedowns: m.takedowns, hits: cm.hits, whiffs: cm.whiffs, guards: cm.guards, actions: cm.actions }); }
 // the form
 function openFeedback(back) {
   const ret = back || (() => showScreen(G.phase === 'fight' || G.phase === 'prefight' ? 'pause' : 'title'));
@@ -162,4 +162,3 @@ function openFeedback(back) {
     }, true], ['Back', ret]]);
   $$('#fbKind button').forEach(b => b.onclick = () => { AU.click(); $$('#fbKind button').forEach(x => x.setAttribute('aria-pressed', String(x === b))); $('#fbLabel').textContent = b.dataset.k === 'bug' ? 'What went wrong, and what were you doing?' : 'What would you like added or changed?'; });
 }
-

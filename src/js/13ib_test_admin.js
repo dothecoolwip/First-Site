@@ -59,4 +59,3 @@ function openTestAdmin() {
     box.append(list);
   });
 }
-

@@ -132,4 +132,3 @@ function fieldBreak(c) {
   for (const [f, s] of [[a, -1], [b, 1]]) { f.pos.x += dx / d * 0.55 * s; f.pos.z += dz / d * 0.55 * s; f.cd = 0.9; f.vel = { x: 0, z: 0 }; f.ai.next = 0.9; }
   after(1.0, () => { if (G.phase === 'fight') marshalCall('Fight.', '', 1); });
 }
-

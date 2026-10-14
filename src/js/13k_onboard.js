@@ -277,5 +277,3 @@ function tourTick(dt) {
 }
 function tourEnd() { const T = ONB.tour; if (!T) return; if (T.el) T.el.remove(); ONB.tour = null; TOWN.busy = false; TOWN.tour = false; TOWN.cam = null; onbSet('done'); $('#townHud').hidden = false;
   if (ONB.view) { const S = W3.scene, cam = W3.camera; if (S.fog && ONB.view.near != null) { S.fog.near = ONB.view.near; S.fog.far = ONB.view.far; } cam.far = ONB.view.cf; cam.updateProjectionMatrix(); ONB.view = null; } toastMenu('Welcome to the festival. Marshal Brenna by the gate starts your fights.'); }
-
-

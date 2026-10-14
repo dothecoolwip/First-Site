@@ -69,4 +69,3 @@ function checkNintendo() {
   $$('.gp[data-k]').forEach(el => { el.textContent = gpName(el.dataset.k); });
   if (on && pref === 'auto' && typeof toastMenu === 'function') toastMenu('Switch controller: right button confirms. Xbox letters on yours? Settings, Button letters.');
 }
-

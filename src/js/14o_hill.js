@@ -54,7 +54,7 @@ function realmHeight(x, z) {
   const north = 5 * smooth((-z - 85) / 310);
   let h = broad + folds + ridge + north;
   // Smooth land-use clearings; no building, list or water surface floats above a slope.
-  for (const [cx, cz, inner, outer] of [[0, 0, 100, 145], [-180, 135, 72, 112], [-214, -104, 38, 65], [-256, -42, 42, 72], [222, 40, 98, 136], [0, -226, 122, 155]]) {
+  for (const [cx, cz, inner, outer] of [[0, 0, 100, 145], [-180, 135, 72, 112], [-214, -104, 38, 65], [-256, -42, 42, 72], [222, 40, 98, 136], [0, -226, 122, 155], [-840, -250, 115, 155], [890, 140, 135, 170], [-90, 900, 145, 185], [0, -1030, 135, 175]]) {
     const d = Math.hypot(x - cx, z - cz);
     h *= smooth((d - inner) / (outer - inner));
   }
@@ -235,4 +235,3 @@ function hillRoads() {
   out[out.length - 1].navOnly = true; // the Hall already has flagstones
   return out;
 }
-

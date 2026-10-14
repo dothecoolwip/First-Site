@@ -295,4 +295,3 @@ function updateEdges() {
   }
   for (let i = n; i < EDGES.length; i++) EDGES[i].hidden = true;
 }
-

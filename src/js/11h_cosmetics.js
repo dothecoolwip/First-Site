@@ -138,4 +138,3 @@ function renderArtificer(list, row, head) {
     }
   }
 }
-

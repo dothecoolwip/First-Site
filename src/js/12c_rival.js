@@ -21,7 +21,7 @@ function startGrudge() {
 function openRival() {
   const R = rivalState(), nm = rivalName(G.category), lvl = R.w + R.l;
   const read = R.last === 'trip' ? 'Since you tripped them last time, they plant their feet and brace more.' : R.last === 'hit' ? 'Since you out-struck them last time, their guard comes up faster.' : 'They have been watching your fights.';
-  msg('rival', nm, `<p><b>${nm}</b> of Festival Company. ${ARCH[R.arch].name}, ${HELMS[R.helm].name.toLowerCase()}.</p>
+  msg('rival', nm, `<p><b>${nm}</b> of ${CLUBS.rival?.name || 'Festival Company'}. ${ARCH[R.arch].name}, ${HELMS[R.helm].name.toLowerCase()}.</p>
     <p>Record against you: <b class="num">${R.l} wins for you, ${R.w} for them</b>. ${lvl ? read : ''}</p>
     <p class="muted">Every grudge match they learn from how you beat them, and they get a little steadier and quicker each time. Beating them pays double.</p>`,
     [['Grudge match', startGrudge, true], ['Back', openModes]]);
@@ -34,4 +34,3 @@ function rivalAfter(m, won) {
   saveCareer();
   return won ? `<p>${rivalName(G.category)} won't forget that. Next time they'll ${R.last === 'trip' ? 'brace harder against your trips' : 'get their guard up faster'}. Rival purse doubled.</p>` : `<p>${rivalName(G.category)} goes up ${R.w}–${R.l} on you. They'll be back.</p>`;
 }
-

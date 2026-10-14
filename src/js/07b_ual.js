@@ -65,4 +65,3 @@ function rebuildCrew() {
   G.crew.forEach((m, i) => { if (m.userData && m.userData.squire != null && UAL.ready && !m.userData.ual) { const J = ualSquire(clubs[m.userData.squire]); J.root.position.copy(m.position); J.root.rotation.copy(m.rotation); J.root.userData = { squire: m.userData.squire, ual: true, J }; W3.matchRoot.remove(m); W3.matchRoot.add(J.root); G.crew[i] = J.root; } });
 }
 function updateCrewAnim(dt) { if (!G.crew) return; for (const m of G.crew) if (m.userData && m.userData.J) m.userData.J.mixer.update(dt); }
-

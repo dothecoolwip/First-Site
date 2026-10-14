@@ -157,4 +157,3 @@ function updateGather(dt) {
   GATHER.actPrev = act;
   if (IN.edges.has('pause')) { IN.edges.delete('pause'); stopGather(false); }
 }
-

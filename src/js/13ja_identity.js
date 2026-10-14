@@ -64,5 +64,3 @@ function creatorRefreshCharacters() {
   }
 }
 setInterval(() => { creatorIssue(); creatorRefreshCharacters(); }, 1000);
-
-

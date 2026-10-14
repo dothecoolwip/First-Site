@@ -188,4 +188,3 @@ function updateVenue(t) {
     T.flame.scale.set(1, f * 1.1, 1); T.glow.material.opacity = 0.6 + 0.3 * f; if (T.light) T.light.intensity = 1.35 + 0.45 * f;
   }
 }
-

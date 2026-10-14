@@ -21,4 +21,3 @@ function updateFlip(dt) {
     if (p.key === 'cloud') { p.s.position.y += dt * 0.25; p.s.material.opacity = Math.min(1, p.life / p.dur * 2) * 0.8; }
   }
 }
-

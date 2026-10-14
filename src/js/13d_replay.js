@@ -35,4 +35,3 @@ function updateReplay(dt) {
   });
   const sl = $('#replayScrub'); if (sl) sl.value = String(clamp((RP.t - RP.frames[0].t) / Math.max(0.1, RP.frames[RP.frames.length - 1].t - RP.frames[0].t), 0, 1));
 }
-

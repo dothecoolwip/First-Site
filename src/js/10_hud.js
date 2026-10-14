@@ -155,4 +155,3 @@ function updateOverlays(t) {
   o.zone.visible = !!(show && isUp(p) && !p.weapon && p.sidearmT <= 0 && G.reserves[sideOf(p)] > 0);
   if (o.zone.visible) { const zn = W3.zones[sideOf(p)]; o.zone.position.x = zn.x; o.zone.position.z = zn.z; o.zone.material.opacity = 0.35 + 0.3 * Math.sin(t * 6); }
 }
-

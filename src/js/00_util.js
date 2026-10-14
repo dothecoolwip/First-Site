@@ -42,4 +42,3 @@ const store = {
 const IS_TOUCH = (() => { try { return matchMedia('(pointer: coarse)').matches || 'ontouchstart' in window; } catch (e) { return false; } })();
 const IS_SMALL = Math.min(window.innerWidth, window.innerHeight) < 600;
 const SHADOWS = !IS_TOUCH && !IS_SMALL; // phones get soft blob shadows instead of a shadow map
-

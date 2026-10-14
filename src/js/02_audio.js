@@ -242,4 +242,3 @@ document.addEventListener('visibilitychange', () => {
     if (window.speechSynthesis) speechSynthesis.cancel();
   } else if (AU.ctx && AU.ctx.state === 'suspended') AU.ctx.resume().catch(() => {});
 });
-

@@ -468,4 +468,3 @@ function applyPose(J, P, rate, dt) {
   J.wrR.rotation.x = cur['wrR.x']; J.wrR.rotation.y = cur['wrR.y'];
   J.shieldPivot.position.set(cur['shp.x'], cur['shp.y'], cur['shp.z']); J.shieldPivot.rotation.set(cur['shp.rx'], cur['shp.ry'], 0);
 }
-

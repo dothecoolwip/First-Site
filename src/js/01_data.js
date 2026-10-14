@@ -183,4 +183,3 @@ function freshKit(spec, worn) {
   for (const k of ['helmet', 'armL', 'armR', 'legs', 'haft']) kit[k] = { cond: r(), tape: null, failed: false, covered: false };
   return kit;
 }
-
