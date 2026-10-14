@@ -1,5 +1,10 @@
 # BUHURT: Steel & Tape — handover for the next assistant
 
+## Patch 4.7 production audit integration, 14 Oct 2026
+
+Candidate steel-tape-auth-34fbff03e018 merges 15 focused runtime modules onto published source 378f4656abcaa1da08750c132a40d6a1f7df2bab. All 83 module bodies match the previously verified isolated fixes after whitespace normalization; online/networking/boards/throne/identity/roster modules are byte-exact from the published base. Syntax and ESLint passed; 12 merged-source auth units, 5 unchanged backend HACSA/identity units and merged cloud-save/account-isolation QA passed. The isolated fix implementation has 158 targeted desktop/phone passes; the broad 296-case suite was not completed. Merged browser release checks and publication are recorded in audit-release-2026-10-14. The private v59 server and frozen evidence remain unchanged: this is a production-only release. Physical Android/controller, real-account OAuth/cloud restore and WAN/crown transfer remain unverified. The reported real Creator 5× exit did not reproduce. No live authentication configuration or real player save was changed in verification.
+
+
 ## Patch 4.6: Team squires and repair workshop, 14 Oct 2026
 
 Promote the exact verified combined source 5ddab75e099ef8c5443bb2b746c707bd65a48aff from sites/squire-release-latest, build steel-tape-auth-6da88497b907. It preserves published version 57 cities, training, riding and campaign along with Gauntlet repair, aim, fullscreen and crowd changes. Team-specific recruitment quests unlock following/care and legal corner reserves; Red Deer Reavers use halfling. Career equipment persists and the workshop has damage-specific tasks and guided actions. Multiplayer protocol is 3: all clients must update. Recorded validation: 44 distinct desktop/phone regressions, 15 auth/HACSA unit cases, 6 combined recruitment/reserve/workshop cases and 2 final five-fight Gauntlet cases passed; private hosted quest/workshop checks passed. Real Android performance, WAN multiplayer and real-account cloud restore remain acceptance items.
@@ -126,3 +131,5 @@ Focused tests: `squire-workshop.spec.js`, `gauntlet-repair-flow.spec.js`, and `r
 
 
 Release reconciliation: version 57 (`c8a1b94fe8ee6e43279501ee1c9caa0ae01d4a68`) had the cities/training/campaign in its compiled page while editable modules remained older. Recovered all 83 published modules and the exact published asset/body prefix and suffix, then merged the squire fixes. City vendor tiers, lessons, riding, talk events, quest-journal access and the 88 campaign chapters are preserved. The final release checkout is `sites/squire-release-latest`. Its `build.py` now recreates the complete combined release from editable source.
+
+Final merged verification: 30 distinct browser cases passed after fixture-only invite corrections (20 main audit/board/city cases, 8 auth returns, 1 controller wake and 1 invite); 17 auth/identity units and cloud-save/account-isolation QA passed. Runtime and candidate bytes remained unchanged during verification. Physical-device/real-account/WAN acceptance remains open.
