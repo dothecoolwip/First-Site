@@ -316,8 +316,10 @@ function updateAnimals(dt) {
 // people far off aren't drawn or animated (skinning a whole realm's worth of townsfolk is the heaviest thing we do)
 function peopleCull() {
   const c = W3.camera.position, F = IS_TOUCH ? 45 : 65, vis = (o, f) => { if (o) o.visible = Math.hypot(o.position.x - c.x, o.position.z - c.z) < f; };
-  for (const N of (typeof FOLK !== 'undefined' && FOLK.people) || []) vis(N.J.root, F);
+  for (const N of (typeof FOLK !== 'undefined' && FOLK.people) || []) vis(N.J.root, N.suspended ? 0 : F);
   for (const S of (typeof SPECT !== 'undefined' && SPECT.people) || []) vis(S.J.root, F + 25);
+  const rigs = [...FOLK.people.filter(N => !N.suspended).map(N => ({ J: N.J, owner: N })), ...SPECT.people.map(S => ({ J: S.J, owner: S })), ...SPECT.seated.map(S => ({ J: S.J, owner: S }))];
+  rigs.sort((a, b) => a.J.root.position.distanceToSquared(c) - b.J.root.position.distanceToSquared(c));
+  rigs.forEach((R, i) => { R.owner.budgetHidden = i >= (IS_TOUCH ? 44 : 80); if (R.owner.budgetHidden) R.J.root.visible = false; });
   for (const S of TOWN.stalls || []) if (S.npc && S.npc.root && S.npc.ual) { const d = Math.hypot(S.x - c.x, S.z - c.z); S.npc.root.visible = d < F; }
 }
-

@@ -1,5 +1,5 @@
 <!doctype html><html><head><meta charset="utf-8"><link rel="manifest" href="manifest.webmanifest"><meta name="theme-color" content="#0f1316"><link rel="apple-touch-icon" href="icon-192.png"><meta name="apple-mobile-web-app-capable" content="yes"><meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover"></head><body>
-<script>window.BUILD_VER="steel-tape-auth-78ced6d2fe58";</script><title>Buhurt: Steel &amp; Tape</title>
+<script>window.BUILD_VER="steel-tape-auth-157bcbbef17a";</script><title>Buhurt: Steel &amp; Tape</title>
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link rel="stylesheet" href="fonts/fonts.css">
@@ -1259,7 +1259,7 @@ body.intown #hud{display:none!important}
             <button data-diff="club" aria-pressed="true">Club</button>
             <button data-diff="nationals" aria-pressed="false">Nationals</button>
           </div></div>
-          <label class="toggle" for="optAssist"><span>Target lock<small>Your view follows the marked opponent</small></span><input type="checkbox" id="optAssist" checked></label>
+          
           <label class="toggle" for="optRing"><span>Balance gauge<small>A practice aid in the corner</small></span><input type="checkbox" id="optRing"></label>
           <div class="setrow"><span>Attack warnings<small>Glint on a weapon winding up at you, arrows for attackers off screen</small></span><div class="seg small" id="teleSeg"><button data-tele="off">Off</button><button data-tele="subtle">Subtle</button><button data-tele="strong">Strong</button></div></div>
           <label class="toggle range" for="optSpeed"><span>Game speed<small>Slow the whole fight down if it's too much</small></span><input type="range" id="optSpeed" min="0.6" max="1" step="0.05" value="1"></label>
@@ -1276,7 +1276,9 @@ body.intown #hud{display:none!important}
           <label class="toggle" for="optInvert"><span>Invert look up and down</span><input type="checkbox" id="optInvert"></label>
         </section>
         <section class="setgroup">
-          <h3>Controller and touch</h3>
+          <h3>Controls</h3>
+<label class="toggle range" for="optAssistStrength"><span>Aim assist strength <output id="assistPercent" for="optAssistStrength">50%</output><small>0% disables automatic aim pull. Higher values help track opponents horizontally. Manual look input always takes priority.</small></span><input id="optAssistStrength" type="range" min="0" max="100" step="1" value="50"></label>
+<label class="toggle" for="optAssist"><span>Target lock<small>Horizontal tracking of the marked opponent; vertical aim stays yours</small></span><input type="checkbox" id="optAssist" checked></label>
           <label class="toggle" for="optRumble"><span>Rumble<small>Controller rumble and phone vibration on hits</small></span><input type="checkbox" id="optRumble" checked></label>
           <label class="toggle" for="optLegend"><span>Button guide in fights<small>Shows the controller buttons at the bottom</small></span><input type="checkbox" id="optLegend" checked></label>
           <div class="setrow"><span>Text size</span><div class="seg small" id="textSeg"><button data-ts="1">Normal</button><button data-ts="1.15">Large</button><button data-ts="1.3">Larger</button></div></div>
@@ -29525,7 +29527,7 @@ function updateCuteDeco(t) {
 // ---------- fighters: balance, actions, contact, grounding ----------
 const G = {
   fighters: [], marshals: [], props: [], phase: 'boot', simTime: 0, realTime: 0, match: null, tourney: null, player: null,
-  settings: { difficulty: 'club', ring: false, voice: false, shake: true, assist: true, view: 'fp', rumble: true, legend: true, sens: 1, invert: false, cine: true, gfx: 'auto', shakeAmt: null, flash: true, comm: true, spokenComm: true, cap: false, tele: 'subtle', speed: 1, ts: '1', haptics: true },
+  settings: { difficulty: 'club', ring: false, voice: false, shake: true, assist: true, assistStrength: 0.5, view: 'fp', rumble: true, legend: true, sens: 1, invert: false, cine: true, gfx: 'auto', shakeAmt: null, flash: true, comm: true, spokenComm: true, cap: false, tele: 'subtle', speed: 1, ts: '1', haptics: true },
   autopilot: false, attract: false, timeScale: 1, hitstop: 0, slowmo: 0, shake: 0, orders: ['free', 'free'], feedLog: [],
   stats: { rounds: 0, roundTimes: [], falls: {}, fouls: 0, cards: 0, hits: 0, blocks: 0, trips: 0, tripsOk: 0, breaks: 0, failures: 0, errors: [] },
   reserves: [2, 2], needRoundCheck: false
@@ -29814,7 +29816,8 @@ function startAction(f, kind, o = {}) {
 const P_RANGE = { trip: 1.05, shove: 1.2, grab: 0.95 };
 function playerLunge(f, kind, t) {
   if (!isUp(t)) return;
-  const want = angTo(f.pos, t.pos); if (Math.abs(angDiff(f.facing, want)) < 1.1) { f.facing = want; f.wantFace = want; }
+  const want = angTo(f.pos, t.pos), pull = f === G.player ? (manualLookActive() ? 0 : aimStrength()) : 1;
+  if (Math.abs(angDiff(f.facing, want)) < 1.1 && pull > 0) { f.facing += angDiff(f.facing, want) * pull; f.wantFace = f.facing; }
   const reach = P_RANGE[kind]; if (!reach) return;
   const gap = Math.hypot(t.pos.x - f.pos.x, t.pos.z - f.pos.z) - t.radius - reach + 0.15;
   if (gap <= 0 || gap > 1.25) return;
@@ -30394,7 +30397,6 @@ function updateClinches(dt) {
     if (c.idle >= BREAK_AFTER) { G.stats.breaks++; fieldBreak(c); }
   }
 }
-
 // ===================================================================
 // Fighting 2.0: layered on the fighter sim (06_fighter) and the team AI (08_ai).
 //  - Directions matter: bots read which side a blow comes from and guard that side; a blow from the side they didn't
@@ -31157,7 +31159,7 @@ function readInput(dt) {
     if (rt > 0.5 && !IN.gp.rtDown) { IN.gp.rtDown = true; IN.swingStart = true; }
     const sn = G.settings.sens || 1;
     const ltDown = !!(b[6] || (noTrig && b[4]));
-    if (isCtl() && !IN.gp.rtDown && !ltDown && (rx || ry)) { if (Math.abs(ry) > 0.2) IN.pitchHold = 2.5; FP.yaw -= rx * 3.6 * sn * dt; FP.pitch = clamp(FP.pitch - ry * 1.9 * sn * (G.settings.invert ? -1 : 1) * dt, -0.75, 0.55); FP.looking = 0.2; }
+    if (isCtl() && !IN.gp.rtDown && !ltDown && (rx || ry)) { FP.yaw -= rx * 3.6 * sn * dt; FP.pitch = clamp(FP.pitch - ry * 1.9 * sn * (G.settings.invert ? -1 : 1) * dt, -0.75, 0.55); FP.looking = 0.2; }
     if (pressed(3)) edge('tackle');
     if (rt < 0.25 && IN.gp.rtDown) { IN.gp.rtDown = false; IN.swingRelease = rx > 0.45 ? 'R2L' : rx < -0.45 ? 'L2R' : ry < -0.5 ? 'O' : 'auto'; }
     if (ltDown) { guard = true; PIN.gdirPad = rx > 0.45 ? 'R' : rx < -0.45 ? 'L' : ry < -0.5 ? 'H' : PIN.gdirPad; } else PIN.gdirPad = null; if (b[0]) brace = true;
@@ -31167,7 +31169,7 @@ function readInput(dt) {
     if (noTrig) { if (pressed(noR3 ? 15 : 11)) edge(G.simTime < (G.saluteUntil || 0) ? 'salute' : 'grab'); } // bumpers are busy: grab on R3, or d-pad right
     else if (pressed(11)) edge(G.simTime < (G.saluteUntil || 0) ? 'salute' : 'retarget'); // R3 switches target
     if (pressed(noL3 ? 14 : 10)) edge('retarget'); // L3 (or d-pad left) switches target too
-    if (noRS) { if (b[12]) { FP.pitch = clamp(FP.pitch + 1.1 * dt, -0.75, 0.55); IN.pitchHold = 2.5; } if (b[13]) { FP.pitch = clamp(FP.pitch - 1.1 * dt, -0.75, 0.55); IN.pitchHold = 2.5; } } // d-pad up/down aims high or low
+    if (noRS) { if (b[12]) { FP.pitch = clamp(FP.pitch + 1.1 * dt, -0.75, 0.55); FP.looking = 0.2; } if (b[13]) { FP.pitch = clamp(FP.pitch - 1.1 * dt, -0.75, 0.55); FP.looking = 0.2; } } // d-pad up/down aims high or low
     else { if (pressed(12)) edge('cmd:pair'); if (pressed(13)) edge('cmd:hold'); }
     if (!noL3 && pressed(14)) edge('cmd:hunt'); if (!noR3 && pressed(15)) edge('cmd:peel');
     if (pressed(9)) edge('pause');
@@ -31222,11 +31224,13 @@ function lockCandidates(f, maxD, maxAng) {
   }
   return out.sort((x, y) => x.s - y.s);
 }
+function aimStrength() { return G.settings.assist ? clamp(Number(G.settings.assistStrength) || 0, 0, 1) : 0; }
+function manualLookActive() { return FP.looking > 0 || (IN.mode === 'kb' && IN.mouseIdle < 0.7); }
 function updateLock(f, dt) {
-  const on = G.settings.assist;
+  const strength = aimStrength(), on = strength > 0;
   if (IN.lock && (!isUp(IN.lock) || IN.lock.out || dist2(IN.lock.pos, f.pos) > 9.5)) IN.lock = null;
   if (!on) { IN.lock = null; return; }
-  const manual = FP.looking > 0 || (IN.mode === 'kb' && IN.mouseIdle < 0.7);
+  const manual = manualLookActive();
   if (manual) IN.lockHold = IN.mode === 'kb' ? 0.2 : 0.8;
   else IN.lockHold = Math.max(0, IN.lockHold - dt);
   if (IN.lockHold > 0) {
@@ -31240,8 +31244,8 @@ function updateLock(f, dt) {
   const want = angTo(f.pos, IN.lock.pos); const d = angDiff(FP.yaw, want);
   const rate = IN.snapT > 0 ? 14 : IN.mode === 'kb' ? 3.2 : 7.5; IN.snapT -= dt;
   if (IN.mode === 'kb' && Math.abs(d) > 1.2) return; // mouse players keep full control of big turns
-  FP.yaw += clamp(d * Math.min(1, dt * 9), -rate * dt, rate * dt);
-  IN.pitchHold = Math.max(0, (IN.pitchHold || 0) - dt); const dd = dist2(IN.lock.pos, f.pos); if (IN.pitchHold <= 0) FP.pitch = damp(FP.pitch, -0.04 - 0.22 / Math.max(1, dd), 3, dt);
+  FP.yaw += clamp(d * (1 - Math.exp(-9 * strength * dt)), -rate * strength * dt, rate * strength * dt);
+  // Tracking is horizontal only. Pitch belongs to the player, including after release.
 }
 function cycleLock(f) {
   const list = lockCandidates(f, 8.5, Math.PI).map(c => c.o);
@@ -31275,13 +31279,12 @@ function playerControl(f, dt) {
   updateSoftTarget(f);
   // facing: your body follows your view (both cameras)
   if (isCtl()) {
-    const off = angDiff(f.facing, FP.yaw); if (Math.abs(off) > 1.25) FP.yaw = f.facing + Math.sign(off) * 1.25;
     f.wantFace = FP.yaw;
   }
   else if (PIN.aim) f.wantFace = Math.atan2(PIN.aim.x - f.pos.x, PIN.aim.z - f.pos.z);
-  else if (f.softTarget && (G.settings.assist || IN.mode === 'pad')) f.wantFace = angTo(f.pos, f.softTarget.pos);
+  else if (f.softTarget && aimStrength() > 0 && !manualLookActive()) f.wantFace = f.facing + angDiff(f.facing, angTo(f.pos, f.softTarget.pos)) * (1 - Math.exp(-9 * aimStrength() * dt));
   else if (vlen(f.move) > 0.2) f.wantFace = Math.atan2(f.move.x, f.move.z);
-  if (f.clinch) { f.wantFace = angTo(f.pos, (f.clinch.a === f ? f.clinch.b : f.clinch.a).pos); if (isCtl()) FP.yaw += angDiff(FP.yaw, f.wantFace) * Math.min(1, dt * 6); }
+  if (f.clinch) { f.wantFace = angTo(f.pos, (f.clinch.a === f ? f.clinch.b : f.clinch.a).pos); if (isCtl() && !manualLookActive()) FP.yaw += angDiff(FP.yaw, f.wantFace) * (1 - Math.exp(-6 * aimStrength() * dt)); }
   if (f.guard && f.action && f.action.kind === 'swing' && f.action.phase === 'windup') f.action.cancel = true;
   // yield by kneeling
   if (IN.yieldT > 1.0) { IN.yieldT = 0; playerYield(); return; }
@@ -31337,7 +31340,6 @@ function setOrder(o, actor = G.player || (VS.on && VS.humans[0])) {
   $$('#tcmd button').forEach(b => b.setAttribute('aria-pressed', String(b.dataset.cmd === o)));
   if (G.phase === 'fight') { feed(`Squad call: ${ORDERS[o].name}.`, '', 'var(--flag)'); const cp = perk(actor, 'show.captain'); if (cp) for (const m of G.fighters) if (m.team === team && isUp(m)) { m.buffT = Math.max(m.buffT || 0, 8); m.buffStab = Math.max(m.buffStab || 1, 1 + 0.06 * cp); } }
 }
-
 // ---------- controller: menus you can drive with a pad (and arrow keys), button glyphs, rumble ----------
 const PAD = { navT: 0, navKey: '', cursor: { x: 0.5, y: 0.5 }, legendT: 0 };
 
@@ -32228,7 +32230,7 @@ function updateTelegraphs(t) {
       const s = TELE.sprites[n++]; const wp = new THREE.Vector3(0, (o.weapon && o.weapon.len || 0.9) * 0.85, 0); o.model.weapon.localToWorld(wp);
       s.position.copy(wp); const k = clamp(a.t / Math.max(0.05, swingTimes(o).wind), 0, 1);
       s.scale.setScalar((mode === 'strong' ? 0.55 : 0.32) * (0.6 + 0.6 * k) * (1 + 0.15 * Math.sin(t * 40)));
-      s.material.color.set(a.arc === 'O' ? '#ff6a5a' : '#fff3b0'); s.visible = true;
+      s.material.color.set(a.arc === 'O' ? '#ff6a5a' : a.arc === 'R2L' ? '#6fc9ff' : '#ffd177'); s.visible = true;
     }
   }
   for (let i = n; i < TELE.sprites.length; i++) TELE.sprites[i].visible = false;
@@ -32236,12 +32238,27 @@ function updateTelegraphs(t) {
 
 function applyTextSize() { document.documentElement.style.setProperty('--ts', String(+G.settings.ts || 1)); document.documentElement.style.fontSize = (16 * (+G.settings.ts || 1)) + 'px'; }
 // fullscreen first, then the landscape lock (lock only works once fullscreen is on); iPhones support neither
-const FS = { tried: false };
+const FS = { pending: false };
+function fullscreenActive() { return !!(document.fullscreenElement || document.webkitFullscreenElement); }
+function syncFullscreenControl() {
+  const b = $('#btnFull'); if (b) { b.textContent = fullscreenActive() ? 'Exit fullscreen' : 'Enter fullscreen'; b.setAttribute('aria-pressed', String(fullscreenActive())); }
+}
 async function goFullscreen(manual) {
-  if (!manual && FS.tried) return; FS.tried = true;
+  if (!manual || FS.pending) return;
+  FS.pending = true;
   const el = document.documentElement;
-  try { if (!document.fullscreenElement && el.requestFullscreen) await el.requestFullscreen({ navigationUI: 'hide' }); else if (el.webkitRequestFullscreen) el.webkitRequestFullscreen(); } catch (e) { if (manual) toastMenu('Fullscreen isn’t allowed here. Use your browser’s menu, or add the page to your home screen.'); return; }
-  try { if (screen.orientation && screen.orientation.lock && IN.mode === 'touch') await screen.orientation.lock('landscape'); } catch (e) { }
+  try {
+    if (fullscreenActive()) {
+      if (document.exitFullscreen) await document.exitFullscreen(); else if (document.webkitExitFullscreen) await document.webkitExitFullscreen();
+      if (screen.orientation && screen.orientation.unlock) screen.orientation.unlock();
+    } else {
+      if (el.requestFullscreen) await el.requestFullscreen({ navigationUI: 'hide' });
+      else if (el.webkitRequestFullscreen) await el.webkitRequestFullscreen();
+      else throw new Error('Fullscreen unsupported');
+      try { if (fullscreenActive() && screen.orientation && screen.orientation.lock && IN.mode === 'touch') await screen.orientation.lock('landscape'); } catch (e) { }
+    }
+  } catch (e) { toastMenu('Fullscreen isn’t allowed here. Use your browser’s menu, or add the page to your home screen.'); }
+  finally { FS.pending = false; syncFullscreenControl(); }
 }
 function watchContext() { // if the phone drops the GPU (backgrounded, low memory), say so instead of freezing
   const c = W3.renderer && W3.renderer.domElement; if (!c) return;
@@ -32350,7 +32367,6 @@ function updateStatsStrip() {
   el.hidden = !on; if (!on) return;
   const h2 = m.hitsT || [0, 0], d = m.takedowns || [0, 0]; const txt = `Hits ${h2[0]}–${h2[1]} · Downs ${d[0]}–${d[1]}`; if (el.textContent !== txt) el.textContent = txt;
 }
-
 // ---------- the repair bench: rip, wrap, smooth (BR 2.1.5, BR 2.3, WR 7.2.2) ----------
 const REP = { piece: null, tape: null, roll: 'black', step: null, timer: 45, ripT: 0, wraps: [], sloppy: 0, side: 0, wrinkles: [], smoothT: 0, q: {}, ptr: null, active: false, onDone: null, onFail: null, log: [], squire: 1, pop: null, lastSec: 99, trail: [], forcedPiece: null, failuresOnly: false, emergency: false };
 const PIECE_SHORT = { helmet: ['Helmet', '⛑️'], armL: ['Left arm', '💪'], armR: ['Right arm', '💪'], legs: ['Legs', '🦵'], haft: ['Haft', '🪓'] };
@@ -34318,7 +34334,7 @@ function renderLineup() {
 
 function beginFight() {
   hideAll(); setHud(true); G.phase = 'prefight'; refreshTouchUI(); AU.music(false);
-  if (IN.mode === 'touch' && !G.attract) goFullscreen(false); // the Ready tap is the gesture fullscreen needs
+  // Fullscreen is entered only through the explicit settings control.
   COMM.firstDown = false; COMM.q.length = 0; showIntro();
   $('#rnd').textContent = G.match.champion ? 'Champion' : G.match.overtime ? 'Overtime' : 'Round ' + G.match.round;
   $('#cmd').textContent = ORDERS[G.orders[0]].name;
@@ -34557,6 +34573,7 @@ function matchEnd() {
   }
   if (G.autoflow) { G.stats.matches = (G.stats.matches || 0) + 1; if (G.autoNext) G.autoNext(); return; }
   const won = m.wins[0] > m.wins[1], drawn = m.wins[0] === m.wins[1]; AU.music(true);
+  if (m.versus || (m.online && NET.role === 'host')) eventMatch(m, won);
   if (m.versus && G.bracket) { VS.on = false; document.body.classList.remove('split', 'split4'); $('#splitLabels').innerHTML = ''; bracketResult(m.wins[0] > m.wins[1] ? 0 : m.wins[1] > m.wins[0] ? 1 : (m.pts && m.pts[1] > m.pts[0] ? 1 : 0)); return; }
   if (m.versus) { VS.on = false; document.body.classList.remove('split', 'split4'); $('#splitLabels').innerHTML = ''; const k = VS.kind; const t = drawn ? 'Draw' : k === 'duel' ? (won ? 'Player 1 wins' : 'Player 2 wins') : k === 'tag' ? (won ? 'Players 1 and 3 win' : 'Players 2 and 4 win') : (won ? 'You two win' : 'The bots win'); msg('local play', t, `<p>${m.wins[0]}–${m.wins[1]} in rounds.</p>`, [['Rematch', () => startVersus(k), true], ['Couch play', openVersus], ['Title', toTitle]]); return; }
   if (m.online) { onlineMatchEnd(); return; }
@@ -34798,6 +34815,13 @@ function initMenus() {
   const segSet = (id, attr, key, after) => $$(id + ' button').forEach(b => { b.setAttribute('aria-pressed', String(b.dataset[attr] === String(G.settings[key]))); b.onclick = () => { G.settings[key] = b.dataset[attr]; $$(id + ' button').forEach(x => x.setAttribute('aria-pressed', String(x === b))); saveSettings(); if (after) after(); AU.click(); }; });
   segSet('#teleSeg', 'tele', 'tele'); segSet('#textSeg', 'ts', 'ts', applyTextSize); applyTextSize();
   $('#btnFull').onclick = () => goFullscreen(true);
+  document.addEventListener('fullscreenchange', syncFullscreenControl);
+  document.addEventListener('webkitfullscreenchange', syncFullscreenControl);
+  syncFullscreenControl();
+  { const sl = $('#optAssistStrength'), out = $('#assistPercent');
+    sl.value = String(Math.round(G.settings.assistStrength * 100)); out.textContent = sl.value + '%';
+    sl.oninput = () => { G.settings.assistStrength = +sl.value / 100; out.textContent = sl.value + '%'; if (!aimStrength()) IN.lock = null; saveSettings(); };
+  }
   $('#btnPadSetup').onclick = () => { AU.click(); openPadSetup(); };
   $('#btnBos').onclick = () => { AU.click(); const back = () => showScreen('settings'); if (BOS.info) msg('buhurtos', 'BuhurtOS account', '<div id="bosBox" class="bosbox"></div>', [['Back', back, true]]), renderBosBox(); else openBosSignIn(back); };
   bosBoot(); setTimeout(() => { if (typeof rosterLoad === 'function') rosterLoad(); }, 1500); setTimeout(() => { if (typeof eventSession === 'function') eventSession(); }, 4000);
@@ -34806,6 +34830,11 @@ function initMenus() {
   $('#btnPauseFeedback').onclick = () => { AU.click(); openFeedback(() => showScreen('pause')); };
   { const sl = $('#optSens'); sl.value = String(G.settings.sens || 1); sl.oninput = () => { G.settings.sens = +sl.value; saveSettings(); }; }
   $('#muteBtn').onclick = () => { AU.init(); AU.setMuted(!AU.muted); $('#muteWave').style.display = AU.muted ? 'none' : ''; store.set('muted', AU.muted); };
+}
+function migrateAimStrength(saved) {
+  if (typeof saved.assistStrength === 'number' && Number.isFinite(saved.assistStrength)) return clamp(saved.assistStrength, 0, 1);
+  if (Object.prototype.hasOwnProperty.call(saved, 'assist')) return saved.assist === false ? 0 : 1;
+  return 0.5;
 }
 function saveSettings() { store.set('settings3', G.settings); }
 function selectTab(bar, tab) {
@@ -34904,7 +34933,6 @@ const CREDITS_HTML = `<p>Created and developed by <b>Garrett Robson</b> · with 
 <div><span>GLTFLoader and SkeletonUtils from three.js</span><span class="muted">MIT</span></div>
 </div>
 <p class="muted">CC BY 4.0: creativecommons.org/licenses/by/4.0. Rules cited from Buhurt International documents.</p>`;
-
 // ---------- Rumble of the Day (same fight for everyone on a date) and the Gauntlet run (five fights, one life) ----------
 // match modifiers: G.mod applies to everyone, G.boon only to you (Gauntlet boons)
 function mod(f, key) { return ((G.mod && G.mod[key]) || 1) * (f && f.isPlayer && G.boon && G.boon[key] || 1); }
@@ -35620,7 +35648,10 @@ function frame(now) {
 // ---------- boot ----------
 async function boot(hot) {
   window.__hotData = hot || {};
-  G.settings = Object.assign(G.settings, store.get('settings3', {}));
+  const savedSettings = store.get('settings3', {}) || {};
+  G.settings = Object.assign(G.settings, savedSettings);
+  G.settings.assistStrength = migrateAimStrength(savedSettings);
+  saveSettings();
   VOICE.enabled = G.settings.voice; AU.muted = !!store.get('muted', false);
   if (AU.muted) $('#muteWave').style.display = 'none';
   try { await Promise.race([Promise.all([document.fonts.load('40px "Permanent Marker"'), document.fonts.load('900 40px "Big Shoulders Display"'), document.fonts.load('600 20px "Barlow Semi Condensed"')]), new Promise(r => setTimeout(r, 1800))]); } catch (e) { }
@@ -35632,7 +35663,7 @@ async function boot(hot) {
   if (location.hash === '#autotest') setTimeout(autotest, 300);
   window.__ST = { GAMEPLAY, SAT, YUKA, CANNON, RAPIER, BVH, gameplayShape, gameplayShapeBlocked, gameplayGroundAt, gameplayMove, G, AU, buildShield, buildWeapon, W3, startTourney, quickFight, toTitle, openRepair, kitCheck, setupMatch, toTactics, beginFight, endRound, matchEnd, CLUBS, WEAPONS, setView, toast, renderKitPicker, applyLoadout, IN, FP, showScreen, weaponIcon, startCine, startTraining, startLadder, openCareer, openModes, openLadder, CAREER, setLesson, TR, unlock, togglePause, afterRound, renderHow, selectPiece, selectTape, msg, renderSheet, setHud, endTraining, setMode, PAD, navMove, focusFirst, sparks, CUTE, THREE, BREATH, setCuteDeco, flipFx, PHOTO, UAL, raiseFlags, startVersus, startFFA, startBracket, startKid, KID, openSeason, startSeasonMatch, setVenue, VS, SPLIT, NET, buildOnlineMatch, hostLobby, joinLobby, ONL, vinControl, openRun, openDaily, openBracket, showBracket, bracketResult, ffaMatchEnd, ffaLeader, ffaWinner, endKid, openPhoto, closePhoto, startReplay, stopReplay, RP, store, startRunFight, newRun, runEnd, WX, setWeather, padVin, readVersus, applyLo, myLoadout, netDropped, netLeave, showIntro, installForged, dailyPlan, openKids, openVersus, openPicks, LESSONS, rivalClub, startGrudge, startDaily, seasonState, newSeason, refreshDaily, VENUES, COMM, hitMapHtml, resetFighterForRound, DIFF, PIN, PADS, NIN, padsUpdate, seatPads, LOBBY, MM, openOnlineHub, benchDown, benchMove, REP, squirePatch, coverage, openProfile, myProfile, BOS, updateTitlePurse, ACH, progressCheck, challenges, masteryOf, S2, rankOf, counterValue, renderCareer, progressMatch, saveCareer, shopState, shopUp, tapeLeft, shopMatchEnd, shopPrizeMult, shopXpMult, swingTimes, pieceWearMult, TABARDS, refillTape, renderShop, UPGRADES, freshKit, TAPE_STOCK, enterTown, leaveTown, TOWN, openVendor, closeVendor, openTownMap, shopFx, renderVendor, VENDORS, ITEMS, itemCost, spCost, skillRoom, sponsorIncome, BOOSTS, STALL_AT, HOMES, FURNISH, pfx, squadFx, boostKit, townCollide, townRefresh, townWalkTo, townTalk, townTeardown, lookState, WORLD, guildCheck, STATIONS, townDressMe, FOLK, updateFolk, navBlocked, buildFolk, BOUT, boutStart, boutStop, boutTick, drawTownMap, updateMiniMap, costumePerson, OUTFIT, buildSkinWeapon, skinIcon, wskinList, skinFor, buildMyWeapon, wskinFamOf, GATHER, startGather, gatherSwing, stopGather, tradeState, tradeLevel, tradeGain, give, have, craft, NODES, MATS, renderTrades, TRADE_SKILLS, ARENAS, DISTRICTS, TRAVEL, setWaypoint, clearWaypoint, realmPath, callHorse, mount, dismount, ANIMAL, districtAt, realmCull, REALM_TIERS, gateOpen, townJump, stableRows, horseAvailable, peopleCull, boutArenaFor, arenaLive, bagSlots, bagState, bagRoom, secretFound, lookOwned, SECRETS, stopSpectating, startTrial, TRIALS, tierCap, gy, tierOf, HILL, hillHouses, cliffAt, gateBlocked, arenaBlocked, localPath, NAV, rampAt, ROSTER, rosterClubs, rosterLive, rosterName, liveBoutPick, aiTier, AI_TIER, guardOutcome, fighterGlow, ONB, onbStage, onbSet, openCreator, tourStart, tourEnd, TOUR_STOPS, THRONE, throneHolder, throneChallenge, throneLoad, throneOnlineEnd, openThrone, BOARDS, boardFetch, boardCrownStatues, sideFromDrag, VOICE };
   if (location.protocol === 'file:' && window.__steeltapeTest)
-  if (location.protocol === 'file:' && window.__steeltapeTest) Object.assign(window.__ST, { applyProfile, rosterAccept, rosterLoad, rosterEligible, creatorReset, creatorRefreshCharacters, creatorRemote, penalize, failPiece, closeRepair, xpNeed, tierProf, runToRepairCorner, onbAfterAccount, onbAccountGate, onbResumeAfterAuth, leaveTarget, leaveScreen, CLOUD, bosLoadInfo, bosBoot, swingLeverage, weaponBindPossible, resolveSwing, sweptSwingTarget, updateAction, think, updateTownCamera, LIBRARY, LIBRARY_DATA, WEAPON_VARIANTS, playerWeaponDef, libraryModel, libraryThumb, LIST, navPushOut, townCollide, SPECT, updateArenaSeatFolk, testAdminApply, testAdminRefresh, testAdminTeleport, openTestAdmin, PLAYTEST, playtestStart, playtestStop, playtestTick, playtestAction, playtestFlush, playtestCapture, gameplayShapePush, gameplayCannonTick, gameplayFolkDirection, arenaRope, gateRefused, stationTrial, commClipName, COMM_AUDIO, SFX_FILES, castleWalkable, castleSurfaceSafe, aiCanSee, aiObserveThreats, aiThreatReady, onlineCoop, onlinePauseRequest, netTick, hostPeers, validatedVin, neutralVin, careerCombatProfile, validateCombatProfile, combatProfile, perk, pfx, recalcBody, packF, unpackF, mapStallVisible, launchActivity, recordGuardOutcome, updateLocalFeedback, rumbleFor, challengeLevel, challengeStage, challengeFactor, botScale, skillsState, traceSwing, simStep, capeAnimate, aiControl, cloudOverlay, activeLayer, navItems, navMove, navBack, newVin, renderSplit, updateSplitCams, eventPlayActivity, getPlaytimeLastInput:()=>PLAYTIME_LAST_INPUT, setPlaytimeLastInput:v=>PLAYTIME_LAST_INPUT=v });
+  if (location.protocol === 'file:' && window.__steeltapeTest) Object.assign(window.__ST, { aimStrength, updateLock, migrateAimStrength, goFullscreen, fullscreenActive, FS, folkRoute, folkMove, navFree, navBuild, folkSpawnSafe, folkPopulationTick, gameplayPropFootprint, folkSeatWalk, playerLunge, applyProfile, rosterAccept, rosterLoad, rosterEligible, creatorReset, creatorRefreshCharacters, creatorRemote, penalize, failPiece, closeRepair, xpNeed, tierProf, runToRepairCorner, onbAfterAccount, onbAccountGate, onbResumeAfterAuth, leaveTarget, leaveScreen, CLOUD, bosLoadInfo, bosBoot, swingLeverage, weaponBindPossible, resolveSwing, sweptSwingTarget, updateAction, think, updateTownCamera, LIBRARY, LIBRARY_DATA, WEAPON_VARIANTS, playerWeaponDef, libraryModel, libraryThumb, LIST, navPushOut, townCollide, SPECT, updateArenaSeatFolk, testAdminApply, testAdminRefresh, testAdminTeleport, openTestAdmin, PLAYTEST, playtestStart, playtestStop, playtestTick, playtestAction, playtestFlush, playtestCapture, gameplayShapePush, gameplayCannonTick, gameplayFolkDirection, arenaRope, gateRefused, stationTrial, commClipName, COMM_AUDIO, SFX_FILES, castleWalkable, castleSurfaceSafe, aiCanSee, aiObserveThreats, aiThreatReady, onlineCoop, onlinePauseRequest, netTick, hostPeers, validatedVin, neutralVin, careerCombatProfile, validateCombatProfile, combatProfile, perk, pfx, recalcBody, packF, unpackF, mapStallVisible, launchActivity, recordGuardOutcome, updateLocalFeedback, rumbleFor, challengeLevel, challengeStage, challengeFactor, botScale, skillsState, traceSwing, simStep, capeAnimate, aiControl, cloudOverlay, activeLayer, navItems, navMove, navBack, newVin, renderSplit, updateSplitCams, eventPlayActivity, getPlaytimeLastInput:()=>PLAYTIME_LAST_INPUT, setPlaytimeLastInput:v=>PLAYTIME_LAST_INPUT=v });
 }
 
 function autotest() {
@@ -38211,6 +38242,7 @@ function buildTown() {
   buildSpecialVendors(); buildWorld(); buildSpawnBoards(); navBuild(); buildGatherNodes(TOWN.root); buildSecrets(TOWN.root); navBuild(); realmCells();
   buildHome(); buildStatue(); buildAvatar(); buildMyPet(); buildWaypoint(); buildAnimals(); buildArenaSeats(); buildDeepMine(); navBuild();
   townResolveApproaches();
+  folkSpots(); // approaches and reservations use the final world obstacle set
   gameplayStart();
 }
 // the field venue's own cottages and tree ring would sit in the middle of the festival: hide them in town
@@ -38364,8 +38396,7 @@ function townCollide(beforeMove) {
     for (const A of ARENAS) {
       // The rope, not just the wooden list, is the public boundary.
       townPushRect(P, A.x, A.z, LIST_BLOCK.x, LIST_BLOCK.z, r);
-      // Benches are solid; the spectator prompt remains reachable at their outer edge.
-      if (!A.indoor) for (const side of [-1, 1]) townPushRect(P, A.x + side * (LIST.W / 2 + 7.2), A.z, 1.5, LIST.L * 0.4, r);
+      // Bench collision comes from the same prop footprints as civilian navigation.
     }
     const ci = Math.floor(P.x / NAV.cell), cj = Math.floor(P.z / NAV.cell);
     for (let i = ci - 1; i <= ci + 1; i++) for (let j = cj - 1; j <= cj + 1; j++) for (const o of (NAV.grid.get(i + ',' + j) || NAV.none)) { const dx = P.x - o.x, dz = P.z - o.z, d = Math.hypot(dx, dz), m = o.r + r; if (d < m && d > 1e-4) { P.x = o.x + dx / d * m; P.z = o.z + dz / d * m; } }
@@ -38441,7 +38472,6 @@ function initTown() {
   $('#townLeave').onclick = () => { AU.click(); leaveTown(); };
 }
 TOWN.frame = 0;
-
 // ---------- the living town: Kenney props, the gate (giant, marshal, notice board, crier), the wardrobe, pets, a haunted graveyard,
 // a windmill, townsfolk, and other players walking around online. Models: Kenney Fantasy Town, Nature and Graveyard kits (CC0).
 const KMAT = {};
@@ -38600,10 +38630,10 @@ function freeSpot() {
     const a = rand(0, TAU), r = rand(22, 80), x = Math.cos(a) * r, z = Math.sin(a) * r;
     if (arenaBlocked(x, z, 1.5)) continue;
     if (Math.hypot(x / FAIR_RX, z / FAIR_RZ) > 0.92) continue;
-    if (TOWN.obst.some(o => Math.hypot(o.x - x, o.z - z) < o.r + 1.2)) continue;
+    if (!folkSpawnSafe(x, z)) continue;
     return { x, z };
   }
-  return { x: 0, z: 30 };
+  return navFree(0, 30);
 }
 function buildWorld() {
   WORLD.spin = []; WORLD.bob = []; WORLD.flick = []; WORLD.others = {}; WORLD.pet = null;
@@ -38901,19 +38931,19 @@ function buildSpecialVendors() {
     const g = new THREE.Group(); g.position.set(x, gy(x, z), z); g.rotation.y = ry; TOWN.root.add(g);
     let npc;
     if (V.key === 'wardrobe') {
-      kpiece(g, 'tent_detailedOpen', 0, 0, -1.4, Math.PI, 3.2);
+      gameplayPropFootprint(kpiece(g, 'tent_detailedOpen', 0, 0, -1.4, Math.PI, 3.2), true);
       for (let i = 0; i < 3; i++) { const rack = grp(g, -1.6 + i * 1.6, 0, -2.4); mk(rack, geo('wd_rack', () => new THREE.BoxGeometry(1.2, 0.05, 0.05)), tmat('#4a3422'), 0, 1.8, 0); for (let j = 0; j < 3; j++) mk(rack, geo('wd_cl', () => new THREE.PlaneGeometry(0.32, 0.8)), lmat({ color: SHOP_TABARDS[(i * 3 + j) % SHOP_TABARDS.length][0], side: THREE.DoubleSide }), -0.4 + j * 0.4, 1.38, 0); }
       const mirror = mk(g, geo('wd_mirror', () => new THREE.PlaneGeometry(0.8, 1.7)), tmat('#cfe3f7', { metalness: 0.9, roughness: 0.05 }), 2.3, 1.1, -0.8); mirror.rotation.y = -0.6;
       npc = costumeOr({ main: V.col, joints: '#e3b341', h: 1.72, anim: 'Idle_Loop' }, vendorOutfit(V)); npc.root.position.set(0, 0, -0.6); g.add(npc.root);
-      TOWN.obst.push({ x: x - Math.sin(ry) * 1.6, z: z - Math.cos(ry) * 1.6, r: 2.4 });
+      // Tent walls are registered from the rendered asset, preserving its entrance.
     } else if (V.key === 'barber') {
-      kpiece(g, 'tent_detailedOpen', 0, 0, -1.2, Math.PI, 2.8);
+      gameplayPropFootprint(kpiece(g, 'tent_detailedOpen', 0, 0, -1.2, Math.PI, 2.8), true);
       const mirror = mk(g, geo('barber_mirror', () => new THREE.PlaneGeometry(1, 1.6)), tmat('#cfe3f7', { metalness: 0.9, roughness: 0.05 }), -2.1, 1.25, -0.8); mirror.rotation.y = 0.65;
       mk(g, geo('barber_chair', () => new THREE.CylinderGeometry(0.42, 0.45, 0.5, 10)), tmat('#603e30'), 1.5, 0.45, -0.6);
       mk(g, geo('barber_pole', () => new THREE.CylinderGeometry(0.1, 0.1, 2.1, 12)), tmat('#e6e2d8'), 2.4, 1.1, 0.3);
       for (let i = 0; i < 7; i++) mk(g, geo('barber_stripe', () => new THREE.TorusGeometry(0.105, 0.018, 5, 14)), tmat(i % 2 ? '#a92932' : '#285d88'), 2.4, 0.35 + i * 0.24, 0.3).rotation.x = Math.PI / 2;
       npc = costumeOr({ main: V.col, joints: '#e3b341', h: 1.7, anim: 'Idle_Loop' }, vendorOutfit(V)); npc.root.position.set(0, 0, -0.6); g.add(npc.root);
-      TOWN.obst.push({ x: x - Math.sin(ry) * 1.3, z: z - Math.cos(ry) * 1.3, r: 2.1 });
+      gameplayShape(x + Math.cos(ry) * 1.5 - Math.sin(ry) * 0.6, z - Math.sin(ry) * 1.5 - Math.cos(ry) * 0.6, 0.45, 0.45, ry, 0.9);
     } else {
       kpiece(g, 'gravestoneDecorative', -1.2, 0, -0.6, 0, 1.8); kpiece(g, 'lanternCandle', 1.1, 0, -0.4, 0, 2);
       npc = { root: kpiece(g, 'ghost', 0, 1.2, -0.5, 0, 2.2) || new THREE.Group(), ghost: true }; WORLD.bob.push({ o: npc.root, k: 'float', ph: 9, cx: 0, cz: -0.5 });
@@ -38924,7 +38954,6 @@ function buildSpecialVendors() {
     TOWN.stalls.push({ V, g, npc, ry, x, z, ax: x + fx * 1.4, az: z + fz * 1.4, label: lab });
   }
 }
-
 // Cloth follows the upper spine. The collar is fixed; springy lower rows trail
 // torso motion and catch a slow, travelling wind.
 const CAPE_TEX = new Map();
@@ -39127,8 +39156,10 @@ function navBlocked(x, z, r) {
   if (typeof gateBlocked === 'function' && gateBlocked(x, z, r)) return true;
   if (Math.hypot(x / TOWN_RX, z / TOWN_RZ) > 0.985) return true;
   if (cliffAt(x, z, r)) return true;
-  const L = NAV.grid.get(Math.floor(x / NAV.cell) + ',' + Math.floor(z / NAV.cell)) || NAV.none;
-  for (const o of L) { const dx = x - o.x, dz = z - o.z, m = o.r + r; if (dx * dx + dz * dz < m * m) return true; }
+  for (let i = Math.floor((x - r) / NAV.cell); i <= Math.floor((x + r) / NAV.cell); i++) for (let j = Math.floor((z - r) / NAV.cell); j <= Math.floor((z + r) / NAV.cell); j++) {
+    const L = NAV.grid.get(i + ',' + j) || NAV.none;
+    for (const o of L) { const dx = x - o.x, dz = z - o.z, m = o.r + r; if (dx * dx + dz * dz < m * m) return true; }
+  }
   if (gameplayShapeBlocked(x, z, r)) return true;
   return false;
 }
@@ -39154,8 +39185,9 @@ function navPushOut(N, beforeMove) { // a gentle positional correction, never a 
     if (px < pz) N.x = A.x + Math.sign(dx || 1) * (LIST_BLOCK.x + 0.3);
     else N.z = A.z + Math.sign(dz || 1) * (LIST_BLOCK.z + 0.3);
   }
-  const L = NAV.grid.get(Math.floor(N.x / NAV.cell) + ',' + Math.floor(N.z / NAV.cell)) || NAV.none;
-  for (const o of L) { const dx = N.x - o.x, dz = N.z - o.z, d = Math.hypot(dx, dz), m = o.r + 0.3; if (d < m && d > 1e-4) { N.x = o.x + dx / d * m; N.z = o.z + dz / d * m; } }
+  const L = new Set();
+  for (let i = Math.floor((N.x - 0.32) / NAV.cell); i <= Math.floor((N.x + 0.32) / NAV.cell); i++) for (let j = Math.floor((N.z - 0.32) / NAV.cell); j <= Math.floor((N.z + 0.32) / NAV.cell); j++) for (const o of NAV.grid.get(i + ',' + j) || NAV.none) L.add(o);
+  for (const o of L) { const dx = N.x - o.x, dz = N.z - o.z, d = Math.hypot(dx, dz), m = o.r + 0.32; if (d < m) { N.x = o.x + (d > 1e-4 ? dx / d : 1) * m; N.z = o.z + (d > 1e-4 ? dz / d : 0) * m; } }
   gameplayShapePush(N, 0.3);
   lakePush(N, 0.3);
   if (beforeMove && !castleWalkable(beforeMove.x, beforeMove.z, N.x, N.z, 0.3)) {
@@ -39169,12 +39201,12 @@ function navPushOut(N, beforeMove) { // a gentle positional correction, never a 
 function navFree(x, z, r = 0.4) {
   if (!navBlocked(x, z, r)) return { x, z };
   for (let rad = 0.6; rad < 6; rad += 0.6) for (let k = 0; k < 12; k++) { const a = k / 12 * TAU, px = x + Math.sin(a) * rad, pz = z + Math.cos(a) * rad; if (!navBlocked(px, pz, r)) return { x: px, z: pz }; }
-  return { x, z };
+  return null;
 }
-const FOLK = { spots: [], people: [] };
+const FOLK = { spots: [], people: [], routeBudget: 1, limit: 0, ema: 0.016, slow: 0, healthy: 0, nearGrid: new Map() };
 function folkSpot(type, x, z, face, anim, dur, opt) {
   const ax = x + Math.sin(face) * (opt && opt.reach || 0), az = z + Math.cos(face) * (opt && opt.reach || 0);
-  const ap = navFree(ax, az);
+  const ap = navFree(ax, az); if (!ap || (!opt?.seat && !folkLineFree(ap.x, ap.z, x, z))) return;
   FOLK.spots.push(Object.assign({ type, x, z, face, anim, dur, ax: ap.x, az: ap.z, occ: null }, opt || {}));
 }
 function folkSpots() {
@@ -39191,7 +39223,7 @@ function folkSpots() {
   for (const a of [5.2, 0.4]) { const x = 29 + Math.sin(a) * 2.2, z = 25 + Math.cos(a) * 2.2; folkSpot('fire', x, z, face(x, z, 29, 25), 'Idle_Loop', [10, 25]); }
   for (const a of [0, 2.1, 4.2]) { const x = 45 + Math.sin(a) * 2, z = 59 + Math.cos(a) * 2; folkSpot('fire', x, z, face(x, z, 45, 59), a ? 'Idle_Talking_Loop' : 'Idle_Loop', [12, 30]); }
   // browse every shop and the food stalls
-  for (const S of TOWN.stalls) { if (S.player || S.station || S.arena || S.secret || S.node || !S.V || !S.V.role) continue; for (const side of [-1, 1]) { const x = S.ax + Math.cos(S.ry) * 1.1 * side, z = S.az - Math.sin(S.ry) * 1.1 * side; folkSpot('browse', x, z, S.ry + Math.PI, side < 0 ? 'Idle_Talking_Loop' : 'Interact', [8, 20], { stall: S.V.key }); } }
+  for (const S of TOWN.stalls) { if (S.player || S.station || S.arena || S.secret || S.node || !S.V || !S.V.role) continue; for (const side of [-1, 1]) { const x = S.ax + Math.cos(S.ry) * 2.2 * side, z = S.az - Math.sin(S.ry) * 2.2 * side; if (TOWN.stalls.some(O => Math.hypot(x - O.ax, z - O.az) < 1.5)) continue; folkSpot('browse', x, z, S.ry + Math.PI, side < 0 ? 'Idle_Talking_Loop' : 'Interact', [8, 20], { stall: S.V.key }); } }
   for (let i = 0; i < 4; i++) { const x = 28 + i * 6.2; folkSpot('eat', x - 0.7, -4.2, Math.PI, 'Interact', [6, 14], { alt: 'Idle_Talking_Loop' }); folkSpot('eat', x + 0.8, -3.9, Math.PI, 'Idle_Loop', [6, 14]); }
   // watch the fights from every side of the rope
   for (const x of [-16.5, -13.5, -10.5, -4.4, 4.4, 10.5, 13.5, 16.5]) folkSpot('watch', x, 24.1, Math.PI, 'Idle_Loop', [20, 60], { alt: 'Idle_Talking_Loop' });
@@ -39214,6 +39246,9 @@ function folkSpots() {
 }
 // what each role likes doing (weights), and how fast they walk
 const FOLK_ROLES = {
+  visitor: { browse: 4, eat: 2, chat: 1, board: 1, walk: 'Walk_Loop', spd: [1.1, 1.5] },
+  walker: { browse: 1, water: 1, board: 1, grave: 1, walk: 'Walk_Loop', spd: [1.3, 1.7] },
+  fan: { watch: 5, eat: 1, fire: 1, chat: 1, walk: 'Walk_Loop', spd: [1.1, 1.4] },
   towns: { sit: 1.2, fire: 1, browse: 2.2, eat: 1.4, watch: 1.8, chat: 1.4, water: 0.5, board: 0.6, grave: 0.4, dance: 0.6, archery: 0.6, train: 0.5, walk: 'Walk_Loop', spd: [1.15, 1.5] },
   kid: { dance: 1.5, watch: 1, eat: 0.8, chat: 0.3, board: 0.1, play: 3, walk: 'Jog_Fwd_Loop', spd: [3.2, 3.8] },
   gateguard: { post: 1, walk: 'Walk_Formal_Loop', spd: [1.1, 1.1] },
@@ -39229,13 +39264,16 @@ function buildFolk() {
   navBuild(); folkSpots();
   const cols = ['#6b4e16', '#2c4a8c', '#23704a', '#8c1f4f', '#4b1d6b', '#7a4a12', '#1f4a4a', '#5a5a5a', '#9a2a12', '#335c3f', '#c46a1c', '#2c2c54'];
   const roles = IS_TOUCH ? ['smith', 'guard', 'gateguard', 'gardener', 'towns', 'towns', 'towns', 'towns', 'towns', 'towns', 'kid', 'kid'] : ['smith', 'guard', 'guard', 'gateguard', 'gateguard', 'gardener', 'towns', 'towns', 'towns', 'towns', 'towns', 'towns', 'towns', 'towns', 'towns', 'towns', 'towns', 'towns', 'kid', 'kid', 'kid', 'kid'];
+  while (roles.length < (IS_TOUCH ? 28 : 48)) roles.push(['visitor', 'walker', 'fan', 'towns'][roles.length % 4]);
+  FOLK.limit = roles.length; FOLK.ema = 0.016; FOLK.slow = FOLK.healthy = 0;
   roles.forEach((role, i) => {
     const kid = role === 'kid', fit = folkOutfit(role, i), J = costumeOr({ main: role === 'guard' || role === 'gateguard' ? '#26344d' : role === 'smith' ? '#3a2a1a' : cols[i % cols.length], joints: role === 'guard' || role === 'gateguard' ? '#9aa3a8' : '#2a2e33', h: kid ? rand(1.1, 1.3) : rand(1.62, 1.86), anim: 'Idle_Loop' }, fit);
     if (J.costume) { if (role === 'guard' || role === 'gateguard') kettleHat(J); else if (J.costume.includes('Peasant') && role !== 'smith') { const hat = pick(['cap', 'flowers', 'none', 'none', 'hood']); if (hat !== 'none') dress(J, { b: pick(['#6b4e16', '#3a4a2a', '#5a2a2a', '#2a3a5a']), t: pick(['#c9b48a', '#e8e0cc', '#8a6a42']), h: hat, c: 'none', n: 'none' }); } }
     if ((role === 'guard' || role === 'gateguard') && J.handR) { const sp = grp(J.handR, 0, 0.06, 0.02); mk(sp, geo('f_spear', () => new THREE.CylinderGeometry(0.018, 0.018, 2.1, 6)), tmat('#5a3b24'), 0, 0.5, 0); mk(sp, geo('f_tip', () => new THREE.ConeGeometry(0.035, 0.18, 6)), tmat('#c9d2d6', { metalness: 0.8 }), 0, 1.62, 0); }
     if (role === 'smith' && J.handR) { const hm = grp(J.handR, 0, 0.06, 0.02); mk(hm, geo('t_hh', () => new THREE.CylinderGeometry(0.018, 0.018, 0.4, 6)), tmat('#5a3b24'), 0, 0.12, 0); mk(hm, geo('t_hhead', () => new THREE.BoxGeometry(0.1, 0.07, 0.16)), tmat('#2b2e31', { metalness: 0.6 }), 0, 0.32, 0); }
     if (role === 'gardener' && !J.costume) dress(J, { b: '#6b4e16', t: '#c9b48a', h: 'cap', c: 'none', n: 'none' });
-    const R0 = FOLK_ROLES[role], start = role === 'guard' ? navFree(GUARD_PATH[i % 2 ? 2 : 0][0], GUARD_PATH[i % 2 ? 2 : 0][1]) : role === 'gateguard' ? navFree(i % 2 ? 3.4 : -3.4, CASTLE.z1 + 4) : freeSpot();
+    const R0 = FOLK_ROLES[role], start = role === 'guard' ? navFree(GUARD_PATH[i % 2 ? 2 : 0][0], GUARD_PATH[i % 2 ? 2 : 0][1]) : role === 'gateguard' ? navFree(i % 2 ? 3.4 : -3.4, CASTLE.z1 + 4) : folkDistrictSpawn(i);
+    if (!start) return;
     const N = { J, role, kid, x: start.x, z: start.z, hx: 0, hz: 1, sideX: 0, sideZ: 0, face: rand(0, TAU), state: 'choose', spot: null, tx: 0, tz: 0, timer: rand(0, 2), best: 1e9, stuck: 0, fails: 0, spd: rand(...R0.spd), pathI: i % GUARD_PATH.length, settle: 0, anim: 'Idle_Loop' };
     J.root.position.set(N.x, gy(N.x, N.z), N.z); J.root.userData.dyn = true; TOWN.root.add(J.root); FOLK.people.push(N);
   });
@@ -39243,8 +39281,9 @@ function buildFolk() {
 function folkPlay(N, name, fade = 0.3) { N.anim = name; if (N.J.ual) N.J.play(UAL.clips[name] ? name : 'Idle_Loop', fade); }
 function folkChoose(N) {
   const R0 = FOLK_ROLES[N.role];
+  N.route = null; N.routeSearch = null; N.detour = false;
   if (N.role === 'guard') { const p = GUARD_PATH[N.pathI = (N.pathI + 1) % GUARD_PATH.length]; N.spot = null; N.tx = p[0]; N.tz = p[1]; N.state = 'walk'; N.best = 1e9; N.stuck = 0; folkPlay(N, R0.walk); return; }
-  if (N.role === 'kid' && Math.random() < (R0.play / 6)) { const leader = FOLK.people.find(o => o.kid && o !== N && o.state === 'walk'); const t = leader && Math.random() < 0.6 ? navFree(leader.x + rand(-2, 2), leader.z + rand(-2, 2)) : freeSpot(); N.spot = null; N.tx = t.x; N.tz = t.z; N.state = 'walk'; N.best = 1e9; N.stuck = 0; folkPlay(N, R0.walk); return; }
+  if (N.role === 'kid' && Math.random() < (R0.play / 6)) { const leader = FOLK.people.find(o => o.kid && o !== N && o.state === 'walk'); const t = leader && Math.random() < 0.6 ? navFree(leader.x + rand(-2, 2), leader.z + rand(-2, 2)) : freeSpot(); if (!t) return; N.route = null; N.spot = null; N.tx = t.x; N.tz = t.z; N.state = 'walk'; N.best = 1e9; N.stuck = 0; folkPlay(N, R0.walk); return; }
   const opts = [];
   for (const S of FOLK.spots) {
     if (S.occ) continue; if (S.owner && S.owner !== N.role) continue; const w = R0[S.type] || 0; if (!w) continue;
@@ -39253,7 +39292,7 @@ function folkChoose(N) {
   opts.sort((a, b) => b[1] - a[1]);
   const pick = opts.slice(0, 3); let tot = pick.reduce((s, o) => s + o[1], 0), r = Math.random() * tot, S = null;
   for (const [s, w] of pick) { r -= w; if (r <= 0) { S = s; break; } }
-  if (!S) { const t = freeSpot(); N.spot = null; N.tx = t.x; N.tz = t.z; } else { S.occ = N; N.spot = S; N.tx = S.ax; N.tz = S.az; }
+  if (!S) { const t = freeSpot(); if (!t) { N.timer = 2; return; } N.spot = null; N.tx = t.x; N.tz = t.z; } else { S.occ = N; N.spot = S; N.tx = S.ax; N.tz = S.az; }
   N.state = 'walk'; N.best = 1e9; N.stuck = 0; folkPlay(N, R0.walk);
 }
 function folkRelease(N) { if (N.spot && N.spot.occ === N) N.spot.occ = null; N.spot = null; }
@@ -39261,51 +39300,67 @@ function updateFolk(dt) {
   updateSpectators(dt);
   if (!FOLK.people.length) return;
   const P = TOWN.pos;
-  for (const N of FOLK.people) {
+  folkPopulationTick(dt); FOLK.routeBudget = 1; folkNeighborBuild();
+  FOLK.routeCursor = ((FOLK.routeCursor || 0) + 1) % FOLK.people.length;
+  for (let index = 0; index < FOLK.people.length; index++) {
+    const N = FOLK.people[(index + FOLK.routeCursor) % FOLK.people.length];
+    if (N.suspended) continue;
+    const distance = pd(N, P); N.elapsed = (N.elapsed || 0) + dt;
+    if (distance > (IS_TOUCH ? 45 : 65) && N.elapsed < 0.3) continue;
+    const stepDt = Math.min(N.elapsed, 0.3); N.elapsed = 0; N.elapsedStep = stepDt;
     const R0 = FOLK_ROLES[N.role];
-    if (N.state === 'choose') { N.timer -= dt; if (N.timer <= 0) folkChoose(N); }
+    if (N.state === 'walk' || N.state === 'choose') {
+      if (navBlocked(N.x, N.z, 0.32)) {
+        const recovered = navFree(N.x, N.z, 0.32);
+        if (!recovered) { N.J.root.visible = false; continue; }
+        N.x = recovered.x; N.z = recovered.z; N.route = null; N.routeSearch = null;
+      }
+    }
+    if (N.state === 'choose') { N.timer -= stepDt; if (N.timer <= 0) folkChoose(N); }
     else if (N.state === 'walk') {
       // step aside for the player and for each other
       N.sideX = 0; N.sideZ = 0;
       const pdx = N.x - P.x, pdz = N.z - P.z, pd = Math.hypot(pdx, pdz); if (pd < 1.6 && pd > 1e-3) { N.sideX += pdx / pd; N.sideZ += pdz / pd; }
-      for (const O of FOLK.people) { if (O === N) continue; const ox = N.x - O.x, oz = N.z - O.z, od = ox * ox + oz * oz; if (od < 1 && od > 1e-4) { const q = Math.sqrt(od); N.sideX += ox / q * 0.6; N.sideZ += oz / q * 0.6; } }
-      const [cx, cz] = navSteer(N, N.tx, N.tz);
-      const [sx, sz] = gameplayFolkDirection(N, N.tx, N.tz, dt, cx, cz);
-      N.hx += (sx - N.hx) * Math.min(1, dt * 6); N.hz += (sz - N.hz) * Math.min(1, dt * 6); const hl = Math.hypot(N.hx, N.hz) || 1; N.hx /= hl; N.hz /= hl;
+      for (const O of folkNeighbors(N)) { if (O === N || O.suspended) continue; const ox = N.x - O.x, oz = N.z - O.z, od = ox * ox + oz * oz; if (od < 1 && od > 1e-4) { const q = Math.sqrt(od); N.sideX += ox / q * 0.6; N.sideZ += oz / q * 0.6; } }
+      const waypoint = folkWaypoint(N);
+      if (!waypoint) continue;
+      const [cx, cz] = navSteer(N, waypoint[0], waypoint[1]);
+      const [sx, sz] = gameplayFolkDirection(N, waypoint[0], waypoint[1], stepDt, cx, cz);
+      N.hx += (sx - N.hx) * Math.min(1, stepDt * 6); N.hz += (sz - N.hz) * Math.min(1, stepDt * 6); const hl = Math.hypot(N.hx, N.hz) || 1; N.hx /= hl; N.hz /= hl;
       const walkSpeed = Math.min(N.spd, Math.max(0.6, Math.hypot(N.tx - N.x, N.tz - N.z) / 0.6));
       const beforeMove = { x: N.x, z: N.z };
-      N.x += N.hx * walkSpeed * dt; N.z += N.hz * walkSpeed * dt; navPushOut(N, beforeMove);
+      folkMove(N, N.hx * walkSpeed * stepDt, N.hz * walkSpeed * stepDt); navPushOut(N, beforeMove);
       N.face = Math.atan2(N.hx, N.hz);
-      const d = Math.hypot(N.tx - N.x, N.tz - N.z);
-      if (d < N.best - 0.05) { N.best = d; N.stuck = 0; } else if ((N.stuck += dt) > 2.5) { N.stuck = 0; N.best = 1e9; if (++N.fails >= 2) { N.fails = 0; folkRelease(N); N.state = 'choose'; N.timer = rand(0.5, 2); folkPlay(N, 'Idle_Loop'); continue; } const t = navFree(N.x + rand(-4, 4), N.z + rand(-4, 4)); N.tx = t.x; N.tz = t.z; N.detour = true; }
-      if (d < 0.4) {
+      const d = Math.hypot(waypoint[0] - N.x, waypoint[1] - N.z);
+      if (d < N.best - 0.05) { N.best = d; N.stuck = 0; } else if ((N.stuck += stepDt) > 2.5) { N.stuck = 0; N.best = 1e9; if (++N.fails >= 2) { N.fails = 0; folkRelease(N); N.state = 'choose'; N.timer = rand(0.5, 2); folkPlay(N, 'Idle_Loop'); continue; } N.route = null; N.routeWait = 0.5; }
+      if (d < 0.25 && N.route && N.route.length > 1) { N.route.shift(); N.best = 1e9; N.stuck = 0; N.J.root.position.set(N.x, gy(N.x, N.z), N.z); continue; }
+      if (d < 0.25) {
         if (N.detour && N.spot) { N.detour = false; N.tx = N.spot.ax; N.tz = N.spot.az; N.best = 1e9; }
         else if (N.spot) { N.fails = 0; N.state = 'settle'; N.settle = 0; N.sx = N.x; N.sz = N.z; }
         else { N.fails = 0; N.state = 'choose'; N.timer = N.kid ? rand(0.1, 0.8) : N.role === 'guard' ? rand(2, 5) : rand(1, 4); folkPlay(N, N.role === 'guard' ? 'Idle_Loop' : 'Idle_Loop'); }
       }
     } else if (N.state === 'settle') { // glide from the approach point into place, turning to face the spot's way
-      const S = N.spot; N.settle = Math.min(1, N.settle + dt * 1.6);
+      const S = N.spot; N.settle = Math.min(1, N.settle + stepDt * 1.6);
       N.x = N.sx + (S.x - N.sx) * N.settle; N.z = N.sz + (S.z - N.sz) * N.settle;
-      let df = S.face - N.face; df = Math.atan2(Math.sin(df), Math.cos(df)); N.face += df * Math.min(1, dt * 6);
+      let df = S.face - N.face; df = Math.atan2(Math.sin(df), Math.cos(df)); N.face += df * Math.min(1, stepDt * 6);
       if (N.settle >= 1) { N.state = 'act'; N.timer = rand(S.dur[0], S.dur[1]); N.phase = 0; folkPlay(N, S.alt && Math.random() < 0.4 ? S.alt : S.anim, 0.4); if (N.J.ual && N.J.acts[N.anim]) { N.J.acts[N.anim].time = Math.random() * 2; N.J.acts[N.anim].timeScale = 0.9 + Math.random() * 0.2; } }
     } else if (N.state === 'act') {
-      const S = N.spot; N.timer -= dt; N.phase += dt;
+      const S = N.spot; N.timer -= stepDt; N.phase += stepDt;
       if (S.then && N.phase > 2.2 && N.anim !== S.then) folkPlay(N, S.then);
       if (S.ring === 'fountain' && N.phase > 4) { N.phase = 0; folkPlay(N, N.anim === 'Idle_Talking_Loop' ? 'Idle_Loop' : 'Idle_Talking_Loop', 0.5); } // take turns talking
-      if (!S.seat && S.type !== 'smith' && S.type !== 'garden' && pd(N, P) < 3.2 && TOWN.speed < 0.5) { const want = Math.atan2(P.x - N.x, P.z - N.z); let df = want - N.face; df = Math.atan2(Math.sin(df), Math.cos(df)); N.face += df * Math.min(1, dt * 2.5); } // turn to look at you when you stop by
-      else { let df = S.face - N.face; df = Math.atan2(Math.sin(df), Math.cos(df)); N.face += df * Math.min(1, dt * 2); }
+      if (!S.seat && S.type !== 'smith' && S.type !== 'garden' && pd(N, P) < 3.2 && TOWN.speed < 0.5) { const want = Math.atan2(P.x - N.x, P.z - N.z); let df = want - N.face; df = Math.atan2(Math.sin(df), Math.cos(df)); N.face += df * Math.min(1, stepDt * 2.5); } // turn to look at you when you stop by
+      else { let df = S.face - N.face; df = Math.atan2(Math.sin(df), Math.cos(df)); N.face += df * Math.min(1, stepDt * 2); }
       if (N.timer <= 0) { N.state = 'leave'; N.settle = 0; folkPlay(N, 'Idle_Loop', 0.4); }
     } else if (N.state === 'leave') { // stand up and step back out to the approach point, then choose again
-      const S = N.spot; N.settle = Math.min(1, N.settle + dt * 1.8);
+      const S = N.spot; N.settle = Math.min(1, N.settle + stepDt * 1.8);
       N.x = S.x + (S.ax - S.x) * N.settle; N.z = S.z + (S.az - S.z) * N.settle;
       if (N.settle >= 1) { folkRelease(N); N.state = 'choose'; N.timer = rand(0.3, 1.5); }
     }
     N.J.root.position.set(N.x, gy(N.x, N.z), N.z); N.J.root.rotation.y = N.face;
-    if (N.J.ual && N.J.root.visible) N.J.mixer.update(dt);
+    if (N.J.ual && N.J.root.visible) N.J.mixer.update(stepDt);
   }
 }
 function pd(N, P) { return Math.hypot(N.x - P.x, N.z - P.z); }
-
 // ---------- the festival plan: a medieval tournament fair around the lists ----------
 //  North      the castle: curtain walls, four corner towers, a gatehouse you can walk through, a keep in the courtyard
 //  North-west training grounds (pells, the trainer) and the watchtower; the wizard's tent
@@ -39323,7 +39378,7 @@ const FEST_RESERVED = [ // [x0, x1, z0, z1] kept clear of random trees and rocks
 ];
 function festReserved(x, z, pad = 0) { return FEST_RESERVED.some(([a, b, c, d]) => x > a - pad && x < b + pad && z > c - pad && z < d + pad); }
 function buildFestival(R) {
-  const O = TOWN.obst, add = (key, x, z, ry, s, r) => { const p = kpiece(R, key, x, gy(x, z), z, ry || 0, s || 1); if (r) O.push({ x, z, r }); return p; };
+  const O = TOWN.obst, add = (key, x, z, ry, s, r) => { const p = kpiece(R, key, x, gy(x, z), z, ry || 0, s || 1); if (/tent|bench|table/i.test(key)) gameplayPropFootprint(p, /Open/.test(key)); else if (r) O.push({ x, z, r }); return p; };
   const line = (x0, z0, x1, z1, r, gap) => { const L = Math.hypot(x1 - x0, z1 - z0), n = Math.max(1, Math.round(L / (r * 1.4))); for (let i = 0; i <= n; i++) { const t = i / n, x = x0 + (x1 - x0) * t, z = z0 + (z1 - z0) * t; if (gap && gap(x, z)) continue; O.push({ x, z, r }); } };
   TOWN.mapRects = [];
   const ground = (x0, x1, z0, z1, col, tex) => {
@@ -39388,7 +39443,7 @@ function buildFestival(R) {
     ['Pine_2', 88, -40, 7.5, -0.2],
   ]) { libraryPlace(R, key, x, z, height, yaw);
     if (libraryFootprint[key]) gameplayShape(x, z, ...libraryFootprint[key], yaw, height);
-    else if (librarySolid[key]) O.push({ x, z, r: librarySolid[key] }); }
+    else if (librarySolid[key] && !libraryFootprint[key]) O.push({ x, z, r: librarySolid[key] }); }
   // ---- the festival gate at the south end of main street
   for (const sx of [-7, 7]) { add('cs_tower_mid', sx, 69, 0, 0.9, 2.6); const t = add('cs_tower_top_1', sx, 69, 0, 0.9, 0); if (t) t.position.y = 3.6; const b = add(sx < 0 ? 'bannerRed' : 'bannerGreen', sx, 66.6, 0, 2.6, 0); if (b) b.position.y = 0.4; }
   for (const sx of [-4.6, 4.6]) mk(R, geo('fest_gpole', () => new THREE.CylinderGeometry(0.1, 0.12, 6.4, 8)), tmat('#4a3422'), sx, 3.2, 68.6);
@@ -39536,7 +39591,6 @@ function buildGraveyard(R, add) {
   add('dp_cage', 58, -48, -0.6, 1, 0.8); add('dp_guillotine', 31, -60, 0.5, 1, 1.2); add('fy_cem_lamp', 37.6, -48.8, 0, 1.2, 0.3); add('fy_cem_lamp', 50.4, -48.8, 0, 1.2, 0.3);
   add('ps_tent', 60, -56, -0.6, 1.2, 1.8); add('ps_fire', 57.6, -58, 0, 1.6, 0.6); add('fy_ancient_tree_autumn', 20, -60, 0.4, 1, 2.2); add('nt_deadtree', 62, -40, 1, 1, 0.8);
 }
-
 // ===================================================================
 // Festival bouts: while you walk the realm there's always a fight on at the arena nearest you.
 // Real fighters on the real sim, but with no player, no prize, no stats and no awards (G.attract keeps all of that off).
@@ -40289,6 +40343,7 @@ function buildSpectators() {
   for (const sz of [-1, 1]) for (const x of [-11, -8, -5, -2, 2, 5, 8, 11]) spots.push([x + rand(-0.35, 0.35), sz * rand(20, 21)]);
   spots.forEach(([x, z], i) => {
     if (IS_TOUCH && i % 2) return;
+    if (navBlocked(x, z, 0.32)) return;
     const fit = folkOutfit('towns', i), J = costumePerson(Object.assign({ h: rand(1.6, 1.86), anim: pick(['Idle_Loop', 'Idle_Talking_Loop', 'Idle_Loop']) }, fit)); if (!J) return;
     if (J.costume.includes('Peasant') && Math.random() < 0.4) dress(J, { b: '#5a2a2a', t: pick(['#c9b48a', '#e8e0cc']), h: pick(['cap', 'flowers', 'hood']), c: 'none', n: 'none' });
     J.root.position.set(x, gy(x, z), z); J.root.rotation.y = Math.atan2(-x, -z); TOWN.root.add(J.root);
@@ -40384,7 +40439,6 @@ function outfitThumb(key, large = false) {
   } catch (e) { console.warn('portrait', e); }
   return c;
 }
-
 // ===================================================================
 // Gathering round the realm: ore in the quarry and the castle mine, marked trees in the Old Woods, herbs, flax, hides and bone.
 // Walk up, press the prompt, then time three swings: the marker sweeps a bar and the green zone is the sweet spot.
@@ -40909,8 +40963,8 @@ function arenaList(R, A, o) {
 function arenaStands(R, A, o) {
   const Y = gy(A.x, A.z), L = LIST.L, W = LIST.W;
   for (const sx of [-1, 1]) for (let row = 0; row < 3; row++) {
-    const bx = A.x + sx * (W / 2 + 6.3 + row * 0.9);
-    const b = mk(R, geo('ar_bench', () => new THREE.BoxGeometry(1.2, 0.12, L * 0.8)), tmat(o.bench || '#7a5a3a'), bx, Y + 0.45 + row * 0.5, A.z); b.receiveShadow = true;
+    const bx = A.x + sx * (W / 2 + 6.3 + row * 2.2);
+    const b = mk(R, geo('ar_bench', () => new THREE.BoxGeometry(1.2, 0.12, L * 0.8)), tmat(o.bench || '#7a5a3a'), bx, Y + 0.45 + row * 0.5, A.z); b.receiveShadow = true; gameplayShape(bx, A.z, 0.6, L * 0.4, 0, 0.9 + row * 0.5);
     for (const sz of [-1, 1]) mk(R, geo('ar_benchleg', () => new THREE.BoxGeometry(1.2, 1, 0.2)), tmat('#4a3422'), bx, Y + (0.45 + row * 0.5) / 2, A.z + sz * L * 0.38).scale.y = 0.45 + row * 0.5;
   }
   arenaSeatFolk(R, A);
@@ -41311,7 +41365,6 @@ const REALM_TIERS = {
   bailey: { level: 15, need: 'Level 15 and the Bailey writ. Beat Sergeant Brask at the gate in a duel to earn it.', name: 'Bailey writ' },
   royal: { level: 40, need: 'Level 40 and the Royal writ. Beat the King’s Guard in the Castle arena to earn it.', name: 'Royal writ' }
 };
-
 // ===================================================================
 // Getting around the realm without teleporting: waypoints with a trail of markers along the road, autowalk,
 // a compass at the top of the screen, sprint stamina, and horses (hire one at the stables or own one).
@@ -41630,11 +41683,13 @@ function updateAnimals(dt) {
 // people far off aren't drawn or animated (skinning a whole realm's worth of townsfolk is the heaviest thing we do)
 function peopleCull() {
   const c = W3.camera.position, F = IS_TOUCH ? 45 : 65, vis = (o, f) => { if (o) o.visible = Math.hypot(o.position.x - c.x, o.position.z - c.z) < f; };
-  for (const N of (typeof FOLK !== 'undefined' && FOLK.people) || []) vis(N.J.root, F);
+  for (const N of (typeof FOLK !== 'undefined' && FOLK.people) || []) vis(N.J.root, N.suspended ? 0 : F);
   for (const S of (typeof SPECT !== 'undefined' && SPECT.people) || []) vis(S.J.root, F + 25);
+  const rigs = [...FOLK.people.filter(N => !N.suspended).map(N => ({ J: N.J, owner: N })), ...SPECT.people.map(S => ({ J: S.J, owner: S })), ...SPECT.seated.map(S => ({ J: S.J, owner: S }))];
+  rigs.sort((a, b) => a.J.root.position.distanceToSquared(c) - b.J.root.position.distanceToSquared(c));
+  rigs.forEach((R, i) => { R.owner.budgetHidden = i >= (IS_TOUCH ? 44 : 80); if (R.owner.budgetHidden) R.J.root.visible = false; });
   for (const S of TOWN.stalls || []) if (S.npc && S.npc.root && S.npc.ual) { const d = Math.hypot(S.x - c.x, S.z - c.z); S.npc.root.visible = d < F; }
 }
-
 // ===================================================================
 // Tiers: where you may go and what you may buy.
 //   Tier 1  the fairground and the open country: the festival's own smiths and armourers, good but not the best
@@ -41743,7 +41798,7 @@ function arenaSeatFolk(R, A, sides) {
     const fit = folkOutfit('towns', row + (sx > 0 ? 7 : 0));
     const J = costumePerson(Object.assign({ h: 1.7 + row * 0.05, anim: 'Sitting_Idle_Loop' }, fit));
     if (!J) continue;
-    const x = A.x + sx * (LIST.W / 2 + 6.3 + row * 0.9), z = A.z + [-7, 0, 7][row], y = gy(A.x, A.z) + row * 0.5;
+    const x = A.x + sx * (LIST.W / 2 + 6.3 + row * 2.2), z = A.z + [-7, 0, 7][row], y = gy(A.x, A.z) + row * 0.5;
     J.root.position.set(x, y, z); J.root.rotation.y = sx < 0 ? Math.PI / 2 : -Math.PI / 2;
     R.add(J.root);
     SPECT.seated.push({ J, A, sx, row, x, y, z, phase: 'sit', timer: rand(12, 28), gesture: rand(3, 8), exit: row % 2 ? -1 : 1 });
@@ -41753,28 +41808,34 @@ function updateArenaSeatFolk(dt) {
   for (const S of SPECT.seated) {
     S.timer -= dt;
     const near = Math.hypot(TOWN.pos.x - S.A.x, TOWN.pos.z - S.A.z) < 70;
-    S.J.root.visible = near && S.phase !== 'away';
+    S.J.root.visible = near && !S.budgetHidden && S.phase !== 'away';
     if (S.phase === 'sit') {
       if ((S.gesture -= dt) <= 0) { S.gesture = rand(4, 9); S.J.play(pick(['Sitting_Idle_Loop', 'Sitting_Talking_Loop']), 0.4); }
-      if (S.timer <= 0) { S.phase = 'leave'; S.J.play('Walk_Loop', 0.25); S.J.root.rotation.y = S.exit > 0 ? 0 : Math.PI; }
+      if (S.timer <= 0) { S.phase = 'leave'; S.stood = false; S.aisleX = null; S.transition = 0; S.route = null; S.retry = 0; S.J.play('Walk_Loop', 0.25); S.J.root.rotation.y = S.exit > 0 ? 0 : Math.PI; }
     } else if (S.phase === 'leave' || S.phase === 'enter') {
-      const target = S.phase === 'leave' ? S.A.z + S.exit * (LIST.L * 0.5 + 0.7) : S.z;
-      const step = Math.sign(target - S.J.root.position.z) * Math.min(Math.abs(target - S.J.root.position.z), dt * 1.7);
-      S.J.root.position.z += step;
-      if (Math.abs(target - S.J.root.position.z) < 0.05) {
-        if (S.phase === 'leave') { S.phase = 'away'; S.timer = rand(3, 8); }
-        else { S.phase = 'sit'; S.timer = rand(12, 28); S.J.root.rotation.y = S.sx < 0 ? Math.PI / 2 : -Math.PI / 2; S.J.play('Sitting_Idle_Loop', 0.3); }
+      if (folkSeatWalk(S, dt)) {
+        if (S.phase === 'leave') { S.phase = 'away'; S.timer = rand(3, 8); S.route = null; }
+        else { S.phase = 'seat'; S.transition = 0; S.route = null; }
       }
+    } else if (S.phase === 'seat') {
+      S.transition = Math.min(1, S.transition + dt * 2);
+      S.J.root.position.x = S.x + (S.aisleX - S.x) * (1 - S.transition);
+      S.J.root.position.z = S.z;
+      S.J.root.position.y = gy(S.x, S.z) * (1 - S.transition) + S.y * S.transition;
+      if (S.transition >= 1) { S.phase = 'sit'; S.timer = rand(12, 28); S.J.root.rotation.y = S.sx < 0 ? Math.PI / 2 : -Math.PI / 2; S.J.play('Sitting_Idle_Loop', 0.3); }
     } else if (S.phase === 'away' && S.timer <= 0) {
       // Re-enter in the same row at another empty place, not through the bench.
       const spots = S.A.key === 'dome' && S.row === 0 ? [-9, -6, -3, 0, 9] : [-9, -6, -3, 0, 3, 6, 9];
-      S.z = S.A.z + pick(spots.filter(z => Math.abs(S.A.z + z - S.z) > 0.1));
+      const available = spots.filter(z => Math.abs(S.A.z + z - S.z) > 0.1 && !TOWN.obst.some(o => Math.hypot(o.x - S.x, o.z - S.A.z - z) < o.r + 0.32));
+      if (!available.length) { S.timer = 5; continue; }
+      S.z = S.A.z + pick(available);
       S.exit = Math.random() < 0.5 ? -1 : 1;
-      S.J.root.position.z = S.A.z + S.exit * (LIST.L * 0.5 + 0.7);
+      S.aisleX = folkSeatAisle(S); if (S.aisleX == null) { S.timer = 5; continue; }
+      S.J.root.position.set(S.aisleX, gy(S.aisleX, S.A.z), S.A.z + S.exit * (LIST.L * 0.5 + 0.7)); S.stood = true; S.route = null; S.retry = 0;
       S.J.root.rotation.y = S.exit > 0 ? Math.PI : 0;
       S.J.play('Walk_Loop', 0.25); S.phase = 'enter'; S.J.root.visible = near;
     }
-    if (near && S.phase !== 'away') S.J.mixer.update(dt);
+    if (near && !S.budgetHidden && S.phase !== 'away') S.J.mixer.update(dt);
   }
 }
 function spectate(A, side = 1, offset = 0) {
@@ -41797,7 +41858,7 @@ function specHud() {
   const el = $('#townSpec'); if (!el) return;
   const S = TOWN.spec; el.hidden = !S || !!G.screen; if (!S) return;
   if (!el.firstChild) el.append(h('span', { class: 'spectxt' }, h('small'), h('b')),
-    h('button', { class: 'btn tape small', onclick: e => { e.stopPropagation(); if (TOWN.spec) { const S = TOWN.spec; S.mode = (S.mode + 1) % SPEC_MODES.length; TOWN.pos.x = S.A.x + S.side * (LIST.W / 2 + 6.3 + Math.min(S.mode, 2) * 0.9); TOWN.cam = null; specHud(); } } }, 'Seat'),
+    h('button', { class: 'btn tape small', onclick: e => { e.stopPropagation(); if (TOWN.spec) { const S = TOWN.spec; S.mode = (S.mode + 1) % SPEC_MODES.length; TOWN.pos.x = S.A.x + S.side * (LIST.W / 2 + 6.3 + Math.min(S.mode, 2) * 2.2); TOWN.cam = null; specHud(); } } }, 'Seat'),
     h('button', { class: 'btn tape small', 'aria-label': 'Binoculars zoom', onclick: e => { e.stopPropagation(); SPEC.zoom = SPEC.zoom === 1 ? 2 : SPEC.zoom === 2 ? 3 : 1; specHud(); } }, 'Zoom'),
     h('button', { class: 'btn tape small', 'data-back': '', onclick: e => { e.stopPropagation(); stopSpectating(); } }, 'Leave'));
   const m = G.match, w = m && m.wins ? m.wins : [0, 0];
@@ -41809,7 +41870,7 @@ function specHud() {
 function specCamera(dt) {
   const S = TOWN.spec, A = S.A, cam = W3.camera; S.t += dt;
   const row = Math.min(S.mode, 2);
-  const want = new THREE.Vector3(A.x + S.side * (LIST.W / 2 + 6.3 + row * 0.9), gy(A.x, A.z) + 2.2 + row * 0.5 + (S.mode === 3 ? 0.8 : 0), A.z + S.offset);
+  const want = new THREE.Vector3(A.x + S.side * (LIST.W / 2 + 6.3 + row * 2.2), gy(A.x, A.z) + 2.2 + row * 0.5 + (S.mode === 3 ? 0.8 : 0), A.z + S.offset);
   // The camera stays at the seat the player chose. Look controls turn the
   // view freely instead of snapping it back to the fighters every frame.
   const look = new THREE.Vector3(want.x - Math.sin(TOWN.yaw) * 24, want.y + (0.5 - TOWN.pitch) * 18, want.z - Math.cos(TOWN.yaw) * 24);
@@ -41831,7 +41892,6 @@ function arenaTicker(dt) {
   }
 }
 function arenaNews(A) { if (A.live && A.liveText) return A.liveText; if (TOWN.boutArena === A.key && BOUT.on) return `On now: ${BOUT.vs}`; const R = SPEC.results[A.key]; return R ? `Last: ${R.text}` : ''; }
-
 // ===================================================================
 // Six hidden places round the realm, each with a free cosmetic (and a little loot) the first time you find it.
 // No labels, no map marker until found: walk close and the prompt says Search. Nothing here changes fighting.
@@ -42479,20 +42539,51 @@ function boardsStartHeartbeat() {
 
 // World gameplay systems. The bespoke bout simulation remains authoritative in
 // the lists; these libraries make travel, props and civilian movement sturdier.
-const GAMEPLAY = { shapes: [], rapier: null, cannon: null, terrainBVH: false, generation: 0 };
+const GAMEPLAY = { shapes: [], shapeGrid: new Map(), rapier: null, cannon: null, terrainBVH: false, generation: 0 };
 
 function gameplayShape(x, z, hx, hz, yaw = 0, height = 2) {
   const polygon = new SAT.Polygon(new SAT.Vector(x, z), [
     new SAT.Vector(-hx, -hz), new SAT.Vector(hx, -hz),
     new SAT.Vector(hx, hz), new SAT.Vector(-hx, hz)
   ]);
-  polygon.setAngle(yaw);
-  GAMEPLAY.shapes.push({ x, z, hx, hz, yaw, height, polygon });
+  // THREE's Y rotation is clockwise in the X/Z plane; SAT's is counterclockwise.
+  polygon.setAngle(-yaw);
+  const shape = { x, z, hx, hz, yaw, height, polygon };
+  GAMEPLAY.shapes.push(shape);
+  const rx = Math.abs(Math.cos(yaw)) * hx + Math.abs(Math.sin(yaw)) * hz, rz = Math.abs(Math.sin(yaw)) * hx + Math.abs(Math.cos(yaw)) * hz;
+  for (let i = Math.floor((x - rx) / 4); i <= Math.floor((x + rx) / 4); i++) for (let j = Math.floor((z - rz) / 4); j <= Math.floor((z + rz) / 4); j++) {
+    const k = i + ',' + j; if (!GAMEPLAY.shapeGrid.has(k)) GAMEPLAY.shapeGrid.set(k, []); GAMEPLAY.shapeGrid.get(k).push(shape);
+  }
+}
+
+// Register footprints from the actual asset bounds, including parent transforms.
+// Open tents retain their front entrance and an interior passage.
+function gameplayPropFootprint(object, openTent = false) {
+  if (!object) return;
+  object.updateWorldMatrix(true, true);
+  const inverse = new THREE.Matrix4().copy(object.matrixWorld).invert(), bounds = new THREE.Box3();
+  object.traverse(child => {
+    if (!child.geometry) return;
+    child.geometry.computeBoundingBox();
+    bounds.union(child.geometry.boundingBox.clone().applyMatrix4(new THREE.Matrix4().multiplyMatrices(inverse, child.matrixWorld)));
+  });
+  if (bounds.isEmpty()) return;
+  const size = bounds.getSize(new THREE.Vector3()), center = bounds.getCenter(new THREE.Vector3());
+  const scale = object.getWorldScale(new THREE.Vector3()), rotation = new THREE.Euler().setFromQuaternion(object.getWorldQuaternion(new THREE.Quaternion()), 'YXZ');
+  const add = (x, z, hx, hz) => { const p = object.localToWorld(new THREE.Vector3(x, 0, z)); gameplayShape(p.x, p.z, hx * Math.abs(scale.x), hz * Math.abs(scale.z), rotation.y, size.y * Math.abs(scale.y)); };
+  if (openTent) {
+    const wall = Math.min(size.x * 0.22, 0.3);
+    add(bounds.min.x + wall / 2, center.z, wall / 2, size.z / 2);
+    add(bounds.max.x - wall / 2, center.z, wall / 2, size.z / 2);
+    add(center.x, bounds.max.z - wall / 2, size.x / 2, wall / 2);
+  } else add(center.x, center.z, size.x / 2, size.z / 2);
 }
 function gameplayShapeResponse(x, z, radius) {
   const circle = new SAT.Circle(new SAT.Vector(x, z), radius);
   const response = new SAT.Response();
-  for (const s of GAMEPLAY.shapes) {
+  const candidates = new Set();
+  for (let i = Math.floor((x - radius) / 4); i <= Math.floor((x + radius) / 4); i++) for (let j = Math.floor((z - radius) / 4); j <= Math.floor((z + radius) / 4); j++) for (const s of GAMEPLAY.shapeGrid.get(i + ',' + j) || []) candidates.add(s);
+  for (const s of candidates) {
     if (Math.abs(x - s.x) > s.hx + s.hz + radius || Math.abs(z - s.z) > s.hx + s.hz + radius) continue;
     response.clear();
     if (SAT.testCirclePolygon(circle, s.polygon, response)) return response;
@@ -42621,7 +42712,7 @@ function gameplayStart() {
 function gameplayStop() {
   GAMEPLAY.generation++;
   if (GAMEPLAY.rapier && GAMEPLAY.rapier.world) GAMEPLAY.rapier.world.free();
-  GAMEPLAY.rapier = null; GAMEPLAY.cannon = null; GAMEPLAY.terrainBVH = false; GAMEPLAY.shapes = [];
+  GAMEPLAY.rapier = null; GAMEPLAY.cannon = null; GAMEPLAY.terrainBVH = false; GAMEPLAY.shapes = []; GAMEPLAY.shapeGrid.clear();
 }
 
 function gameplayFolkDirection(N, tx, tz, dt, steerX, steerZ) {
@@ -42641,7 +42732,135 @@ function gameplayFolkDirection(N, tx, tz, dt, steerX, steerZ) {
   const L = Math.hypot(wx, wz) || 1;
   return [wx / L, wz / L];
 }
+// Shared civilian clearance, routes, population pacing, and reserved seat transitions.
+const FOLK_RADIUS = 0.32;
+function folkLineFree(x, z, tx, tz) {
+  const count = Math.max(1, Math.ceil(Math.hypot(tx - x, tz - z) / 0.2));
+  for (let i = 0; i <= count; i++) if (navBlocked(x + (tx - x) * i / count, z + (tz - z) * i / count, FOLK_RADIUS)) return false;
+  return true;
+}
+function* folkRouteSteps(x, z, tx, tz) {
+  if (navBlocked(x, z, FOLK_RADIUS) || navBlocked(tx, tz, FOLK_RADIUS)) return null;
+  if (folkLineFree(x, z, tx, tz)) return [[tx, tz]];
+  const cell = 0.8, sx = Math.round(x / cell), sz = Math.round(z / cell), ex = Math.round(tx / cell), ez = Math.round(tz / cell);
+  const key = (i, j) => i + ',' + j, start = key(sx, sz), goal = key(ex, ez);
+  const cost = new Map([[start, 0]]), from = new Map(), freeCache = new Map(), heap = [];
+  const free = (i, j) => { const k = key(i, j); if (!freeCache.has(k)) freeCache.set(k, !navBlocked(i * cell, j * cell, FOLK_RADIUS)); return freeCache.get(k); };
+  const push = entry => { let i = heap.length; heap.push(entry); while (i > 0) { const p = (i - 1) >> 1; if (heap[p][0] <= entry[0]) break; heap[i] = heap[p]; i = p; } heap[i] = entry; };
+  const pop = () => { const top = heap[0], last = heap.pop(); if (heap.length) { let i = 0; heap[0] = last; for (;;) { let c = i * 2 + 1; if (c >= heap.length) break; if (c + 1 < heap.length && heap[c + 1][0] < heap[c][0]) c++; if (heap[c][0] >= last[0]) break; heap[i] = heap[c]; i = c; } heap[i] = last; } return top; };
+  if (!folkLineFree(x, z, sx * cell, sz * cell) || !folkLineFree(ex * cell, ez * cell, tx, tz)) return null;
+  push([0, sx, sz, 0]); let found = false, visits = 0;
+  while (heap.length && visits++ < 6000) {
+    if (visits % 128 === 0) yield null;
+    const [, i, j, oldCost] = pop(), k = key(i, j);
+    if (cost.get(k) !== oldCost) continue;
+    if (k === goal) { found = true; break; }
+    for (const [di, dj] of [[1, 0], [-1, 0], [0, 1], [0, -1], [1, 1], [1, -1], [-1, 1], [-1, -1]]) {
+      const ni = i + di, nj = j + dj, nk = key(ni, nj);
+      if (ni < Math.min(sx, ex) - 15 || ni > Math.max(sx, ex) + 15 || nj < Math.min(sz, ez) - 15 || nj > Math.max(sz, ez) + 15 || !free(ni, nj)) continue;
+      if (di && dj && (!free(i + di, j) || !free(i, j + dj))) continue;
+      if (!folkLineFree(i * cell, j * cell, ni * cell, nj * cell)) continue;
+      const next = oldCost + Math.hypot(di, dj);
+      if (next >= (cost.get(nk) ?? Infinity)) continue;
+      cost.set(nk, next); from.set(nk, k); push([next + Math.hypot(ex - ni, ez - nj), ni, nj, next]);
+    }
+  }
+  if (!found) return null;
+  const path = [[tx, tz]]; let k = goal;
+  while (k !== start) { const [i, j] = k.split(',').map(Number); path.push([i * cell, j * cell]); k = from.get(k); }
+  path.reverse(); const out = []; let ax = x, az = z, index = 0;
+  while (index < path.length) { let end = Math.min(index + 20, path.length - 1); while (end > index && !folkLineFree(ax, az, ...path[end])) end--; out.push(path[end]); [ax, az] = path[end]; index = end + 1; }
+  return out;
+}
+function folkRoute(x, z, tx, tz) {
+  const search = folkRouteSteps(x, z, tx, tz); let step;
+  do { step = search.next(); } while (!step.done);
+  return step.value;
+}
+function folkWaypoint(N) {
+  if (N.routeWait > 0) { N.routeWait = Math.max(0, N.routeWait - (N.elapsedStep || 0.016)); return null; }
+  if (N.route?.length) return N.route[0];
+  if (FOLK.routeBudget <= 0) return null;
+  FOLK.routeBudget--;
+  if (!N.routeSearch) N.routeSearch = folkRouteSteps(N.x, N.z, N.tx, N.tz);
+  const step = N.routeSearch.next();
+  if (!step.done) return null;
+  N.routeSearch = null; N.route = step.value;
+  if (!N.route) { folkRelease(N); N.state = 'choose'; N.timer = rand(1, 3); folkPlay(N, 'Idle_Loop'); return null; }
+  N.best = Infinity; N.stuck = 0; return N.route[0];
+}
+function folkMove(N, dx, dz) {
+  const count = Math.max(1, Math.ceil(Math.hypot(dx, dz) / 0.1));
+  for (let i = 0; i < count; i++) {
+    const x = N.x + dx / count, z = N.z + dz / count;
+    if (!navBlocked(x, z, FOLK_RADIUS) && castleWalkable(N.x, N.z, x, z, FOLK_RADIUS)) { N.x = x; N.z = z; }
+    else if (!navBlocked(x, N.z, FOLK_RADIUS) && castleWalkable(N.x, N.z, x, N.z, FOLK_RADIUS)) N.x = x;
+    else if (!navBlocked(N.x, z, FOLK_RADIUS) && castleWalkable(N.x, N.z, N.x, z, FOLK_RADIUS)) N.z = z;
+  }
+}
+function folkSpawnSafe(x, z) {
+  return !navBlocked(x, z, 0.65) && !TOWN.stalls.some(S => Math.hypot(x - S.ax, z - S.az) < 2 || Math.hypot(x - S.x, z - S.z) < 1.4);
+}
+function folkDistrictSpawn(index) {
+  const districts = [[-39, 8], [36, 14], [43, 59], [-37, 53], [-43, -29], [39, -44], [-12, 48], [10, -156]];
+  const [cx, cz] = districts[index % districts.length];
+  for (let n = 0; n < 60; n++) { const x = cx + rand(-10, 10), z = cz + rand(-10, 10); if (folkSpawnSafe(x, z)) return { x, z }; }
+  return freeSpot();
+}
+function folkNeighborBuild() {
+  FOLK.nearGrid.clear();
+  for (const N of FOLK.people) { if (N.suspended) continue; const k = Math.floor(N.x / 2) + ',' + Math.floor(N.z / 2); if (!FOLK.nearGrid.has(k)) FOLK.nearGrid.set(k, []); FOLK.nearGrid.get(k).push(N); }
+}
+function folkNeighbors(N) {
+  const out = [], x = Math.floor(N.x / 2), z = Math.floor(N.z / 2);
+  for (let i = x - 1; i <= x + 1; i++) for (let j = z - 1; j <= z + 1; j++) out.push(...(FOLK.nearGrid.get(i + ',' + j) || []));
+  return out;
+}
+function folkPopulationTick(dt) {
+  if (G.fast || G.renderEvery > 100) return; // simulation regression fast-forward is not device timing
+  FOLK.ema += (dt - FOLK.ema) * (1 - Math.exp(-dt / 2));
+  FOLK.slow = dt > 0.025 && FOLK.ema > 0.025 ? FOLK.slow + dt : 0;
+  FOLK.healthy = FOLK.ema < 0.020 ? FOLK.healthy + dt : 0;
+  const max = IS_TOUCH ? 28 : 48, min = IS_TOUCH ? 12 : 20;
+  if (FOLK.slow > 4) { FOLK.limit = Math.max(min, FOLK.limit - 4); FOLK.slow = 0; }
+  if (FOLK.healthy > 12) { FOLK.limit = Math.min(max, FOLK.limit + 2); FOLK.healthy = 0; }
+  let active = FOLK.people.filter(N => !N.suspended).length;
+  for (const N of [...FOLK.people].sort((a, b) => pd(b, TOWN.pos) - pd(a, TOWN.pos))) {
+    if (active <= FOLK.limit) break;
+    if (['guard', 'gateguard', 'smith', 'gardener'].includes(N.role) || N.suspended || pd(N, TOWN.pos) < 18) continue;
+    folkRelease(N); N.suspended = true; N.state = 'choose'; N.route = null; N.J.root.visible = false; active--;
+  }
+  for (const N of FOLK.people) if (active < FOLK.limit && N.suspended && folkSpawnSafe(N.x, N.z)) { N.suspended = false; N.elapsed = 0; active++; }
+}
 
+// Sitting is a reserved placement. Walking starts in a real aisle beside the row.
+function folkSeatAisle(S) {
+  for (const side of [S.sx, -S.sx]) {
+    const x = S.x + side * 0.95;
+    if (!navBlocked(x, S.z, FOLK_RADIUS) && !navBlocked(x, S.A.z + S.exit * (LIST.L * 0.5 + 0.7), FOLK_RADIUS)) return x;
+  }
+  return null;
+}
+function folkSeatWalk(S, dt) {
+  if (S.aisleX == null) S.aisleX = folkSeatAisle(S);
+  if (S.aisleX == null) { S.phase = 'sit'; S.timer = 10; S.J.play('Sitting_Idle_Loop', 0.3); return false; }
+  const aisleX = S.aisleX;
+  if (!S.stood) {
+    S.transition = Math.min(1, (S.transition || 0) + dt * 2);
+    S.J.root.position.x = S.x + (aisleX - S.x) * S.transition;
+    S.J.root.position.y = S.y * (1 - S.transition) + gy(aisleX, S.J.root.position.z) * S.transition;
+    if (S.transition < 1) return false;
+    S.stood = true;
+  }
+  const tx = aisleX, tz = S.phase === 'leave' ? S.A.z + S.exit * (LIST.L * 0.5 + 0.7) : S.z;
+  const N = { x: S.J.root.position.x, z: S.J.root.position.z };
+  if (!S.route) S.route = folkRoute(N.x, N.z, tx, tz);
+  if (!S.route) { S.retry = (S.retry || 0) + dt; if (S.retry > 2) { S.phase = 'away'; S.timer = 5; S.J.root.visible = false; } return false; }
+  const [x, z] = S.route[0], d = Math.hypot(x - N.x, z - N.z);
+  if (d > 0.05) { const step = Math.min(d, dt * 1.7); folkMove(N, (x - N.x) / d * step, (z - N.z) / d * step); S.J.root.position.set(N.x, gy(N.x, N.z), N.z); S.J.root.rotation.y = Math.atan2(x - N.x, z - N.z); }
+  if (d < 0.15) S.route.shift();
+  return !S.route.length;
+}
 // The Old Woods Deep Mine: a separate, enclosed floor beneath the quarry.
 // Surface and mine share map coordinates but never share interaction or collision layers.
 const DEEP_MINE = { x: -256, z: -46, y: -25, halfX: 29, halfZ: 29, entrance: [-256, -42], entry: [-256, -23], exit: [-256, -20] };

@@ -444,6 +444,7 @@ function buildSpectators() {
   for (const sz of [-1, 1]) for (const x of [-11, -8, -5, -2, 2, 5, 8, 11]) spots.push([x + rand(-0.35, 0.35), sz * rand(20, 21)]);
   spots.forEach(([x, z], i) => {
     if (IS_TOUCH && i % 2) return;
+    if (navBlocked(x, z, 0.32)) return;
     const fit = folkOutfit('towns', i), J = costumePerson(Object.assign({ h: rand(1.6, 1.86), anim: pick(['Idle_Loop', 'Idle_Talking_Loop', 'Idle_Loop']) }, fit)); if (!J) return;
     if (J.costume.includes('Peasant') && Math.random() < 0.4) dress(J, { b: '#5a2a2a', t: pick(['#c9b48a', '#e8e0cc']), h: pick(['cap', 'flowers', 'hood']), c: 'none', n: 'none' });
     J.root.position.set(x, gy(x, z), z); J.root.rotation.y = Math.atan2(-x, -z); TOWN.root.add(J.root);
@@ -539,4 +540,3 @@ function outfitThumb(key, large = false) {
   } catch (e) { console.warn('portrait', e); }
   return c;
 }
-

@@ -149,6 +149,7 @@ function buildTown() {
   buildSpecialVendors(); buildWorld(); buildSpawnBoards(); navBuild(); buildGatherNodes(TOWN.root); buildSecrets(TOWN.root); navBuild(); realmCells();
   buildHome(); buildStatue(); buildAvatar(); buildMyPet(); buildWaypoint(); buildAnimals(); buildArenaSeats(); buildDeepMine(); navBuild();
   townResolveApproaches();
+  folkSpots(); // approaches and reservations use the final world obstacle set
   gameplayStart();
 }
 // the field venue's own cottages and tree ring would sit in the middle of the festival: hide them in town
@@ -302,8 +303,7 @@ function townCollide(beforeMove) {
     for (const A of ARENAS) {
       // The rope, not just the wooden list, is the public boundary.
       townPushRect(P, A.x, A.z, LIST_BLOCK.x, LIST_BLOCK.z, r);
-      // Benches are solid; the spectator prompt remains reachable at their outer edge.
-      if (!A.indoor) for (const side of [-1, 1]) townPushRect(P, A.x + side * (LIST.W / 2 + 7.2), A.z, 1.5, LIST.L * 0.4, r);
+      // Bench collision comes from the same prop footprints as civilian navigation.
     }
     const ci = Math.floor(P.x / NAV.cell), cj = Math.floor(P.z / NAV.cell);
     for (let i = ci - 1; i <= ci + 1; i++) for (let j = cj - 1; j <= cj + 1; j++) for (const o of (NAV.grid.get(i + ',' + j) || NAV.none)) { const dx = P.x - o.x, dz = P.z - o.z, d = Math.hypot(dx, dz), m = o.r + r; if (d < m && d > 1e-4) { P.x = o.x + dx / d * m; P.z = o.z + dz / d * m; } }
@@ -379,4 +379,3 @@ function initTown() {
   $('#townLeave').onclick = () => { AU.click(); leaveTown(); };
 }
 TOWN.frame = 0;
-

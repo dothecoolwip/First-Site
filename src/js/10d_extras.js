@@ -82,7 +82,7 @@ function updateTelegraphs(t) {
       const s = TELE.sprites[n++]; const wp = new THREE.Vector3(0, (o.weapon && o.weapon.len || 0.9) * 0.85, 0); o.model.weapon.localToWorld(wp);
       s.position.copy(wp); const k = clamp(a.t / Math.max(0.05, swingTimes(o).wind), 0, 1);
       s.scale.setScalar((mode === 'strong' ? 0.55 : 0.32) * (0.6 + 0.6 * k) * (1 + 0.15 * Math.sin(t * 40)));
-      s.material.color.set(a.arc === 'O' ? '#ff6a5a' : '#fff3b0'); s.visible = true;
+      s.material.color.set(a.arc === 'O' ? '#ff6a5a' : a.arc === 'R2L' ? '#6fc9ff' : '#ffd177'); s.visible = true;
     }
   }
   for (let i = n; i < TELE.sprites.length; i++) TELE.sprites[i].visible = false;
@@ -90,12 +90,27 @@ function updateTelegraphs(t) {
 
 function applyTextSize() { document.documentElement.style.setProperty('--ts', String(+G.settings.ts || 1)); document.documentElement.style.fontSize = (16 * (+G.settings.ts || 1)) + 'px'; }
 // fullscreen first, then the landscape lock (lock only works once fullscreen is on); iPhones support neither
-const FS = { tried: false };
+const FS = { pending: false };
+function fullscreenActive() { return !!(document.fullscreenElement || document.webkitFullscreenElement); }
+function syncFullscreenControl() {
+  const b = $('#btnFull'); if (b) { b.textContent = fullscreenActive() ? 'Exit fullscreen' : 'Enter fullscreen'; b.setAttribute('aria-pressed', String(fullscreenActive())); }
+}
 async function goFullscreen(manual) {
-  if (!manual && FS.tried) return; FS.tried = true;
+  if (!manual || FS.pending) return;
+  FS.pending = true;
   const el = document.documentElement;
-  try { if (!document.fullscreenElement && el.requestFullscreen) await el.requestFullscreen({ navigationUI: 'hide' }); else if (el.webkitRequestFullscreen) el.webkitRequestFullscreen(); } catch (e) { if (manual) toastMenu('Fullscreen isn’t allowed here. Use your browser’s menu, or add the page to your home screen.'); return; }
-  try { if (screen.orientation && screen.orientation.lock && IN.mode === 'touch') await screen.orientation.lock('landscape'); } catch (e) { }
+  try {
+    if (fullscreenActive()) {
+      if (document.exitFullscreen) await document.exitFullscreen(); else if (document.webkitExitFullscreen) await document.webkitExitFullscreen();
+      if (screen.orientation && screen.orientation.unlock) screen.orientation.unlock();
+    } else {
+      if (el.requestFullscreen) await el.requestFullscreen({ navigationUI: 'hide' });
+      else if (el.webkitRequestFullscreen) await el.webkitRequestFullscreen();
+      else throw new Error('Fullscreen unsupported');
+      try { if (fullscreenActive() && screen.orientation && screen.orientation.lock && IN.mode === 'touch') await screen.orientation.lock('landscape'); } catch (e) { }
+    }
+  } catch (e) { toastMenu('Fullscreen isn’t allowed here. Use your browser’s menu, or add the page to your home screen.'); }
+  finally { FS.pending = false; syncFullscreenControl(); }
 }
 function watchContext() { // if the phone drops the GPU (backgrounded, low memory), say so instead of freezing
   const c = W3.renderer && W3.renderer.domElement; if (!c) return;
@@ -204,4 +219,3 @@ function updateStatsStrip() {
   el.hidden = !on; if (!on) return;
   const h2 = m.hitsT || [0, 0], d = m.takedowns || [0, 0]; const txt = `Hits ${h2[0]}–${h2[1]} · Downs ${d[0]}–${d[1]}`; if (el.textContent !== txt) el.textContent = txt;
 }
-

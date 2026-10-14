@@ -362,8 +362,8 @@ function arenaList(R, A, o) {
 function arenaStands(R, A, o) {
   const Y = gy(A.x, A.z), L = LIST.L, W = LIST.W;
   for (const sx of [-1, 1]) for (let row = 0; row < 3; row++) {
-    const bx = A.x + sx * (W / 2 + 6.3 + row * 0.9);
-    const b = mk(R, geo('ar_bench', () => new THREE.BoxGeometry(1.2, 0.12, L * 0.8)), tmat(o.bench || '#7a5a3a'), bx, Y + 0.45 + row * 0.5, A.z); b.receiveShadow = true;
+    const bx = A.x + sx * (W / 2 + 6.3 + row * 2.2);
+    const b = mk(R, geo('ar_bench', () => new THREE.BoxGeometry(1.2, 0.12, L * 0.8)), tmat(o.bench || '#7a5a3a'), bx, Y + 0.45 + row * 0.5, A.z); b.receiveShadow = true; gameplayShape(bx, A.z, 0.6, L * 0.4, 0, 0.9 + row * 0.5);
     for (const sz of [-1, 1]) mk(R, geo('ar_benchleg', () => new THREE.BoxGeometry(1.2, 1, 0.2)), tmat('#4a3422'), bx, Y + (0.45 + row * 0.5) / 2, A.z + sz * L * 0.38).scale.y = 0.45 + row * 0.5;
   }
   arenaSeatFolk(R, A);
@@ -764,4 +764,3 @@ const REALM_TIERS = {
   bailey: { level: 15, need: 'Level 15 and the Bailey writ. Beat Sergeant Brask at the gate in a duel to earn it.', name: 'Bailey writ' },
   royal: { level: 40, need: 'Level 40 and the Royal writ. Beat the King’s Guard in the Castle arena to earn it.', name: 'Royal writ' }
 };
-

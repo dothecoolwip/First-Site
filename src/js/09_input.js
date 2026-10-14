@@ -172,7 +172,7 @@ function readInput(dt) {
     if (rt > 0.5 && !IN.gp.rtDown) { IN.gp.rtDown = true; IN.swingStart = true; }
     const sn = G.settings.sens || 1;
     const ltDown = !!(b[6] || (noTrig && b[4]));
-    if (isCtl() && !IN.gp.rtDown && !ltDown && (rx || ry)) { if (Math.abs(ry) > 0.2) IN.pitchHold = 2.5; FP.yaw -= rx * 3.6 * sn * dt; FP.pitch = clamp(FP.pitch - ry * 1.9 * sn * (G.settings.invert ? -1 : 1) * dt, -0.75, 0.55); FP.looking = 0.2; }
+    if (isCtl() && !IN.gp.rtDown && !ltDown && (rx || ry)) { FP.yaw -= rx * 3.6 * sn * dt; FP.pitch = clamp(FP.pitch - ry * 1.9 * sn * (G.settings.invert ? -1 : 1) * dt, -0.75, 0.55); FP.looking = 0.2; }
     if (pressed(3)) edge('tackle');
     if (rt < 0.25 && IN.gp.rtDown) { IN.gp.rtDown = false; IN.swingRelease = rx > 0.45 ? 'R2L' : rx < -0.45 ? 'L2R' : ry < -0.5 ? 'O' : 'auto'; }
     if (ltDown) { guard = true; PIN.gdirPad = rx > 0.45 ? 'R' : rx < -0.45 ? 'L' : ry < -0.5 ? 'H' : PIN.gdirPad; } else PIN.gdirPad = null; if (b[0]) brace = true;
@@ -182,7 +182,7 @@ function readInput(dt) {
     if (noTrig) { if (pressed(noR3 ? 15 : 11)) edge(G.simTime < (G.saluteUntil || 0) ? 'salute' : 'grab'); } // bumpers are busy: grab on R3, or d-pad right
     else if (pressed(11)) edge(G.simTime < (G.saluteUntil || 0) ? 'salute' : 'retarget'); // R3 switches target
     if (pressed(noL3 ? 14 : 10)) edge('retarget'); // L3 (or d-pad left) switches target too
-    if (noRS) { if (b[12]) { FP.pitch = clamp(FP.pitch + 1.1 * dt, -0.75, 0.55); IN.pitchHold = 2.5; } if (b[13]) { FP.pitch = clamp(FP.pitch - 1.1 * dt, -0.75, 0.55); IN.pitchHold = 2.5; } } // d-pad up/down aims high or low
+    if (noRS) { if (b[12]) { FP.pitch = clamp(FP.pitch + 1.1 * dt, -0.75, 0.55); FP.looking = 0.2; } if (b[13]) { FP.pitch = clamp(FP.pitch - 1.1 * dt, -0.75, 0.55); FP.looking = 0.2; } } // d-pad up/down aims high or low
     else { if (pressed(12)) edge('cmd:pair'); if (pressed(13)) edge('cmd:hold'); }
     if (!noL3 && pressed(14)) edge('cmd:hunt'); if (!noR3 && pressed(15)) edge('cmd:peel');
     if (pressed(9)) edge('pause');
@@ -237,11 +237,13 @@ function lockCandidates(f, maxD, maxAng) {
   }
   return out.sort((x, y) => x.s - y.s);
 }
+function aimStrength() { return G.settings.assist ? clamp(Number(G.settings.assistStrength) || 0, 0, 1) : 0; }
+function manualLookActive() { return FP.looking > 0 || (IN.mode === 'kb' && IN.mouseIdle < 0.7); }
 function updateLock(f, dt) {
-  const on = G.settings.assist;
+  const strength = aimStrength(), on = strength > 0;
   if (IN.lock && (!isUp(IN.lock) || IN.lock.out || dist2(IN.lock.pos, f.pos) > 9.5)) IN.lock = null;
   if (!on) { IN.lock = null; return; }
-  const manual = FP.looking > 0 || (IN.mode === 'kb' && IN.mouseIdle < 0.7);
+  const manual = manualLookActive();
   if (manual) IN.lockHold = IN.mode === 'kb' ? 0.2 : 0.8;
   else IN.lockHold = Math.max(0, IN.lockHold - dt);
   if (IN.lockHold > 0) {
@@ -255,8 +257,8 @@ function updateLock(f, dt) {
   const want = angTo(f.pos, IN.lock.pos); const d = angDiff(FP.yaw, want);
   const rate = IN.snapT > 0 ? 14 : IN.mode === 'kb' ? 3.2 : 7.5; IN.snapT -= dt;
   if (IN.mode === 'kb' && Math.abs(d) > 1.2) return; // mouse players keep full control of big turns
-  FP.yaw += clamp(d * Math.min(1, dt * 9), -rate * dt, rate * dt);
-  IN.pitchHold = Math.max(0, (IN.pitchHold || 0) - dt); const dd = dist2(IN.lock.pos, f.pos); if (IN.pitchHold <= 0) FP.pitch = damp(FP.pitch, -0.04 - 0.22 / Math.max(1, dd), 3, dt);
+  FP.yaw += clamp(d * (1 - Math.exp(-9 * strength * dt)), -rate * strength * dt, rate * strength * dt);
+  // Tracking is horizontal only. Pitch belongs to the player, including after release.
 }
 function cycleLock(f) {
   const list = lockCandidates(f, 8.5, Math.PI).map(c => c.o);
@@ -290,13 +292,12 @@ function playerControl(f, dt) {
   updateSoftTarget(f);
   // facing: your body follows your view (both cameras)
   if (isCtl()) {
-    const off = angDiff(f.facing, FP.yaw); if (Math.abs(off) > 1.25) FP.yaw = f.facing + Math.sign(off) * 1.25;
     f.wantFace = FP.yaw;
   }
   else if (PIN.aim) f.wantFace = Math.atan2(PIN.aim.x - f.pos.x, PIN.aim.z - f.pos.z);
-  else if (f.softTarget && (G.settings.assist || IN.mode === 'pad')) f.wantFace = angTo(f.pos, f.softTarget.pos);
+  else if (f.softTarget && aimStrength() > 0 && !manualLookActive()) f.wantFace = f.facing + angDiff(f.facing, angTo(f.pos, f.softTarget.pos)) * (1 - Math.exp(-9 * aimStrength() * dt));
   else if (vlen(f.move) > 0.2) f.wantFace = Math.atan2(f.move.x, f.move.z);
-  if (f.clinch) { f.wantFace = angTo(f.pos, (f.clinch.a === f ? f.clinch.b : f.clinch.a).pos); if (isCtl()) FP.yaw += angDiff(FP.yaw, f.wantFace) * Math.min(1, dt * 6); }
+  if (f.clinch) { f.wantFace = angTo(f.pos, (f.clinch.a === f ? f.clinch.b : f.clinch.a).pos); if (isCtl() && !manualLookActive()) FP.yaw += angDiff(FP.yaw, f.wantFace) * (1 - Math.exp(-6 * aimStrength() * dt)); }
   if (f.guard && f.action && f.action.kind === 'swing' && f.action.phase === 'windup') f.action.cancel = true;
   // yield by kneeling
   if (IN.yieldT > 1.0) { IN.yieldT = 0; playerYield(); return; }
@@ -352,4 +353,3 @@ function setOrder(o, actor = G.player || (VS.on && VS.humans[0])) {
   $$('#tcmd button').forEach(b => b.setAttribute('aria-pressed', String(b.dataset.cmd === o)));
   if (G.phase === 'fight') { feed(`Squad call: ${ORDERS[o].name}.`, '', 'var(--flag)'); const cp = perk(actor, 'show.captain'); if (cp) for (const m of G.fighters) if (m.team === team && isUp(m)) { m.buffT = Math.max(m.buffT || 0, 8); m.buffStab = Math.max(m.buffStab || 1, 1 + 0.06 * cp); } }
 }
-

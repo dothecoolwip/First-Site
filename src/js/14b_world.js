@@ -156,10 +156,10 @@ function freeSpot() {
     const a = rand(0, TAU), r = rand(22, 80), x = Math.cos(a) * r, z = Math.sin(a) * r;
     if (arenaBlocked(x, z, 1.5)) continue;
     if (Math.hypot(x / FAIR_RX, z / FAIR_RZ) > 0.92) continue;
-    if (TOWN.obst.some(o => Math.hypot(o.x - x, o.z - z) < o.r + 1.2)) continue;
+    if (!folkSpawnSafe(x, z)) continue;
     return { x, z };
   }
-  return { x: 0, z: 30 };
+  return navFree(0, 30);
 }
 function buildWorld() {
   WORLD.spin = []; WORLD.bob = []; WORLD.flick = []; WORLD.others = {}; WORLD.pet = null;
@@ -457,19 +457,19 @@ function buildSpecialVendors() {
     const g = new THREE.Group(); g.position.set(x, gy(x, z), z); g.rotation.y = ry; TOWN.root.add(g);
     let npc;
     if (V.key === 'wardrobe') {
-      kpiece(g, 'tent_detailedOpen', 0, 0, -1.4, Math.PI, 3.2);
+      gameplayPropFootprint(kpiece(g, 'tent_detailedOpen', 0, 0, -1.4, Math.PI, 3.2), true);
       for (let i = 0; i < 3; i++) { const rack = grp(g, -1.6 + i * 1.6, 0, -2.4); mk(rack, geo('wd_rack', () => new THREE.BoxGeometry(1.2, 0.05, 0.05)), tmat('#4a3422'), 0, 1.8, 0); for (let j = 0; j < 3; j++) mk(rack, geo('wd_cl', () => new THREE.PlaneGeometry(0.32, 0.8)), lmat({ color: SHOP_TABARDS[(i * 3 + j) % SHOP_TABARDS.length][0], side: THREE.DoubleSide }), -0.4 + j * 0.4, 1.38, 0); }
       const mirror = mk(g, geo('wd_mirror', () => new THREE.PlaneGeometry(0.8, 1.7)), tmat('#cfe3f7', { metalness: 0.9, roughness: 0.05 }), 2.3, 1.1, -0.8); mirror.rotation.y = -0.6;
       npc = costumeOr({ main: V.col, joints: '#e3b341', h: 1.72, anim: 'Idle_Loop' }, vendorOutfit(V)); npc.root.position.set(0, 0, -0.6); g.add(npc.root);
-      TOWN.obst.push({ x: x - Math.sin(ry) * 1.6, z: z - Math.cos(ry) * 1.6, r: 2.4 });
+      // Tent walls are registered from the rendered asset, preserving its entrance.
     } else if (V.key === 'barber') {
-      kpiece(g, 'tent_detailedOpen', 0, 0, -1.2, Math.PI, 2.8);
+      gameplayPropFootprint(kpiece(g, 'tent_detailedOpen', 0, 0, -1.2, Math.PI, 2.8), true);
       const mirror = mk(g, geo('barber_mirror', () => new THREE.PlaneGeometry(1, 1.6)), tmat('#cfe3f7', { metalness: 0.9, roughness: 0.05 }), -2.1, 1.25, -0.8); mirror.rotation.y = 0.65;
       mk(g, geo('barber_chair', () => new THREE.CylinderGeometry(0.42, 0.45, 0.5, 10)), tmat('#603e30'), 1.5, 0.45, -0.6);
       mk(g, geo('barber_pole', () => new THREE.CylinderGeometry(0.1, 0.1, 2.1, 12)), tmat('#e6e2d8'), 2.4, 1.1, 0.3);
       for (let i = 0; i < 7; i++) mk(g, geo('barber_stripe', () => new THREE.TorusGeometry(0.105, 0.018, 5, 14)), tmat(i % 2 ? '#a92932' : '#285d88'), 2.4, 0.35 + i * 0.24, 0.3).rotation.x = Math.PI / 2;
       npc = costumeOr({ main: V.col, joints: '#e3b341', h: 1.7, anim: 'Idle_Loop' }, vendorOutfit(V)); npc.root.position.set(0, 0, -0.6); g.add(npc.root);
-      TOWN.obst.push({ x: x - Math.sin(ry) * 1.3, z: z - Math.cos(ry) * 1.3, r: 2.1 });
+      gameplayShape(x + Math.cos(ry) * 1.5 - Math.sin(ry) * 0.6, z - Math.sin(ry) * 1.5 - Math.cos(ry) * 0.6, 0.45, 0.45, ry, 0.9);
     } else {
       kpiece(g, 'gravestoneDecorative', -1.2, 0, -0.6, 0, 1.8); kpiece(g, 'lanternCandle', 1.1, 0, -0.4, 0, 2);
       npc = { root: kpiece(g, 'ghost', 0, 1.2, -0.5, 0, 2.2) || new THREE.Group(), ghost: true }; WORLD.bob.push({ o: npc.root, k: 'float', ph: 9, cx: 0, cz: -0.5 });
@@ -480,4 +480,3 @@ function buildSpecialVendors() {
     TOWN.stalls.push({ V, g, npc, ry, x, z, ax: x + fx * 1.4, az: z + fz * 1.4, label: lab });
   }
 }
-

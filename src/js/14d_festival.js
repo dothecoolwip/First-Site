@@ -15,7 +15,7 @@ const FEST_RESERVED = [ // [x0, x1, z0, z1] kept clear of random trees and rocks
 ];
 function festReserved(x, z, pad = 0) { return FEST_RESERVED.some(([a, b, c, d]) => x > a - pad && x < b + pad && z > c - pad && z < d + pad); }
 function buildFestival(R) {
-  const O = TOWN.obst, add = (key, x, z, ry, s, r) => { const p = kpiece(R, key, x, gy(x, z), z, ry || 0, s || 1); if (r) O.push({ x, z, r }); return p; };
+  const O = TOWN.obst, add = (key, x, z, ry, s, r) => { const p = kpiece(R, key, x, gy(x, z), z, ry || 0, s || 1); if (/tent|bench|table/i.test(key)) gameplayPropFootprint(p, /Open/.test(key)); else if (r) O.push({ x, z, r }); return p; };
   const line = (x0, z0, x1, z1, r, gap) => { const L = Math.hypot(x1 - x0, z1 - z0), n = Math.max(1, Math.round(L / (r * 1.4))); for (let i = 0; i <= n; i++) { const t = i / n, x = x0 + (x1 - x0) * t, z = z0 + (z1 - z0) * t; if (gap && gap(x, z)) continue; O.push({ x, z, r }); } };
   TOWN.mapRects = [];
   const ground = (x0, x1, z0, z1, col, tex) => {
@@ -80,7 +80,7 @@ function buildFestival(R) {
     ['Pine_2', 88, -40, 7.5, -0.2],
   ]) { libraryPlace(R, key, x, z, height, yaw);
     if (libraryFootprint[key]) gameplayShape(x, z, ...libraryFootprint[key], yaw, height);
-    else if (librarySolid[key]) O.push({ x, z, r: librarySolid[key] }); }
+    else if (librarySolid[key] && !libraryFootprint[key]) O.push({ x, z, r: librarySolid[key] }); }
   // ---- the festival gate at the south end of main street
   for (const sx of [-7, 7]) { add('cs_tower_mid', sx, 69, 0, 0.9, 2.6); const t = add('cs_tower_top_1', sx, 69, 0, 0.9, 0); if (t) t.position.y = 3.6; const b = add(sx < 0 ? 'bannerRed' : 'bannerGreen', sx, 66.6, 0, 2.6, 0); if (b) b.position.y = 0.4; }
   for (const sx of [-4.6, 4.6]) mk(R, geo('fest_gpole', () => new THREE.CylinderGeometry(0.1, 0.12, 6.4, 8)), tmat('#4a3422'), sx, 3.2, 68.6);
@@ -228,4 +228,3 @@ function buildGraveyard(R, add) {
   add('dp_cage', 58, -48, -0.6, 1, 0.8); add('dp_guillotine', 31, -60, 0.5, 1, 1.2); add('fy_cem_lamp', 37.6, -48.8, 0, 1.2, 0.3); add('fy_cem_lamp', 50.4, -48.8, 0, 1.2, 0.3);
   add('ps_tent', 60, -56, -0.6, 1.2, 1.8); add('ps_fire', 57.6, -58, 0, 1.6, 0.6); add('fy_ancient_tree_autumn', 20, -60, 0.4, 1, 2.2); add('nt_deadtree', 62, -40, 1, 1, 0.8);
 }
-

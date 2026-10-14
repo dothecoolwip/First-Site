@@ -1,19 +1,50 @@
 // World gameplay systems. The bespoke bout simulation remains authoritative in
 // the lists; these libraries make travel, props and civilian movement sturdier.
-const GAMEPLAY = { shapes: [], rapier: null, cannon: null, terrainBVH: false, generation: 0 };
+const GAMEPLAY = { shapes: [], shapeGrid: new Map(), rapier: null, cannon: null, terrainBVH: false, generation: 0 };
 
 function gameplayShape(x, z, hx, hz, yaw = 0, height = 2) {
   const polygon = new SAT.Polygon(new SAT.Vector(x, z), [
     new SAT.Vector(-hx, -hz), new SAT.Vector(hx, -hz),
     new SAT.Vector(hx, hz), new SAT.Vector(-hx, hz)
   ]);
-  polygon.setAngle(yaw);
-  GAMEPLAY.shapes.push({ x, z, hx, hz, yaw, height, polygon });
+  // THREE's Y rotation is clockwise in the X/Z plane; SAT's is counterclockwise.
+  polygon.setAngle(-yaw);
+  const shape = { x, z, hx, hz, yaw, height, polygon };
+  GAMEPLAY.shapes.push(shape);
+  const rx = Math.abs(Math.cos(yaw)) * hx + Math.abs(Math.sin(yaw)) * hz, rz = Math.abs(Math.sin(yaw)) * hx + Math.abs(Math.cos(yaw)) * hz;
+  for (let i = Math.floor((x - rx) / 4); i <= Math.floor((x + rx) / 4); i++) for (let j = Math.floor((z - rz) / 4); j <= Math.floor((z + rz) / 4); j++) {
+    const k = i + ',' + j; if (!GAMEPLAY.shapeGrid.has(k)) GAMEPLAY.shapeGrid.set(k, []); GAMEPLAY.shapeGrid.get(k).push(shape);
+  }
+}
+
+// Register footprints from the actual asset bounds, including parent transforms.
+// Open tents retain their front entrance and an interior passage.
+function gameplayPropFootprint(object, openTent = false) {
+  if (!object) return;
+  object.updateWorldMatrix(true, true);
+  const inverse = new THREE.Matrix4().copy(object.matrixWorld).invert(), bounds = new THREE.Box3();
+  object.traverse(child => {
+    if (!child.geometry) return;
+    child.geometry.computeBoundingBox();
+    bounds.union(child.geometry.boundingBox.clone().applyMatrix4(new THREE.Matrix4().multiplyMatrices(inverse, child.matrixWorld)));
+  });
+  if (bounds.isEmpty()) return;
+  const size = bounds.getSize(new THREE.Vector3()), center = bounds.getCenter(new THREE.Vector3());
+  const scale = object.getWorldScale(new THREE.Vector3()), rotation = new THREE.Euler().setFromQuaternion(object.getWorldQuaternion(new THREE.Quaternion()), 'YXZ');
+  const add = (x, z, hx, hz) => { const p = object.localToWorld(new THREE.Vector3(x, 0, z)); gameplayShape(p.x, p.z, hx * Math.abs(scale.x), hz * Math.abs(scale.z), rotation.y, size.y * Math.abs(scale.y)); };
+  if (openTent) {
+    const wall = Math.min(size.x * 0.22, 0.3);
+    add(bounds.min.x + wall / 2, center.z, wall / 2, size.z / 2);
+    add(bounds.max.x - wall / 2, center.z, wall / 2, size.z / 2);
+    add(center.x, bounds.max.z - wall / 2, size.x / 2, wall / 2);
+  } else add(center.x, center.z, size.x / 2, size.z / 2);
 }
 function gameplayShapeResponse(x, z, radius) {
   const circle = new SAT.Circle(new SAT.Vector(x, z), radius);
   const response = new SAT.Response();
-  for (const s of GAMEPLAY.shapes) {
+  const candidates = new Set();
+  for (let i = Math.floor((x - radius) / 4); i <= Math.floor((x + radius) / 4); i++) for (let j = Math.floor((z - radius) / 4); j <= Math.floor((z + radius) / 4); j++) for (const s of GAMEPLAY.shapeGrid.get(i + ',' + j) || []) candidates.add(s);
+  for (const s of candidates) {
     if (Math.abs(x - s.x) > s.hx + s.hz + radius || Math.abs(z - s.z) > s.hx + s.hz + radius) continue;
     response.clear();
     if (SAT.testCirclePolygon(circle, s.polygon, response)) return response;
@@ -142,7 +173,7 @@ function gameplayStart() {
 function gameplayStop() {
   GAMEPLAY.generation++;
   if (GAMEPLAY.rapier && GAMEPLAY.rapier.world) GAMEPLAY.rapier.world.free();
-  GAMEPLAY.rapier = null; GAMEPLAY.cannon = null; GAMEPLAY.terrainBVH = false; GAMEPLAY.shapes = [];
+  GAMEPLAY.rapier = null; GAMEPLAY.cannon = null; GAMEPLAY.terrainBVH = false; GAMEPLAY.shapes = []; GAMEPLAY.shapeGrid.clear();
 }
 
 function gameplayFolkDirection(N, tx, tz, dt, steerX, steerZ) {
@@ -162,4 +193,3 @@ function gameplayFolkDirection(N, tx, tz, dt, steerX, steerZ) {
   const L = Math.hypot(wx, wz) || 1;
   return [wx / L, wz / L];
 }
-

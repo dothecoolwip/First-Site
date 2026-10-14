@@ -210,7 +210,7 @@ function renderLineup() {
 
 function beginFight() {
   hideAll(); setHud(true); G.phase = 'prefight'; refreshTouchUI(); AU.music(false);
-  if (IN.mode === 'touch' && !G.attract) goFullscreen(false); // the Ready tap is the gesture fullscreen needs
+  // Fullscreen is entered only through the explicit settings control.
   COMM.firstDown = false; COMM.q.length = 0; showIntro();
   $('#rnd').textContent = G.match.champion ? 'Champion' : G.match.overtime ? 'Overtime' : 'Round ' + G.match.round;
   $('#cmd').textContent = ORDERS[G.orders[0]].name;
@@ -449,6 +449,7 @@ function matchEnd() {
   }
   if (G.autoflow) { G.stats.matches = (G.stats.matches || 0) + 1; if (G.autoNext) G.autoNext(); return; }
   const won = m.wins[0] > m.wins[1], drawn = m.wins[0] === m.wins[1]; AU.music(true);
+  if (m.versus || (m.online && NET.role === 'host')) eventMatch(m, won);
   if (m.versus && G.bracket) { VS.on = false; document.body.classList.remove('split', 'split4'); $('#splitLabels').innerHTML = ''; bracketResult(m.wins[0] > m.wins[1] ? 0 : m.wins[1] > m.wins[0] ? 1 : (m.pts && m.pts[1] > m.pts[0] ? 1 : 0)); return; }
   if (m.versus) { VS.on = false; document.body.classList.remove('split', 'split4'); $('#splitLabels').innerHTML = ''; const k = VS.kind; const t = drawn ? 'Draw' : k === 'duel' ? (won ? 'Player 1 wins' : 'Player 2 wins') : k === 'tag' ? (won ? 'Players 1 and 3 win' : 'Players 2 and 4 win') : (won ? 'You two win' : 'The bots win'); msg('local play', t, `<p>${m.wins[0]}–${m.wins[1]} in rounds.</p>`, [['Rematch', () => startVersus(k), true], ['Couch play', openVersus], ['Title', toTitle]]); return; }
   if (m.online) { onlineMatchEnd(); return; }
@@ -690,6 +691,13 @@ function initMenus() {
   const segSet = (id, attr, key, after) => $$(id + ' button').forEach(b => { b.setAttribute('aria-pressed', String(b.dataset[attr] === String(G.settings[key]))); b.onclick = () => { G.settings[key] = b.dataset[attr]; $$(id + ' button').forEach(x => x.setAttribute('aria-pressed', String(x === b))); saveSettings(); if (after) after(); AU.click(); }; });
   segSet('#teleSeg', 'tele', 'tele'); segSet('#textSeg', 'ts', 'ts', applyTextSize); applyTextSize();
   $('#btnFull').onclick = () => goFullscreen(true);
+  document.addEventListener('fullscreenchange', syncFullscreenControl);
+  document.addEventListener('webkitfullscreenchange', syncFullscreenControl);
+  syncFullscreenControl();
+  { const sl = $('#optAssistStrength'), out = $('#assistPercent');
+    sl.value = String(Math.round(G.settings.assistStrength * 100)); out.textContent = sl.value + '%';
+    sl.oninput = () => { G.settings.assistStrength = +sl.value / 100; out.textContent = sl.value + '%'; if (!aimStrength()) IN.lock = null; saveSettings(); };
+  }
   $('#btnPadSetup').onclick = () => { AU.click(); openPadSetup(); };
   $('#btnBos').onclick = () => { AU.click(); const back = () => showScreen('settings'); if (BOS.info) msg('buhurtos', 'BuhurtOS account', '<div id="bosBox" class="bosbox"></div>', [['Back', back, true]]), renderBosBox(); else openBosSignIn(back); };
   bosBoot(); setTimeout(() => { if (typeof rosterLoad === 'function') rosterLoad(); }, 1500); setTimeout(() => { if (typeof eventSession === 'function') eventSession(); }, 4000);
@@ -698,6 +706,11 @@ function initMenus() {
   $('#btnPauseFeedback').onclick = () => { AU.click(); openFeedback(() => showScreen('pause')); };
   { const sl = $('#optSens'); sl.value = String(G.settings.sens || 1); sl.oninput = () => { G.settings.sens = +sl.value; saveSettings(); }; }
   $('#muteBtn').onclick = () => { AU.init(); AU.setMuted(!AU.muted); $('#muteWave').style.display = AU.muted ? 'none' : ''; store.set('muted', AU.muted); };
+}
+function migrateAimStrength(saved) {
+  if (typeof saved.assistStrength === 'number' && Number.isFinite(saved.assistStrength)) return clamp(saved.assistStrength, 0, 1);
+  if (Object.prototype.hasOwnProperty.call(saved, 'assist')) return saved.assist === false ? 0 : 1;
+  return 0.5;
 }
 function saveSettings() { store.set('settings3', G.settings); }
 function selectTab(bar, tab) {
@@ -796,4 +809,3 @@ const CREDITS_HTML = `<p>Created and developed by <b>Garrett Robson</b> · with 
 <div><span>GLTFLoader and SkeletonUtils from three.js</span><span class="muted">MIT</span></div>
 </div>
 <p class="muted">CC BY 4.0: creativecommons.org/licenses/by/4.0. Rules cited from Buhurt International documents.</p>`;
-

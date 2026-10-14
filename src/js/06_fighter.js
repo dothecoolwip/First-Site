@@ -1,7 +1,7 @@
 // ---------- fighters: balance, actions, contact, grounding ----------
 const G = {
   fighters: [], marshals: [], props: [], phase: 'boot', simTime: 0, realTime: 0, match: null, tourney: null, player: null,
-  settings: { difficulty: 'club', ring: false, voice: false, shake: true, assist: true, view: 'fp', rumble: true, legend: true, sens: 1, invert: false, cine: true, gfx: 'auto', shakeAmt: null, flash: true, comm: true, spokenComm: true, cap: false, tele: 'subtle', speed: 1, ts: '1', haptics: true },
+  settings: { difficulty: 'club', ring: false, voice: false, shake: true, assist: true, assistStrength: 0.5, view: 'fp', rumble: true, legend: true, sens: 1, invert: false, cine: true, gfx: 'auto', shakeAmt: null, flash: true, comm: true, spokenComm: true, cap: false, tele: 'subtle', speed: 1, ts: '1', haptics: true },
   autopilot: false, attract: false, timeScale: 1, hitstop: 0, slowmo: 0, shake: 0, orders: ['free', 'free'], feedLog: [],
   stats: { rounds: 0, roundTimes: [], falls: {}, fouls: 0, cards: 0, hits: 0, blocks: 0, trips: 0, tripsOk: 0, breaks: 0, failures: 0, errors: [] },
   reserves: [2, 2], needRoundCheck: false
@@ -290,7 +290,8 @@ function startAction(f, kind, o = {}) {
 const P_RANGE = { trip: 1.05, shove: 1.2, grab: 0.95 };
 function playerLunge(f, kind, t) {
   if (!isUp(t)) return;
-  const want = angTo(f.pos, t.pos); if (Math.abs(angDiff(f.facing, want)) < 1.1) { f.facing = want; f.wantFace = want; }
+  const want = angTo(f.pos, t.pos), pull = f === G.player ? (manualLookActive() ? 0 : aimStrength()) : 1;
+  if (Math.abs(angDiff(f.facing, want)) < 1.1 && pull > 0) { f.facing += angDiff(f.facing, want) * pull; f.wantFace = f.facing; }
   const reach = P_RANGE[kind]; if (!reach) return;
   const gap = Math.hypot(t.pos.x - f.pos.x, t.pos.z - f.pos.z) - t.radius - reach + 0.15;
   if (gap <= 0 || gap > 1.25) return;
@@ -870,4 +871,3 @@ function updateClinches(dt) {
     if (c.idle >= BREAK_AFTER) { G.stats.breaks++; fieldBreak(c); }
   }
 }
-

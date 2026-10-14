@@ -1259,7 +1259,7 @@ body.intown #hud{display:none!important}
             <button data-diff="club" aria-pressed="true">Club</button>
             <button data-diff="nationals" aria-pressed="false">Nationals</button>
           </div></div>
-          <label class="toggle" for="optAssist"><span>Target lock<small>Your view follows the marked opponent</small></span><input type="checkbox" id="optAssist" checked></label>
+          
           <label class="toggle" for="optRing"><span>Balance gauge<small>A practice aid in the corner</small></span><input type="checkbox" id="optRing"></label>
           <div class="setrow"><span>Attack warnings<small>Glint on a weapon winding up at you, arrows for attackers off screen</small></span><div class="seg small" id="teleSeg"><button data-tele="off">Off</button><button data-tele="subtle">Subtle</button><button data-tele="strong">Strong</button></div></div>
           <label class="toggle range" for="optSpeed"><span>Game speed<small>Slow the whole fight down if it's too much</small></span><input type="range" id="optSpeed" min="0.6" max="1" step="0.05" value="1"></label>
@@ -1276,7 +1276,9 @@ body.intown #hud{display:none!important}
           <label class="toggle" for="optInvert"><span>Invert look up and down</span><input type="checkbox" id="optInvert"></label>
         </section>
         <section class="setgroup">
-          <h3>Controller and touch</h3>
+          <h3>Controls</h3>
+<label class="toggle range" for="optAssistStrength"><span>Aim assist strength <output id="assistPercent" for="optAssistStrength">50%</output><small>0% disables automatic aim pull. Higher values help track opponents horizontally. Manual look input always takes priority.</small></span><input id="optAssistStrength" type="range" min="0" max="100" step="1" value="50"></label>
+<label class="toggle" for="optAssist"><span>Target lock<small>Horizontal tracking of the marked opponent; vertical aim stays yours</small></span><input type="checkbox" id="optAssist" checked></label>
           <label class="toggle" for="optRumble"><span>Rumble<small>Controller rumble and phone vibration on hits</small></span><input type="checkbox" id="optRumble" checked></label>
           <label class="toggle" for="optLegend"><span>Button guide in fights<small>Shows the controller buttons at the bottom</small></span><input type="checkbox" id="optLegend" checked></label>
           <div class="setrow"><span>Text size</span><div class="seg small" id="textSeg"><button data-ts="1">Normal</button><button data-ts="1.15">Large</button><button data-ts="1.3">Larger</button></div></div>
