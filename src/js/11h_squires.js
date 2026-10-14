@@ -163,7 +163,7 @@ function squireBuildTown() {
   const group = new THREE.Group(); group.add(model.root); group.position.set(free.x, gy(free.x, free.z), free.z); TOWN.root.add(group);
   if (S.outfit['tool belt']) { const belt = mk(group, geo('squire_belt', () => new THREE.TorusGeometry(0.18, 0.025, 5, 12)), tmat('#50321c'), 0, 0.82, 0); belt.rotation.x = Math.PI / 2; mk(group, geo('squire_pouch', () => new THREE.BoxGeometry(0.12, 0.16, 0.08)), tmat('#8d643a'), 0.19, 0.75, 0); }
   const label = townLabel(S.name, S.recruited ? 'Your squire' : 'Eager spectator', '#f2c40f'); label.position.y = 2.2; group.add(label);
-  const stall = { V: { key: 'personal-squire', name: S.name, role: 'Squire', icon: '🧰' }, x: free.x, z: free.z, ax: free.x + 1, az: free.z + 1, g: group, npc: model, label, open: openSquire, station: true, squireNPC: true };
+  const stall = { V: { key: 'personal-squire', name: S.name, role: 'Squire', icon: '🧰' }, x: free.x, z: free.z, ax: free.x + 1, az: free.z + 1, ry: 0, g: group, npc: model, label, open: openSquire, station: true, squireNPC: true };
   TOWN.stalls.push(stall); Object.assign(COMPANION, { group, model, stall, team: S.key, route: [], routeSearch: null, routeT: 0, stuck: 0 });
 }
 function squireTownTick(dt) {
@@ -171,7 +171,7 @@ function squireTownTick(dt) {
   if (C.team !== S.key) { squireBuildTown(); return; }
   const P = C.group.position;
   if (navBlocked(P.x, P.z, 0.32)) { const free = navFree(P.x, P.z); if (free) { P.set(free.x, gy(free.x, free.z), free.z); C.route = []; C.routeSearch = null; C.routeT = 0; } }
-  Object.assign(C.stall, { x: P.x, z: P.z, ax: P.x + 1, az: P.z + 1 });
+  Object.assign(C.stall, { x: P.x, z: P.z, ax: P.x + 1, az: P.z + 1, ry: C.group.rotation.y });
   C.group.visible = Math.hypot(P.x - TOWN.pos.x, P.z - TOWN.pos.z) < (IS_TOUCH ? 50 : 70);
   if (C.model.ual && C.group.visible) C.model.mixer.update(dt);
   if (!S.recruited || S.departed) return;
@@ -192,7 +192,7 @@ function squireTownTick(dt) {
   const nx = P.x + dir[0] * step, nz = P.z + dir[1] * step;
   if (!navBlocked(nx, nz, 0.32) && castleWalkable(P.x, P.z, nx, nz, 0.32)) { P.set(nx, gy(nx, nz), nz); C.group.rotation.y = Math.atan2(dir[0], dir[1]); C.stuck = 0; }
   else { C.stuck += dt; if (C.stuck > 2) { C.routeT = 0; C.stuck = 0; } }
-  Object.assign(C.stall, { x: P.x, z: P.z, ax: P.x + 1, az: P.z + 1 });
+  Object.assign(C.stall, { x: P.x, z: P.z, ax: P.x + 1, az: P.z + 1, ry: C.group.rotation.y });
 }
 function reserveAllowed(f) {
   if (!humanFighter(f)) return true;

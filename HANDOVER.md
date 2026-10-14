@@ -159,3 +159,7 @@ Focused tests: `squire-workshop.spec.js`, `gauntlet-repair-flow.spec.js`, and `r
 
 
 Release reconciliation: version 57 (`c8a1b94fe8ee6e43279501ee1c9caa0ae01d4a68`) had the cities/training/campaign in its compiled page while editable modules remained older. Recovered all 83 published modules and the exact published asset/body prefix and suffix, then merged the squire fixes. City vendor tiers, lessons, riding, talk events, quest-journal access and the 88 campaign chapters are preserved. The final release checkout is `sites/squire-release-latest`. Its `build.py` now recreates the complete combined release from editable source.
+
+
+## 2026-10-14 — Invisible squire when approached
+The personal-squire stall now initializes its facing angle (ry) and updates it as the follower turns. Previously the shared vendor look-at code subtracted an undefined ry, producing NaN in the squire's body rotation and world matrices; the separate nameplate and interaction prompt remained visible. Regression checks approach the recruit before and after hiring and assert visible body meshes with finite world transforms.
