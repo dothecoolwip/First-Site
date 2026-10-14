@@ -1,5 +1,10 @@
 # BUHURT: Steel & Tape — handover for the next assistant
 
+## Patch 4.5: Gauntlet repair flow
+
+Build steel-tape-auth-d751d7f7e356 reconciles only the three Gauntlet runtime modules into tested version 55. Unfinished rounds have exact 30-second repairs; wins 1–4 show results and boon choice before one exact 60-second repair; the final win has no repair. Unsafe armour blocks early Done and unsafe timeout ends the run. Existing ordinary repair bonuses and emergency rules remain. Exact-release desktop/phone Gauntlet and ordinary repair checks passed (16/16), with syntax and ESLint clean. Authentication, saves, HACSA filtering and published aim/fullscreen/crowd changes are retained.
+
+
 ## 13 Oct 2026 — Patch 4.3 production release
 
 Production candidate comes from the exact published private Site version 52, source commit `572b8904a0138ad66ca1bbde0d831b34190a5163`, build `steel-tape-auth-56e90ed91fab`. Source provenance and auth validation are in the scoped Site source checkout (`sites/auth-return-deploy`) and `auth-return-audit/verification.json`. This promotes the tested page, worker and version together and adds the renderer/fonts referenced by its offline cache. Asset bundles and current combat difficulty milestones are preserved. Desktop and phone startup passed without page or game-loop errors; 40 worker cache entries exist. Auth repair previously passed 15 unit, 14 browser and 3 exact-release phone cases using mocked authentication. Actual Android Google-return acceptance remains unverified. Patch 4.3 must be dispatched only after production is READY, to both required Discord destinations, without duplicate notes or broad mentions.

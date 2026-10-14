@@ -1,4 +1,9 @@
 # BUHURT: Steel & Tape — "The Realm" plan
+
+## Patch 4.5: Gauntlet repair flow
+
+Build steel-tape-auth-d751d7f7e356 reconciles only the three Gauntlet runtime modules into tested version 55. Unfinished rounds have exact 30-second repairs; wins 1–4 show results and boon choice before one exact 60-second repair; the final win has no repair. Unsafe armour blocks early Done and unsafe timeout ends the run. Existing ordinary repair bonuses and emergency rules remain. Exact-release desktop/phone Gauntlet and ordinary repair checks passed (16/16), with syntax and ESLint clean. Authentication, saves, HACSA filtering and published aim/fullscreen/crowd changes are retained.
+
 > Release update, 13 Oct 2026: Patch 4.3 promotes private playtest version 52 (`572b8904a0138ad66ca1bbde0d831b34190a5163`, build `steel-tape-auth-56e90ed91fab`) with Google-return/cloud-save recovery, saved-team preservation, current world/appearance fixes, and local renderer/font assets for offline startup. Existing combat difficulty milestones remain. Desktop and phone startup checks passed with no page or game-loop errors; earlier auth verification used mocked accounts. Real Android Google return remains for device validation. Release notes go to BuhurtOS's Steel & Tape category #patch-notes and Red Deer Reavers #buhurt-steel-and-tape.
 > **Status, 11 Oct 2026: all eight steps shipped** (Patch 3.0 to 3.5, live at buhurt-steel-and-tape.vercel.app, notes posted to Discord).
 > Differences from the plan: no thrust direction (it would break online play's move encoding), so directions are left / right / overhead; the driftwood club is a hand item, not a weapon skin; the smugglers' tunnel is a grate you peek through rather than a walkable tunnel; win rates of about 60 / 45 / 35% are what the AI tiers aim for, but they haven't been measured with real players; the three Drive packs (HighLands buildings, Modular Weapons and Dungeon, Fantasy Ambient) still need trimmed re-uploads.
