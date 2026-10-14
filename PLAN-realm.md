@@ -1,5 +1,10 @@
 # BUHURT: Steel & Tape — "The Realm" plan
 
+## Patch 4.6: Team squires and repair workshop, 14 Oct 2026
+
+Promote the exact verified combined source 5ddab75e099ef8c5443bb2b746c707bd65a48aff from sites/squire-release-latest, build steel-tape-auth-6da88497b907. It preserves published version 57 cities, training, riding and campaign along with Gauntlet repair, aim, fullscreen and crowd changes. Team-specific recruitment quests unlock following/care and legal corner reserves; Red Deer Reavers use halfling. Career equipment persists and the workshop has damage-specific tasks and guided actions. Multiplayer protocol is 3: all clients must update. Recorded validation: 44 distinct desktop/phone regressions, 15 auth/HACSA unit cases, 6 combined recruitment/reserve/workshop cases and 2 final five-fight Gauntlet cases passed; private hosted quest/workshop checks passed. Real Android performance, WAN multiplayer and real-account cloud restore remain acceptance items.
+
+
 ## Patch 4.5: Gauntlet repair flow
 
 Build steel-tape-auth-d751d7f7e356 reconciles only the three Gauntlet runtime modules into tested version 55. Unfinished rounds have exact 30-second repairs; wins 1–4 show results and boon choice before one exact 60-second repair; the final win has no repair. Unsafe armour blocks early Done and unsafe timeout ends the run. Existing ordinary repair bonuses and emergency rules remain. Exact-release desktop/phone Gauntlet and ordinary repair checks passed (16/16), with syntax and ESLint clean. Authentication, saves, HACSA filtering and published aim/fullscreen/crowd changes are retained.

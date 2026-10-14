@@ -1,5 +1,10 @@
 # BUHURT: Steel & Tape — handover for the next assistant
 
+## Patch 4.6: Team squires and repair workshop, 14 Oct 2026
+
+Promote the exact verified combined source 5ddab75e099ef8c5443bb2b746c707bd65a48aff from sites/squire-release-latest, build steel-tape-auth-6da88497b907. It preserves published version 57 cities, training, riding and campaign along with Gauntlet repair, aim, fullscreen and crowd changes. Team-specific recruitment quests unlock following/care and legal corner reserves; Red Deer Reavers use halfling. Career equipment persists and the workshop has damage-specific tasks and guided actions. Multiplayer protocol is 3: all clients must update. Recorded validation: 44 distinct desktop/phone regressions, 15 auth/HACSA unit cases, 6 combined recruitment/reserve/workshop cases and 2 final five-fight Gauntlet cases passed; private hosted quest/workshop checks passed. Real Android performance, WAN multiplayer and real-account cloud restore remain acceptance items.
+
+
 ## Patch 4.5: Gauntlet repair flow
 
 Build steel-tape-auth-d751d7f7e356 reconciles only the three Gauntlet runtime modules into tested version 55. Unfinished rounds have exact 30-second repairs; wins 1–4 show results and boon choice before one exact 60-second repair; the final win has no repair. Unsafe armour blocks early Done and unsafe timeout ends the run. Existing ordinary repair bonuses and emergency rules remain. Exact-release desktop/phone Gauntlet and ordinary repair checks passed (16/16), with syntax and ESLint clean. Authentication, saves, HACSA filtering and published aim/fullscreen/crowd changes are retained.
@@ -85,3 +90,39 @@ Edge functions (all deployed with `verify_jwt=false`, CORS open, use service rol
 - No teleporting in the realm. No thrust attack. No monsters/magic. Only display names and team colours from BuhurtOS, never private fields; fighters who opted out of the card game (`cards.game_use=false`) are excluded.
 - Credit people who suggest features in the patch notes (e.g. directional blocking: @kestonpiche).
 - Commit messages are descriptive one-liners; the owner reads the Discord notes, not the commits.
+
+
+## 2026-10-14 — Team squires and persistent repair workshop
+
+The entrance now has Ada the Corner Guide and a “Find your squire” quest. Every team has a saved, fictional recruit; Red Deer Reavers use “halfling”, a happy, enthusiastic 16-year-old inspired by the owner’s real squire, with a fictional appearance. Stable team IDs govern assignment; changing a display name does not grant another team’s progress. Festival-goers get a fictional companion. Recruiting one team’s squire does not recruit another’s.
+
+### Recruitment and support
+
+Six stages: discover the recruit using Ada’s landmark hint; share a tavern meal; arrange inn/home lodging; buy clothes, shoes and a tool belt; practise a strap repair, wrap repair and safe handoff at the armourer; finish a career team match (winning is optional), return, and explicitly hire. Training uses isolated practice equipment. All objectives and supplies save. Halfling’s initial location is outside the actual bailey gate, derived from the gate position, rather than old arena coordinates. Exact directory access unlocks after meeting him.
+
+No completed quest means no personal corner squire, following, squire patches, or corner replacement weapon. There is no generic replacement attendant for the player. Flat dropped weapons remain unpickable under the existing rules. Use an already-carried legal backup or grapple without a weapon. Recruited squires supply two shared random legal reserve weapons per team per round, with no selection/reroll. Two-handed weapons stow your existing shield; a one-handed replacement can restore it. Match reserves are not permanent inventory rewards. Network protocol 3 carries recruitment availability, weapon/shield state, and authoritative reserve rack/stock; all online players must update. Recruitment is client career progress, not a server-issued entitlement.
+
+### Care and following
+
+Follow/wait/return-to-lodging commands use shared world obstacles and paths. The companion coexists with cosmetic pets, stays outside fights, waits during unsupported activities, and is culled at distance. Follow catch-up is limited to distant travel; returning to accommodation uses routes. Initial spawning runs after town activation and restored player position.
+
+Meals and rest each cover three completed career matches; clothing maintenance covers twenty. No offline, practice, local-versus or online decay. Food costs 10 coins, inn rest 20, clothing mending 25. Suitable home lodging rests for free. Optional auto-feeding/inn renewal is off by default and obeys a displayed remaining budget. Good care gives 5% repair quality. After a depleted need warning and three further neglected career matches, the squire leaves temporarily, also removing personal corner handoffs. Return to the original recruit location, feed/rest/clothe him, and apologize to restore service. He never dies or permanently disappears. Existing hired-squire purchases remain crew levels: extra field patches after recruitment and 10% labour discount per level, maximum 30%.
+
+### Equipment and repair
+
+Career armour is shared across loadouts; weapon records are separate by weapon type. Damage survives results, reloads, travel, and swapping weapons. Season/Gauntlet kit is synchronized with the career record and town servicing. Practice/local/online kits stay separate. Legacy run/season condition is imported when the new equipment record is absent. Authentication and HACSA fighter filtering are unchanged; squires are support characters, never fighter-roster entries.
+
+Fault tasks: thread torn straps, tighten buckles, secure fittings, rewrap grips, straighten dents, clean equipment, and replace a genuinely snapped haft. Touch/mouse gestures differ by task; keyboard/controller guided actions remain available and the preference saves. Layouts vary; pending fitting and wrapping work is retained. Parts are consumed once when fitted. Completing a securing step is required before equipment becomes safe; timer expiry never finishes incomplete work.
+
+Field fixes restore safety and condition up to 70%, without lowering equipment already above that limit, and remain temporary. Proper town repair is untimed and can reach 100%. Optional cleaning reduces wear by 5% for the next fight. Manual essential armour safety repairs have free basic materials, even without money. Ordinary replacement stock costs 25 per strap, 20 per fitting kit, and 40 per haft. A snapped haft cannot be repaired with tape. Public armourer service/manual benches remain usable without a recruit. Paid selected/all service shows labour, missing parts and total before purchase.
+
+Gauntlet keeps exact 30-second round breaks and 60-second between-fight breaks, none after the fifth victory. The keen-squire boon now grants an explicit free labour voucher at the workshop instead of silently restoring equipment. Spare-straps levels provide 3% less strap wear and one field spare per level rather than match-start healing. Existing tape and applicable time/quality upgrades retain their benefits; fixed Gauntlet timers stay fixed.
+
+### Source and verification
+
+New shared modules: `steeltape/src/js/11h_squires.js` (quest, care, follower and reserves) and `11ia_workshop.js` (equipment migration, fault tasks and servicing). Integration touches repair, match flow, shops, Season/Gauntlet, networking, town and map code. The final release checkout is `sites/squire-release-latest`; it preserves the published version 57 cities, training and campaign. Canonical source and the combined release rebuild with their own `build.py`.
+
+Focused tests: `squire-workshop.spec.js`, `gauntlet-repair-flow.spec.js`, and `repair.spec.js`. Reports and final deployment details are recorded in `implementation-2026-10-14/SQUIRE_WORKSHOP_RESULTS.md`. Browser phone emulation is separate from physical Android testing; real WAN multiplayer and real-account cloud restore require device/account acceptance. Test publication retains the existing owner-only audience. Live deployment is a separate handoff to “deploy live”.
+
+
+Release reconciliation: version 57 (`c8a1b94fe8ee6e43279501ee1c9caa0ae01d4a68`) had the cities/training/campaign in its compiled page while editable modules remained older. Recovered all 83 published modules and the exact published asset/body prefix and suffix, then merged the squire fixes. City vendor tiers, lessons, riding, talk events, quest-journal access and the 88 campaign chapters are preserved. The final release checkout is `sites/squire-release-latest`. Its `build.py` now recreates the complete combined release from editable source.
