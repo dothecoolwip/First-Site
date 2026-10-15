@@ -4,16 +4,17 @@
   if (!fight || document.getElementById('btnWiki')) return;
   var wiki = 'https://buhurt-steel-and-tape.vercel.app/wiki/';
   var link = document.createElement('a');
-  link.id = 'btnWiki'; link.className = 'btn'; link.href = wiki;
+  link.id = 'btnWiki'; link.className = 'wiki-menu-link'; link.href = wiki;
   link.target = '_blank'; link.rel = 'noopener noreferrer external'; link.tabIndex = 0;
   link.setAttribute('aria-label', 'Open Wiki in your browser');
   link.textContent = 'Wiki ↗';
-  link.style.cssText = 'display:inline-flex;align-items:center;justify-content:center;align-self:center;width:auto;min-width:96px;max-width:140px;min-height:44px;padding:6px 16px;margin:8px auto 0;font-size:14px;line-height:1.2;letter-spacing:.3px;text-decoration:none;background:rgba(255,255,255,.06);border:1px solid rgba(190,205,200,.28)';
+  link.style.cssText = 'display:inline-flex;align-items:center;box-sizing:border-box;height:36px;min-height:0;padding:6px 0;background:none;border:0;color:var(--steel);font:600 .95rem var(--body, sans-serif);text-decoration:underline;text-decoration-color:rgba(170,180,184,.35);text-underline-offset:4px;cursor:pointer';
   var installed = navigator.standalone === true || ['standalone', 'fullscreen', 'minimal-ui'].some(function (mode) { return window.matchMedia && window.matchMedia('(display-mode: ' + mode + ')').matches; });
   if (installed && /Android/i.test(navigator.userAgent)) {
     link.href = 'intent://buhurt-steel-and-tape.vercel.app/wiki/#Intent;scheme=https;action=android.intent.action.VIEW;category=android.intent.category.BROWSABLE;package=com.android.chrome;S.browser_fallback_url=' + encodeURIComponent(wiki) + ';end';
   }
-  fight.insertAdjacentElement('afterend', link);
+  var links = fight.parentElement.querySelector('.links');
+  if (links) links.appendChild(link);
 })();
 /* END_STEEL_TAPE_WIKI_MENU */
 // Small, non-blocking update notice for the hosted/PWA game.

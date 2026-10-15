@@ -2,6 +2,41 @@
   "schema": 1,
   "releases": [
     {
+      "id": "game-menu-wiki-layout",
+      "title": "Restore the original main-menu layout",
+      "date": "2026-10-15T06:58:00Z",
+      "kind": "Quiet interface correction",
+      "build": "steel-tape-auth-ad27047a6f73",
+      "previousBuild": "steel-tape-auth-ad27047a6f73",
+      "summary": "The extra Wiki row is removed. A small Wiki link joins Settings and Credits without moving the original menu.",
+      "reviewedPublic": true,
+      "evidence": [
+        "Compared with production commit 66a6b3181651b5a578c620fb4f4003e74a90a36e and the original menu markup.",
+        "The engine page, existing menu stylesheet, gameplay assets and save format are unchanged."
+      ],
+      "sections": [
+        {
+          "title": "Correct the menu layout",
+          "items": [
+            "The previous separate Wiki row increased the menu height and shifted the centred title layout. This corrects the placement introduced in game-menu-wiki and retained in game-menu-wiki-compact.",
+            "Wiki is now a small text link in the existing Settings and Credits row. It does not create an additional menu row or use the primary button style.",
+            "The existing title, division controls, Time to Fight, Settings and Credits retain their original positions and sizes. The external-browser request and HTTPS fallback are preserved.",
+            "This changes only the menu-link UI asset and its cache revision. Reload or restart an already running game to receive it. No combat or progression values change.",
+            "Deployed silently at the owner's request. No Discord announcement."
+          ],
+          "metrics": []
+        }
+      ],
+      "knownIssues": [
+        "The operating system and browser still control external-app handoff; physical Android/iOS handoff has not been tested."
+      ],
+      "validation": [
+        "Original home element positions and sizes compared before and after link insertion at desktop, landscape-phone and two portrait-phone sizes.",
+        "Separate-window opening, null opener and duplicate prevention checked in browser automation."
+      ],
+      "canonicalUrl": "https://buhurt-steel-and-tape.vercel.app/wiki/patch-notes/#patch/game-menu-wiki-layout"
+    },
+    {
       "id": "game-menu-wiki-compact",
       "title": "A compact Wiki button",
       "date": "2026-10-15T06:49:37Z",
