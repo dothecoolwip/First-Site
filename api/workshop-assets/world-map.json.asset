@@ -1,0 +1,986 @@
+{
+  "version": 1,
+  "roads": [
+    {
+      "name": "fair-main",
+      "pts": [
+        [
+          0,
+          70
+        ],
+        [
+          0,
+          58
+        ],
+        [
+          1,
+          48
+        ],
+        [
+          0,
+          38
+        ],
+        [
+          0,
+          27
+        ]
+      ],
+      "w": 9,
+      "id": "road:fair-main:0",
+      "surface": "earth",
+      "collision": "none",
+      "smooth": true
+    },
+    {
+      "name": "fair-crafts",
+      "pts": [
+        [
+          0,
+          38
+        ],
+        [
+          -18,
+          38
+        ],
+        [
+          -31,
+          29
+        ],
+        [
+          -42,
+          20
+        ]
+      ],
+      "w": 5,
+      "id": "road:fair-crafts:1",
+      "surface": "earth",
+      "collision": "none",
+      "smooth": true
+    },
+    {
+      "name": "fair-market",
+      "pts": [
+        [
+          0,
+          38
+        ],
+        [
+          17,
+          38
+        ],
+        [
+          29,
+          32
+        ],
+        [
+          44,
+          30
+        ]
+      ],
+      "w": 5,
+      "id": "road:fair-market:2",
+      "surface": "earth",
+      "collision": "none",
+      "smooth": true
+    },
+    {
+      "name": "north",
+      "pts": [
+        [
+          0,
+          -24
+        ],
+        [
+          -2,
+          -45
+        ],
+        [
+          -1,
+          -67
+        ],
+        [
+          -4,
+          -88
+        ],
+        [
+          -2,
+          -111
+        ],
+        [
+          0,
+          -140
+        ]
+      ],
+      "w": 6,
+      "id": "road:north:3",
+      "surface": "earth",
+      "collision": "none",
+      "smooth": true
+    },
+    {
+      "name": "west",
+      "pts": [
+        [
+          -42,
+          20
+        ],
+        [
+          -52,
+          10
+        ],
+        [
+          -52,
+          -2
+        ],
+        [
+          -74,
+          7
+        ],
+        [
+          -95,
+          -11
+        ],
+        [
+          -119,
+          -10
+        ],
+        [
+          -137,
+          -30
+        ],
+        [
+          -162,
+          -39
+        ],
+        [
+          -178,
+          -61
+        ],
+        [
+          -196,
+          -78
+        ]
+      ],
+      "w": 5,
+      "id": "road:west:4",
+      "surface": "earth",
+      "collision": "none",
+      "smooth": true
+    },
+    {
+      "name": "southwest",
+      "pts": [
+        [
+          -16,
+          70
+        ],
+        [
+          -38,
+          81
+        ],
+        [
+          -58,
+          101
+        ],
+        [
+          -87,
+          101
+        ],
+        [
+          -111,
+          123
+        ],
+        [
+          -135,
+          127
+        ],
+        [
+          -160,
+          140
+        ]
+      ],
+      "w": 5,
+      "id": "road:southwest:5",
+      "surface": "earth",
+      "collision": "none",
+      "smooth": true
+    },
+    {
+      "name": "millpond-east",
+      "pts": [
+        [
+          -38,
+          81
+        ],
+        [
+          -47,
+          75
+        ],
+        [
+          -49.7,
+          72
+        ]
+      ],
+      "w": 2.8,
+      "id": "road:millpond-east:6",
+      "surface": "earth",
+      "collision": "none",
+      "smooth": true
+    },
+    {
+      "name": "millpond-farm",
+      "pts": [
+        [
+          -62.3,
+          72
+        ],
+        [
+          -61,
+          64
+        ],
+        [
+          -61,
+          55
+        ],
+        [
+          -68,
+          44
+        ]
+      ],
+      "w": 2.6,
+      "id": "road:millpond-farm:7",
+      "surface": "earth",
+      "collision": "none",
+      "smooth": true
+    },
+    {
+      "name": "east",
+      "pts": [
+        [
+          44,
+          30
+        ],
+        [
+          53,
+          25
+        ],
+        [
+          52,
+          6
+        ],
+        [
+          74,
+          17
+        ],
+        [
+          92,
+          17
+        ],
+        [
+          105,
+          36
+        ],
+        [
+          121,
+          49
+        ],
+        [
+          128,
+          58
+        ],
+        [
+          122,
+          79
+        ],
+        [
+          132,
+          100
+        ]
+      ],
+      "w": 5,
+      "id": "road:east:8",
+      "surface": "earth",
+      "collision": "none",
+      "smooth": true
+    },
+    {
+      "name": "woodsnorth",
+      "pts": [
+        [
+          -196,
+          -78
+        ],
+        [
+          -190,
+          -104
+        ],
+        [
+          -169,
+          -122
+        ],
+        [
+          -148,
+          -135
+        ],
+        [
+          -120,
+          -150
+        ]
+      ],
+      "w": 4,
+      "id": "road:woodsnorth:9",
+      "surface": "earth",
+      "collision": "none",
+      "smooth": true
+    },
+    {
+      "name": "quarry-spur",
+      "pts": [
+        [
+          -196,
+          -78
+        ],
+        [
+          -218,
+          -71
+        ],
+        [
+          -237,
+          -58
+        ],
+        [
+          -251,
+          -45
+        ]
+      ],
+      "w": 3.5,
+      "id": "road:quarry-spur:10",
+      "surface": "earth",
+      "collision": "none",
+      "smooth": true
+    },
+    {
+      "name": "lakenorth",
+      "pts": [
+        [
+          128,
+          58
+        ],
+        [
+          145,
+          38
+        ],
+        [
+          139,
+          12
+        ],
+        [
+          156,
+          -11
+        ],
+        [
+          153,
+          -33
+        ],
+        [
+          176,
+          -60
+        ]
+      ],
+      "w": 4,
+      "id": "road:lakenorth:11",
+      "surface": "earth",
+      "collision": "none",
+      "smooth": true
+    },
+    {
+      "name": "south",
+      "pts": [
+        [
+          0,
+          70
+        ],
+        [
+          12,
+          92
+        ],
+        [
+          2,
+          116
+        ],
+        [
+          -23,
+          133
+        ],
+        [
+          -30,
+          160
+        ]
+      ],
+      "w": 4,
+      "id": "road:south:12",
+      "surface": "earth",
+      "collision": "none",
+      "smooth": true
+    },
+    {
+      "name": "millbrook-lists",
+      "pts": [
+        [
+          -160,
+          140
+        ],
+        [
+          -176,
+          134
+        ]
+      ],
+      "w": 3,
+      "id": "road:millbrook-lists:13",
+      "surface": "earth",
+      "collision": "none",
+      "smooth": true
+    },
+    {
+      "name": "millbrook-green",
+      "pts": [
+        [
+          -160,
+          140
+        ],
+        [
+          -174,
+          128
+        ],
+        [
+          -184,
+          115
+        ],
+        [
+          -198,
+          121
+        ],
+        [
+          -218,
+          116
+        ],
+        [
+          -230,
+          106
+        ]
+      ],
+      "w": 3.2,
+      "id": "road:millbrook-green:14",
+      "surface": "earth",
+      "collision": "none",
+      "smooth": true
+    },
+    {
+      "name": "woods-lists",
+      "pts": [
+        [
+          -196,
+          -78
+        ],
+        [
+          -214,
+          -74
+        ]
+      ],
+      "w": 3,
+      "id": "road:woods-lists:15",
+      "surface": "earth",
+      "collision": "none",
+      "smooth": true
+    },
+    {
+      "name": "shore-lists",
+      "pts": [
+        [
+          132,
+          100
+        ],
+        [
+          148,
+          103
+        ]
+      ],
+      "w": 3,
+      "id": "road:shore-lists:16",
+      "surface": "earth",
+      "collision": "none",
+      "smooth": true
+    },
+    {
+      "name": "country-loop",
+      "pts": [
+        [
+          -160,
+          140
+        ],
+        [
+          -211,
+          174
+        ],
+        [
+          -248,
+          215
+        ],
+        [
+          -261,
+          271
+        ],
+        [
+          -226,
+          326
+        ],
+        [
+          -166,
+          354
+        ],
+        [
+          -91,
+          371
+        ],
+        [
+          -12,
+          392
+        ],
+        [
+          67,
+          365
+        ],
+        [
+          138,
+          319
+        ],
+        [
+          193,
+          276
+        ],
+        [
+          225,
+          223
+        ],
+        [
+          183,
+          160
+        ],
+        [
+          132,
+          100
+        ]
+      ],
+      "w": 5,
+      "id": "road:country-loop:17",
+      "surface": "earth",
+      "collision": "none",
+      "smooth": true
+    },
+    {
+      "name": "ridge-trail",
+      "pts": [
+        [
+          -196,
+          -78
+        ],
+        [
+          -239,
+          -83
+        ],
+        [
+          -275,
+          -61
+        ],
+        [
+          -309,
+          -17
+        ],
+        [
+          -333,
+          48
+        ],
+        [
+          -310,
+          113
+        ],
+        [
+          -274,
+          169
+        ],
+        [
+          -248,
+          215
+        ]
+      ],
+      "w": 4,
+      "id": "road:ridge-trail:18",
+      "surface": "earth",
+      "collision": "none",
+      "smooth": true
+    },
+    {
+      "name": "riverford-shortcut",
+      "pts": [
+        [
+          -30,
+          160
+        ],
+        [
+          -57,
+          202
+        ],
+        [
+          -41,
+          251
+        ],
+        [
+          -70,
+          302
+        ],
+        [
+          -91,
+          371
+        ]
+      ],
+      "w": 4,
+      "id": "road:riverford-shortcut:19",
+      "surface": "earth",
+      "collision": "none",
+      "smooth": true
+    },
+    {
+      "name": "lakeside-path",
+      "pts": [
+        [
+          183,
+          160
+        ],
+        [
+          240,
+          170
+        ],
+        [
+          304,
+          145
+        ],
+        [
+          340,
+          94
+        ],
+        [
+          322,
+          34
+        ],
+        [
+          289,
+          -12
+        ],
+        [
+          228,
+          -31
+        ],
+        [
+          176,
+          -60
+        ]
+      ],
+      "w": 4,
+      "id": "road:lakeside-path:20",
+      "surface": "earth",
+      "collision": "none",
+      "smooth": true
+    },
+    {
+      "name": "northern-hunter-road",
+      "pts": [
+        [
+          -309,
+          -17
+        ],
+        [
+          -336,
+          -79
+        ],
+        [
+          -345,
+          -133
+        ],
+        [
+          -315,
+          -202
+        ],
+        [
+          -276,
+          -271
+        ],
+        [
+          -213,
+          -320
+        ],
+        [
+          -138,
+          -351
+        ],
+        [
+          -61,
+          -351
+        ],
+        [
+          27,
+          -369
+        ],
+        [
+          101,
+          -344
+        ],
+        [
+          157,
+          -293
+        ],
+        [
+          196,
+          -222
+        ],
+        [
+          197,
+          -147
+        ],
+        [
+          176,
+          -60
+        ]
+      ],
+      "w": 4,
+      "id": "road:northern-hunter-road:21",
+      "surface": "earth",
+      "collision": "none",
+      "smooth": true
+    },
+    {
+      "name": "ashmarket-road",
+      "pts": [
+        [
+          -333,
+          48
+        ],
+        [
+          -369,
+          9
+        ],
+        [
+          -401,
+          -38
+        ],
+        [
+          -432,
+          -91
+        ],
+        [
+          -467,
+          -143
+        ],
+        [
+          -500,
+          -194
+        ],
+        [
+          -510,
+          -220
+        ],
+        [
+          -510,
+          -250
+        ]
+      ],
+      "w": 6,
+      "id": "road:ashmarket-road:22",
+      "surface": "earth",
+      "collision": "none",
+      "smooth": true
+    },
+    {
+      "name": "stoneford-road",
+      "pts": [
+        [
+          340,
+          94
+        ],
+        [
+          392,
+          103
+        ],
+        [
+          440,
+          117
+        ],
+        [
+          490,
+          132
+        ],
+        [
+          530,
+          140
+        ]
+      ],
+      "w": 6,
+      "id": "road:stoneford-road:23",
+      "surface": "earth",
+      "collision": "none",
+      "smooth": true
+    },
+    {
+      "name": "southmere-road",
+      "pts": [
+        [
+          -12,
+          392
+        ],
+        [
+          -27,
+          451
+        ],
+        [
+          -48,
+          505
+        ],
+        [
+          -69,
+          560
+        ],
+        [
+          -90,
+          620
+        ]
+      ],
+      "w": 6,
+      "id": "road:southmere-road:24",
+      "surface": "earth",
+      "collision": "none",
+      "smooth": true
+    },
+    {
+      "name": "northwatch-road",
+      "pts": [
+        [
+          27,
+          -369
+        ],
+        [
+          29,
+          -433
+        ],
+        [
+          22,
+          -497
+        ],
+        [
+          12,
+          -559
+        ],
+        [
+          0,
+          -622
+        ],
+        [
+          0,
+          -690
+        ]
+      ],
+      "w": 6,
+      "id": "road:northwatch-road:25",
+      "surface": "earth",
+      "collision": "none",
+      "smooth": true
+    },
+    {
+      "name": "ashmarket-forge-street",
+      "pts": [
+        [
+          -510,
+          -220
+        ],
+        [
+          -510,
+          -250
+        ],
+        [
+          -510,
+          -295
+        ]
+      ],
+      "w": 7,
+      "id": "road:ashmarket-forge-street:26",
+      "surface": "earth",
+      "collision": "none",
+      "smooth": true
+    },
+    {
+      "name": "stoneford-armour-lane",
+      "pts": [
+        [
+          490,
+          140
+        ],
+        [
+          530,
+          140
+        ],
+        [
+          570,
+          140
+        ]
+      ],
+      "w": 7,
+      "id": "road:stoneford-armour-lane:27",
+      "surface": "earth",
+      "collision": "none",
+      "smooth": true
+    },
+    {
+      "name": "southmere-stable-lane",
+      "pts": [
+        [
+          -90,
+          620
+        ],
+        [
+          -90,
+          570
+        ],
+        [
+          -90,
+          530
+        ]
+      ],
+      "w": 6,
+      "id": "road:southmere-stable-lane:28",
+      "surface": "earth",
+      "collision": "none",
+      "smooth": true
+    },
+    {
+      "name": "northwatch-yard",
+      "pts": [
+        [
+          0,
+          -630
+        ],
+        [
+          0,
+          -690
+        ],
+        [
+          0,
+          -755
+        ]
+      ],
+      "w": 7,
+      "id": "road:northwatch-yard:29",
+      "surface": "earth",
+      "collision": "none",
+      "smooth": true
+    }
+  ],
+  "props": []
+}

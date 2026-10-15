@@ -47,6 +47,7 @@ table{width:100%;border-collapse:collapse;font-size:.9rem}th,td{text-align:left;
   <div id="accountActions" hidden><button class="tiny alt" id="signout">Sign out</button></div>
 <div id="app" hidden>
     <p class="small"><span id="who"></span> · <button class="tiny alt" id="refresh">Refresh</button> </p>
+    <section class="notice" id="workshop" hidden><h2 style="margin-top:0">Map Workshop</h2><p>Edit roads and assets, preview the terrain, and export your map. Drafts save on this computer.</p><a id="workshopLink" class="back-to-game" href="/map-editor/">Open Map Workshop</a><p class="small">https://buhurt-steel-and-tape.vercel.app/map-editor/</p><p id="workshopStatus" role="status" class="small"></p></section>
     <div id="trackerNote" class="notice" hidden></div>
     <div class="kpis" id="kpis"></div>
     <h2>Last 30 days</h2>
@@ -252,14 +253,37 @@ $('#exportCsv').onclick = () => {
   const link=document.createElement('a');link.href=blob;link.download='steel-tape-players.csv';link.click();setTimeout(()=>URL.revokeObjectURL(blob),1500);
 };
 
+const ownerUser = user => user?.id === '8c40a519-d188-4779-ab4c-88ef4b939e07' && String(user.email || '').trim().toLowerCase() === 'garrettrobson95@gmail.com' && Boolean(user.email_confirmed_at) && user.is_anonymous !== true;
+async function workshopSession() {
+  const { data: { session } } = await sb.auth.getSession();
+  const { data: { user }, error } = await sb.auth.getUser();
+  if (error || !session || !ownerUser(user)) throw Error('Sign in with the verified owner account.');
+  const r = await fetch('/api/map-workshop?asset=session', { method:'POST', credentials:'same-origin', headers:{ Authorization:'Bearer '+session.access_token } });
+  if (!r.ok) throw Error('Could not open the owner workshop. Sign in again and retry.');
+}
+async function clearWorkshop() {
+  $('#workshop').hidden = true;
+  await fetch('/api/map-workshop?asset=session', { method:'DELETE', credentials:'same-origin' }).catch(() => {});
+}
+$('#workshopLink').onclick = async event => {
+  event.preventDefault(); $('#workshopStatus').textContent = 'Verifying owner…';
+  try { await workshopSession(); location.assign('/map-editor/'); }
+  catch (e) { $('#workshopStatus').textContent = e.message; }
+};
 async function load() {
+  $('#app').hidden = true; $('#workshop').hidden = true;
   const { data: { session } } = await sb.auth.getSession();
   $('#accountActions').hidden = !session;
-  if (!session) { $('#login').hidden = false; $('#app').hidden = true; return; }
+  if (!session) { $('#login').hidden = false; await clearWorkshop(); return; }
+  const verified = await sb.auth.getUser();
+  if (verified.error || !ownerUser(verified.data.user)) { $('#login').hidden = false; $('#err').textContent = 'Only the verified owner account can enter.'; await clearWorkshop(); return; }
   const r = await fetch(URL_ + '/functions/v1/steeltape-admin', { headers: { Authorization: 'Bearer ' + session.access_token, apikey: KEY } });
   const d = await r.json().catch(() => ({}));
   if (!r.ok) { $('#login').hidden = false; $('#app').hidden = true; $('#err').textContent = d.error === 'not an admin' ? 'This account isn’t the owner. Sign out and use the owner account.' : 'Couldn’t load statistics: ' + (d.error || r.status) + '. Your login has NOT been signed out. Refresh to retry.'; return; }
   $('#login').hidden = true; $('#app').hidden = false; $('#who').textContent = d.email;
+  $('#workshop').hidden = false;
+  try { await workshopSession(); $('#workshopStatus').textContent = 'Owner access verified. Sessions last up to 15 minutes.'; }
+  catch (e) { $('#workshopStatus').textContent = e.message; }
   const P = d.players || [], S = d.stats || {};
   allTrackedPlayers = P;
   $('#trackerNote').hidden = Boolean(P.length || num(d.total));
@@ -297,7 +321,7 @@ async function load() {
 }
 $('#signin').onclick = async () => { $('#err').textContent = ''; const { error } = await sb.auth.signInWithPassword({ email: $('#email').value.trim(), password: $('#pass').value }); if (error) { $('#err').textContent = error.message; return; } load(); };
 $('#google').onclick = () => sb.auth.signInWithOAuth({ provider: 'google', options: { redirectTo: location.origin + location.pathname } });
-$('#signout').onclick = async () => { try { const result = await sb.auth.signOut(); if (result.error) throw result.error; $('#err').textContent = ''; await load(); } catch (e) { $('#err').textContent = 'Could not sign out. Please retry.'; } };
+$('#signout').onclick = async () => { try { await clearWorkshop(); const result = await sb.auth.signOut(); if (result.error) throw result.error; $('#err').textContent = ''; await load(); } catch (e) { $('#err').textContent = 'Could not sign out. Please retry.'; } };
 $('#refresh').onclick = load;
 sb.auth.onAuthStateChange(() => { setTimeout(() => load().catch(e => { $('#err').textContent = String(e); }), 0); });
 load();
