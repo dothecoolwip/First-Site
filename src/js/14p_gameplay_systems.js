@@ -20,6 +20,7 @@ function gameplayShape(x, z, hx, hz, yaw = 0, height = 2) {
 // Register footprints from the actual asset bounds, including parent transforms.
 // Open tents retain their front entrance and an interior passage.
 function gameplayPropFootprint(object, openTent = false) {
+  if(object?.userData.collision==='none')return;
   if (!object) return;
   object.updateWorldMatrix(true, true);
   const inverse = new THREE.Matrix4().copy(object.matrixWorld).invert(), bounds = new THREE.Box3();
@@ -61,6 +62,7 @@ function gameplayShapePush(P, radius) {
 }
 
 function gameplayGroundAt(x, z) {
+  const surface=worldMapSurfaceAt(x,z);if(surface!=null)return surface;
   // The raycast mesh is the continuous country below the castle. The raised
   // courtyards and ramps are separate meshes and use gy() for their floor.
   if (tierOf(x, z) || rampAt(x, z)) return gy(x, z);

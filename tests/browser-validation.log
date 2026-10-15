@@ -1,0 +1,21 @@
+
+Running 12 tests using 1 worker
+
+(node:30692) Warning: The 'NO_COLOR' env is ignored due to the 'FORCE_COLOR' env being set.
+(Use `node --trace-warnings ...` to show where the warning was created)
+  ok  1 [desktop] › tests\e2e\aim-crowd-fullscreen.spec.js:3:1 › manual head aim survives release and assistance scales across frame rates @touch (12.9s)
+  ok  2 [desktop] › tests\e2e\aim-crowd-fullscreen.spec.js:71:1 › fullscreen only follows explicit gestures and survives internal transitions @touch (8.0s)
+  ok  3 [desktop] › tests\e2e\aim-crowd-fullscreen.spec.js:90:1 › shared footprints keep civilian routes clear over three simulated minutes @touch (36.2s)
+  ok  4 [desktop] › tests\e2e\castle-collision.spec.js:4:1 › castle floors, cliff faces, and every ramp agree with player collision @touch (17.8s)
+  ok  5 [desktop] › tests\e2e\map-crown.spec.js:6:6 › map workshop retains editable assets, road pieces, vendor anchors, undo and import safety (51.8s)
+  ok  6 [desktop] › tests\e2e\map-crown.spec.js:30:1 › a complete verified crown win reviews crooked scores and retries its verdict without duplicate rewards (19.6s)
+  ok  7 [desktop] › tests\e2e\map-crown.spec.js:45:1 › crown NPC fights replay inputs, show holder appearance and interrupt safely @touch (8.4s)
+(node:18308) Warning: The 'NO_COLOR' env is ignored due to the 'FORCE_COLOR' env being set.
+(Use `node --trace-warnings ...` to show where the warning was created)
+  ok  8 [phone] › tests\e2e\aim-crowd-fullscreen.spec.js:3:1 › manual head aim survives release and assistance scales across frame rates @touch (11.8s)
+  ok  9 [phone] › tests\e2e\aim-crowd-fullscreen.spec.js:71:1 › fullscreen only follows explicit gestures and survives internal transitions @touch (7.5s)
+  ok 10 [phone] › tests\e2e\aim-crowd-fullscreen.spec.js:90:1 › shared footprints keep civilian routes clear over three simulated minutes @touch (27.4s)
+  ok 11 [phone] › tests\e2e\castle-collision.spec.js:4:1 › castle floors, cliff faces, and every ramp agree with player collision @touch (15.5s)
+  ok 12 [phone] › tests\e2e\map-crown.spec.js:45:1 › crown NPC fights replay inputs, show holder appearance and interrupt safely @touch (8.8s)
+
+  12 passed (3.9m)

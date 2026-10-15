@@ -7,6 +7,7 @@ const CITY_SITES = {
 };
 const STONEFORD_RIVER = { x0: 607.5, x1: 642.5, z0: -70, z1: 350 };
 function stonefordWaterBlocked(x, z, r = 0) {
+  if(worldMapSurfaceAt(x,z)!=null)return false;
   const W = STONEFORD_RIVER;
   return x > W.x0 - r && x < W.x1 + r && z > W.z0 - r && z < W.z1 + r;
 }

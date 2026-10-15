@@ -1,0 +1,37 @@
+# Map Workshop and Crooked Crowns
+
+Local candidate based on source `73d56c04b79d59224442e9880edf1bbfcdf9bd92` (v4.8). The separate Crown Herald and disarmed-duelist fixes are retained. This work does not deploy, publish, force updates, or change frozen v59.
+
+## Map Workshop
+
+From this checkout run `node tools/serve.cjs`, then open <http://127.0.0.1:8848/map-editor/> on a desktop browser. The editor uses the game’s terrain, assets and collision queries. Its separate preview runs only on localhost or file URLs, uses an in-memory game store, and disables cloud/lobby bootstrap. Editor drafts use `steel-tape-map-editor-v1`; they never replace player saves.
+
+Draw a road with successive clicks and press **Finish road** or Enter. Alternatively place straight, curve, tee, cross or end pieces. Roads snap to endpoints and an optional metre grid. Select road handles to reshape a path; reshaping a prefab converts its branches into editable paths. Select a piece to change its anchor, rotation, scale, width and earth/cobble/gravel surface. Undo/redo retains fifty edits. Crossings are split into connected route nodes and blended at junctions. Rendered roads, minimap paths and route planning share their sampled coordinates.
+
+Roads always use **No collision**. That setting does not remove other obstacles. Props can use **No collision** or **Solid obstacle**; the registered `map-bridge` prefab also supports **Walkable bridge surface**, with a raised deck and solid rails. An open tent keeps an entrance rather than becoming one filled bounding box. Collision overlays show footprints and blocked road segments. Select a road and use **Walk-test** to try reaching its end from the camera centre; failure remains visible. A route still needs valid gates, slopes and obstacle clearance.
+
+Supported vendor assemblies move their NPC, label, interaction anchor and associated footprints together. Vendors cannot be duplicated or deleted. Terrain, castle terraces, gates, arena boundaries and quest regions remain reference objects. The editor deliberately does not promise to relocate all scripted activities when moving arbitrary furniture.
+
+**Export map** produces versioned `world-map.json`. Review the layout warnings, replace `src/world-map.json` with the export, and run `python build.py`. The map and shared code participate in the game build hash. Keep exported edits in source control; a browser draft alone does not change the shipped game. Invalid imports are rejected and preserve the last valid draft. No wholesale town redesign was made: the existing thirty authored roads were converted, while generated castle routes remain available.
+
+## Crooked crown fights
+
+An authenticated player with the Royal writ and an eligible linked HACSA fighter challenges the King (male fighter) or Queen (female fighter) through the reachable Crown Herald. Test groups remain excluded by the existing roster endpoint. The defender uses the current holder’s latest saved appearance and loadout, even when that holder is offline. After a valid win the new holder becomes the NPC defender for future attempts. Existing holders are preserved; there is no reset, scheduled defense or original-ruler reclaim privilege.
+
+Each crown has one exclusive attempt reservation. A lease lasts 120 seconds and is renewed by accepted input or a paused-fight heartbeat every thirty seconds. Disconnecting or leaving an unfinished fight requires a new attempt. A fully submitted verdict can be checked again; title transfer and the stored server result are atomic and idempotent. A changed holder or expired attempt cannot claim a crown. The frontend deduplicates its purse award by attempt ID.
+
+Crown combat uses an isolated, seeded sixty-tick simulation shared with the server. Clients submit ordered input, not a claimed winner. The server replays every input and retains scoring events in the input journal, including overlooked defender fouls. The defender has readable attacks and feints plus signalled pocket sand, illegal trips, illegal strikes and royal stamina privileges. Biased marshal points affect the displayed score only. Final review corrects actual scoring before a title transfer; it does not retroactively punish the defender’s deliberate foul exemptions. Challenger fouls still earn cards, including strikes on a disarmed opponent. Ordinary combat, marshals and duel AI are unchanged.
+
+Head/Body/Low controls choose strike and guard zones. Strike, hold Guard and Disarm work alongside existing movement and look controls. First-person vertical aim also chooses the strike zone. Fight outcomes arise from the simulated actions and points; there is no forced loss or rolled winner. Client and server simulation versions include the core source hash and fail closed when mismatched.
+
+## Verification and staging
+
+Run `python build.py`; lint with `node tests/node_modules/eslint/bin/eslint.js build_cache/game.js`; run `node --test tests/core.test.cjs tests/server.test.mjs tests/unit/auth-return.test.cjs`; type-check with `npx deno check supabase/functions/steeltape-throne/index.ts`. Install the pinned browser tools from `tests/package.json` and local PostgreSQL test runtime from `test-support/package.json` when reproducing on a new machine. The current machine reuses its existing browser tooling through a junction; do not install into that junction.
+
+With the local server running, execute `node tests/node_modules/playwright/cli.js test --config tests/playwright.config.cjs tests/e2e/map-crown.spec.js`. Calibration: `node tests/calibrate.cjs 1000`. Reports live in `tests/`; failures retained during development are superseded by the final reports, not counted as passes.
+
+The SQL migration and Edge Function are prepared in `supabase/`. They have **not** been applied remotely. A future staging operator must use a separate Supabase staging project containing the existing game schema and authoritative initial holder accounts; never invent or reset holder IDs. Before any staging sign-in, configure `BOS_URL` and `BOS_KEY` in `src/js/13i_buhurtos.js` for that staging project, using its public publishable key, and rebuild. Apply `20261015000001_crooked_crown_attempts.sql`, deploy the function and the matching client build together, and validate real account/roster/save reads before any production promotion. The existing production schema was inspected read-only. Frozen v59 remains untouched.
+
+Local database tests use actual PostgreSQL via PGlite, including migration execution, permissions, retries and holder changes. PGlite serializes connections; genuine multi-connection contention still needs staging verification. Browser API fixtures validate UI and replay flow, not deployed Supabase authentication. No human crown playtest or physical Android test has been performed here. The automated win-rate target is evidence about one reproducible skilled bot policy, not a measured human win rate.
+
+Before release, record at least twenty skilled human attempts per division with seed, equipment, final score, result and comments about readable tells. Test physical Android landscape/portrait and desktop; measure performance during normal fights and a populated town. Test two real staging accounts attempting the same crown simultaneously, interrupted/expired attempts, a confirmed new holder defending offline, opted-out or ineligible links, delayed completion retries, and preservation of authentication and player saves. Promote only after those checks and explicit release authorization.

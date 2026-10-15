@@ -1,0 +1,318 @@
+{
+  "config": {
+    "argv": [
+      "C:\\Program Files\\nodejs\\node.exe",
+      "C:\\Users\\User\\Documents\\ChatGPT\\buhurt S&T\\sites\\map-crown-candidate\\tests\\node_modules\\playwright\\cli.js",
+      "test",
+      "--config",
+      "tests/playwright.config.cjs",
+      "tests/e2e/map-crown.spec.js"
+    ],
+    "configFile": "C:\\Users\\User\\Documents\\ChatGPT\\buhurt S&T\\sites\\map-crown-candidate\\tests\\playwright.config.cjs",
+    "rootDir": "C:/Users/User/Documents/ChatGPT/buhurt S&T/sites/map-crown-candidate/tests/e2e",
+    "failOnFlakyTests": false,
+    "forbidOnly": false,
+    "fullyParallel": false,
+    "globalSetup": null,
+    "globalTeardown": null,
+    "globalTimeout": 0,
+    "grep": {},
+    "grepInvert": null,
+    "maxFailures": 0,
+    "metadata": {
+      "actualWorkers": 1
+    },
+    "preserveOutput": "always",
+    "projects": [
+      {
+        "outputDir": "C:/Users/User/Documents/ChatGPT/buhurt S&T/sites/map-crown-candidate/tests/map-crown-results",
+        "repeatEach": 1,
+        "retries": 0,
+        "metadata": {
+          "actualWorkers": 1
+        },
+        "id": "desktop",
+        "name": "desktop",
+        "testDir": "C:/Users/User/Documents/ChatGPT/buhurt S&T/sites/map-crown-candidate/tests/e2e",
+        "testIgnore": [],
+        "testMatch": [
+          "**/*.@(spec|test).?(c|m)[jt]s?(x)"
+        ],
+        "timeout": 180000
+      },
+      {
+        "outputDir": "C:/Users/User/Documents/ChatGPT/buhurt S&T/sites/map-crown-candidate/tests/map-crown-results",
+        "repeatEach": 1,
+        "retries": 0,
+        "metadata": {
+          "actualWorkers": 1
+        },
+        "id": "phone",
+        "name": "phone",
+        "testDir": "C:/Users/User/Documents/ChatGPT/buhurt S&T/sites/map-crown-candidate/tests/e2e",
+        "testIgnore": [],
+        "testMatch": [
+          "**/*.@(spec|test).?(c|m)[jt]s?(x)"
+        ],
+        "timeout": 180000
+      }
+    ],
+    "filteredProjects": [
+      {
+        "grep": {},
+        "grepInvert": null,
+        "outputDir": "C:\\Users\\User\\Documents\\ChatGPT\\buhurt S&T\\sites\\map-crown-candidate\\tests\\map-crown-results",
+        "repeatEach": 1,
+        "retries": 0,
+        "metadata": {
+          "actualWorkers": 1
+        },
+        "name": "desktop",
+        "testDir": "C:\\Users\\User\\Documents\\ChatGPT\\buhurt S&T\\sites\\map-crown-candidate\\tests\\e2e",
+        "snapshotDir": "C:\\Users\\User\\Documents\\ChatGPT\\buhurt S&T\\sites\\map-crown-candidate\\tests\\e2e",
+        "testIgnore": [],
+        "testMatch": "**/*.@(spec|test).?(c|m)[jt]s?(x)",
+        "timeout": 180000,
+        "use": {
+          "headless": true,
+          "trace": "retain-on-failure",
+          "screenshot": "only-on-failure",
+          "launchOptions": {
+            "args": [
+              "--use-angle=d3d11",
+              "--ignore-gpu-blocklist",
+              "--autoplay-policy=no-user-gesture-required"
+            ]
+          },
+          "viewport": {
+            "width": 960,
+            "height": 540
+          }
+        },
+        "dependencies": [],
+        "ignoreSnapshots": false,
+        "__projectId": "desktop"
+      },
+      {
+        "grep": {},
+        "grepInvert": null,
+        "outputDir": "C:\\Users\\User\\Documents\\ChatGPT\\buhurt S&T\\sites\\map-crown-candidate\\tests\\map-crown-results",
+        "repeatEach": 1,
+        "retries": 0,
+        "metadata": {
+          "actualWorkers": 1
+        },
+        "name": "phone",
+        "testDir": "C:\\Users\\User\\Documents\\ChatGPT\\buhurt S&T\\sites\\map-crown-candidate\\tests\\e2e",
+        "snapshotDir": "C:\\Users\\User\\Documents\\ChatGPT\\buhurt S&T\\sites\\map-crown-candidate\\tests\\e2e",
+        "testIgnore": [],
+        "testMatch": "**/*.@(spec|test).?(c|m)[jt]s?(x)",
+        "timeout": 180000,
+        "use": {
+          "headless": true,
+          "trace": "retain-on-failure",
+          "screenshot": "only-on-failure",
+          "launchOptions": {
+            "args": [
+              "--use-angle=d3d11",
+              "--ignore-gpu-blocklist",
+              "--autoplay-policy=no-user-gesture-required"
+            ]
+          },
+          "viewport": {
+            "width": 844,
+            "height": 390
+          },
+          "isMobile": true,
+          "hasTouch": true
+        },
+        "dependencies": [],
+        "ignoreSnapshots": false,
+        "__projectId": "phone"
+      }
+    ],
+    "quiet": false,
+    "reporter": [
+      [
+        "list",
+        null
+      ],
+      [
+        "json",
+        {
+          "outputFile": "C:\\Users\\User\\Documents\\ChatGPT\\buhurt S&T\\sites\\map-crown-candidate\\tests\\map-crown-results.json"
+        }
+      ]
+    ],
+    "reportSlowTests": {
+      "max": 5,
+      "threshold": 300000
+    },
+    "shard": null,
+    "tags": [],
+    "updateSnapshots": "default",
+    "updateSourceMethod": "patch",
+    "version": "1.64.0",
+    "workers": 1,
+    "webServer": null
+  },
+  "suites": [
+    {
+      "title": "map-crown.spec.js",
+      "file": "map-crown.spec.js",
+      "column": 0,
+      "line": 0,
+      "specs": [
+        {
+          "title": "map workshop retains editable assets, road pieces, vendor anchors, undo and import safety",
+          "ok": true,
+          "tags": [],
+          "tests": [
+            {
+              "timeout": 180000,
+              "annotations": [],
+              "expectedStatus": "passed",
+              "projectId": "desktop",
+              "projectName": "desktop",
+              "results": [
+                {
+                  "workerIndex": 0,
+                  "parallelIndex": 0,
+                  "status": "passed",
+                  "duration": 54191,
+                  "errors": [],
+                  "stdout": [],
+                  "stderr": [],
+                  "retry": 0,
+                  "startTime": "2026-10-15T00:00:28.793Z",
+                  "annotations": [],
+                  "attachments": []
+                }
+              ],
+              "status": "expected"
+            }
+          ],
+          "id": "e4c939ee42d7167fe6c4-79c4d3c07cb8d6e1f1a8",
+          "file": "map-crown.spec.js",
+          "line": 6,
+          "column": 6
+        },
+        {
+          "title": "a complete verified crown win reviews crooked scores and retries its verdict without duplicate rewards",
+          "ok": true,
+          "tags": [],
+          "tests": [
+            {
+              "timeout": 180000,
+              "annotations": [],
+              "expectedStatus": "passed",
+              "projectId": "desktop",
+              "projectName": "desktop",
+              "results": [
+                {
+                  "workerIndex": 0,
+                  "parallelIndex": 0,
+                  "status": "passed",
+                  "duration": 19242,
+                  "errors": [],
+                  "stdout": [],
+                  "stderr": [],
+                  "retry": 0,
+                  "startTime": "2026-10-15T00:01:23.330Z",
+                  "annotations": [],
+                  "attachments": []
+                }
+              ],
+              "status": "expected"
+            }
+          ],
+          "id": "e4c939ee42d7167fe6c4-6c0041c4be82b9ce6a7e",
+          "file": "map-crown.spec.js",
+          "line": 30,
+          "column": 1
+        },
+        {
+          "title": "crown NPC fights replay inputs, show holder appearance and interrupt safely @touch",
+          "ok": true,
+          "tags": [
+            "touch"
+          ],
+          "tests": [
+            {
+              "timeout": 180000,
+              "annotations": [],
+              "expectedStatus": "passed",
+              "projectId": "desktop",
+              "projectName": "desktop",
+              "results": [
+                {
+                  "workerIndex": 0,
+                  "parallelIndex": 0,
+                  "status": "passed",
+                  "duration": 8226,
+                  "errors": [],
+                  "stdout": [],
+                  "stderr": [],
+                  "retry": 0,
+                  "startTime": "2026-10-15T00:01:42.614Z",
+                  "annotations": [],
+                  "attachments": []
+                }
+              ],
+              "status": "expected"
+            }
+          ],
+          "id": "e4c939ee42d7167fe6c4-73f0f60c1a53c42a4569",
+          "file": "map-crown.spec.js",
+          "line": 45,
+          "column": 1
+        },
+        {
+          "title": "crown NPC fights replay inputs, show holder appearance and interrupt safely @touch",
+          "ok": true,
+          "tags": [
+            "touch"
+          ],
+          "tests": [
+            {
+              "timeout": 180000,
+              "annotations": [],
+              "expectedStatus": "passed",
+              "projectId": "phone",
+              "projectName": "phone",
+              "results": [
+                {
+                  "workerIndex": 1,
+                  "parallelIndex": 0,
+                  "status": "passed",
+                  "duration": 13799,
+                  "errors": [],
+                  "stdout": [],
+                  "stderr": [],
+                  "retry": 0,
+                  "startTime": "2026-10-15T00:01:55.420Z",
+                  "annotations": [],
+                  "attachments": []
+                }
+              ],
+              "status": "expected"
+            }
+          ],
+          "id": "e4c939ee42d7167fe6c4-ad5414b84608c7b1c93f",
+          "file": "map-crown.spec.js",
+          "line": 45,
+          "column": 1
+        }
+      ]
+    }
+  ],
+  "errors": [],
+  "stats": {
+    "startTime": "2026-10-15T00:00:27.135Z",
+    "duration": 103244.397,
+    "expected": 4,
+    "skipped": 0,
+    "unexpected": 0,
+    "flaky": 0
+  }
+}

@@ -1,0 +1,27 @@
+{
+  "base": "73d56c04b79d59224442e9880edf1bbfcdf9bd92",
+  "build": "steel-tape-auth-aeab0a4c693b",
+  "calibration": {
+    "version": "crooked-crown-1-61d2d73a58dd",
+    "fights": 1280,
+    "wins": 153,
+    "rate": 0.11953125
+  },
+  "protectedModules": {
+    "src/js/09_input.js": "bd79d5d6360ef696536696655c3dc6cf5c3c66842f0900a4de8abf1a1e03ee89",
+    "src/js/13i_buhurtos.js": "464a5b15497982661bc512b89b8d29c3358f62c99a4c98abe49a7ec7479ed2b9",
+    "src/js/13ia_cloudsave.js": "dafef066ae460a873d7e9691dd74ca452d543685158efb1ffe2248252e48d367",
+    "src/js/13j_roster.js": "a8c6fa9fe0dcff2bf05335ada4b22b1efc6bfc188fe3aae16a6344318433269d",
+    "src/js/13ja_identity.js": "daae3143643d2b13f8672be27ce4b3c8d61f599767a34cce7a3e0d4a580da7ce",
+    "src/js/06_fighter.js": "4144742bc4135306da8e54b11a2e10f695bfc9dfefbf489b7d75a716522acc52",
+    "src/js/07_marshals.js": "81036d8e9a3a6d0d18ff6ff65a5443a133415509fd09c5b587555a851f437909",
+    "src/js/08_ai.js": "ae47233ade5e9357e3530f9272fb2f88c2c0b1762f6d0aa1f478e88605c57a50",
+    "src/js/11h_squires.js": "bc652502273f97fd9cb18e76c0e298243db638ad7b1aab9bf716088eada0f063"
+  },
+  "frozenV59": {
+    "version": "steel-tape-auth-14edf9973749",
+    "indexSha256": "9febc28a92bb24e885540d3c5265130201f442c4211be0f4be24179eb00834e0"
+  },
+  "remoteMutations": false,
+  "deployment": false
+}

@@ -1,0 +1,4 @@
+const Core=require('../supabase/functions/steeltape-throne/crown-core.js'),{policy}=require('./calibrate.cjs'),fs=require('fs');
+const rows=[],count=20;
+for(const player of Object.keys(Core.weapons))for(const defender of Object.keys(Core.weapons)){let wins=0;for(let seed=1;seed<=count;seed++){const s=Core.create(seed,{weapon:player},{weapon:defender});while(!s.done)Core.step(s,policy(s));wins+=s.winner===0;}rows.push({player,defender,count,wins,rate:wins/count});}
+const total=rows.reduce((n,r)=>n+r.count,0),wins=rows.reduce((n,r)=>n+r.wins,0);const result={simulation:Core.VERSION,total,wins,rate:wins/total,rows};fs.writeFileSync(__dirname+'/equipment-calibration.json',JSON.stringify(result,null,2));console.log({total,wins,rate:wins/total,min:Math.min(...rows.map(r=>r.rate)),max:Math.max(...rows.map(r=>r.rate))});

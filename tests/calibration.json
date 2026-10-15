@@ -1,0 +1,14 @@
+{
+  "simulation": "crooked-crown-1-61d2d73a58dd",
+  "policy": "skilled: reacts to visible windup after 14 ticks, changes attack zone, retreats to evade",
+  "count": 1000,
+  "wins": 43,
+  "draws": 0,
+  "winRate": 0.043,
+  "confidence95": [
+    0.03207848108830104,
+    0.057419304219659906
+  ],
+  "meanFightSeconds": 168.4874166666667,
+  "elapsedMs": 40677.1256
+}

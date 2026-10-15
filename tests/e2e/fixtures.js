@@ -6,7 +6,7 @@ const base = require('playwright/test');
 
 const ROOT = path.join(__dirname, '..');
 const THREE_JS = fs.readFileSync(path.join(ROOT, 'three.min.js'));
-const URL = process.env.STEELTAPE_TEST_URL || 'file://' + path.join(ROOT, 'index.html');
+const URL = process.env.STEELTAPE_TEST_URL || require('url').pathToFileURL(path.join(ROOT, '..', 'dist', 'index.html')).href;
 const FONT_DIR = '/home/claude/fonts/gf';
 
 async function route(page) {

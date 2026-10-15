@@ -139,6 +139,7 @@ function townResolveApproaches() {
   }
 }
 function buildTown() {
+  worldMapReset();
   gameplayStop();
   if (TOWN.root) W3.scene.remove(TOWN.root);
   TOWN.root = new THREE.Group(); W3.scene.add(TOWN.root); TOWN.stalls = []; TOWN.obst = []; TOWN.home = null; TOWN.statue = null; SPECT.seated = [];
@@ -147,8 +148,10 @@ function buildTown() {
   const RX = LIST.W / 2 + 4, RZ = LIST.L / 2 + 4;
   for (const [x, z] of [[-RX - 9, -10], [-RX - 10, 4], [-RX - 9, 16], [RX + 9, -14], [RX + 10, 2], [RX + 9, 15], [-8, -RZ - 10], [9, -RZ - 10]]) TOWN.obst.push({ x, z, r: 2.7 });
   for (const V of VENDORS) if (!V.custom) buildStall(V);
-  buildSpecialVendors(); buildWorld(); buildSpawnBoards(); navBuild(); buildGatherNodes(TOWN.root); buildSecrets(TOWN.root); navBuild(); realmCells();
+  buildSpecialVendors(); buildWorld(); buildSpawnBoards(); navBuild(); buildGatherNodes(TOWN.root); buildSecrets(TOWN.root); navBuild();
   buildHome(); buildStatue(); buildAvatar(); buildMyPet(); buildWaypoint(); buildAnimals(); buildArenaSeats(); buildDeepMine(); navBuild(); squireBuildTown();
+  if (MAP_WORLD.data.props.length) worldMapApply();
+  realmCells();
   townResolveApproaches();
   folkSpots(); // approaches and reservations use the final world obstacle set
   gameplayStart();

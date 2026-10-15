@@ -1,0 +1,2 @@
+npm notice run npx
+npm notice run deno check supabase/functions/steeltape-throne/index.ts

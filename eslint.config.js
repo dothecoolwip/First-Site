@@ -8,7 +8,7 @@ const browser = ['window', 'document', 'navigator', 'location', 'history', 'scre
   'PointerEvent', 'ResizeObserver', 'MutationObserver', 'IntersectionObserver', 'addEventListener', 'removeEventListener', 'alert', 'confirm', 'caches', 'self',
   'Response', 'Request', 'Headers', 'DOMParser', 'XMLSerializer', 'AbortController', 'crypto', 'indexedDB', 'Notification', 'visualViewport', 'ClipboardItem', 'Path2D'];
 const data = ['THREE', 'SFX_B64', 'UAL_GLB', 'GLTFX', 'SkelUtils', 'SFX_FILES', 'ASSET_GEO', 'FANTASY_GEO', 'VILLAGE_GEO', 'KENNEY_GEO', 'PACK_GEO', 'DECOR_GEO', 'DECOR_META', 'OUTFIT_GEO', 'HAIR_GEO', 'UBC_HEAD_GEO', 'WSKIN_GEO', 'REALM_GEO', 'ANIMAL_GLB', 'CASTLE_GEO', 'VFX_IMG', 'LIBRARY_DATA', 'SAT', 'YUKA', 'CANNON', 'RAPIER', 'BVH'];
-const globals = Object.fromEntries([...browser, ...data].map(k => [k, 'readonly']));
+const globals = Object.fromEntries([...browser, ...data, 'module'].map(k => [k, 'readonly']));
 module.exports = [{
   files: ['build_cache/game.js'],
   languageOptions: { ecmaVersion: 2022, sourceType: 'script', globals },

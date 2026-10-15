@@ -64,6 +64,7 @@ function realmHeight(x, z) {
   return h;
 }
 function gy(x, z) {
+  const surface=worldMapSurfaceAt(x,z);if(surface!=null)return surface;
   if (z > HILL_T[0].cz + HILL_T[0].rz + 1) return realmHeight(x, z);
   const rp = rampAt(x, z); if (rp) return HILL_T[rp.ramp.k - 1].h + HILL.rise * rp.t;
   const k = tierOf(x, z); return k ? HILL_T[k - 1].h : realmHeight(x, z);

@@ -208,51 +208,14 @@ function realmGround(R, x0, x1, z0, z1, col, tex, y) {
   const g = mk(R, geo, lmat({ map: tex === false ? null : venueTex(tex || 'path'), alphaMap: realmEdgeMask('patch'), transparent: true, depthWrite: false, color: col, roughness: 1, side: THREE.DoubleSide }), cx, 0, cz, false);
   g.receiveShadow = true; (TOWN.mapRects = TOWN.mapRects || []).push([x0, x1, z0, z1, col]); return g;
 }
-function roadPath(Rd) {
-  if (Rd.path) return Rd.path;
-  // Keep the hill ramps and streets exact: their edges must track walls and
-  // gates. The earth roads can turn gradually without losing their endpoints.
-  if (/^(street|yard|ramp|t[234])/.test(Rd.name) || Rd.pts.length < 3) return Rd.path = Rd.pts;
-  const pts = Rd.pts, path = [pts[0]];
-  for (let i = 1; i < pts.length - 1; i++) {
-    const prev = pts[i - 1], at = pts[i], next = pts[i + 1];
-    const ax = at[0] - prev[0], az = at[1] - prev[1], bx = next[0] - at[0], bz = next[1] - at[1];
-    const la = Math.hypot(ax, az), lb = Math.hypot(bx, bz);
-    if (la < 0.01 || lb < 0.01) { path.push(at); continue; }
-    const openCountry = /^(country|ridge|riverford|lakeside|northern)/.test(Rd.name);
-    const reach = Math.min(openCountry ? 13 : 6, la * (openCountry ? 0.3 : 0.22), lb * (openCountry ? 0.3 : 0.22));
-    const a = [at[0] - ax / la * reach, at[1] - az / la * reach];
-    const b = [at[0] + bx / lb * reach, at[1] + bz / lb * reach];
-    path.push(a);
-    for (const t of [0.25, 0.5, 0.75]) { const u = 1 - t; path.push([u * u * a[0] + 2 * u * t * at[0] + t * t * b[0], u * u * a[1] + 2 * u * t * at[1] + t * t * b[1]]); }
-    path.push(b);
-  }
-  path.push(pts[pts.length - 1]);
-  return Rd.path = path;
+function roadPath(Rd) { return Rd.path || (Rd.path = MapCore.sample(Rd)); }
+function realmRoad(R, pts, w, surface='earth') {
+  const key='road:'+surface+':'+w, m=TMAT[key]||(TMAT[key]=lmat({map:venueTex(surface==='cobble'?'cobble':'path'),alphaMap:realmEdgeMask('road'),transparent:true,depthWrite:false,color:surface==='gravel'?'#a49b88':'#91876d',roughness:1,side:THREE.DoubleSide}));
+  const q=MapCore.ribbon(pts,w,gy),g=new THREE.BufferGeometry();g.setAttribute('position',new THREE.Float32BufferAttribute(q.position,3));g.setAttribute('uv',new THREE.Float32BufferAttribute(q.uv,2));g.setIndex(q.index);g.computeVertexNormals();
+  const mesh=mk(R,g,m,0,0,0,false);mesh.receiveShadow=true;mesh.userData.collision='none';
+  (TOWN.mapRoadMeshes=TOWN.mapRoadMeshes||[]).push(mesh);(TOWN.mapRoads=TOWN.mapRoads||[]).push({pts,w});
 }
-function realmRoad(R, pts, w) {
-  const m = TMAT['road' + w] || (TMAT['road' + w] = lmat({ map: venueTex('path'), alphaMap: realmEdgeMask('road'), transparent: true, depthWrite: false, color: '#91876d', roughness: 1, side: THREE.DoubleSide }));
-  // A single ribbon shares its corner vertices. Independent strips left visible
-  // square gaps and overlaps at every bend, especially on the country circuit.
-  const pos = [], uv = [], idx = []; let distance = 0;
-  for (let i = 0; i < pts.length - 1; i++) {
-    const [x0, z0] = pts[i], [x1, z1] = pts[i + 1], L = Math.hypot(x1 - x0, z1 - z0);
-    if (L < 0.01) continue;
-    const n = Math.max(1, Math.ceil(L / 2.5));
-    for (let j = i ? 1 : 0; j <= n; j++) {
-      const t = j / n, x = x0 + (x1 - x0) * t, z = z0 + (z1 - z0) * t;
-      const before = pts[Math.max(0, i - (j === 0 ? 1 : 0))], after = pts[Math.min(pts.length - 1, i + (j === n ? 2 : 1))];
-      const tx = after[0] - before[0], tz = after[1] - before[1], len = Math.hypot(tx, tz) || 1;
-      const nx = tz / len, nz = -tx / len, v = (distance + t * L) / 7;
-      for (const side of [-1, 1]) { const px = x + nx * side * w / 2, pz = z + nz * side * w / 2; pos.push(px, gy(px, pz) + 0.048, pz); uv.push(side < 0 ? 0 : 1, v); }
-      if (pos.length > 6) { const k = pos.length / 3 - 4; idx.push(k, k + 2, k + 1, k + 1, k + 2, k + 3); }
-    }
-    distance += L;
-  }
-  const g = new THREE.BufferGeometry(); g.setAttribute('position', new THREE.Float32BufferAttribute(pos, 3)); g.setAttribute('uv', new THREE.Float32BufferAttribute(uv, 2)); g.setIndex(idx); g.computeVertexNormals();
-  const s = mk(R, g, m, 0, 0, 0, false); s.receiveShadow = true;
-  (TOWN.mapRoads = TOWN.mapRoads || []).push({ pts, w });
-}
+
 // a stone-and-timber building: stone base, plastered timber upper floor, a pitched roof; door on the +z side
 function realmHall(R, x, z, w, d, h, ry, o) {
   o = o || {}; const g = new THREE.Group(); g.position.set(x, gy(x, z), z); g.rotation.y = ry || 0; R.add(g);
@@ -436,7 +399,9 @@ function buildRealm(R) {
   const O = TOWN.obst, add = (key, x, z, ry, s, r) => { const p = kpiece(R, key, x, gy(x, z), z, ry || 0, s || 1); if (r) O.push({ x, z, r }); return p; };
   const face = (x, z, tx, tz) => Math.atan2(tx - x, tz - z);
   // roads, then signposts where they leave the fairground
-  for (const Rd of ROADS) if (!Rd.navOnly) realmRoad(R, roadPath(Rd), Rd.w);
+  worldMapRoads();
+  for (const Rd of ROADS) if (!Rd.navOnly) realmRoad(R, roadPath(Rd), Rd.w, Rd.surface);
+  worldMapJunctions(R);
   signpost(R, 5, -28, 0, [['CASTLE ↑', 0], ['FAIRGROUND ↓', Math.PI]]);
   signpost(R, -56, 4, -Math.PI / 2, [['THE OLD WOODS', -Math.PI / 2], ['FAIRGROUND', Math.PI / 2]]);
   signpost(R, 56, 10, Math.PI / 2, [['MIRROR LAKE', Math.PI / 2], ['FAIRGROUND', -Math.PI / 2]]);
@@ -681,6 +646,7 @@ function lakeBlocked(x, z, r) {
   return Math.hypot((x - LAKE.x) / (LAKE.rx + r), (z - LAKE.z) / (LAKE.rz + r)) < 1;
 }
 function lakePush(P, r) {
+  if(worldMapSurfaceAt(P.x,P.z)!=null)return;
   const dx = P.x - LAKE.x, dz = P.z - LAKE.z;
   const d = Math.hypot(dx / (LAKE.rx + r), dz / (LAKE.rz + r));
   if (d >= 1) return;

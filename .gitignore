@@ -2,3 +2,9 @@ site-roads-stage/
 site-roads*.tar.gz
 
 build_cache/
+test-support/node_modules/
+tests/node_modules/
+tests/map-crown-results/
+tests/editor-results/
+review/*.tar.gz
+review/*.patch

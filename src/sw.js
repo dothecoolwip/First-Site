@@ -13,7 +13,7 @@ self.addEventListener('fetch', e => {
   }
   // The owner dashboard includes authentication state. Never serve an obsolete admin
   // bundle out of the PWA's cache, and never replace a failed dashboard load with game HTML.
-  if (url.origin === self.location.origin && /^\/admin(?:[.\/-]|$)/.test(url.pathname)) {
+  if (url.origin === self.location.origin && /^(?:\/admin(?:[.\/-]|$)|\/map-editor(?:\/|$)|\/api\/map-workshop(?:\/|$))/.test(url.pathname)) {
     e.respondWith(fetch(e.request, { cache: 'no-store' }).catch(() =>
       new Response('Admin dashboard is unavailable offline. Reconnect and reload.', {
         status: 503, headers: { 'Content-Type': 'text/plain; charset=utf-8', 'Cache-Control': 'no-store' }

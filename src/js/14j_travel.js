@@ -149,9 +149,9 @@ function routeSafe(sx, sz, path) {
 const ROADNET = { nodes: [], adj: [] };
 function roadNetBuild() {
   if (ROADNET.nodes.length) return;
-  const node = (x, z) => { let i = ROADNET.nodes.findIndex(n => Math.hypot(n[0] - x, n[1] - z) < 3); if (i < 0) { i = ROADNET.nodes.length; ROADNET.nodes.push([x, z]); ROADNET.adj.push([]); } return i; };
+  const node = (x, z) => { let i = ROADNET.nodes.findIndex(n => Math.hypot(n[0] - x, n[1] - z) < .05); if (i < 0) { i = ROADNET.nodes.length; ROADNET.nodes.push([x, z]); ROADNET.adj.push([]); } return i; };
   const link = (a, b, local) => { if (a === b) return; const d = Math.hypot(ROADNET.nodes[a][0] - ROADNET.nodes[b][0], ROADNET.nodes[a][1] - ROADNET.nodes[b][1]) * (local ? 1.3 : 1); if (!ROADNET.adj[a].some(e => e[0] === b)) { ROADNET.adj[a].push([b, d, !!local]); ROADNET.adj[b].push([a, d, !!local]); } };
-  for (const R of ROADS) { let prev = null; for (const [x, z] of R.pts) { const i = node(x, z); if (prev != null) link(prev, i); prev = i; } }
+  for (const edge of MapCore.network(ROADS)) link(node(...edge.a),node(...edge.b));
   // the roads meet at the fairground's edge; between those ends the way is found locally round the stalls and the dome
   for (const [a, b] of [[[0, -24], [-52, -2]], [[0, -24], [52, 6]], [[-52, -2], [-16, 70]], [[52, 6], [0, 70]], [[0, 70], [-16, 70]]]) { const i = node(a[0], a[1]), j = node(b[0], b[1]); link(i, j, true); }
 }

@@ -20,7 +20,7 @@ function cliffAt(x, z, r) {
   return Math.abs(gy(x + d, z) - y) > 1.2 || Math.abs(gy(x - d, z) - y) > 1.2 || Math.abs(gy(x, z + d) - y) > 1.2 || Math.abs(gy(x, z - d) - y) > 1.2;
 }
 function navBlocked(x, z, r) {
-  if (lakeBlocked(x, z, r)) return true;
+  if (worldMapSurfaceAt(x,z)==null && lakeBlocked(x, z, r)) return true;
   if (stonefordWaterBlocked(x, z, r)) return true;
   if (arenaBlocked(x, z, r)) return true;
   if (typeof gateBlocked === 'function' && gateBlocked(x, z, r)) return true;

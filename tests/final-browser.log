@@ -1,0 +1,13 @@
+
+Running 4 tests using 1 worker
+
+(node:40860) Warning: The 'NO_COLOR' env is ignored due to the 'FORCE_COLOR' env being set.
+(Use `node --trace-warnings ...` to show where the warning was created)
+  ok 1 [desktop] › tests\e2e\map-crown.spec.js:6:6 › map workshop retains editable assets, road pieces, vendor anchors, undo and import safety (54.2s)
+  ok 2 [desktop] › tests\e2e\map-crown.spec.js:30:1 › a complete verified crown win reviews crooked scores and retries its verdict without duplicate rewards (19.2s)
+  ok 3 [desktop] › tests\e2e\map-crown.spec.js:45:1 › crown NPC fights replay inputs, show holder appearance and interrupt safely @touch (8.2s)
+(node:27044) Warning: The 'NO_COLOR' env is ignored due to the 'FORCE_COLOR' env being set.
+(Use `node --trace-warnings ...` to show where the warning was created)
+  ok 4 [phone] › tests\e2e\map-crown.spec.js:45:1 › crown NPC fights replay inputs, show holder appearance and interrupt safely @touch (13.8s)
+
+  4 passed (1.7m)

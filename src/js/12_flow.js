@@ -1215,6 +1215,7 @@ function dropPhoto() { if (!G.photo) return; try { stopReplay(); } catch (e) {} 
 function refreshDaily() { dailyState(); dailyPlan(); }
 
 function toTitle(opts) {
+  if (typeof CROWN!=='undefined' && CROWN.active) { const id=CROWN.id; crownStop(); thronePost({action:'abandon',id}).catch(()=>{}); }
 
   persistPlayerKit();
 

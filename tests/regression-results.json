@@ -1,0 +1,638 @@
+{
+  "config": {
+    "argv": [
+      "C:\\Program Files\\nodejs\\node.exe",
+      "C:\\Users\\User\\Documents\\ChatGPT\\buhurt S&T\\sites\\map-crown-candidate\\tests\\node_modules\\playwright\\cli.js",
+      "test",
+      "--config",
+      "tests/playwright.config.cjs",
+      "tests/e2e/map-crown.spec.js",
+      "tests/e2e/aim-crowd-fullscreen.spec.js",
+      "tests/e2e/castle-collision.spec.js",
+      "--grep",
+      "map workshop|complete verified|crown NPC|manual head aim|fullscreen only|shared footprints|castle floors"
+    ],
+    "configFile": "C:\\Users\\User\\Documents\\ChatGPT\\buhurt S&T\\sites\\map-crown-candidate\\tests\\playwright.config.cjs",
+    "rootDir": "C:/Users/User/Documents/ChatGPT/buhurt S&T/sites/map-crown-candidate/tests/e2e",
+    "failOnFlakyTests": false,
+    "forbidOnly": false,
+    "fullyParallel": false,
+    "globalSetup": null,
+    "globalTeardown": null,
+    "globalTimeout": 0,
+    "grep": {},
+    "grepInvert": null,
+    "maxFailures": 0,
+    "metadata": {
+      "actualWorkers": 1
+    },
+    "preserveOutput": "always",
+    "projects": [
+      {
+        "outputDir": "C:/Users/User/Documents/ChatGPT/buhurt S&T/sites/map-crown-candidate/tests/map-crown-results",
+        "repeatEach": 1,
+        "retries": 0,
+        "metadata": {
+          "actualWorkers": 1
+        },
+        "id": "desktop",
+        "name": "desktop",
+        "testDir": "C:/Users/User/Documents/ChatGPT/buhurt S&T/sites/map-crown-candidate/tests/e2e",
+        "testIgnore": [],
+        "testMatch": [
+          "**/*.@(spec|test).?(c|m)[jt]s?(x)"
+        ],
+        "timeout": 180000
+      },
+      {
+        "outputDir": "C:/Users/User/Documents/ChatGPT/buhurt S&T/sites/map-crown-candidate/tests/map-crown-results",
+        "repeatEach": 1,
+        "retries": 0,
+        "metadata": {
+          "actualWorkers": 1
+        },
+        "id": "phone",
+        "name": "phone",
+        "testDir": "C:/Users/User/Documents/ChatGPT/buhurt S&T/sites/map-crown-candidate/tests/e2e",
+        "testIgnore": [],
+        "testMatch": [
+          "**/*.@(spec|test).?(c|m)[jt]s?(x)"
+        ],
+        "timeout": 180000
+      }
+    ],
+    "filteredProjects": [
+      {
+        "grep": {},
+        "grepInvert": null,
+        "outputDir": "C:\\Users\\User\\Documents\\ChatGPT\\buhurt S&T\\sites\\map-crown-candidate\\tests\\map-crown-results",
+        "repeatEach": 1,
+        "retries": 0,
+        "metadata": {
+          "actualWorkers": 1
+        },
+        "name": "desktop",
+        "testDir": "C:\\Users\\User\\Documents\\ChatGPT\\buhurt S&T\\sites\\map-crown-candidate\\tests\\e2e",
+        "snapshotDir": "C:\\Users\\User\\Documents\\ChatGPT\\buhurt S&T\\sites\\map-crown-candidate\\tests\\e2e",
+        "testIgnore": [],
+        "testMatch": "**/*.@(spec|test).?(c|m)[jt]s?(x)",
+        "timeout": 180000,
+        "use": {
+          "headless": true,
+          "trace": "retain-on-failure",
+          "screenshot": "only-on-failure",
+          "launchOptions": {
+            "args": [
+              "--use-angle=d3d11",
+              "--ignore-gpu-blocklist",
+              "--autoplay-policy=no-user-gesture-required"
+            ]
+          },
+          "viewport": {
+            "width": 960,
+            "height": 540
+          }
+        },
+        "dependencies": [],
+        "ignoreSnapshots": false,
+        "__projectId": "desktop"
+      },
+      {
+        "grep": {},
+        "grepInvert": null,
+        "outputDir": "C:\\Users\\User\\Documents\\ChatGPT\\buhurt S&T\\sites\\map-crown-candidate\\tests\\map-crown-results",
+        "repeatEach": 1,
+        "retries": 0,
+        "metadata": {
+          "actualWorkers": 1
+        },
+        "name": "phone",
+        "testDir": "C:\\Users\\User\\Documents\\ChatGPT\\buhurt S&T\\sites\\map-crown-candidate\\tests\\e2e",
+        "snapshotDir": "C:\\Users\\User\\Documents\\ChatGPT\\buhurt S&T\\sites\\map-crown-candidate\\tests\\e2e",
+        "testIgnore": [],
+        "testMatch": "**/*.@(spec|test).?(c|m)[jt]s?(x)",
+        "timeout": 180000,
+        "use": {
+          "headless": true,
+          "trace": "retain-on-failure",
+          "screenshot": "only-on-failure",
+          "launchOptions": {
+            "args": [
+              "--use-angle=d3d11",
+              "--ignore-gpu-blocklist",
+              "--autoplay-policy=no-user-gesture-required"
+            ]
+          },
+          "viewport": {
+            "width": 844,
+            "height": 390
+          },
+          "isMobile": true,
+          "hasTouch": true
+        },
+        "dependencies": [],
+        "ignoreSnapshots": false,
+        "__projectId": "phone"
+      }
+    ],
+    "quiet": false,
+    "reporter": [
+      [
+        "list",
+        null
+      ],
+      [
+        "json",
+        {
+          "outputFile": "C:\\Users\\User\\Documents\\ChatGPT\\buhurt S&T\\sites\\map-crown-candidate\\tests\\map-crown-results.json"
+        }
+      ]
+    ],
+    "reportSlowTests": {
+      "max": 5,
+      "threshold": 300000
+    },
+    "shard": null,
+    "tags": [],
+    "updateSnapshots": "default",
+    "updateSourceMethod": "patch",
+    "version": "1.64.0",
+    "workers": 1,
+    "webServer": null
+  },
+  "suites": [
+    {
+      "title": "aim-crowd-fullscreen.spec.js",
+      "file": "aim-crowd-fullscreen.spec.js",
+      "column": 0,
+      "line": 0,
+      "specs": [
+        {
+          "title": "manual head aim survives release and assistance scales across frame rates @touch",
+          "ok": true,
+          "tags": [
+            "touch"
+          ],
+          "tests": [
+            {
+              "timeout": 180000,
+              "annotations": [],
+              "expectedStatus": "passed",
+              "projectId": "desktop",
+              "projectName": "desktop",
+              "results": [
+                {
+                  "workerIndex": 0,
+                  "parallelIndex": 0,
+                  "status": "passed",
+                  "duration": 12916,
+                  "errors": [],
+                  "stdout": [],
+                  "stderr": [],
+                  "retry": 0,
+                  "startTime": "2026-10-14T23:55:10.912Z",
+                  "annotations": [],
+                  "attachments": []
+                }
+              ],
+              "status": "expected"
+            }
+          ],
+          "id": "78f5b8ac0fa003286212-d4941be3356f3c4c731d",
+          "file": "aim-crowd-fullscreen.spec.js",
+          "line": 3,
+          "column": 1
+        },
+        {
+          "title": "fullscreen only follows explicit gestures and survives internal transitions @touch",
+          "ok": true,
+          "tags": [
+            "touch"
+          ],
+          "tests": [
+            {
+              "timeout": 180000,
+              "annotations": [],
+              "expectedStatus": "passed",
+              "projectId": "desktop",
+              "projectName": "desktop",
+              "results": [
+                {
+                  "workerIndex": 0,
+                  "parallelIndex": 0,
+                  "status": "passed",
+                  "duration": 7966,
+                  "errors": [],
+                  "stdout": [],
+                  "stderr": [],
+                  "retry": 0,
+                  "startTime": "2026-10-14T23:55:24.245Z",
+                  "annotations": [],
+                  "attachments": []
+                }
+              ],
+              "status": "expected"
+            }
+          ],
+          "id": "78f5b8ac0fa003286212-72a76f020cf61fba10d2",
+          "file": "aim-crowd-fullscreen.spec.js",
+          "line": 71,
+          "column": 1
+        },
+        {
+          "title": "shared footprints keep civilian routes clear over three simulated minutes @touch",
+          "ok": true,
+          "tags": [
+            "touch"
+          ],
+          "tests": [
+            {
+              "timeout": 180000,
+              "annotations": [],
+              "expectedStatus": "passed",
+              "projectId": "desktop",
+              "projectName": "desktop",
+              "results": [
+                {
+                  "workerIndex": 0,
+                  "parallelIndex": 0,
+                  "status": "passed",
+                  "duration": 36249,
+                  "errors": [],
+                  "stdout": [],
+                  "stderr": [],
+                  "retry": 0,
+                  "startTime": "2026-10-14T23:55:32.250Z",
+                  "annotations": [],
+                  "attachments": [
+                    {
+                      "name": "crowd-simulation",
+                      "contentType": "application/json",
+                      "body": "ewogICJjb3VudCI6IDQ4LAogICJzaGFwZXMiOiA4NCwKICAicGVuZXRyYXRpb25zIjogMCwKICAic2VhdFBlbmV0cmF0aW9ucyI6IDAsCiAgInNlYXRXYWxraW5nIjogMjY4NzEsCiAgIndhbGtpbmciOiAzNjk2NSwKICAibW92ZWQiOiA0MSwKICAicnVudGltZU1zIjogMTkwMjQsCiAgInNwYXduU2FmZSI6IHRydWUsCiAgInJvbGVzIjogWwogICAgInNtaXRoIiwKICAgICJndWFyZCIsCiAgICAiZ2F0ZWd1YXJkIiwKICAgICJnYXJkZW5lciIsCiAgICAidG93bnMiLAogICAgImtpZCIsCiAgICAiZmFuIiwKICAgICJ2aXNpdG9yIiwKICAgICJ3YWxrZXIiCiAgXSwKICAiYmFyYmVyQXBwcm9hY2giOiB0cnVlLAogICJwbGF5ZXJBaXNsZSI6IHRydWUKfQ=="
+                    }
+                  ]
+                }
+              ],
+              "status": "expected"
+            }
+          ],
+          "id": "78f5b8ac0fa003286212-d17df25736edb2d8c4fb",
+          "file": "aim-crowd-fullscreen.spec.js",
+          "line": 90,
+          "column": 1
+        },
+        {
+          "title": "manual head aim survives release and assistance scales across frame rates @touch",
+          "ok": true,
+          "tags": [
+            "touch"
+          ],
+          "tests": [
+            {
+              "timeout": 180000,
+              "annotations": [],
+              "expectedStatus": "passed",
+              "projectId": "phone",
+              "projectName": "phone",
+              "results": [
+                {
+                  "workerIndex": 1,
+                  "parallelIndex": 0,
+                  "status": "passed",
+                  "duration": 11795,
+                  "errors": [],
+                  "stdout": [],
+                  "stderr": [],
+                  "retry": 0,
+                  "startTime": "2026-10-14T23:57:49.512Z",
+                  "annotations": [],
+                  "attachments": []
+                }
+              ],
+              "status": "expected"
+            }
+          ],
+          "id": "78f5b8ac0fa003286212-59162dddc25611d54b53",
+          "file": "aim-crowd-fullscreen.spec.js",
+          "line": 3,
+          "column": 1
+        },
+        {
+          "title": "fullscreen only follows explicit gestures and survives internal transitions @touch",
+          "ok": true,
+          "tags": [
+            "touch"
+          ],
+          "tests": [
+            {
+              "timeout": 180000,
+              "annotations": [],
+              "expectedStatus": "passed",
+              "projectId": "phone",
+              "projectName": "phone",
+              "results": [
+                {
+                  "workerIndex": 1,
+                  "parallelIndex": 0,
+                  "status": "passed",
+                  "duration": 7471,
+                  "errors": [],
+                  "stdout": [],
+                  "stderr": [],
+                  "retry": 0,
+                  "startTime": "2026-10-14T23:58:01.761Z",
+                  "annotations": [],
+                  "attachments": []
+                }
+              ],
+              "status": "expected"
+            }
+          ],
+          "id": "78f5b8ac0fa003286212-e3aec4d714d584759b93",
+          "file": "aim-crowd-fullscreen.spec.js",
+          "line": 71,
+          "column": 1
+        },
+        {
+          "title": "shared footprints keep civilian routes clear over three simulated minutes @touch",
+          "ok": true,
+          "tags": [
+            "touch"
+          ],
+          "tests": [
+            {
+              "timeout": 180000,
+              "annotations": [],
+              "expectedStatus": "passed",
+              "projectId": "phone",
+              "projectName": "phone",
+              "results": [
+                {
+                  "workerIndex": 1,
+                  "parallelIndex": 0,
+                  "status": "passed",
+                  "duration": 27444,
+                  "errors": [],
+                  "stdout": [],
+                  "stderr": [],
+                  "retry": 0,
+                  "startTime": "2026-10-14T23:58:09.273Z",
+                  "annotations": [],
+                  "attachments": [
+                    {
+                      "name": "crowd-simulation",
+                      "contentType": "application/json",
+                      "body": "ewogICJjb3VudCI6IDI4LAogICJzaGFwZXMiOiA4NCwKICAicGVuZXRyYXRpb25zIjogMCwKICAic2VhdFBlbmV0cmF0aW9ucyI6IDAsCiAgInNlYXRXYWxraW5nIjogMTU1NjksCiAgIndhbGtpbmciOiAxOTI5NCwKICAibW92ZWQiOiAyNiwKICAicnVudGltZU1zIjogMTI2NjUuNDAwMDAwMDM1NzYzLAogICJzcGF3blNhZmUiOiB0cnVlLAogICJyb2xlcyI6IFsKICAgICJzbWl0aCIsCiAgICAiZ3VhcmQiLAogICAgImdhdGVndWFyZCIsCiAgICAiZ2FyZGVuZXIiLAogICAgInRvd25zIiwKICAgICJraWQiLAogICAgInZpc2l0b3IiLAogICAgIndhbGtlciIsCiAgICAiZmFuIgogIF0sCiAgImJhcmJlckFwcHJvYWNoIjogdHJ1ZSwKICAicGxheWVyQWlzbGUiOiB0cnVlCn0="
+                    }
+                  ]
+                }
+              ],
+              "status": "expected"
+            }
+          ],
+          "id": "78f5b8ac0fa003286212-aab44ad04acbedd67460",
+          "file": "aim-crowd-fullscreen.spec.js",
+          "line": 90,
+          "column": 1
+        }
+      ]
+    },
+    {
+      "title": "castle-collision.spec.js",
+      "file": "castle-collision.spec.js",
+      "column": 0,
+      "line": 0,
+      "specs": [
+        {
+          "title": "castle floors, cliff faces, and every ramp agree with player collision @touch",
+          "ok": true,
+          "tags": [
+            "touch"
+          ],
+          "tests": [
+            {
+              "timeout": 180000,
+              "annotations": [],
+              "expectedStatus": "passed",
+              "projectId": "desktop",
+              "projectName": "desktop",
+              "results": [
+                {
+                  "workerIndex": 0,
+                  "parallelIndex": 0,
+                  "status": "passed",
+                  "duration": 17776,
+                  "errors": [],
+                  "stdout": [],
+                  "stderr": [],
+                  "retry": 0,
+                  "startTime": "2026-10-14T23:56:08.573Z",
+                  "annotations": [],
+                  "attachments": []
+                }
+              ],
+              "status": "expected"
+            }
+          ],
+          "id": "52d702a944667ecee8e1-c5d1d4d0f8b5c0ccd73a",
+          "file": "castle-collision.spec.js",
+          "line": 4,
+          "column": 1
+        },
+        {
+          "title": "castle floors, cliff faces, and every ramp agree with player collision @touch",
+          "ok": true,
+          "tags": [
+            "touch"
+          ],
+          "tests": [
+            {
+              "timeout": 180000,
+              "annotations": [],
+              "expectedStatus": "passed",
+              "projectId": "phone",
+              "projectName": "phone",
+              "results": [
+                {
+                  "workerIndex": 1,
+                  "parallelIndex": 0,
+                  "status": "passed",
+                  "duration": 15491,
+                  "errors": [],
+                  "stdout": [],
+                  "stderr": [],
+                  "retry": 0,
+                  "startTime": "2026-10-14T23:58:36.790Z",
+                  "annotations": [],
+                  "attachments": []
+                }
+              ],
+              "status": "expected"
+            }
+          ],
+          "id": "52d702a944667ecee8e1-3f3f42b6510b2803733f",
+          "file": "castle-collision.spec.js",
+          "line": 4,
+          "column": 1
+        }
+      ]
+    },
+    {
+      "title": "map-crown.spec.js",
+      "file": "map-crown.spec.js",
+      "column": 0,
+      "line": 0,
+      "specs": [
+        {
+          "title": "map workshop retains editable assets, road pieces, vendor anchors, undo and import safety",
+          "ok": true,
+          "tags": [],
+          "tests": [
+            {
+              "timeout": 180000,
+              "annotations": [],
+              "expectedStatus": "passed",
+              "projectId": "desktop",
+              "projectName": "desktop",
+              "results": [
+                {
+                  "workerIndex": 0,
+                  "parallelIndex": 0,
+                  "status": "passed",
+                  "duration": 51780,
+                  "errors": [],
+                  "stdout": [],
+                  "stderr": [],
+                  "retry": 0,
+                  "startTime": "2026-10-14T23:56:26.425Z",
+                  "annotations": [],
+                  "attachments": []
+                }
+              ],
+              "status": "expected"
+            }
+          ],
+          "id": "e4c939ee42d7167fe6c4-79c4d3c07cb8d6e1f1a8",
+          "file": "map-crown.spec.js",
+          "line": 6,
+          "column": 6
+        },
+        {
+          "title": "a complete verified crown win reviews crooked scores and retries its verdict without duplicate rewards",
+          "ok": true,
+          "tags": [],
+          "tests": [
+            {
+              "timeout": 180000,
+              "annotations": [],
+              "expectedStatus": "passed",
+              "projectId": "desktop",
+              "projectName": "desktop",
+              "results": [
+                {
+                  "workerIndex": 0,
+                  "parallelIndex": 0,
+                  "status": "passed",
+                  "duration": 19608,
+                  "errors": [],
+                  "stdout": [],
+                  "stderr": [],
+                  "retry": 0,
+                  "startTime": "2026-10-14T23:57:18.252Z",
+                  "annotations": [],
+                  "attachments": []
+                }
+              ],
+              "status": "expected"
+            }
+          ],
+          "id": "e4c939ee42d7167fe6c4-6c0041c4be82b9ce6a7e",
+          "file": "map-crown.spec.js",
+          "line": 30,
+          "column": 1
+        },
+        {
+          "title": "crown NPC fights replay inputs, show holder appearance and interrupt safely @touch",
+          "ok": true,
+          "tags": [
+            "touch"
+          ],
+          "tests": [
+            {
+              "timeout": 180000,
+              "annotations": [],
+              "expectedStatus": "passed",
+              "projectId": "desktop",
+              "projectName": "desktop",
+              "results": [
+                {
+                  "workerIndex": 0,
+                  "parallelIndex": 0,
+                  "status": "passed",
+                  "duration": 8435,
+                  "errors": [],
+                  "stdout": [],
+                  "stderr": [],
+                  "retry": 0,
+                  "startTime": "2026-10-14T23:57:37.902Z",
+                  "annotations": [],
+                  "attachments": []
+                }
+              ],
+              "status": "expected"
+            }
+          ],
+          "id": "e4c939ee42d7167fe6c4-73f0f60c1a53c42a4569",
+          "file": "map-crown.spec.js",
+          "line": 45,
+          "column": 1
+        },
+        {
+          "title": "crown NPC fights replay inputs, show holder appearance and interrupt safely @touch",
+          "ok": true,
+          "tags": [
+            "touch"
+          ],
+          "tests": [
+            {
+              "timeout": 180000,
+              "annotations": [],
+              "expectedStatus": "passed",
+              "projectId": "phone",
+              "projectName": "phone",
+              "results": [
+                {
+                  "workerIndex": 1,
+                  "parallelIndex": 0,
+                  "status": "passed",
+                  "duration": 8805,
+                  "errors": [],
+                  "stdout": [],
+                  "stderr": [],
+                  "retry": 0,
+                  "startTime": "2026-10-14T23:58:52.330Z",
+                  "annotations": [],
+                  "attachments": []
+                }
+              ],
+              "status": "expected"
+            }
+          ],
+          "id": "e4c939ee42d7167fe6c4-ad5414b84608c7b1c93f",
+          "file": "map-crown.spec.js",
+          "line": 45,
+          "column": 1
+        }
+      ]
+    }
+  ],
+  "errors": [],
+  "stats": {
+    "startTime": "2026-10-14T23:55:08.880Z",
+    "duration": 233970.33800000002,
+    "expected": 12,
+    "skipped": 0,
+    "unexpected": 0,
+    "flaky": 0
+  }
+}

@@ -42,31 +42,19 @@ function throneLabels() {
 }
 function openThrone() {
   throneLoad(true);
-  if (!realmHasWrit('royal')) { toastMenu('The guards bar the way. Only a holder of the Royal writ may approach the throne.'); return; }
-  townPanel('The throne', box => {
-    const list = stationRows(box, '“Who comes before the crown? Speak, and say which seat you dare to claim.”', []);
-    for (const seat of ['king', 'queen']) {
-      const H = throneHolder(seat), mine = throneMine(seat), online = throneOnline(seat), eligible = BOS.info && BOS.info.gender === (seat === 'king' ? 'male' : 'female');
-      const who = (seat === 'king' ? 'King ' : 'Queen ') + H.name, held = (CAREER.throne || {})[seat];
-      list.append(h('div', { class: 'up' }, h('div', null, h('div', { class: 'uph' }, h('b', null, who), h('span', { class: 'tier' }, mine ? 'You hold this seat' : online ? 'Online now' : held ? 'You took it once' : 'On the throne')),
-        h('div', { class: 'muted' }, mine ? 'Defend your crown when a challenger arrives.' : !eligible ? `Only a linked ${seat === 'king' ? 'male' : 'female'} fighter can challenge for this title.` : online ? `Fight ${H.name} in a one-on-one duel to take the crown.` : `${H.name} is offline. You must fight the real title holder when they return.`)),
-        h('button', { class: 'btn small ' + (mine ? 'tape' : 'primary flagtape'), disabled: mine || !online || !eligible || !THRONE.seats ? true : null, onclick: () => { if (!mine) throneChallenge(seat); } }, mine ? 'Yours' : 'Challenge')));
+  if(!realmHasWrit('royal')){toastMenu('The guards bar the way. Earn the Royal writ before approaching the Crown Herald.');return;}
+  townPanel('The Crown Herald',box=>{
+    const list=stationRows(box,'The ruler has paid the marshal. Win the fight anyway; the final review will correct the scoring.',[]);
+    for(const seat of ['king','queen']){const H=throneHolder(seat),mine=throneMine(seat),eligible=!!(BOS.user&&BOS.info?.fighter&&BOS.info.gender===(seat==='king'?'male':'female'));
+      list.append(h('div',{class:'up'},h('div',null,h('div',{class:'uph'},h('b',null,(seat==='king'?'King ':'Queen ')+H.name)),h('div',{class:'muted'},mine?'Your NPC copy defends this crown.':!eligible?'A linked '+(seat==='king'?'male':'female')+' fighter is required.':'Challenge the ruler’s NPC copy, even while the title holder is offline. One challenger fights for this crown at a time.')),
+      h('button',{class:'btn small primary flagtape',disabled:mine||!eligible||!THRONE.seats?true:null,onclick:()=>crownBegin(seat)},mine?'Yours':'Challenge NPC')));
     }
-    if (!THRONE.seats) list.append(h('p', { class: 'muted small' }, 'The herald is still fetching the court rolls. Try again in a moment if the names look wrong.'));
+    try{const pending=JSON.parse(sessionStorage.getItem('steel-tape-crown-result')||'null');if(pending?.uid===BOS.user?.id)list.append(h('button',{class:'btn tape',onclick:()=>crownFinish(pending.id)},'Check previous crown verdict'));}catch(e){}
   });
 }
 // is the real holder in the game right now? (a lobby peer signed in to BuhurtOS with the holder's id)
 function throneOnline(seat) { const H = throneHolder(seat); if (!H.uid) return null; return ((typeof LOBBY !== 'undefined' && LOBBY.peers) || []).find(p => p.presence && p.presence.bu === H.uid && p.peer !== (LOBBY.me || null)) || null; }
-async function throneChallenge(seat) {
-  AU.click();
-  if (!BOS.info || BOS.info.gender !== (seat === 'king' ? 'male' : 'female')) { toastMenu(`Only a linked ${seat === 'king' ? 'male' : 'female'} fighter can challenge.`); return; }
-  await initLobby();
-  const online = throneOnline(seat);
-  if (!online) { toastMenu('The title holder is offline. Fight them when they return.'); return; }
-  let d; try { d = await thronePost({ seat, action: 'challenge' }); } catch (e) { toastMenu(e.message); return; }
-  closeVendor(); await sendInvite(online, d.duel);
-  toastMenu(`Crown duel sent to ${throneHolder(seat).name}. Beat the holder to take the title.`);
-}
+async function throneChallenge(seat) { return crownBegin(seat); }
 async function throneOnlineEnd(m) {
   const duel = m && m.throneDuel, spec = m && m.netSpec;
   if (!duel || !spec || m.wins[0] === m.wins[1]) return;
@@ -93,5 +81,5 @@ async function throneOnlineEnd(m) {
   } catch (e) { toastMenu(e.message || 'The duel result could not be recorded.'); }
 }
 async function throneEnd(m, won, withPurse) {
-  msg('the throne', 'Crown duel unavailable', withPurse('<p>The title only changes hands in a one-on-one online fight with its current holder.</p>'), [['Back to the realm', toTitle, true]]);
+  msg('the throne', 'Visit the Crown Herald', withPurse('<p>Challenge the current holder’s NPC defender at the Great Hall entrance.</p>'), [['Back to the realm', toTitle, true]]);
 }

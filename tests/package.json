@@ -1,0 +1,1 @@
+{"private":true,"scripts":{"browser":"playwright test --config playwright.config.cjs e2e/map-crown.spec.js","lint":"eslint --config ../eslint.config.js ../build_cache/game.js"},"devDependencies":{"playwright":"1.64.0","eslint":"10.12.0"}}

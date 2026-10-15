@@ -1,0 +1,34 @@
+✔ road conversion, terrain-following geometry, and snapped junctions share coordinates (6.8818ms)
+✔ invalid map imports cannot change asset identities or turn arbitrary props into walkable decks (4.3928ms)
+✔ crown replay gives identical complete state for the same ordered inputs (20.8253ms)
+✔ crooked display points cannot decide the reviewed winner (1.4109ms)
+✔ defender fouls are recorded but overlooked; challenger fouls retain cards and immediate red-card defeat (0.8299ms)
+✔ match RNG is independent of rendering and saved equipment is normalized (0.7277ms)
+✔ intersecting roads connect at a shared point and body values survive normalization (1.8584ms)
+✔ server rejects unlinked and wrong-division challengers (8219.1033ms)
+✔ one reservation per crown, retryable begin, immutable holder snapshot and safe abandonment (131.253ms)
+✔ ordered replay ignores fabricated winner/state and rejects conflicting retries (85.5483ms)
+✔ atomic claim is repeatable, successor becomes defender, original ruler has no special reclaim path (68.6392ms)
+✔ expired reservations and stale-holder wins cannot transfer a crown (49.126ms)
+✔ anonymous/authenticated clients cannot write attempts or call private RPCs (13.8913ms)
+✔ an eligible female challenger can reserve the Queen, and Royal writ remains required (34.0904ms)
+✔ implicit callback is consumed once; SDK auto-detection disabled; unrelated URL survives (34.3486ms)
+✔ concurrent client requests construct one client and callbacks do no SDK work (19.2979ms)
+✔ PKCE code is exchanged once and cannot be replayed on retry (5.0991ms)
+✔ OAuth cancellation removes only callback data and gives retry/back (4.3446ms)
+✔ slow SDK session lookup gives recovery rather than eternal splash (53.6187ms)
+✔ provider returned error is shown for both Google and Discord and intent saved (9.3596ms)
+✔ refresh uses persisted session, does not process OAuth again or change saved appearance (5.4137ms)
+✔ old tab session migrates to persistent storage without replacing a current account (4.7134ms)
+✔ persistent session is restored after a new tab and browser process (6.2897ms)
+✔ completed account return enters game and does not reset onboarding or team (4.582ms)
+✔ failed code exchange is recoverable and does not load profile (9.4342ms)
+✔ a timed-out session can retry once the connection recovers without duplicate transition (70.7371ms)
+ℹ tests 26
+ℹ suites 0
+ℹ pass 26
+ℹ fail 0
+ℹ cancelled 0
+ℹ skipped 0
+ℹ todo 0
+ℹ duration_ms 9412.3131

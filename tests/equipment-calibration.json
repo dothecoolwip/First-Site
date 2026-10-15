@@ -1,0 +1,456 @@
+{
+  "simulation": "crooked-crown-1-61d2d73a58dd",
+  "total": 1280,
+  "wins": 153,
+  "rate": 0.11953125,
+  "rows": [
+    {
+      "player": "sword",
+      "defender": "sword",
+      "count": 20,
+      "wins": 1,
+      "rate": 0.05
+    },
+    {
+      "player": "sword",
+      "defender": "falchion",
+      "count": 20,
+      "wins": 2,
+      "rate": 0.1
+    },
+    {
+      "player": "sword",
+      "defender": "axe",
+      "count": 20,
+      "wins": 4,
+      "rate": 0.2
+    },
+    {
+      "player": "sword",
+      "defender": "mace",
+      "count": 20,
+      "wins": 3,
+      "rate": 0.15
+    },
+    {
+      "player": "sword",
+      "defender": "longsword",
+      "count": 20,
+      "wins": 0,
+      "rate": 0
+    },
+    {
+      "player": "sword",
+      "defender": "longaxe",
+      "count": 20,
+      "wins": 0,
+      "rate": 0
+    },
+    {
+      "player": "sword",
+      "defender": "polearm",
+      "count": 20,
+      "wins": 0,
+      "rate": 0
+    },
+    {
+      "player": "sword",
+      "defender": "spear",
+      "count": 20,
+      "wins": 0,
+      "rate": 0
+    },
+    {
+      "player": "falchion",
+      "defender": "sword",
+      "count": 20,
+      "wins": 2,
+      "rate": 0.1
+    },
+    {
+      "player": "falchion",
+      "defender": "falchion",
+      "count": 20,
+      "wins": 5,
+      "rate": 0.25
+    },
+    {
+      "player": "falchion",
+      "defender": "axe",
+      "count": 20,
+      "wins": 7,
+      "rate": 0.35
+    },
+    {
+      "player": "falchion",
+      "defender": "mace",
+      "count": 20,
+      "wins": 7,
+      "rate": 0.35
+    },
+    {
+      "player": "falchion",
+      "defender": "longsword",
+      "count": 20,
+      "wins": 0,
+      "rate": 0
+    },
+    {
+      "player": "falchion",
+      "defender": "longaxe",
+      "count": 20,
+      "wins": 0,
+      "rate": 0
+    },
+    {
+      "player": "falchion",
+      "defender": "polearm",
+      "count": 20,
+      "wins": 0,
+      "rate": 0
+    },
+    {
+      "player": "falchion",
+      "defender": "spear",
+      "count": 20,
+      "wins": 0,
+      "rate": 0
+    },
+    {
+      "player": "axe",
+      "defender": "sword",
+      "count": 20,
+      "wins": 0,
+      "rate": 0
+    },
+    {
+      "player": "axe",
+      "defender": "falchion",
+      "count": 20,
+      "wins": 1,
+      "rate": 0.05
+    },
+    {
+      "player": "axe",
+      "defender": "axe",
+      "count": 20,
+      "wins": 1,
+      "rate": 0.05
+    },
+    {
+      "player": "axe",
+      "defender": "mace",
+      "count": 20,
+      "wins": 1,
+      "rate": 0.05
+    },
+    {
+      "player": "axe",
+      "defender": "longsword",
+      "count": 20,
+      "wins": 0,
+      "rate": 0
+    },
+    {
+      "player": "axe",
+      "defender": "longaxe",
+      "count": 20,
+      "wins": 5,
+      "rate": 0.25
+    },
+    {
+      "player": "axe",
+      "defender": "polearm",
+      "count": 20,
+      "wins": 5,
+      "rate": 0.25
+    },
+    {
+      "player": "axe",
+      "defender": "spear",
+      "count": 20,
+      "wins": 5,
+      "rate": 0.25
+    },
+    {
+      "player": "mace",
+      "defender": "sword",
+      "count": 20,
+      "wins": 0,
+      "rate": 0
+    },
+    {
+      "player": "mace",
+      "defender": "falchion",
+      "count": 20,
+      "wins": 0,
+      "rate": 0
+    },
+    {
+      "player": "mace",
+      "defender": "axe",
+      "count": 20,
+      "wins": 0,
+      "rate": 0
+    },
+    {
+      "player": "mace",
+      "defender": "mace",
+      "count": 20,
+      "wins": 0,
+      "rate": 0
+    },
+    {
+      "player": "mace",
+      "defender": "longsword",
+      "count": 20,
+      "wins": 0,
+      "rate": 0
+    },
+    {
+      "player": "mace",
+      "defender": "longaxe",
+      "count": 20,
+      "wins": 0,
+      "rate": 0
+    },
+    {
+      "player": "mace",
+      "defender": "polearm",
+      "count": 20,
+      "wins": 0,
+      "rate": 0
+    },
+    {
+      "player": "mace",
+      "defender": "spear",
+      "count": 20,
+      "wins": 0,
+      "rate": 0
+    },
+    {
+      "player": "longsword",
+      "defender": "sword",
+      "count": 20,
+      "wins": 0,
+      "rate": 0
+    },
+    {
+      "player": "longsword",
+      "defender": "falchion",
+      "count": 20,
+      "wins": 0,
+      "rate": 0
+    },
+    {
+      "player": "longsword",
+      "defender": "axe",
+      "count": 20,
+      "wins": 1,
+      "rate": 0.05
+    },
+    {
+      "player": "longsword",
+      "defender": "mace",
+      "count": 20,
+      "wins": 0,
+      "rate": 0
+    },
+    {
+      "player": "longsword",
+      "defender": "longsword",
+      "count": 20,
+      "wins": 0,
+      "rate": 0
+    },
+    {
+      "player": "longsword",
+      "defender": "longaxe",
+      "count": 20,
+      "wins": 1,
+      "rate": 0.05
+    },
+    {
+      "player": "longsword",
+      "defender": "polearm",
+      "count": 20,
+      "wins": 0,
+      "rate": 0
+    },
+    {
+      "player": "longsword",
+      "defender": "spear",
+      "count": 20,
+      "wins": 0,
+      "rate": 0
+    },
+    {
+      "player": "longaxe",
+      "defender": "sword",
+      "count": 20,
+      "wins": 7,
+      "rate": 0.35
+    },
+    {
+      "player": "longaxe",
+      "defender": "falchion",
+      "count": 20,
+      "wins": 9,
+      "rate": 0.45
+    },
+    {
+      "player": "longaxe",
+      "defender": "axe",
+      "count": 20,
+      "wins": 11,
+      "rate": 0.55
+    },
+    {
+      "player": "longaxe",
+      "defender": "mace",
+      "count": 20,
+      "wins": 11,
+      "rate": 0.55
+    },
+    {
+      "player": "longaxe",
+      "defender": "longsword",
+      "count": 20,
+      "wins": 6,
+      "rate": 0.3
+    },
+    {
+      "player": "longaxe",
+      "defender": "longaxe",
+      "count": 20,
+      "wins": 9,
+      "rate": 0.45
+    },
+    {
+      "player": "longaxe",
+      "defender": "polearm",
+      "count": 20,
+      "wins": 5,
+      "rate": 0.25
+    },
+    {
+      "player": "longaxe",
+      "defender": "spear",
+      "count": 20,
+      "wins": 6,
+      "rate": 0.3
+    },
+    {
+      "player": "polearm",
+      "defender": "sword",
+      "count": 20,
+      "wins": 0,
+      "rate": 0
+    },
+    {
+      "player": "polearm",
+      "defender": "falchion",
+      "count": 20,
+      "wins": 0,
+      "rate": 0
+    },
+    {
+      "player": "polearm",
+      "defender": "axe",
+      "count": 20,
+      "wins": 15,
+      "rate": 0.75
+    },
+    {
+      "player": "polearm",
+      "defender": "mace",
+      "count": 20,
+      "wins": 0,
+      "rate": 0
+    },
+    {
+      "player": "polearm",
+      "defender": "longsword",
+      "count": 20,
+      "wins": 6,
+      "rate": 0.3
+    },
+    {
+      "player": "polearm",
+      "defender": "longaxe",
+      "count": 20,
+      "wins": 6,
+      "rate": 0.3
+    },
+    {
+      "player": "polearm",
+      "defender": "polearm",
+      "count": 20,
+      "wins": 6,
+      "rate": 0.3
+    },
+    {
+      "player": "polearm",
+      "defender": "spear",
+      "count": 20,
+      "wins": 3,
+      "rate": 0.15
+    },
+    {
+      "player": "spear",
+      "defender": "sword",
+      "count": 20,
+      "wins": 0,
+      "rate": 0
+    },
+    {
+      "player": "spear",
+      "defender": "falchion",
+      "count": 20,
+      "wins": 0,
+      "rate": 0
+    },
+    {
+      "player": "spear",
+      "defender": "axe",
+      "count": 20,
+      "wins": 0,
+      "rate": 0
+    },
+    {
+      "player": "spear",
+      "defender": "mace",
+      "count": 20,
+      "wins": 0,
+      "rate": 0
+    },
+    {
+      "player": "spear",
+      "defender": "longsword",
+      "count": 20,
+      "wins": 0,
+      "rate": 0
+    },
+    {
+      "player": "spear",
+      "defender": "longaxe",
+      "count": 20,
+      "wins": 2,
+      "rate": 0.1
+    },
+    {
+      "player": "spear",
+      "defender": "polearm",
+      "count": 20,
+      "wins": 0,
+      "rate": 0
+    },
+    {
+      "player": "spear",
+      "defender": "spear",
+      "count": 20,
+      "wins": 0,
+      "rate": 0
+    }
+  ]
+}
