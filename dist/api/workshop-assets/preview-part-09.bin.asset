@@ -13780,7 +13780,9 @@ function buildStatue() {
 }
 function buildAvatar() {
   if (TOWN.me) TOWN.root.remove(TOWN.me.root);
-  const L = lookLite(); const J = lookPerson(L, L.ht); TOWN.me = J; TOWN.root.add(J.root);
+  const L = lookLite(); const J = lookPerson(L, L.ht); TOWN.me = J;
+  // This rig moves with the player. Never fold it into a distant scenery cell.
+  J.root.userData.dyn = true; TOWN.root.add(J.root);
   fighterGlow({model:J,isPlayer:true,spec:{player:true},name:myName(),club:CLUBS.reavers});
   if (G.guildLabel !== false && guildTag()) { const gl = townLabel(`[${guildTag()}]`, (guildState() || {}).name || '', (guildState() || {}).col); gl.scale.multiplyScalar(0.7); gl.position.y = 2.3; J.root.add(gl); }
   const ring = mk(J.root, geo('t_ring', () => new THREE.RingGeometry(0.42, 0.5, 24)), new THREE.MeshBasicMaterial({ color: '#f2c40f', transparent: true, opacity: 0.7, depthWrite: false }), 0, 0.04, 0, false); ring.rotation.x = -Math.PI / 2;

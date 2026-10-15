@@ -1,3 +1,9 @@
+# Player visibility hotfix candidate — 14 Oct 2026
+
+Build `steel-tape-auth-ecec3f690c13` is a focused follow-up to live patch 4.9. `buildAvatar()` now marks the player rig dynamic before `realmCells()` groups scenery. Previously the rig entered the origin cell, which became hidden when the camera reached Northwatch or another distant city. No player save, authentication, NPC culling, or crown logic changed. The source is `src/js/14_town.js`; the generated `dist/` files were rebuilt from it.
+
+ESLint passed. The exact rebuilt game passed two browser regressions, desktop and emulated phone, checking the player at spawn, all four distant cities, and after town re-entry. A rendered Northwatch capture is `review/avatar-northwatch-after.png`; the avatar is visible and the browser reported no game-loop error. Physical Android and the affected owner's account have not been tested. This candidate has not been deployed; use the current patch 4.9 production build as the release base and preserve frozen private v59.
+
 # Patch 4.9 — hosted owner Map Workshop and Crooked Crowns
 
 Build steel-tape-auth-6956385a377a; core crooked-crown-1-61d2d73a58dd. Public production only; frozen private v59 remains unchanged. Authoritative editable source: sites/map-crown-candidate, based on 73d56c04b79d59224442e9880edf1bbfcdf9bd92.
