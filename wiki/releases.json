@@ -2,6 +2,111 @@
   "schema": 1,
   "releases": [
     {
+      "id": "wiki-player-experience",
+      "title": "A field guide that feels at home on your phone",
+      "date": "2026-10-15T05:51:29.498Z",
+      "kind": "Wiki design & usability update",
+      "build": "steel-tape-auth-ad27047a6f73",
+      "previousBuild": "steel-tape-auth-ad27047a6f73",
+      "summary": "A refreshed interface with easier phone navigation, typo-tolerant search, saved entries, two reading themes and better tools for long articles.",
+      "reviewedPublic": true,
+      "evidence": [
+        "Compared with production commit 48da0e78d013dcbc2eba8d783102bd79786acb7d, gameplay build steel-tape-auth-ad27047a6f73.",
+        "Fuse.js 7.5.0 and a 29-icon Lucide Static 1.57.0 subset are pinned, served locally, and accompanied by their license files and vendor hashes.",
+        "Declared typography values compared with the previous production wiki CSS. Percentages describe CSS font-size changes, not gameplay or measured player outcomes."
+      ],
+      "sections": [
+        {
+          "title": "Made for phone navigation",
+          "items": [
+            "A compact sticky header and a dedicated navigation drawer replace the horizontal category strip on narrow screens. The drawer exposes every database category and the link back to the game.",
+            "A bottom navigation bar keeps Explore, Search, Updates and Saved within reach. Controls account for the phone's bottom safe area, and the page reserves room beneath the content.",
+            "Cards, quick facts, article layouts and dialogs adjust to narrow phones, tablets and desktop windows. Wide numerical patch-note tables remain scrollable, with an explanatory hint and keyboard focus."
+          ],
+          "metrics": []
+        },
+        {
+          "title": "Find an entry even when the spelling is imperfect",
+          "items": [
+            "Fuse.js adds typo-tolerant matching to the wiki search. Exact matches are retained, while additional close matches help with misspelled names and multi-word queries.",
+            "A site-wide search dialog is available from any article, using the header button, the phone's Search tab, or Ctrl+K / Command+K. The slash shortcut focuses the current page's search when available and opens site search elsewhere.",
+            "Arrow keys move through site-search suggestions, Enter opens a focused entry, and Escape dismisses the dialog. Search, icons and their supporting library files are served by the game server; no external search service receives queries."
+          ],
+          "metrics": []
+        },
+        {
+          "title": "Keep your own useful pages",
+          "items": [
+            "Every database article has a Save entry control. Saved entries have their own page, persist across reloads on the same browser and can be removed individually or cleared.",
+            "The home page can show recently opened articles so a player can return to a quest, ingredient or location. Recent and saved pages are stored locally in this browser; they do not sync with a game account or another device.",
+            "Copy page link shares an entry or the canonical full-release URL. If clipboard access is unavailable, the interface opens a selectable link for manual copying."
+          ],
+          "metrics": []
+        },
+        {
+          "title": "Reading, themes and long-page tools",
+          "items": [
+            "The visual refresh uses a forest-and-brass dark palette, a parchment light palette, consistent Lucide icons, clearer cards, rounded surfaces and more consistent spacing.",
+            "The theme switch stores the reader's choice in this browser. Larger article and result text improves the default reading scale; browser zoom remains available.",
+            "Long articles and release notes gain an On this page section list. The list can be collapsed on phones, and its buttons move keyboard focus to the chosen heading.",
+            "A reading progress line and a back-to-top control help with longer pages. Reduced-motion preferences disable animated transitions and smooth scrolling. Native dialogs provide focus containment and Escape handling."
+          ],
+          "metrics": [
+            {
+              "name": "Quest chapter paragraph and objective font size",
+              "before": 14,
+              "after": 15,
+              "unit": "CSS px",
+              "context": "Default declared chapter copy and objective size in the wiki; this is a typography change, not a gameplay change.",
+              "delta": 1,
+              "relativePercent": 7.142857142857142,
+              "percentagePoints": null
+            },
+            {
+              "name": "Search result title font size",
+              "before": 15,
+              "after": 16,
+              "unit": "CSS px",
+              "context": "Default declared title size in the standard results list.",
+              "delta": 1,
+              "relativePercent": 6.666666666666667,
+              "percentagePoints": null
+            },
+            {
+              "name": "Search result description font size",
+              "before": 12,
+              "after": 13,
+              "unit": "CSS px",
+              "context": "Default declared summary size in standard page search results; compact dialog suggestions may use a smaller summary.",
+              "delta": 1,
+              "relativePercent": 8.333333333333332,
+              "percentagePoints": null
+            }
+          ]
+        },
+        {
+          "title": "Compatibility, scope and verification",
+          "items": [
+            "This release changes the wiki interface. The game page, game build, saves, combat, costs, XP, rewards and existing release records are preserved.",
+            "The public catalogue remains subject to its existing review policy. Secrets, discovery clues, hidden content and private player data are not added by these interface features.",
+            "Interactive preferences rely on browser storage. If storage is unavailable, the current page still works but saved entries and preferences cannot be retained. Saved pages are specific to the current browser and origin.",
+            "Search dialogs use the browser's native dialog support. Font fallbacks remain available if the optional web fonts cannot load. No measured speed or frame-rate gain is claimed."
+          ],
+          "metrics": []
+        }
+      ],
+      "knownIssues": [
+        "Saved entries, recent pages and theme preferences do not sync across browsers or devices.",
+        "The existing guide coverage gaps remain: this interface update does not add unverified gameplay content."
+      ],
+      "validation": [
+        "Responsive interface checks at 320, 390, 768 and 1440 CSS pixels, including dark and light themes and horizontal-overflow checks.",
+        "Checks cover typo-tolerant search, search keyboard navigation, drawer dismissal, saved-entry persistence/removal, theme persistence, article jump links, Escape dismissal and reduced-motion behavior.",
+        "Existing catalogue, quest-link, recipe, release arithmetic, archive, exported-subfolder and service-worker checks remain part of the release gate."
+      ],
+      "canonicalUrl": "https://buhurt-steel-and-tape.vercel.app/wiki/patch-notes/#patch/wiki-player-experience"
+    },
+    {
       "id": "wiki-release-workflow",
       "title": "A live reference and permanent full patch notes",
       "date": "2026-10-15T05:30:24.374Z",

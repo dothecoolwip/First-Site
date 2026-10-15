@@ -1,0 +1,18 @@
+{
+  "fuse": {
+    "version": "7.5.0",
+    "license": "Apache-2.0",
+    "source": "https://www.fusejs.io/"
+  },
+  "lucide": {
+    "version": "1.57.0",
+    "license": "ISC",
+    "source": "https://lucide.dev/"
+  },
+  "files": {
+    "fuse.min.js": "80fbe0836fb39ef8a8898b618438de3798b568f74637bbeb76c034eaf94b5ef4",
+    "FUSE-LICENSE.txt": "cc807e3caa26cdee316bab2ff6fdb508a2f619b74959fe59e513ef6e61635ebe",
+    "LUCIDE-LICENSE.txt": "b495047bd93a9b06913511076f504daba17d5bbeb3e0650f3bb53a4220329c57",
+    "icons.svg": "310383cb32a94d2b31a7bc9046cce124a48b73dcafd6a3cd757f61bd926d6434"
+  }
+}
