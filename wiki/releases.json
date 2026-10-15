@@ -2,6 +2,40 @@
   "schema": 1,
   "releases": [
     {
+      "id": "game-menu-wiki-compact",
+      "title": "A compact Wiki button",
+      "date": "2026-10-15T06:49:37Z",
+      "kind": "Quiet interface update",
+      "build": "steel-tape-auth-ad27047a6f73",
+      "previousBuild": "steel-tape-auth-ad27047a6f73",
+      "summary": "The Wiki link beneath Time to Fight is now a small, centred secondary button.",
+      "reviewedPublic": true,
+      "evidence": [
+        "Compared with production commit 72fece0a2aedd888733f455b8ad78ebf28003046.",
+        "Only the existing menu UI asset, its cache revision and this permanent release record change."
+      ],
+      "sections": [
+        {
+          "title": "Smaller menu link",
+          "items": [
+            "The Wiki link no longer uses the large primary-button style. It fits its label in a centred button, with 14 px text, 16 px horizontal padding, and a width between 96 and 140 px.",
+            "The minimum touch-target height remains 44 px. Keyboard focus, external-browser intent and HTTPS fallback keep their existing behavior.",
+            "This UI-asset revision leaves gameplay values, the engine build and saves unchanged. Reload or restart an already running game to receive the revised cached menu asset.",
+            "Published silently at the owner's request; no Discord announcement."
+          ],
+          "metrics": []
+        }
+      ],
+      "knownIssues": [
+        "Final app-to-browser handoff remains controlled by the device. It has not been tested on physical Android or iOS hardware."
+      ],
+      "validation": [
+        "Button placement, compact width and 44 px target checked on desktop and portrait/landscape phones.",
+        "External link behavior, Android intent/fallback and duplicate protection checked with browser automation."
+      ],
+      "canonicalUrl": "https://buhurt-steel-and-tape.vercel.app/wiki/patch-notes/#patch/game-menu-wiki-compact"
+    },
+    {
       "id": "game-menu-wiki",
       "title": "Open the wiki from the main menu",
       "date": "2026-10-15T06:30:43.602Z",
