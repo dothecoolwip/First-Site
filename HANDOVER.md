@@ -1,3 +1,13 @@
+# Patch 4.10 deployed — 14 Oct 2026
+
+Player visibility hotfix build steel-tape-auth-ecec3f690c13 is live at https://buhurt-steel-and-tape.vercel.app. Vercel deployment dpl_5YdbJDr1J9nGnr2dekX2kZuDPe43 is READY; GitHub release commit 306e1af82e0a1cfce5c69c6d73e5afd8fc7ffab5; source commit 68b48983f699f42a23c24f86e67083b13b174451.
+
+The live index SHA256 is d5ba979e74b1e0e53895d347aeefa5a6aab2c10ec744193781aa95e3f75ba98a and live sw.js SHA256 is 8309d6d5e3e17aea176a690e5a01fd30731e7cd09539b9b426bc0ba22fd5b353, both exact supplied artifacts. Public admin loads; unauthenticated workshop pages/scripts return401; direct private preview file returns404. Existing crown/admin backend, environment and owner auth code were retained. No player saves were changed. Frozen private v59 index remains SHA256 9febc28a92bb24e885540d3c5265130201f442c4211be0f4be24179eb00834e0.
+
+Exact source was clean on receipt. Source build and ESLint passed before handoff, and the supplied exact-build desktop/emulated-phone regression passed2/2 at spawn, Ashmarket, Stoneford, Southmere, Northwatch and town re-entry. Reviewed screenshot shows the avatar. Physical Android and affected owner's live account remain unverified.
+
+Discord dispatcher v29 posted v4-10 in BuhurtOS #patch-notes (request774) and Red Deer Reavers #buhurt-steel-and-tape (request775). Delivery response is preserved in avatar-release-2026-10-14. See LIVE_SMOKE.json and PATCH_NOTES.txt there.
+
 # Player visibility hotfix candidate — 14 Oct 2026
 
 Build `steel-tape-auth-ecec3f690c13` is a focused follow-up to live patch 4.9. `buildAvatar()` now marks the player rig dynamic before `realmCells()` groups scenery. Previously the rig entered the origin cell, which became hidden when the camera reached Northwatch or another distant city. No player save, authentication, NPC culling, or crown logic changed. The source is `src/js/14_town.js`; the generated `dist/` files were rebuilt from it.
