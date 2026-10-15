@@ -1,3 +1,9 @@
+# Player visibility hotfix candidate — 14 Oct 2026
+
+Build `steel-tape-auth-ecec3f690c13` is a focused follow-up to live patch 4.9. `buildAvatar()` now marks the player rig dynamic before `realmCells()` groups scenery. Previously the rig entered the origin cell, which became hidden when the camera reached Northwatch or another distant city. No player save, authentication, NPC culling, or crown logic changed. The source is `src/js/14_town.js`; the generated `dist/` files were rebuilt from it.
+
+ESLint passed. The exact rebuilt game passed two browser regressions, desktop and emulated phone, checking the player at spawn, all four distant cities, and after town re-entry. A rendered Northwatch capture is `review/avatar-northwatch-after.png`; the avatar is visible and the browser reported no game-loop error. Physical Android and the affected owner's account have not been tested. This candidate has not been deployed; use the current patch 4.9 production build as the release base and preserve frozen private v59.
+
 # Patch 4.9 — hosted owner Map Workshop and Crooked Crowns
 
 Build steel-tape-auth-6956385a377a; core crooked-crown-1-61d2d73a58dd. Public production only; frozen private v59 remains unchanged. Authoritative editable source: sites/map-crown-candidate, based on 73d56c04b79d59224442e9880edf1bbfcdf9bd92.
@@ -236,3 +242,7 @@ The prior throne interaction was at `(7,-285.4)`, inside the Great Hall list exc
 The test also exposed a separate local autowalk issue: the planner validated a route from the hall entrance around the list to the former east-aisle throne point, but lookahead movement cut the corner and stalled near `(9.4,-242.8)`. The reachable entrance Herald removes that route from the crown interaction. Review lookahead corner following separately if other hall destinations use the aisle.
 
 Merged candidate steel-tape-auth-06ff46d37f00 passed syntax, ESLint and all six focused desktop/phone duel/Herald checks against the exact hosted artifact. Current Duels Rules 26.4 section 4.5 was verified via the official rules page. Production-only release; private v59 stays frozen. The separate east-aisle autowalk lookahead stall remains a travel follow-up.
+
+Production confirmed READY: dpl_Gw66NjihSbFxCJucc9Bidj7ibDvr; GitHub main 9bf62a9ce3e0b06e55738abf02ae3d12b4ff0e4a; build steel-tape-auth-6956385a377a. Live game bytes match the staged release. Editor HTML, scripts, preview and chunks deny unauthenticated callers (401); direct private and encoded asset paths return 404; invalid session tokens return 401. Server admin/crown endpoints reject missing and invalid tokens. Both current crown holder tuples remain unchanged. New crown tables have RLS with intentional deny-all/no-policy behavior and no anon/authenticated write or RPC execution grants. Supabase security advisor reports only informational no-policy findings on those two new tables.
+
+Discord v28 sent Patch 4.9 to BuhurtOS category #patch-notes (1558642158095835229; request772) and Red Deer Reavers #buhurt-steel-and-tape (request773), both HTTP200 with no failures. Current note is saved beside this record. Private frozen index SHA256 remains 9febc28a92bb24e885540d3c5265130201f442c4211be0f4be24179eb00834e0. Owner interactive login on production has not been exercised with real credentials; hosted positive authorization is covered by dependency-injected real-handler browser tests, while production rejection routes were exercised live.
