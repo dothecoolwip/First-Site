@@ -2,6 +2,60 @@
   "schema": 1,
   "releases": [
     {
+      "id": "game-menu-wiki",
+      "title": "Open the wiki from the main menu",
+      "date": "2026-10-15T06:30:43.602Z",
+      "kind": "Quiet interface update",
+      "build": "steel-tape-auth-ad27047a6f73",
+      "previousBuild": "steel-tape-auth-ad27047a6f73",
+      "summary": "A Wiki button is available directly below Time to Fight, with an external-browser request that keeps the game page open.",
+      "reviewedPublic": true,
+      "evidence": [
+        "Based on production commit b5be3892f62909f7a8e7dc0c7a0b2b0a3dc15f29 and game build steel-tape-auth-ad27047a6f73.",
+        "The existing menu UI asset adds the link; the game engine page and save format are preserved. The service-worker asset-cache revision changes so reloaded installed games receive the new menu asset.",
+        "Android intent syntax follows https://developer.chrome.com/docs/android/intents. Installed-web-app behavior remains controlled by the device and browser."
+      ],
+      "sections": [
+        {
+          "title": "A wiki button on the game menu",
+          "items": [
+            "A clearly labelled Wiki button appears directly below Time to Fight. It uses the existing menu styling, supports keyboard and controller focus, and links to the full player wiki on the live server.",
+            "The link opens a new browsing context with opener access disabled, so it does not replace the current game page.",
+            "The existing game UI script supplies the button and guards against duplicate insertion. Cached UI assets receive a new service-worker cache revision; an already running game may need a reload or restart to show the button."
+          ],
+          "metrics": []
+        },
+        {
+          "title": "Opening outside the installed game",
+          "items": [
+            "On Android in standalone, fullscreen or minimal-UI display mode, the button requests Chrome through an Android browser intent. An HTTPS fallback is included if the intent cannot be handled.",
+            "Other environments use a standard HTTPS link with target=_blank and rel=external, noopener and noreferrer. This requests a separate browser window or tab and keeps the game page open.",
+            "A website cannot universally force a particular external browser or override every installed-app, operating-system or embedded-browser policy. Device handoff is therefore best effort, rather than a promise that every platform will leave its app container."
+          ],
+          "metrics": []
+        },
+        {
+          "title": "Scope and validation",
+          "items": [
+            "This release adds menu navigation. It changes no combat values, progression, costs, XP, rewards, player saves or public game-content entries.",
+            "The embedded engine build remains steel-tape-auth-ad27047a6f73; this is a separate UI-asset/cache revision.",
+            "The owner requested a silent update. No Discord announcement is sent for this release."
+          ],
+          "metrics": []
+        }
+      ],
+      "knownIssues": [
+        "Actual Android/iOS app-to-browser handoff has not been tested on a physical device. Native new-window behavior and generated Android intent/fallback paths are covered by browser automation.",
+        "If Chrome is unavailable or the host blocks external launches, the operating system/browser decides how to handle the HTTPS fallback."
+      ],
+      "validation": [
+        "Main-menu link placement and usable target size checked at desktop, landscape-phone and portrait-phone dimensions.",
+        "Native new-window opening, null opener and preservation of the original game page checked in browser automation.",
+        "Standalone/fullscreen Android intent construction, HTTPS fallback, duplicate protection and the iOS standalone link path checked with simulated environments."
+      ],
+      "canonicalUrl": "https://buhurt-steel-and-tape.vercel.app/wiki/patch-notes/#patch/game-menu-wiki"
+    },
+    {
       "id": "wiki-player-experience",
       "title": "A field guide that feels at home on your phone",
       "date": "2026-10-15T05:51:29.498Z",
