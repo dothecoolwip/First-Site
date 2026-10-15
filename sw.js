@@ -7,6 +7,15 @@ self.addEventListener('activate', e => { e.waitUntil(caches.keys().then(ks => Pr
 self.addEventListener('fetch', e => {
   if (e.request.method !== 'GET') return;
   const url = new URL(e.request.url);
+  // The player wiki is a separate document tree. Never return cached game HTML
+  // for wiki navigation or keep its release catalogue behind the game cache.
+  if (url.origin === self.location.origin && /^\/wiki(?:\/|$)/.test(url.pathname)) {
+    e.respondWith(fetch(e.request, { cache: 'no-store' }).catch(() =>
+      new Response('The wiki is unavailable offline. Reconnect to read the latest guide and patch notes.', {
+        status: 503, headers: { 'Content-Type': 'text/plain; charset=utf-8', 'Cache-Control': 'no-store' }
+      })));
+    return;
+  }
   if (url.origin === self.location.origin && url.pathname.endsWith('/version.json')) {
     e.respondWith(fetch(e.request, { cache: 'no-store' }));
     return;

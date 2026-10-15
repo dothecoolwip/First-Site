@@ -1,0 +1,67 @@
+{
+  "schema": 1,
+  "releases": [
+    {
+      "id": "wiki-launch",
+      "title": "The Steel & Tape player wiki is here",
+      "date": "2026-10-14T23:16:58-06:00",
+      "build": "steel-tape-auth-a268adde2f30",
+      "previousBuild": null,
+      "kind": "Wiki release",
+      "summary": "A searchable player reference and a permanent home for detailed patch notes, hosted alongside the live game.",
+      "reviewedPublic": true,
+      "evidence": [
+        "Production game build steel-tape-auth-a268adde2f30, Git commit b4f96822ce2d9f0a03b5abaaeb910fc50cf3104c",
+        "229-entry public catalogue validated with 88 quest chapters; desktop and phone browser checks passed"
+      ],
+      "sections": [
+        {
+          "title": "The player database",
+          "items": [
+            "22 questlines contain 88 chapters, with prerequisites, objectives, gold and XP rewards, dialogue choices and follow-up quests.",
+            "10 public regions and 10 arenas link to 67 people and services. Region pages include world coordinates, access requirements and regional gathering information.",
+            "The first catalogue includes 17 standard equipment pieces, 19 materials, 6 trades, 45 combat perks, 22 core crafting recipes, 4 repeatable contracts and 5 fighter archetypes.",
+            "Search supports names, objectives, ingredients, places and other entry details. Articles link to related quests, NPCs, materials and prerequisites."
+          ],
+          "metrics": []
+        },
+        {
+          "title": "A home for full patch notes",
+          "items": [
+            "Detailed release pages live at /wiki/patch-notes/ and have permanent release links for Discord announcements.",
+            "Future balance notes must state the old and new values, units, exact absolute change and calculated relative percentage change. Changes to percentage-valued stats must also state percentage points.",
+            "Full notes can include mechanics, edge cases, affected modes, progression, crafting costs, world changes, interface changes, performance measurements, fixes, known issues and validation that cannot fit comfortably in a Discord announcement.",
+            "No game balance values were changed by the wiki launch. There is no verified previous-game comparison attached to this entry, so it claims no historical buffs, nerfs or percentage changes."
+          ],
+          "metrics": []
+        },
+        {
+          "title": "Hosting and keeping pages current",
+          "items": [
+            "The wiki is served from the live game’s /wiki/ subfolder. The game remains at the root URL.",
+            "The game service worker bypasses wiki requests so a cached game page cannot replace a wiki page, and wiki assets are fetched fresh.",
+            "The deployment handoff requires reviewed wiki updates and full release notes after successful live releases, then a concise Discord announcement containing the exact full-notes URL.",
+            "Secrets, hidden locations, secret rewards, triggers, discovery clues, private player data and admin tools stay out of both wiki entries and patch notes."
+          ],
+          "metrics": []
+        },
+        {
+          "title": "Known coverage gaps",
+          "items": [
+            "Public cosmetics, housing, complete mode walkthroughs, detailed controls, advanced squire care and other systems still need expanded guides.",
+            "This launch starts the detailed public release archive. Older game releases are not reconstructed from memory or presented as measured numerical comparisons."
+          ],
+          "metrics": []
+        }
+      ],
+      "knownIssues": [
+        "Some public game systems still need fuller guide coverage; see Sources & coverage."
+      ],
+      "validation": [
+        "Content checks validate quest links, prerequisites, crafting ingredients and unique entry IDs.",
+        "Browser verification covers desktop and phone layouts, search, every article, region navigation and patch-note pages."
+      ],
+      "canonicalUrl": "https://buhurt-steel-and-tape.vercel.app/wiki/patch-notes/#patch/wiki-launch"
+    }
+  ]
+}

@@ -36,6 +36,16 @@ Verification: 28 focused Node tests (12 auth + 14 geometry/replay/real PostgreSQ
 
 # BUHURT: Steel & Tape — handover for the next assistant
 
+## Player wiki and full release notes — 14 Oct 2026
+
+The canonical player wiki is a static subfolder of this live deployment: `/wiki/`. Full detailed notes are at `/wiki/patch-notes/`, with permanent links `/wiki/patch-notes/#patch/RELEASE-ID`. Retain the entire wiki folder in future releases. The old chatgpt.site preview is not the canonical player address.
+
+Authoring source in the owner's shared workspace: `sites/buhurtos-wiki`. Read its current README, PATCH-NOTES.md, content-policy.json and DEPLOY-LIVE-PROMPT.txt. Update verified public entries and full notes on every game release. Include old/new values, units, absolute and relative percentage changes, and separate percentage points where applicable; do not invent historical values or measured gains. Exclude secrets, hidden locations, triggers, rewards, discovery clues, player data and admin/debug details from prose and metrics.
+
+Export the explicit public assets with `scripts/export-live.cjs` into the latest game checkout. Preserve game/API/map-editor routing, wiki redirects/no-cache headers and the root service worker's network-only wiki bypass. Verify production build and actual public pages before announcements.
+
+Every existing authorized Discord release announcement must include the exact verified full-notes URL, plus Play and Wiki URLs. Preserve established destinations, deduplication, credits and mention rules. The full website notes contain details that cannot fit in Discord. Wiki-launch notes make no gameplay-balance change claims.
+
 ## Local Map Workshop and Crooked Crown candidate — 14 Oct 2026
 
 Implemented in the isolated `sites/map-crown-candidate` checkout on branch `codex/map-crown`, based on authoritative v4.8 source `73d56c04b79d59224442e9880edf1bbfcdf9bd92`. Keep the separate Crown Herald and disarmed-opponent fixes. Frozen private v59 (`steel-tape-auth-14edf9973749`, source `378f4656abcaa1da08750c132a40d6a1f7df2bab`) is unchanged. This candidate has not been deployed and its database migration has not been applied remotely.

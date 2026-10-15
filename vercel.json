@@ -1,6 +1,9 @@
 {
   "functions": { "api/map-workshop.js": { "includeFiles": "api/workshop-assets/**", "maxDuration": 30 } },
   "routes": [
+    { "src": "/wiki", "headers": { "Location": "/wiki/" }, "status": 308 },
+    { "src": "/wiki/patch-notes", "headers": { "Location": "/wiki/patch-notes/" }, "status": 308 },
+    { "src": "/wiki(?:/.*)?", "headers": { "Cache-Control": "no-cache" }, "continue": true },
     { "src": "/api/workshop-assets(?:/.*)?", "status": 404 },
     { "src": "/map-editor", "headers": { "Location": "/map-editor/" }, "status": 307 },
     { "src": "/map-editor/(.*)", "dest": "/api/map-workshop?asset=$1" },
