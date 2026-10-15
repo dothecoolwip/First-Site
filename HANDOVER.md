@@ -1,3 +1,7 @@
+## Quiet mobile mount hotfix — October 14, 2026
+
+Build steel-tape-auth-ad27047a6f73 moves creator Test tools below the horse control so Whistle, Mount and Dismount remain tappable. See PATCH_NOTES_NEXT.md; include this fix in the next patch announcement. No separate announcement for this hotfix.
+
 # Online identity hotfix candidate — 14 Oct 2026
 
 Build `steel-tape-auth-a268adde2f30` follows live patch 4.10. A second browser session signed into the same BuhurtOS account had a different peer ID and was rendered as another town player. `13f_invite.js` now retains the raw presence list but exposes one peer per signed-in account, excludes the local account's other sessions, and chooses a stable town presence before a non-town presence. It uses account IDs, never matching display names. `14b_world.js` rechecks that list each town update so a restored login or account switch removes an already-rendered duplicate. Unauthenticated peers retain their separate session identities because there is no verified account key to merge.
