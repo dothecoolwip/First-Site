@@ -1,3 +1,9 @@
+# Online identity hotfix candidate — 14 Oct 2026
+
+Build `steel-tape-auth-a268adde2f30` follows live patch 4.10. A second browser session signed into the same BuhurtOS account had a different peer ID and was rendered as another town player. `13f_invite.js` now retains the raw presence list but exposes one peer per signed-in account, excludes the local account's other sessions, and chooses a stable town presence before a non-town presence. It uses account IDs, never matching display names. `14b_world.js` rechecks that list each town update so a restored login or account switch removes an already-rendered duplicate. Unauthenticated peers retain their separate session identities because there is no verified account key to merge.
+
+The rebuilt source passed ESLint and two exact-build browser cases on desktop and emulated phone: same-account sessions collapse to one avatar, local extra sessions never appear, two distinct accounts with the same name remain visible, account switching updates the figures, and stale figures and interaction stalls are removed. Two existing desktop P2P regressions also passed for lobby entry and player profiles. No real multi-device signed-in session or physical Android was available for acceptance. This candidate has not been deployed; preserve crown, map workshop, saves, authentication and frozen private v59.
+
 # Patch 4.10 deployed — 14 Oct 2026
 
 Player visibility hotfix build steel-tape-auth-ecec3f690c13 is live at https://buhurt-steel-and-tape.vercel.app. Vercel deployment dpl_5YdbJDr1J9nGnr2dekX2kZuDPe43 is READY; GitHub release commit 306e1af82e0a1cfce5c69c6d73e5afd8fc7ffab5; source commit 68b48983f699f42a23c24f86e67083b13b174451.

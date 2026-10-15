@@ -11296,7 +11296,7 @@ function checkNintendo() {
 // presence: name, what they're doing, profile stats (pr), `look` (the code of an open lobby, for Find a match) and
 // `invite` (a lobby code addressed to one player). Fights themselves happen in a lobby room (13h).
 const GAME_URL = 'https://claude.ai/artifact/2hhQkB83SkLC5ta9nNEnkN';
-const LOBBY = { room: null, me: null, peers: [], pending: null, seen: {}, ready: false, invited: null, starting: null };
+const LOBBY = { room: null, me: null, peers: [], rawPeers: null, pending: null, seen: {}, ready: false, invited: null, starting: null };
 const MM = { searching: false };
 const SESSION_START = Date.now();
 const escTxt = s => String(s == null ? '' : s).replace(/[&<>"']/g, c => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' })[c]);
@@ -11313,6 +11313,33 @@ function myProfile() {
 }
 async function claudeRoom() { try { return window.claude && window.claude.use ? await window.claude.use('room') : null; } catch (e) { return null; } }
 function lobbySet(patch) { try { LOBBY.room && LOBBY.room.presence(patch); } catch (e) { } }
+// A person can have several browser sessions, each with a different peer ID.
+// Account IDs identify people; display names do not.
+function lobbyDistinctPeers(peers) {
+  const own = typeof BOS !== 'undefined' && BOS.user && BOS.user.id;
+  const byAccount = new Map(), guests = [];
+  for (const p of peers || []) {
+    if (!p || p.isMe || p.kind !== 'viewer' || !p.presence || !p.presence.name) continue;
+    const uid = typeof p.presence.bu === 'string' && p.presence.bu || null;
+    if (uid && uid === own) continue;
+    if (!uid) { guests.push(p); continue; }
+    const prev = byAccount.get(uid);
+    const rank = q => [q.presence.tw ? 1 : 0, Number(q.presence.pr && q.presence.pr.on) || 0, String(q.peer || '')];
+    if (!prev) byAccount.set(uid, p);
+    else {
+      const a = rank(p), b = rank(prev);
+      if (a[0] > b[0] || a[0] === b[0] && (a[1] > b[1] || a[1] === b[1] && a[2] > b[2])) byAccount.set(uid, p);
+    }
+  }
+  return [...byAccount.values(), ...guests];
+}
+function lobbySyncPeers() {
+  const next = lobbyDistinctPeers(LOBBY.rawPeers == null ? LOBBY.peers : LOBBY.rawPeers);
+  const changed = next.length !== LOBBY.peers.length || next.some((p, i) => p.peer !== LOBBY.peers[i].peer);
+  LOBBY.peers = next;
+  if (changed) updateLobbyBadge();
+  return next;
+}
 async function initLobby() {
   if (LOBBY.room) return LOBBY.room;
   if (LOBBY.starting) return LOBBY.starting;
@@ -11327,7 +11354,8 @@ async function initLobby() {
     setInterval(() => lobbySet({ name: myName(), st: lobbyStatus(), pr: myProfile(), bu: (typeof BOS !== 'undefined' && BOS.user && BOS.user.id) || null }), 5000);
     room.onPeers(ch => {
       const me = ch.peers.find(p => p.isMe && p.sameTab); if (me) LOBBY.me = me.peer;
-      LOBBY.peers = ch.peers.filter(p => !p.isMe && p.kind === 'viewer' && p.presence && p.presence.name);
+      LOBBY.rawPeers = ch.peers.filter(p => !p.isMe && p.kind === 'viewer' && p.presence && p.presence.name);
+      LOBBY.peers = lobbyDistinctPeers(LOBBY.rawPeers);
       LOBBY.ready = true;
       try { guildCheck(LOBBY.peers); } catch (e) { }
       updateLobbyBadge();
@@ -14289,7 +14317,7 @@ function townPresence() {
 function updateOthers(dt) {
   townPresence();
   const seen = {};
-  for (const p of (LOBBY.peers || [])) {
+  for (const p of lobbySyncPeers()) {
     const tw = p.presence && p.presence.tw; if (!tw || typeof tw.x !== 'number') continue;
     seen[p.peer] = 1; let O = WORLD.others[p.peer];
     if (!O) {

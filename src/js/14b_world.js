@@ -214,7 +214,7 @@ function townPresence() {
 function updateOthers(dt) {
   townPresence();
   const seen = {};
-  for (const p of (LOBBY.peers || [])) {
+  for (const p of lobbySyncPeers()) {
     const tw = p.presence && p.presence.tw; if (!tw || typeof tw.x !== 'number') continue;
     seen[p.peer] = 1; let O = WORLD.others[p.peer];
     if (!O) {
