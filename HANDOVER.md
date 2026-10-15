@@ -1,3 +1,13 @@
+# Patch 4.11 deployed — 14 Oct 2026
+
+Online identity hotfix steel-tape-auth-a268adde2f30 is live at https://buhurt-steel-and-tape.vercel.app. Vercel dpl_8WYm6EsSd8rhS5aWULmCLCXKiW4W is READY; GitHub release b4f96822ce2d9f0a03b5abaaeb910fc50cf3104c; supplied clean source61d397dd20c650fcdd3fa6227c9cd7222754a794. Live index SHA256 c6c3931ded13354041b6d5afe4ad2e00a3cc6b60a64226627f26c5cc1b1b4b40 and sw.js SHA256 4c138baa3fbe044563d6efd17690129a5b931c30677809e3602ba5fdd2508bac match the supplied exact artifacts.
+
+Only account presence filtering and town actor resync changed in game source. Patch4.10 avatar dynamic flag remains; crown/admin backend and owner auth configuration were retained. No player saves were changed. Workshop requests without owner authentication return401; direct private preview files return404. Frozen private v59 index SHA256 remains9febc28a92bb24e885540d3c5265130201f442c4211be0f4be24179eb00834e0.
+
+Handoff checks: build and ESLint passed; exact-build identity browser2/2 desktop/emulated phone and existing P2P/profile regressions2/2 desktop passed. Real multi-device signed-in sessions and physical Android remain unverified.
+
+Discord dispatcher v30 sent v4-11 to BuhurtOS #patch-notes (request776) and Red Deer Reavers #buhurt-steel-and-tape (request777). Delivery responses, live hash/access checks, release notes and a source bundle are in identity-release-2026-10-14.
+
 # Online identity hotfix candidate — 14 Oct 2026
 
 Build `steel-tape-auth-a268adde2f30` follows live patch 4.10. A second browser session signed into the same BuhurtOS account had a different peer ID and was rendered as another town player. `13f_invite.js` now retains the raw presence list but exposes one peer per signed-in account, excludes the local account's other sessions, and chooses a stable town presence before a non-town presence. It uses account IDs, never matching display names. `14b_world.js` rechecks that list each town update so a restored login or account switch removes an already-rendered duplicate. Unauthenticated peers retain their separate session identities because there is no verified account key to merge.
