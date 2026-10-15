@@ -1,0 +1,7 @@
+BUHURT: Steel & Tape public model previews
+
+The equipment and anonymous armoured mannequins are serialized from the live game's own geometry and materials. The game combines procedural geometry with CC0 Quaternius sword and heater-shield assets. Quaternius: https://quaternius.com/
+
+The viewer uses the same Three.js r149 renderer as the game. Three.js is MIT licensed; see ../vendor/THREE-LICENSE.txt. Three.js: https://threejs.org/
+
+Preview lighting, camera angles, the display pedestal and inspection pose are wiki presentation. Mannequins use an anonymous 1.8 m body and Reavers colours. These are not player account exports or personalized characters. Only standard, reviewed public equipment is included.

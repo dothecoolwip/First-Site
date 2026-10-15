@@ -2,6 +2,128 @@
   "schema": 1,
   "releases": [
     {
+      "id": "wiki-armoury-models",
+      "title": "The armoury: live models, dressing room and gear comparisons",
+      "date": "2026-10-15T07:12:00Z",
+      "kind": "Wiki tools and visual reference",
+      "build": "steel-tape-auth-ad27047a6f73",
+      "previousBuild": "steel-tape-auth-ad27047a6f73",
+      "summary": "Explore the game's standard equipment in 3D, try a full kit on an armoured fighter, and compare equipment stats side by side.",
+      "reviewedPublic": true,
+      "evidence": [
+        "Based on the exact game page and renderer served by production commit 8435291da751e28205983fa2e7df44ebbbd98d94, build steel-tape-auth-ad27047a6f73.",
+        "Model geometry and materials were serialized from the live game's standard equipment and anonymous display-fighter constructors. Every exported equipment ID already belongs to the reviewed public catalogue.",
+        "The model manifest records game-source, renderer, geometry and preview-image SHA-256 hashes. Models contain self-contained textures and no executable game bundle, account exports or save data.",
+        "The interface follows patterns researched in Wowhead's model-viewer tutorial and transmog tools: https://www.wowhead.com/news/wowhead-modelviewer-tutorial-235544 and https://www.wowhead.com/transmog."
+      ],
+      "sections": [
+        {
+          "title": "A visual equipment database",
+          "items": [
+            "A new Armoury page shows the seven standard weapons, eight helmets and two shields with rendered images of their actual game geometry. Each card links to its existing item article and offers Try on and Compare actions.",
+            "Search by equipment name or description, filter by equipment type or weapon hand count, and sort alphabetically, by ascending mass, or by descending weapon reach. Empty searches explain how to broaden the filters.",
+            "The wiki overview, desktop sidebar, header and mobile browse drawer now link to the armoury and dressing room. Existing quest, material, crafting, place and skill articles remain available."
+          ],
+          "metrics": [
+            {
+              "name": "Standard equipment models available for inspection",
+              "before": 0,
+              "after": 17,
+              "unit": "models",
+              "context": "New wiki model previews; the equipment already existed in the game.",
+              "delta": 17,
+              "relativePercent": null,
+              "percentagePoints": null
+            }
+          ]
+        },
+        {
+          "title": "Interactive character and equipment viewers",
+          "items": [
+            "Equipment articles now offer Explore in 3D. Rotate with a pointer, keyboard arrows or the rotation buttons; zoom with the slider, plus/minus keys or a two-finger pinch. Reset restores the starting camera. Auto rotate is optional and pauses rendering while the page is hidden or the viewer is outside the viewport.",
+            "The dressing room assembles standard weapons, helmets and shields on either the standard or fitted anonymous armoured harness. Geometry, materials and Reavers colours come from the game. Mannequins use a fixed 1.8 m display body; camera, pedestal, lighting and inspection pose are wiki presentation.",
+            "Changing to a two-handed weapon removes and disables the shield. Changing back to a one-handed weapon makes the shield selector available again; a shield is optional.",
+            "Fighter-archetype articles also show an armoured display fighter and link to the dressing room. These are illustrative mannequins, not reconstructions of a specific player or a promise that an archetype fixes your personal appearance."
+          ],
+          "metrics": [
+            {
+              "name": "Anonymous harness shapes in the dressing room",
+              "before": 0,
+              "after": 2,
+              "unit": "shapes",
+              "context": "Standard and fitted display mannequins; no player character is imported.",
+              "delta": 2,
+              "relativePercent": null,
+              "percentagePoints": null
+            }
+          ]
+        },
+        {
+          "title": "Compare, save and share",
+          "items": [
+            "Select up to three pieces of the same equipment type in the armoury. Mixed types are rejected with an explanation, and the selection can be cleared.",
+            "The comparison shows actual source stats and absolute differences from the first selected piece. Weapons compare mass, reach, hand count and class; helmets compare mass, protection, field of view, breathing and sound muffling; shields compare mass and block value. Larger values are not universally better, and these source values do not measure match outcomes.",
+            "Each comparison and dressing-room combination has its own shareable URL. Copy-link controls use the clipboard when available and provide a selectable link when clipboard access is unavailable.",
+            "Save up to five looks in this browser and reopen or remove them later. Saved looks do not sync to a game account and never equip, purchase or change anything in the game.",
+            "The displayed equipment mass subtotal includes only the selected weapon, helmet and optional shield. It excludes body armour and all other carried kit; it is not the fighter's total kit mass."
+          ],
+          "metrics": [
+            {
+              "name": "Pieces in one same-type comparison",
+              "before": 0,
+              "after": 3,
+              "unit": "pieces",
+              "context": "New comparison-tool maximum.",
+              "delta": 3,
+              "relativePercent": null,
+              "percentagePoints": null
+            },
+            {
+              "name": "Saved dressing-room looks per browser",
+              "before": 0,
+              "after": 5,
+              "unit": "looks",
+              "context": "Maximum locally stored looks; clearing browser storage removes them.",
+              "delta": 5,
+              "relativePercent": null,
+              "percentagePoints": null
+            }
+          ]
+        },
+        {
+          "title": "Mobile, accessibility and loading behavior",
+          "items": [
+            "The armoury uses responsive cards, labelled filters and touch-sized controls. Dressing-room controls stack under the model on phones; wide comparison tables remain horizontally scrollable.",
+            "The Three.js renderer loads only after a visitor requests a 3D preview. Ordinary wiki browsing uses static model images and does not create a WebGL context.",
+            "If the renderer or a model cannot be loaded, the static preview and equipment facts remain accessible. Leaving a page disposes its model geometry, textures and renderer. Reduced-motion preferences disable card movement; model auto-rotation requires an explicit click.",
+            "The viewer uses the game's existing Three.js r149 with its MIT license. Quaternius CC0 source geometry credits are retained with the model assets."
+          ],
+          "metrics": []
+        },
+        {
+          "title": "Release scope and maintenance",
+          "items": [
+            "This is a wiki-only release inside the existing live game's /wiki/ folder. The game home screen, small Wiki link, engine code, gameplay values, progression and saves are unchanged.",
+            "The existing 229-entry public catalogue and permanent release archive are retained. Only reviewed standard equipment and the anonymous display mannequins join the public asset allowlist.",
+            "Future release maintenance now includes live-model extraction, static-preview generation and manifest checks against the exact candidate game page. Unknown equipment remains subject to individual public-content review.",
+            "Published silently under the owner's continuing request. No Discord announcement is sent."
+          ],
+          "metrics": []
+        }
+      ],
+      "knownIssues": [
+        "WebGL support and performance depend on the browser and device. Static previews are always available; physical-device pinch and performance measurements have not been performed.",
+        "Personal character import, account synchronization, cosmetic variants, wear/damage states and gameplay animations are not part of this inspection viewer."
+      ],
+      "validation": [
+        "All 19 model assets parsed and rendered to their static previews, including every standard equipment piece and both harness shapes.",
+        "Gallery searches, filters, sorting, comparison selection and arithmetic, kit deep links, two-hand/shield behavior and saved-look persistence tested at desktop and 390/320 px phone widths.",
+        "3D triangle rendering, rotation, keyboard zoom/reset, model switching, renderer disposal and graphics-load failure fallback tested in browser automation.",
+        "Existing catalogue, quest-link, release arithmetic, search, mobile navigation and public article checks retained."
+      ],
+      "canonicalUrl": "https://buhurt-steel-and-tape.vercel.app/wiki/patch-notes/#patch/wiki-armoury-models"
+    },
+    {
       "id": "game-menu-wiki-layout",
       "title": "Restore the original main-menu layout",
       "date": "2026-10-15T06:58:00Z",
