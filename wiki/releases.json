@@ -2,6 +2,66 @@
   "schema": 1,
   "releases": [
     {
+      "id": "wiki-release-workflow",
+      "title": "A live reference and permanent full patch notes",
+      "date": "2026-10-15T05:30:24.374Z",
+      "kind": "Wiki update",
+      "build": "steel-tape-auth-ad27047a6f73",
+      "previousBuild": "steel-tape-auth-ad27047a6f73",
+      "summary": "The player reference is checked against the current game, with permanent detailed release pages and clearer release timestamps.",
+      "reviewedPublic": true,
+      "evidence": [
+        "Verified production gameplay build steel-tape-auth-ad27047a6f73 at commit 0e44bd249c19314bb661eb7271bc02048db5e2df before this wiki-only update.",
+        "Live-source refresh verified 229 public entries, no changed entries and no new pending entries. Gameplay files are preserved byte-for-byte."
+      ],
+      "sections": [
+        {
+          "title": "The current player reference",
+          "items": [
+            "The wiki was refreshed from the actual live game. Its 229 reviewed public entries and their player-facing values were unchanged in this refresh.",
+            "Quest chapters, prerequisites, objectives, ordinary rewards, people and places, gathering requirements, recipes, equipment and combat perks remain searchable and linked. No new gameplay system is claimed by this release."
+          ],
+          "metrics": []
+        },
+        {
+          "title": "Detailed release records",
+          "items": [
+            "The patch-note archive keeps permanent links for individual releases, including this page. Existing release entries remain intact. Factual corrections will be published as new records identifying the earlier claim.",
+            "Release facts now display the release time with the date and timezone. Search and direct release links continue to work from the wiki subfolder.",
+            "Full notes accompany future game updates and explain affected modes, conditions, mechanics, fixes, interactions, edge cases, compatibility and known issues. The short Discord announcement points to the complete public record."
+          ],
+          "metrics": []
+        },
+        {
+          "title": "Understanding numerical changes",
+          "items": [
+            "Future numerical changes use verified old and new values, explicit units, the absolute difference and the relative percentage change. Percentage-valued statistics also show percentage-point differences.",
+            "A zero baseline has no defined relative percentage change. Unknown old values are identified as unknown rather than guessed. Source constants and calculated percentages do not establish measured performance or win-rate improvements.",
+            "This release changes the wiki and release workflow. It does not change gameplay balance, costs, XP, ordinary rewards, cooldowns, probabilities, save formats or controls; there are no numerical gameplay deltas to report."
+          ],
+          "metrics": []
+        },
+        {
+          "title": "Compatibility and verification",
+          "items": [
+            "The current gameplay build is retained, including the latest fixes already present in production. No player-save migration is required for this wiki update.",
+            "The wiki and full notes remain under the live game domain. Wiki requests use the existing network-only behavior rather than the game offline cache.",
+            "Content, link, numeric-note and desktop/phone browser checks cover the reference and full-note pages. No measured frame-rate or loading-speed improvement is claimed."
+          ],
+          "metrics": []
+        }
+      ],
+      "knownIssues": [
+        "Coverage is still incomplete for public cosmetics, housing, full mode walkthroughs, detailed controls and advanced squire care. The coverage page continues to identify these gaps.",
+        "Physical Android and real-account multi-device gameplay acceptance are outside this wiki-only verification."
+      ],
+      "validation": [
+        "Live-source extraction: matching production build, 229 reviewed entries, no pending additions and no catalogue changes.",
+        "Release archive preserves the earlier wiki-launch record and its permanent URL."
+      ],
+      "canonicalUrl": "https://buhurt-steel-and-tape.vercel.app/wiki/patch-notes/#patch/wiki-release-workflow"
+    },
+    {
       "id": "wiki-launch",
       "title": "The Steel & Tape player wiki is here",
       "date": "2026-10-15T05:22:51.704Z",
