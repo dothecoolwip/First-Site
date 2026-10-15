@@ -4,14 +4,14 @@
     {
       "id": "wiki-launch",
       "title": "The Steel & Tape player wiki is here",
-      "date": "2026-10-14T23:16:58-06:00",
-      "build": "steel-tape-auth-a268adde2f30",
+      "date": "2026-10-15T05:22:51.704Z",
+      "build": "steel-tape-auth-ad27047a6f73",
       "previousBuild": null,
       "kind": "Wiki release",
       "summary": "A searchable player reference and a permanent home for detailed patch notes, hosted alongside the live game.",
       "reviewedPublic": true,
       "evidence": [
-        "Production game build steel-tape-auth-a268adde2f30, Git commit b4f96822ce2d9f0a03b5abaaeb910fc50cf3104c",
+        "Verified current production game build steel-tape-auth-ad27047a6f73, Git commit 5a888e39016e6034cb0b0d7ca10cb4110044ce14. The wiki release preserves that gameplay build.",
         "229-entry public catalogue validated with 88 quest chapters; desktop and phone browser checks passed"
       ],
       "sections": [
