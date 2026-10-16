@@ -1,5 +1,5 @@
 // Offline cache for Buhurt: Steel & Tape. Bump VERSION when you upload a new build.
-const VERSION = "steel-tape-auth-ad27047a6f73-wiki-b93f86304b";
+const VERSION = 'steel-tape-auth-309388adb67a';
 const CORE = ["./","./index.html","./manifest.webmanifest","./icon-192.png","./icon-512.png","./update_prompt.js","./version.json","./sfx_base.js","./sfx_00.js","./sfx_01.js","./sfx_02.js","./sfx_03.js","./library_base.js","./library_icons_00.js","./library_surfaces_00.js","./library_models_00.js","./library_models_01.js","./library_models_02.js","./library_models_03.js","./library_models_04.js","./library_models_05.js","./library_models_06.js","./library_models_07.js","./library_models_08.js","./library_models_09.js","./library_models_10.js","./library_models_11.js","./library_models_12.js","./library_models_13.js","./library_models_14.js","./three.min.js","./fonts/fonts.css","./fonts/font-0.ttf","./fonts/font-1.ttf","./fonts/font-2.ttf","./fonts/font-3.ttf","./fonts/font-4.ttf","./fonts/font-5.ttf","./fonts/font-6.ttf","./fonts/font-7.ttf"];
 self.addEventListener('install', e => { e.waitUntil(caches.open(VERSION).then(c => c.addAll(CORE)).then(() => self.skipWaiting())); });
 self.addEventListener('activate', e => { e.waitUntil(caches.keys().then(ks => Promise.all(ks.filter(k => k !== VERSION).map(k => caches.delete(k)))).then(() => self.clients.claim())); });
@@ -7,6 +7,14 @@ self.addEventListener('activate', e => { e.waitUntil(caches.keys().then(ks => Pr
 self.addEventListener('fetch', e => {
   if (e.request.method !== 'GET') return;
   const url = new URL(e.request.url);
+  // Personal eligibility is always fresh and must never enter the asset cache.
+  if (url.origin === self.location.origin && url.pathname === '/api/crown-eligibility') {
+    e.respondWith(fetch(e.request, { cache: 'no-store' }).catch(() =>
+      new Response(JSON.stringify({ error: 'Crown eligibility is unavailable offline. Reconnect and retry.' }), {
+        status: 503, headers: { 'Content-Type': 'application/json', 'Cache-Control': 'private, no-store' }
+      })));
+    return;
+  }
   // The player wiki is a separate document tree. Never return cached game HTML
   // for wiki navigation or keep its release catalogue behind the game cache.
   if (url.origin === self.location.origin && /^\/wiki(?:\/|$)/.test(url.pathname)) {

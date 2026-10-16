@@ -1,5 +1,5 @@
 <!doctype html><html><head><meta charset="utf-8"><link rel="manifest" href="manifest.webmanifest"><meta name="theme-color" content="#0f1316"><link rel="apple-touch-icon" href="icon-192.png"><meta name="apple-mobile-web-app-capable" content="yes"><meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover"></head><body>
-<script>window.BUILD_VER="steel-tape-auth-ad27047a6f73";</script><title>Buhurt: Steel &amp; Tape</title>
+<script>window.BUILD_VER="steel-tape-auth-309388adb67a";</script><title>Buhurt: Steel &amp; Tape</title>
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link rel="stylesheet" href="fonts/fonts.css">
@@ -105,6 +105,14 @@ h1,h2,h3{font-family:var(--display);text-wrap:balance;margin:0;line-height:1}
 .back svg{width:20px;height:20px;stroke:currentColor;fill:none;stroke-width:2.4;stroke-linecap:round;stroke-linejoin:round}
 .tabs{margin-left:auto}
 .tabs button{min-height:38px}
+/* Keep Fighter navigation in its own wrapping row at phone widths. */
+@media(max-width:900px){
+#careerTabs{flex:1 0 100%;margin-left:0;min-width:0}
+#careerTabs button{min-height:44px;overflow-wrap:anywhere}
+#career .phead{flex-shrink:0;max-height:48vh;overflow-y:auto}
+#careerBody [aria-label="Progress sections"]{flex-shrink:0}
+}
+
 .tabpane{display:flex;flex-direction:column;gap:14px}
 .sechead{display:flex;align-items:baseline;gap:10px;flex-wrap:wrap}
 .sechead .seg{margin-left:auto}
@@ -1405,7 +1413,7 @@ body.intown #hud{display:none!important}
   <section class="screen dimmed" id="career" hidden>
     <div class="panel wide">
       <header class="phead"><button class="back" data-back data-gp="B" aria-label="Back"><svg viewBox="0 0 24 24"><path d="M15 5l-7 7 7 7"/></svg><span>Back</span></button><h2 class="ttape tape mk">Your fighter</h2>
-        <div class="seg tabs" id="careerTabs" role="tablist"><button data-tab="skills" aria-pressed="false">Skills</button><button data-tab="profile" aria-pressed="true">Profile</button><button data-tab="shop" aria-pressed="false">Town</button><button data-tab="inv" aria-pressed="false">Inventory</button><button data-tab="trades" aria-pressed="false">Trades</button><button data-tab="progress" aria-pressed="false">Progress</button></div>
+        <div class="seg tabs" id="careerTabs" role="tablist"><button data-tab="skills" aria-pressed="false">Skills</button><button data-tab="profile" aria-pressed="true">Profile</button><button data-tab="shop" aria-pressed="false">Town</button><button data-tab="inv" aria-pressed="false">Inventory</button><button data-tab="trades" aria-pressed="false">Trades</button><button data-tab="progress" aria-pressed="false">Progress / Achievements</button></div>
       </header>
       <div class="pbody" id="careerBody"></div>
     </div>
@@ -27594,6 +27602,32 @@ function h(tag, attrs, ...kids) {
   return e;
 }
 
+// Refreshing a counter must not discard its nested horizontal/vertical viewport.
+// Restore synchronously: a delayed restore would fight the next touch gesture.
+function menuView(root, { reset = false } = {}) {
+  const pathOf = el => { const path = []; while (el !== root) { const p = el.parentElement; if (!p) return null; path.unshift(Array.prototype.indexOf.call(p.children, el)); el = p; } return path; };
+  const atPath = path => path && path.reduce((el, i) => el?.children[i], root);
+  const active = root.contains(document.activeElement) ? document.activeElement : null;
+  const focus = active && { el: active, key: active.dataset.menuKey, id: active.id, label: active.getAttribute('aria-label'), name: active.getAttribute('name'), tag: active.tagName, text: active.textContent, path: pathOf(active), start: active.selectionStart, end: active.selectionEnd };
+  const scrolls = reset ? [] : [root, ...root.querySelectorAll('*')].filter(el => el === root || el.scrollTop || el.scrollLeft).map(el => ({ path: pathOf(el), top: el.scrollTop, left: el.scrollLeft }));
+  const parents = []; for (let el = root.parentElement; el && el !== document.body; el = el.parentElement) if (el.scrollTop || el.scrollLeft) parents.push([el, el.scrollTop, el.scrollLeft]);
+  root.style.overflowAnchor = 'none';
+  return () => {
+    if (reset) { root.scrollTop = 0; root.scrollLeft = 0; }
+    else {
+      if (focus) {
+        const candidates = Array.from(root.querySelectorAll(focus.tag));
+        const matches = candidates.filter(el => focus.key ? el.dataset.menuKey === focus.key : focus.id ? el.id === focus.id : focus.label ? el.getAttribute('aria-label') === focus.label : focus.name ? el.getAttribute('name') === focus.name : el.textContent === focus.text);
+        const next = root.contains(focus.el) ? focus.el : matches.length === 1 ? matches[0] : matches.find(el => el === atPath(focus.path));
+        if (next && !next.disabled) { next.focus({ preventScroll: true }); if (focus.start != null && next.setSelectionRange) { try { next.setSelectionRange(focus.start, focus.end); } catch (e) { /* number/range inputs do not expose a text selection */ } } }
+      }
+      for (const s of scrolls) { const el = atPath(s.path); if (el) { el.style.overflowAnchor = 'none'; el.scrollTop = s.top; el.scrollLeft = s.left; } }
+      for (const [el, top, left] of parents) { el.scrollTop = top; el.scrollLeft = left; }
+    }
+  };
+}
+function redrawMenu(root, render, options) { const restore = menuView(root, options); try { return render(); } finally { restore(); } }
+
 const store = {
   get(k, d) { try { const v = localStorage.getItem('st-' + k); return v == null ? d : JSON.parse(v); } catch (e) { return d; } },
   set(k, v) { try { localStorage.setItem('st-' + k, JSON.stringify(v)); } catch (e) { /* storage unavailable */ } },
@@ -27652,7 +27686,7 @@ function worldMapApply(data=MAP_WORLD.data) {
   for(const v of MAP_WORLD.objects.values())if(!records.has(v.id)){if(v.added)v.g.removeFromParent();else records.set(v.id,{id:v.id,asset:v.asset,...v.base,collision:v.originalCollision});}
   for(const p of records.values()){let v=MAP_WORLD.objects.get(p.id);if(!v){if(p.asset.startsWith('vendor:'))throw Error('Unknown vendor anchor '+p.id);const g=p.asset==='map-bridge'?mapBridge(TOWN.root,p):kpiece(TOWN.root,p.asset,p.x,gy(p.x,p.z),p.z,p.ry,p.scale);if(!g)throw Error('Missing asset '+p.asset);v={id:p.id,asset:p.asset,g,base:{...p},collision:p.collision,added:true};MAP_WORLD.objects.set(p.id,v);}
     const g=v.g;if(p.removed){g.removeFromParent();continue;}if(!g.parent)TOWN.root.add(g);g.position.set(p.x,gy(p.x,p.z)+(p.y||0),p.z);g.rotation.y=p.ry;g.scale.setScalar(p.scale);v.collision=p.collision;g.userData.collision=p.collision;
-    if(v.stall){const s=v.stall,b=v.base,a=p.ry-b.ry,c=Math.cos(a),sn=Math.sin(a),dx=b.ax-b.x,dz=b.az-b.z;s.x=p.x;s.z=p.z;STALL_AT[s.V.key]=[p.x,p.z];if(s.V.at)s.V.at=[p.x,p.z];s.ax=p.x+dx*c+dz*sn;s.az=p.z-dx*sn+dz*c;s.ry=p.ry;if(s.label&&!g.getObjectById(s.label.id))s.label.position.set(p.x,s.label.position.y,p.z);}
+    if(v.stall){const s=v.stall,b=v.base,a=p.ry-b.ry,c=Math.cos(a),sn=Math.sin(a),dx=b.ax-b.x,dz=b.az-b.z;s.x=p.x;s.z=p.z;STALL_AT[s.V.key]=[p.x,p.z];if(s.V.at)s.V.at=[p.x,p.z];s.ax=p.x+(dx*c+dz*sn)*p.scale/b.scale;s.az=p.z+(-dx*sn+dz*c)*p.scale/b.scale;s.ry=p.ry;if(s.node)Object.assign(s.node,{x:s.x,z:s.z,ax:s.ax,az:s.az});if(s.label&&!g.getObjectById(s.label.id))s.label.position.set(p.x,s.label.position.y,p.z);}
     if(p.collision==='surface'){if(p.asset!=='map-bridge')throw Error('Walkable surface currently requires the registered bridge prefab.');MAP_WORLD.surfaces.push({x:p.x,z:p.z,ry:p.ry,hx:2*p.scale,hz:5*p.scale,y:g.position.y+.475*p.scale});}
   }
   TOWN.obst=MAP_WORLD.baseline.circles.filter(o=>{const p=records.get(o.owner);return !p||(!p.removed&&p.collision==='solid');}).map(o=>mapMoveFootprint(o,records.get(o.owner)));
@@ -29382,7 +29416,7 @@ function dropWeaponProp(f) {
   const a = rand(0, TAU);
   prop.position.set(f.pos.x + Math.sin(a) * 0.9, 0.03, f.pos.z + Math.cos(a) * 0.9); prop.rotation.set(Math.PI / 2, 0, a);
   prop.traverse(o => { if (o.isMesh) o.castShadow = true; });
-  W3.matchRoot.add(prop); G.props.push(prop);
+  W3.matchRoot.add(prop); G.props.push(prop); return prop;
 }
 
 // ---------- marshals ----------
@@ -30434,10 +30468,11 @@ function resolveDisarm(f) { // grabbing the haft or hilt, never the blade (BR 3.
 
 function disarm(f, how) {
   if (!f.weapon) return;
-  dropWeaponProp(f);
+  const lost=f.weapon, prop=dropWeaponProp(f);
+  f.duelLostWeapon={weapon:lost,prop,intact:!(lost.haft&&f.kit.haft?.failed)};
   f.weapon = null; setWeaponModel(f); if (f.action && f.action.kind === 'swing') f.action = null;
-  feed(`${label(f)} disarmed, weapon ${how}. A weapon lying flat can't be picked up.`, 'BR 3.5, 3.6', teamColor(f));
-  if (f.spec.sidearm && !f.sidearmUsed) f.sidearmT = 1.3;
+  feed(`${label(f)} disarmed, weapon ${how}. ${standardDuel()?'Defend and visit your corner; the marshal will stop play if no legal replacement is available.':"A weapon lying flat can't be picked up."}`,standardDuel()?'Duel weapon recovery':'BR 3.5, 3.6',teamColor(f));
+  if (f.spec.sidearm && !f.sidearmUsed && duelWeaponAllowed('short')) f.sidearmT = 1.3;
   AU.block('clash', 0.6, vol(f));
 }
 
@@ -30448,6 +30483,7 @@ function updateRearm(f, dt) {
     if (f.sidearmT <= 0) { f.weapon = WEAPONS.short; f.sidearmUsed = true; setWeaponModel(f); AU.play('drawS0', 0.5 * vol(f)); feed(`${label(f)} draws the sidearm.`, 'BR 3.6', teamColor(f)); }
     return;
   }
+  if (standardDuel() && !duelReserveAvailable(f)) { beginDuelWeaponStop(f); return; }
   const sd = sideOf(f), zn = W3.zones[sd];
   if (Math.hypot(f.pos.x - zn.x, f.pos.z - zn.z) < 1.5 && G.reserves[sd] > 0 && reserveAllowed(f)) {
     f.rearmT += dt;
@@ -30598,6 +30634,58 @@ function updateClinches(dt) {
     a.vel.x = b.vel.x = vx; a.vel.z = b.vel.z = vz;
     if (c.idle >= BREAK_AFTER) { G.stats.breaks++; fieldBreak(c); }
   }
+}
+// Scoped recovery adapter: existing production match formats remain unchanged.
+function standardDuel(m=G.match){return !!(m?.duel&&!m.pro&&!m.training&&!m.crownNPC);}
+function duelWeaponAllowed(key,m=G.match){
+ if(!standardDuel(m))return true;
+ const w=WEAPONS[key];
+ if(!w)return false;
+ if(m.duelCat==='Polearm')return w.hands===2&&!!w.haft;
+ if(m.duelCat==='Longsword')return w.hands===2&&!w.haft;
+ return w.hands===1;
+}
+function matchScoreText(m=G.match){if(m.duelForfeit!=null)return `by technical decision (${m.technicalReason==='withdrawal'?'withdrawal':'equipment unavailable'}); ${m.pts[0]}–${m.pts[1]} recorded points`;return `${m.wins[0]}–${m.wins[1]} in rounds`;}
+// Existing spares are finite. Exhaustion holds the clock; it does not create a
+// third spare, add points, or make striking an unarmed duelist legal.
+function duelReserveAvailable(f) {
+  const side=sideOf(f), count=G.reserves[side], key=G.reserveKeys?.[side]?.[2-count];
+  return count>0 && reserveAllowed(f) && !!WEAPONS[key] && duelWeaponAllowed(key);
+}
+function duelReturnableWeapon(f) {
+  const lost=f.duelLostWeapon;
+  return lost?.intact && lost.weapon && duelWeaponAllowed(lost.weapon.key) ? lost : null;
+}
+function beginDuelWeaponStop(f) {
+  if (!standardDuel() || G.phase!=='fight' || G.weaponStop || f.weapon || f.sidearmT>0 || !isUp(f)) return;
+  G.weaponStop={match:G.match,f,left:60,age:0,silent:!!G.attract}; G.phase='weapon-stop';
+  for (const actor of G.fighters) { if(actor.clinch)breakClinch(actor);actor.action=null;actor.move={x:0,z:0};actor.vel={x:0,z:0};actor.guard=false; }
+  if(G.weaponStop.silent)return; // Background festival bouts must never take over the player's menus.
+  marshalCall('Stop fight.', 'Disarmed duelist. Clock stopped for a legal weapon check.', 3); setHud(false);
+  const available=!!duelReturnableWeapon(f);
+  msg('weapon check','Duel paused',`<p>No usable corner replacement is available for ${escTxt(label(f))}. The fight clock and score are held.</p><p>${available ? 'The marshal can return the same intact, category-legal weapon. No spare is added.' : 'No intact category-legal weapon is available. The marshal allows one minute to resolve the equipment problem; inability to continue results in a technical loss.'}</p><p id="duelWeaponClock" role="timer">1:00</p><p>Do not strike an unarmed opponent.</p>`, f.isPlayer ? [...(available ? [['Collect my weapon', finishDuelWeaponStop, true]] : []), ['Withdraw from this duel',()=>forfeitDuelWeaponStop('withdrawal')]] : []);
+}
+function finishDuelWeaponStop() {
+  const stop=G.weaponStop;if(!stop||stop.match!==G.match)return false;
+  const f=stop.f,lost=duelReturnableWeapon(f);if(!lost)return false;
+  f.weapon=lost.weapon;f.duelLostWeapon=null;f.rearmT=0;
+  if(lost.prop){lost.prop.removeFromParent();G.props=G.props.filter(p=>p!==lost.prop);}
+  setWeaponModel(f);recalcBody(f);G.weaponStop=null;G.phase='fight';if(!stop.silent){showScreen(null);setHud(true);refreshTouchUI();}
+  marshalCall('Fight.', 'Original weapon returned. Scores and reserve stock unchanged.', 2);return true;
+}
+function forfeitDuelWeaponStop(reason) {
+  const stop=G.weaponStop;if(!stop||stop.match!==G.match)return;
+  G.weaponStop=null;const m=G.match;m.duelForfeit=stop.f.team;m.technicalReason=reason;
+  m.wins[1-stop.f.team]=2;G.phase='fight';if(!stop.silent){showScreen(null);setHud(true);}
+  marshalCall('Technical decision', reason==='withdrawal'?'Competitor withdrew.':'No legal equipment after the one-minute allowance.',3);endRound('equipment');
+}
+function updateDuelWeaponStop(dt) {
+  const stop=G.weaponStop;if(!stop)return;
+  if(stop.match!==G.match){G.weaponStop=null;return;}
+  stop.age+=dt;stop.left=Math.max(0,stop.left-dt);
+  const timer=!stop.silent&&$('#duelWeaponClock');if(timer)timer.textContent=fmtClock(stop.left);
+  if(!stop.f.isPlayer&&stop.age>=3&&duelReturnableWeapon(stop.f)){finishDuelWeaponStop();return;}
+  if(stop.left===0){if(!finishDuelWeaponStop())forfeitDuelWeaponStop('equipment');}
 }
 // ===================================================================
 // Fighting 2.0: layered on the fighter sim (06_fighter) and the team AI (08_ai).
@@ -32477,9 +32565,10 @@ document.addEventListener('click', e => { const b = e.target.closest && e.target
 function shareText(kind, extra = {}) {
   const m = G.match; if (!m) return '';
   const head = kind === 'daily' ? `BUHURT Daily #${extra.day} ${extra.mod || ''}` : kind === 'run' ? `BUHURT Gauntlet ${extra.code}` : `BUHURT: Steel & Tape`;
-  const lines = [head.trim(), `${m.wins[0] > m.wins[1] ? '🏆' : m.wins[0] === m.wins[1] ? '🤝' : '🛡️'} ${m.wins[0]}–${m.wins[1]} vs ${CLUBS[m.opp] ? CLUBS[m.opp].short : ''}${m.category === 'youth' ? ' 🧸' : ''}`];
+  const lines = [head.trim(), `${m.wins[0] > m.wins[1] ? '🏆' : m.wins[0] === m.wins[1] ? '🤝' : '🛡️'} ${m.duelForfeit!=null?m.pts[0]:m.wins[0]}–${m.duelForfeit!=null?m.pts[1]:m.wins[1]}${m.duelForfeit!=null?" recorded points":""} vs ${CLUBS[m.opp] ? CLUBS[m.opp].short : ''}${m.category === 'youth' ? ' 🧸' : ''}`];
   const rnd = m.results.map((r, i) => `R${r.round}${r.winner === 0 ? '🟩' : r.winner === 1 ? '🟥' : '⬜'}`).join(' ');
   lines.push(rnd);
+  if(m.duelForfeit!=null)lines.push('Technical decision: '+(m.technicalReason==='withdrawal'?'withdrawal':'equipment unavailable')+'. Recorded scores shown above.');
   const hits = (MT.zones || []).slice(0, 14).map(z => ({ helmet: '🟩', torso: '🟨', armL: '🟦', armR: '🟦', legs: '🟦', down: '💥' })[z] || '⬛').join('');
   if (hits) lines.push(hits);
   const tape = G.tourney ? '' : `🩹 tape ${MT.tape || 0} · 🟨 cards ${m.cards.filter(c => c.team === 0 && c.card !== 'warning').length}`;
@@ -33295,12 +33384,17 @@ function shieldPreview(club, size = 96) {
   return c;
 }
 function renderCareer() {
+  const box = $('#careerBody'), section = () => (G.careerTab || 'profile') + ':' + !!G.appearanceEditor;
+  const reset = G.screen !== 'career' || box.dataset.menuSection !== section();
+  const result = redrawMenu(box, renderCareerBody, { reset }); box.dataset.menuSection = section(); return result;
+}
+function renderCareerBody() {
   const P = CAREER.club, box = $('#careerBody'); box.innerHTML = '';
   if (['forge', 'forge-gone'].includes(G.careerTab)) G.careerTab = 'shop'; if (G.careerTab === '__oldach') G.careerTab = 'ach'; // the Forge lives at the blacksmith now
   const tab = G.careerTab || 'profile';
   $$('#careerTabs [data-tab]').forEach(x => x.setAttribute('aria-pressed', String(x.dataset.tab === tab)));
   if (['progress', 'ach', 'record'].includes(tab)) {
-    box.append(h('div', { class: 'seg', role: 'tablist', 'aria-label': 'Progress sections' }, ...[['progress', 'Progress'], ['ach', 'Awards'], ['record', 'Record']].map(([key, name]) => h('button', { role: 'tab', 'aria-pressed': String(tab === key), onclick: () => { G.careerTab = key; renderCareer(); } }, name))));
+    box.append(h('div', { class: 'seg', role: 'tablist', 'aria-label': 'Progress sections' }, ...[['progress', 'Progress'], ['ach', 'Achievements'], ['record', 'Record']].map(([key, name]) => h('button', { role: 'tab', 'aria-pressed': String(tab === key), onclick: () => { G.careerTab = key; renderCareer(); } }, name))));
     const parent = $('#careerTabs [data-tab="progress"]'); if (parent) parent.setAttribute('aria-pressed', 'true');
   }
   if (G.appearanceEditor && tab === 'profile') {
@@ -33344,7 +33438,7 @@ function renderCareer() {
 }
 const confirmReset = { armed: false };
 function toastMenu(text) { const el = $('#achPop'); el.innerHTML = ''; el.append(h('b', null, text)); el.classList.add('on'); setTimeout(() => el.classList.remove('on'), 2200); }
-function openCareer(tab) { G.appearanceEditor = false; G.backTo = G.screen === 'msgScr' ? 'title' : 'title'; skillsState(); G.careerTab = tab || (CAREER.sp > 0 ? 'skills' : 'profile'); renderCareer(); showScreen('career'); }
+function openCareer(tab) { const restore=!tab&&G.careerLastTab===G.careerTab?G.careerViewRestore:null; G.appearanceEditor=false; G.backTo='title'; skillsState(); G.careerTab=tab||G.careerTab||(CAREER.sp>0?'skills':'profile'); renderCareer(); showScreen('career'); if(restore)restore(); }
 
 // prize money and match achievements at full time
 function careerMatchEnd(m, won) {
@@ -35020,7 +35114,7 @@ function refreshPlayerCorner() {
   for (const child of [...root.children]) if (child.userData?.cornerLabel) root.remove(child);
   const S = teamSquire(G.match?.online ? squireTeam() : G.match?.squireTeam), label = townLabel(S.name, 'Your corner squire', '#f2c40f'); label.userData.cornerLabel = true; label.position.y = 2.4; root.add(label); root.userData.name = S.name;
 }
-function reserveWeapons() { return Object.keys(WEAPONS).filter(k => !WEAPONS[k].fantasy && !SPECIAL_WEAPONS.includes(k) && k !== 'custom'); }
+function reserveWeapons() { return Object.keys(WEAPONS).filter(k => !WEAPONS[k].fantasy && !SPECIAL_WEAPONS.includes(k) && k !== 'custom' && (!standardDuel() || duelWeaponAllowed(k))); }
 function prepareReserveWeapons() {
   G.reserveKeys = [[], []]; G.reserves = [2, 2]; G.reserveMeshes = [[], []];
   for (const t of [0, 1]) {
@@ -35564,6 +35658,7 @@ function renderInventory(box) {
 const SCREENS = ['title', 'howto', 'settings', 'tactics', 'sheetScr', 'repair', 'msgScr', 'pause', 'modes', 'ladder', 'career', 'townShop', 'creator'];
 
 function showScreen(id) {
+  if (G.screen === 'career' && id !== 'career') { G.careerLastTab=G.careerTab; G.careerViewRestore=menuView($('#career')); }
 
   if (id === 'howto') { renderHow(G.helpKind || IN.mode); selectTab($('#howTabs'), 'controls'); }
 
@@ -35593,7 +35688,7 @@ function clearMatch() {
 
   persistPlayerKit();
 
-  G.repairStop = false;
+  G.repairStop = false; G.weaponStop = null;
 
   for (const f of G.fighters) if (f.model) W3.matchRoot.remove(f.model.root);
 
@@ -35878,6 +35973,7 @@ function benchRotation(m) {
 }
 
 function startRound() {
+  G.weaponStop=null;for(const f of G.fighters)f.duelLostWeapon=null;
 
   const m = G.match; m.round++; m.clock = m.duel ? (m.overtime ? DUEL_OT : DUEL_TIME) : ROUND_TIME; m.pts = [0, 0];
 
@@ -36049,17 +36145,17 @@ function endRound(reason) {
 
   const a = m.duel ? m.pts[0] : standing(0), b = m.duel ? m.pts[1] : standing(1);
 
-  let winner = m.duel && m.duelDQ != null ? 1 - m.duelDQ : a > b ? 0 : b > a ? 1 : -1;
+  let winner = m.duel && m.duelDQ != null ? 1 - m.duelDQ : m.duel && m.duelForfeit != null ? 1-m.duelForfeit : a > b ? 0 : b > a ? 1 : -1;
 
   if (m.ffa) { const wf = ffaWinner(reason); winner = -1; if (wf) { m.ffaWins[wf.team]++; G.lastDown = G.lastDown || wf; } m.ffaLast = wf; reason = reason === 'time' ? 'time' : 'ffa';
 
     const me = G.player || (VS.on && VS.humans && VS.humans[0]); m.wins = [me ? m.ffaWins[me.team] : 0, Math.max(0, ...G.fighters.filter(f => f !== me).map(f => m.ffaWins[f.team]))]; }
 
-  else if (m.duel && m.duelDQ != null) m.wins[winner] = Math.max(2, m.wins[winner]);
+  else if (m.duel && (m.duelDQ != null || m.duelForfeit != null)) m.wins[winner] = Math.max(2, m.wins[winner]);
 
   else if (winner >= 0) m.wins[winner]++;
 
-  if (m.duel) reason = m.duelDQ != null ? 'dq' : 'duel';
+  if (m.duel) reason = m.duelDQ != null ? 'dq' : m.duelForfeit != null ? 'equipment' : 'duel';
 
   const time = (m.duel ? (m.overtime ? DUEL_OT : DUEL_TIME) : ROUND_TIME) - m.clock;
 
@@ -36079,11 +36175,11 @@ function endRound(reason) {
 
   if (G.attract) { after(3, () => { if (!G.attract) return; if (BOUT.on && BOUT.inSim) boutAfterRound(); else { startRound(); G.phase = 'fight'; } }); return; }
 
-  marshalCall('Hold! Stop fight!', reason === 'dq' ? 'Disqualification.' : reason === 'time' || reason === 'duel' ? 'Time.' : '', 3); raiseFlags(); if (reason === 'time' || reason === 'duel') AU.vo('time');
+  marshalCall('Hold! Stop fight!', reason === 'equipment' ? 'Technical decision: ' + m.technicalReason : reason === 'dq' ? 'Disqualification.' : reason === 'time' || reason === 'duel' ? 'Time.' : '', 3); raiseFlags(); if (reason === 'time' || reason === 'duel') AU.vo('time');
 
   const wname = m.ffa ? (m.ffaLast ? (m.ffaLast.isPlayer ? 'you' : m.ffaLast.name) : null) : winner < 0 ? null : winner === 0 ? CLUBS.reavers.name : CLUBS[m.opp].name;
 
-  after(1.7, () => marshalCall(wname ? `Round to ${wname}` : 'Round drawn', reason === 'dq' ? 'Disqualification' : m.duel ? `${a}–${b} on points` : `${a}–${b} standing (REG 4.${reason === 'time' ? 2 : 1})`, 2));
+  after(1.7, () => marshalCall(wname ? `Round to ${wname}` : 'Round drawn', m.duelForfeit != null ? 'Technical decision: ' + m.technicalReason : reason === 'dq' ? 'Disqualification' : m.duel ? `${a}–${b} on points` : `${a}–${b} standing (REG 4.${reason === 'time' ? 2 : 1})`, 2));
 
   after(3.4, () => { if (m.duelDQ != null) return; marshalCall('All rise.', '', 1); for (const f of G.fighters) if (isDown(f) && !f.out) { if (f.state === 'falling') f.state = 'grounded'; f.state = 'rising'; f.riseT = 0; } });
 
@@ -36367,7 +36463,7 @@ function renderSheet(extraTitle) {
 
   const m = G.match, B = CLUBS[m.opp];
 
-  const rows = m.results.map(r => `<tr><td>${r.round}</td><td class="hand">${r.winner < 0 ? 'draw' : r.winner === 0 ? CLUBS.reavers.name : B.name}</td><td>${r.a}–${r.b}</td><td>${fmtClock(r.time)}</td><td>${r.reason === 'dq' ? 'Disqualification' : r.reason === 'duel' ? 'More points (duel rules)' : r.reason === 'time' ? 'Time, more standing (REG 4.2)' : 'Outnumbered 3 to 1 (REG 4.1)'}</td></tr>`).join('');
+  const rows = m.results.map(r => `<tr><td>${r.round}</td><td class="hand">${r.winner < 0 ? 'draw' : r.winner === 0 ? CLUBS.reavers.name : B.name}</td><td>${r.a}–${r.b}</td><td>${fmtClock(r.time)}</td><td>${r.reason === 'equipment' ? 'Technical decision: ' + m.technicalReason : r.reason === 'dq' ? 'Disqualification' : r.reason === 'duel' ? 'More points (duel rules)' : r.reason === 'time' ? 'Time, more standing (REG 4.2)' : 'Outnumbered 3 to 1 (REG 4.1)'}</td></tr>`).join('');
 
   const cards = m.cards.length ? m.cards.map(c => `<tr><td>${c.round}</td><td>${c.who}</td><td>${cardIcon(c.card) || ''}${c.card}</td><td>${c.text}</td><td>${c.cite}</td></tr>`).join('') : '<tr><td colspan="5">None recorded.</td></tr>';
 
@@ -36499,7 +36595,7 @@ function matchEnd() {
 
   if (m.versus && G.bracket) { VS.on = false; document.body.classList.remove('split', 'split4'); $('#splitLabels').innerHTML = ''; bracketResult(m.wins[0] > m.wins[1] ? 0 : m.wins[1] > m.wins[0] ? 1 : (m.pts && m.pts[1] > m.pts[0] ? 1 : 0)); return; }
 
-  if (m.versus) { VS.on = false; document.body.classList.remove('split', 'split4'); $('#splitLabels').innerHTML = ''; const k = VS.kind; const t = drawn ? 'Draw' : k === 'duel' ? (won ? 'Player 1 wins' : 'Player 2 wins') : k === 'tag' ? (won ? 'Players 1 and 3 win' : 'Players 2 and 4 win') : (won ? 'You two win' : 'The bots win'); msg('local play', t, `<p>${m.wins[0]}–${m.wins[1]} in rounds.</p>`, [['Rematch', () => startVersus(k), true], ['Couch play', openVersus], ['Title', toTitle]]); return; }
+  if (m.versus) { VS.on = false; document.body.classList.remove('split', 'split4'); $('#splitLabels').innerHTML = ''; const k = VS.kind; const t = drawn ? 'Draw' : k === 'duel' ? (won ? 'Player 1 wins' : 'Player 2 wins') : k === 'tag' ? (won ? 'Players 1 and 3 win' : 'Players 2 and 4 win') : (won ? 'You two win' : 'The bots win'); msg('local play', t, `<p>${matchScoreText(m)}.</p>`, [['Rematch', () => startVersus(k), true], ['Couch play', openVersus], ['Title', toTitle]]); return; }
 
   if (m.online) { onlineMatchEnd(); return; }
 
@@ -36515,7 +36611,7 @@ function matchEnd() {
 
   let purseHtml = pay0 ? `<div class="paybox"><b class="num">+${fmtMoney(pay0.money)}</b><span>${pay0.lines.join(' · ')}</span><span class="muted">Purse ${fmtMoney(CAREER.purse)}. Spend it in Your fighter.</span></div>` : '';
 
-  const summary = `<p>${won ? `${CLUBS.reavers.name} take it` : `${CLUBS[m.opp].name} take it`}, ${m.wins[0]}–${m.wins[1]} in rounds. You took ${p ? p.stats.takedowns : 0} fighter${p && p.stats.takedowns === 1 ? '' : 's'} down and landed ${p ? p.stats.hits : 0} strikes.</p>${hitMapHtml()}PBS
+  const summary = `<p>${won ? `${CLUBS.reavers.name} take it` : `${CLUBS[m.opp].name} take it`}, ${matchScoreText(m)}. You took ${p ? p.stats.takedowns : 0} fighter${p && p.stats.takedowns === 1 ? '' : 's'} down and landed ${p ? p.stats.hits : 0} strikes.</p>${hitMapHtml()}PBS
 
     PURSE<details><summary>Secretary's sheet</summary><div><div class="sheet">${$('#sheet').innerHTML}</div></div></details>
 
@@ -38090,6 +38186,7 @@ function simStep(hdt) {
   G.simTime += hdt;
   if (G.match && G.phase === 'fight' && !G.paused && !G.repairStop) G.match.activeFightTime = (G.match.activeFightTime || 0) + hdt;
   runTimers();
+  if (G.weaponStop) { updateDuelWeaponStop(hdt); return; }
   if (G.repairStop) return; // Marshal has stopped play while a fighter reaches the squire.
   if (G.phase === 'fight' && G.match && !G.match.training) { G.match.clock -= hdt; if (G.match.clock <= 0) { G.match.clock = 0; endRound('time'); } }
   for (const f of G.fighters) { if (f.out) continue; if (f.vin) vinControl(f, f.vin, hdt); else if (f.isPlayer && !G.autopilot) playerControl(f, hdt); else aiControl(f, hdt); }
@@ -38119,7 +38216,7 @@ function frame(now) {
     if (G.hitstop > 0) { G.hitstop -= dt; simDt *= 0.1; }
     if (G.slowmo > 0) { G.slowmo -= dt; simDt *= 0.4; }
     if (G.match?.crownNPC) simDt = dt;
-    const running = !G.paused && ['fight', 'prefight', 'stopping', 'between', 'over', 'tactics'].includes(G.phase) && !(G.phase === 'tactics');
+    const running = !G.paused && ['fight', 'weapon-stop', 'prefight', 'stopping', 'between', 'over', 'tactics'].includes(G.phase) && !(G.phase === 'tactics');
     if (VS.on) readVersus();
     if (NET.on && NET.role === 'guest') { netTick(dt); simDt = 0; }
     else if (running && G.fast && !G.match?.crownNPC) { for (let i = 0; i < 90; i++) simStep(1 / 60); simDt = 1.5; }
@@ -38179,7 +38276,7 @@ async function boot(hot) {
   if (location.protocol === 'file:' && window.__steeltapeTest)
     Object.assign(window.__ST, { afterRound, startRound, openGauntletRepair, BOONS, aimStrength, updateLock, migrateAimStrength, goFullscreen, fullscreenActive, FS, folkRoute, folkMove, navFree, navBuild, folkSpawnSafe, folkPopulationTick, gameplayPropFootprint, folkSeatWalk, playerLunge, aiCanSee, aiObserveThreats, aiThreatReady, onlineCoop, onlinePauseRequest, netTick, hostPeers, validatedVin, neutralVin, careerCombatProfile, validateCombatProfile, combatProfile, perk, pfx, recalcBody, packF, unpackF, mapStallVisible, launchActivity, recordGuardOutcome, updateLocalFeedback, rumbleFor, challengeLevel, challengeStage, challengeFactor, botScale, skillsState, traceSwing, simStep });
   if (location.protocol === 'file:' && window.__steeltapeTest)
-    Object.assign(window.__ST, { QUESTS, QUEST_BY_ID, QUEST_REPEAT, QUEST_PLANNED_HOURS, questState, questEntry, questAvailable, questAccept, questEvent, questClaim, openQuestJournal, trainingState, trainingCredit, CITY_SITES, ROADS, ev });
+    Object.assign(window.__ST, { standardDuel,duelWeaponAllowed,matchScoreText,shareText,disarm,updateRearm,reserveWeapons,DUEL_PTS,DUEL_TIME,DUEL_OT,emergencyArmourStop,updateClinches,NET_PROTOCOL,newVin,resolveCollisions,marshalGround,groundFighter,duelReserveAvailable,duelReturnableWeapon,beginDuelWeaponStop,finishDuelWeaponStop,updateDuelWeaponStop,forfeitDuelWeaponStop,bosReadFighterInfo,bosRetryFighterInfo,townInteractionActive, QUESTS, QUEST_BY_ID, QUEST_REPEAT, QUEST_PLANNED_HOURS, questState, questEntry, questAvailable, questAccept, questEvent, questClaim, openQuestJournal, trainingState, trainingCredit, CITY_SITES, ROADS, ev });
 }
 
 function autotest() {
@@ -39817,21 +39914,45 @@ async function bosLoadInfoOnce() {
   if (BOS.testAdmin && typeof testAdminApply === 'function') testAdminApply();
   const info = { name: '', team: '', fighter: null, gender: null, m: 0, w: 0, l: 0, golds: 0, podiums: 0, wins_t: 0 };
   try { const { data } = await bosTimeout(sb.from('profiles').select('display_name').eq('id', u.id).maybeSingle(), 'Loading your profile'); if (data && data.display_name) info.name = data.display_name; } catch (e) { }
-  try {
-    const { data: link } = await bosTimeout(sb.from('fighter_accounts').select('fighter_id').eq('user_id', u.id).limit(1).maybeSingle(), 'Loading your fighter record');
-    if (link && link.fighter_id) {
-      info.fighter = link.fighter_id;
-      const { data: dir } = await bosTimeout(sb.from('fighter_directory').select('display_name, team_name, gender').eq('id', link.fighter_id).maybeSingle(), 'Loading your fighter record');
-      if (dir) { info.name = dir.display_name || info.name; info.team = dir.team_name || ''; info.gender = dir.gender || null; }
-      const { data: st } = await bosTimeout(sb.from('fighter_career_stats').select('matches, wins, losses, golds, podiums, tournament_victories').eq('fighter_id', link.fighter_id).maybeSingle(), 'Loading your fighter record');
-      if (st) Object.assign(info, { m: st.matches || 0, w: st.wins || 0, l: st.losses || 0, golds: st.golds || 0, podiums: st.podiums || 0, wins_t: st.tournament_victories || 0 });
-    }
-  } catch (e) { }
+  await bosReadFighterInfo(info, u.id);
   if (!info.name) info.name = (u.user_metadata && (u.user_metadata.full_name || u.user_metadata.name)) || (u.email || '').split('@')[0];
   BOS.info = info; bosApply();
   if (typeof testAdminRefresh === 'function') testAdminRefresh();
   if (typeof eventIdentify === 'function') eventIdentify(); // claim this device's earlier guest sessions only after verified sign-in
   if (!BOS.booting && !BOS.interactive) onbResumeAfterAuth();
+}
+// Fighter lookup has its own status. A failed query is never an absent link.
+async function bosReadFighterInfo(info, uid) {
+  const state = BOS.fighterProfile = { uid, status: 'loading', error: null };
+  const read = async (table, columns, column, value) => {
+    const result = await bosTimeout(BOS.sb.from(table).select(columns).eq(column, value).limit(1).maybeSingle(), 'Loading your fighter record');
+    if (result.error) throw Error('Your fighter record could not be loaded. Retry; your account does not need to be recreated.');
+    return result.data;
+  };
+  try {
+    const link = await read('fighter_accounts', 'fighter_id', 'user_id', uid);
+    let dir = null;
+    if (link?.fighter_id) {
+      dir = await read('fighter_directory', 'display_name, team_name, gender', 'id', link.fighter_id);
+      if (!dir) throw Error('Your linked fighter directory entry could not be loaded. Retry, or ask BuhurtOS support to check the existing link.');
+    }
+    if (BOS.user?.id !== uid || BOS.fighterProfile !== state) return;
+    info.fighter = link?.fighter_id || null; info.gender = dir?.gender || null;
+    if (dir) { info.name = dir.display_name || info.name; info.team = dir.team_name || ''; }
+    state.status = 'ready';
+    // Career statistics are optional; their failure cannot revoke a valid link.
+    if (info.fighter) try {
+      const st = await read('fighter_career_stats', 'matches, wins, losses, golds, podiums, tournament_victories', 'fighter_id', info.fighter);
+      if (st) Object.assign(info, { m: st.matches || 0, w: st.wins || 0, l: st.losses || 0, golds: st.golds || 0, podiums: st.podiums || 0, wins_t: st.tournament_victories || 0 });
+    } catch (e) { /* The verified link is independent of optional statistics. */ }
+  } catch (e) { if (BOS.fighterProfile === state) { state.status = 'error'; state.error = e.message; } }
+}
+async function bosRetryFighterInfo() {
+  const uid = BOS.user?.id; if (!uid || BOS.fighterProfile?.status === 'loading') return;
+  const info = { ...(BOS.info || {}) };
+  await bosReadFighterInfo(info, uid);
+  // No bosApply/cloudOnAuth here: retry must not restore or rewrite game saves.
+  if (BOS.user?.id === uid && BOS.fighterProfile?.status === 'ready') BOS.info = info;
 }
 // your BuhurtOS name becomes your fighter's name; everyone online sees the BuhurtOS tick and your real record
 function bosApply() {
@@ -39848,7 +39969,7 @@ function renderBosBox() {
   const box = $('#bosBox'); if (!box) return; box.innerHTML = '';
   const I = BOS.info;
   if (I) {
-    box.append(h('div', { class: 'bosme' }, h('span', { class: 'bostick' }, '✓'), h('div', null, h('b', null, I.name), h('small', null, rosterEligible(I.fighter) ? `${I.team ? I.team + ' · ' : ''}${I.m} matches, ${I.w} wins${I.golds ? ', ' + I.golds + ' gold' : ''} on BuhurtOS` : 'BuhurtOS account (no fighter linked yet)'))),
+    box.append(h('div', { class: 'bosme' }, h('span', { class: 'bostick' }, '✓'), h('div', null, h('b', null, I.name), h('small', null, I.fighter ? `${I.team ? I.team + ' · ' : ''}${I.m} matches, ${I.w} wins${I.golds ? ', ' + I.golds + ' gold' : ''} on BuhurtOS` : BOS.fighterProfile?.status === 'error' ? 'Fighter record unavailable — retry at the Crown Herald' : BOS.fighterProfile?.status === 'loading' ? 'Loading fighter record…' : 'BuhurtOS account (no fighter linked yet)'))),
       h('button', { class: 'btn tape small', onclick: async () => { AU.click(); if (typeof presenceOffline === 'function') presenceOffline(); try { await (await bosClient()).auth.signOut({ scope: 'local' }); } catch (e) { } localStorage.removeItem(BOS_SESSION_KEY); sessionStorage.removeItem(BOS_SESSION_KEY); BOS.user = null; BOS.info = null; BOS.infoReady = null; BOS.testAdmin = false; creatorReset(); if (typeof cloudOnSignOut === 'function') cloudOnSignOut(); bosApply(); } }, 'Sign out'));
     return;
   }
@@ -41386,7 +41507,7 @@ function updateTown(dt) {
   let best = null, bd = 5;
   for (const S of TOWN.stalls) {
     if (!!S.mine !== !!TOWN.mineOn) continue;
-    const d = Math.hypot(S.ax - TOWN.pos.x, S.az - TOWN.pos.z); if (d < (S.reach || 2.8) && d < bd) { bd = d; best = S; }
+    const d = Math.hypot(S.ax - TOWN.pos.x, S.az - TOWN.pos.z); if (d < (S.reach || 2.8) && d < bd && townInteractionActive(S)) { bd = d; best = S; }
     const N = S.npc; if (N && N.ual && !S.squireNPC) { const talk = S === TOWN.near || S.V.key === TOWN.vendor; N.play(talk ? 'Idle_Talking_Loop' : 'Idle_Loop', 0.4); if (N.root.visible) N.mixer.update(dt); }
     const dd = Math.hypot(S.x - TOWN.pos.x, S.z - TOWN.pos.z); S.label.visible = dd < 30 && !(S.node && S.node.until);
     if (N && N.root && !S.player && dd < 9) { const lx = TOWN.pos.x - S.x, lz = TOWN.pos.z - S.z; const local = Math.atan2(lx, lz) - S.ry; const t = clamp(Math.atan2(Math.sin(local), Math.cos(local)), -1.1, 1.1); N.root.rotation.y += (t - N.root.rotation.y) * Math.min(1, dt * 4); }
@@ -41401,7 +41522,17 @@ function updateTown(dt) {
   if (walking && TOWN.frame++ % 20 === 0) townHudUpdate();
   updateWorld(dt);
 }
-function townTalk(S) { if (typeof playtestAction === 'function') playtestAction('interact', { target: S.V.name, role: S.V.role || '' }); if (typeof questEvent === 'function') questEvent('talk', { key: S.V.key }); if (S.open) S.open(); else openVendor(S.V.key); }
+function townInteractionActive(S) {
+  if (!S) return false;
+  const visual=S.visual || (S.g?.children?.length ? S.g : null);
+  if (!visual) return true; // Deliberate label-only destinations keep their existing presentation.
+  let attached = false;
+  for (let node = visual; node; node = node.parent) { if (!node.visible) return false; if (node === TOWN.root) attached = true; }
+  if (!attached) return false;
+  const p = visual.getWorldPosition(new THREE.Vector3());
+  return Math.abs(p.y - mineGroundY(TOWN.pos.x, TOWN.pos.z)) < 2.8;
+}
+function townTalk(S) { if (!townInteractionActive(S)) { TOWN.near=null; townPrompt(); return; } if (typeof playtestAction === 'function') playtestAction('interact', { target: S.V.name, role: S.V.role || '' }); if (typeof questEvent === 'function') questEvent('talk', { key: S.V.key }); if (S.open) S.open(); else openVendor(S.V.key); }
 function townPushRect(P, x, z, hx, hz, r) {
   const dx = P.x - x, dz = P.z - z, px = hx + r - Math.abs(dx), pz = hz + r - Math.abs(dz);
   if (px <= 0 || pz <= 0) return;
@@ -41450,7 +41581,7 @@ function updateTownCamera(dt) {
 }
 function townPrompt() {
   const b = $('#townPrompt'); if (!b) return;
-  const S = TOWN.near; if (!S || G.screen || TOWN.busy || TOWN.spec) { b.hidden = true; return; }
+  const S = TOWN.near; if (!S || !townInteractionActive(S) || G.screen || TOWN.busy || TOWN.spec) { b.hidden = true; return; }
   const key = IN.mode === 'pad' ? (NIN && NIN.on ? 'A' : 'A') : IN.mode === 'touch' ? 'Tap' : 'E';
   b.innerHTML = ''; b.append(h('kbd', null, key), h('span', null, `${S.verb || 'Talk to'} ${S.V.name}`), h('small', null, `${S.V.icon} ${S.V.role}`)); b.hidden = false;
 }
@@ -41733,6 +41864,7 @@ function updateOthers(dt) {
 }
 // ---- what the gate folk say and offer
 function townPanel(title, fill, silent = false) {
+  $('#townShopBody').dataset.menuSection='panel:'+title;
   if (typeof playtestAction === 'function' && title !== 'Test tools' && title !== 'Screenshot note') playtestAction('panel', { title });
   if (!silent) AU.click(); TOWN.vendor = null;
   const box = $('#townShopBody'); box.innerHTML = '';
@@ -42497,7 +42629,18 @@ function buildFestival(R) {
   for (const [x, z] of [[-14, 38], [-15, 49], [-14, 26.5], [14, 26.5]]) add('pumpkinCarved', x, z, face(x, z, -19, 48), 1.4);
   add('slv_crate', -14.6, 39.6, 0.3, 1.2, 0.6); add('slv_veg', -14.4, 41.4, 0.2, 1.2, 0.5); add('fy_vil_barrel', -14.8, 49.6, 0, 1, 0.5);
   // ---- craftsmen's row (west): the forge yard behind the blacksmith, racks at the armourer, the guild's pillory and gold
-  add('bf_furnace', -45, 24.6, Math.PI / 2, 1, 1.8); const glow = mk(R, geo('w_forgeglow', () => new THREE.BoxGeometry(0.7, 0.35, 0.05)), tmat('#ff7a1a', { emissive: '#ff4a00', emissiveIntensity: 1.8 }), -43.7, 0.75, 24.6); glow.rotation.y = Math.PI / 2; WORLD.flick.push(glow);
+  const furnace = add('bf_furnace', -45, 24.6, Math.PI / 2, 1, 1.8);
+  if (furnace) {
+    // Model-local opening, not a second world-space placement. Follow terrain,
+    // furnace rotation/scale and any later entity movement together.
+    const glow = new THREE.Group(); glow.name='furnace-opening-glow'; glow.position.set(0,0.55,0.85); furnace.add(glow);
+    for (let i=0;i<5;i++) {
+      const x=(i-2)*0.13, height=0.22+(i%3)*0.035;
+      mk(glow,geo('forge_ember',()=>new THREE.SphereGeometry(0.085,6,4)),tmat('#b9360e',{emissive:'#b62900',emissiveIntensity:0.7}),x,0,0);
+      mk(glow,geo('forge_flame'+i,()=>new THREE.ConeGeometry(0.075,height,6)),tmat(i%2?'#ffb02e':'#ef6a12',{emissive:'#e34600',emissiveIntensity:0.8}),x,height/2,0.025);
+    }
+    glow.userData.nomerge=true; furnace.userData.nomerge=true; furnace.userData.furnace=true; WORLD.flick.push(glow);
+  }
   add('bf_anvil', -42, 18.6, 0.2, 1, 0.5); add('bf_armor_rack', -45, 18.2, Math.PI / 2, 1, 0.6); add('bf_weapon_rack', -47, 21.4, Math.PI / 2, 1, 0.8); add('bf_barrel', -46.4, 27.6, 0, 1, 0.5); add('bf_crate', -48, 25.4, 0.3, 1, 0.6);
   add('ps_anvil', -42.4, 27, 0.4, 1.4, 0.5); add('ps_sharpener', -40.6, 28.8, 1.1, 1, 0.8); add('slv_barrel', -40, 15.6, 0, 1.2, 0.5);
   add('dp_weapon_rack', -42.6, 11, Math.PI / 2, 1, 0.6); add('dp_shield', -42.4, 7.8, Math.PI / 2, 1, 0.4); add('bf_crate', -44, 13, 0.6, 0.8, 0.5);
@@ -42682,7 +42825,7 @@ function boutStop() {
 function boutAfterRound() {
   const m = G.match; if (!m) return;
   const w = m.wins || [0, 0], best = m.mode === 1 ? 2 : 2;
-  if (w[0] >= best || w[1] >= best || m.round >= 3) { BOUT.next = true; if (TOWN.spec) unlock('spectator', true); return; } // match done: a new pairing walks on
+  if (m.duelForfeit != null || w[0] >= best || w[1] >= best || m.round >= 3) { BOUT.next = true; if (TOWN.spec) unlock('spectator', true); return; } // match done: a new pairing walks on
   startRound(); G.phase = 'fight';
 }
 function boutTick(dt) {
@@ -45319,7 +45462,7 @@ function arenaNews(A) { if (A.live && A.liveText) return A.liveText; if (TOWN.bo
 // ===================================================================
 const SECRETS = [
   { key: 'hermit', name: 'The hermit’s cave', x: -286, z: -40, hint: 'Behind the quarry, where the rocks lean together, someone used to live.', look: ['hat', 'hermit'], loot: { gold_ore: 2 }, verb: 'Search the cave' },
-  { key: 'crypt', name: 'The chapel crypt', x: 90, z: -254, hint: 'A lever behind the bailey chapel. Nobody’s pulled it in years.', look: ['hat', 'crypt'], loot: { silver_ore: 2 }, verb: 'Pull the old lever', gate: 'bailey' },
+  { key: 'crypt', name: 'The chapel crypt', x: 90, z: -252, hint: 'A lever behind the bailey chapel. Nobody’s pulled it in years.', look: ['hat', 'crypt'], loot: { silver_ore: 2 }, verb: 'Pull the old lever', gate: 'bailey' },
   { key: 'lookout', name: 'The treetop lookout', x: -238, z: -122, hint: 'Deep in the Old Woods a ladder goes up into one particular tree.', look: ['cape', 'ranger'], loot: { hickory: 3 }, verb: 'Climb the hidden ladder' },
   { key: 'boat', name: 'The sunken boat', x: 226, z: 128, hint: 'At the far end of Mirror Lake, half in the reeds, an old boat rots.', look: ['hand', 'driftwood'], loot: { oak: 3 }, verb: 'Search the wreck' },
   { key: 'cellar', name: 'The king’s wine cellar', x: -16, z: -290, hint: 'On the citadel, behind the Great Hall, steps go down to the cellar.', look: ['hand', 'goblet'], look2: ['cape', 'courtier'], loot: {}, item: 'royal_seal', verb: 'Go down to the cellar', gate: 'royal' },
@@ -45328,31 +45471,43 @@ const SECRETS = [
 LOOKS.hat.push(['hermit', 'Hermit’s hood', 0, 'hidden'], ['crypt', 'Crypt knight helm', 0, 'hidden'], ['smuggler', 'Smuggler’s mask', 0, 'hidden']);
 LOOKS.cape.push(['ranger', 'Ranger’s cloak', 0, 'hidden'], ['courtier', 'Courtier’s mantle', 0, 'hidden']);
 LOOKS.hand.push(['driftwood', 'Driftwood club', 0, 'hidden'], ['goblet', 'Royal goblet', 0, 'hidden']);
+function SECRET_BY_KEY(key) { return SECRETS.find(s => s.key === key); }
 function secretFound(key) { return !!(CAREER.found && CAREER.found[key]); }
 // the places themselves: a few props each, and an invisible stall you can only find by walking up to it
 function buildSecrets(R) {
+  const visuals = {}, starts = {};
+  const begin = key => { starts[key] = R.children.length; };
+  const finish = key => { const objects = R.children.slice(starts[key]); const g = new THREE.Group(); g.position.set(SECRET_BY_KEY(key).x, gy(SECRET_BY_KEY(key).x, SECRET_BY_KEY(key).z), SECRET_BY_KEY(key).z); g.userData.nomerge=true; R.add(g); R.updateMatrixWorld(true); for (const o of objects) g.attach(o); visuals[key] = g; };
+  const groundMesh = (parent, geometry, material, x, y, z) => mk(parent, geometry, material, x, gy(x, z) + y, z);
   const add = (k, x, z, ry, s, y) => kpiece(R, k, x, (y || 0) + gy(x, z), z, ry || 0, s || 1);
+  begin('hermit');
   // hermit's cave: leaning boulders, a dark mouth, a candle and a bedroll
   for (const [k, dx, dz, ry, s] of [['fy_rock_big_1', -3, -2, 0.4, 1.6], ['fy_rock_big_3', 3, -2.5, 2.2, 1.5], ['fy_rock_big_pillar', 0, -4.5, 1.2, 1.2], ['fy_rock_medium_4', -4, 1.5, 0.8, 1.1]]) { add(k, -286 + dx, -40 + dz, ry, s); TOWN.obst.push({ x: -286 + dx, z: -40 + dz, r: 1.6 }); }
-  { const m = mk(R, new THREE.PlaneGeometry(2.2, 2.4), lmat({ color: '#0a0806' }), -286, 1.2, -42.6); m.rotation.y = 0; }
+  { const m = groundMesh(R, new THREE.PlaneGeometry(2.2, 2.4), lmat({ color: '#0a0806' }), -286, 1.2, -42.6); m.rotation.y = 0; }
   add('dp_candle_big', -285, -40.6, 0, 1.2); add('mk_Chest_Wood', -287.4, -41.2, 0.3, 0.9);
+  finish('hermit'); begin('crypt');
   // crypt lever behind the chapel
-  add('mk_Chain_Coil', 90, -255.4, 0, 0.9); { const lv = mk(R, geo('sc_lever', () => new THREE.BoxGeometry(0.08, 0.9, 0.08)), tmat('#3a3d40', { metalness: 0.7 }), 90, 0.9 + gy(90, -253.6), -253.6); lv.rotation.z = 0.5; }
+  add('mk_Chain_Coil', 90.6, -252.7, 0, 0.9); { const lv = mk(R, geo('sc_lever', () => new THREE.BoxGeometry(0.08, 0.9, 0.08)), tmat('#3a3d40', { metalness: 0.7 }), 90, 0.9 + gy(90, -252.85), -252.85); lv.rotation.z = 0.5; }
+  finish('crypt'); begin('lookout');
   // lookout: a tall trunk, a ladder, a platform
-  { const tr = mk(R, geo('sc_trunk', () => new THREE.CylinderGeometry(0.5, 0.7, 9, 8)), tmat('#5a3b24'), -238, 4.5, -123.4); tr.castShadow = true; TOWN.obst.push({ x: -238, z: -123.4, r: 0.8 }); }
-  for (let i = 0; i < 12; i++) mk(R, geo('sc_rung', () => new THREE.BoxGeometry(0.6, 0.05, 0.05)), tmat('#7a5a36'), -238, 0.4 + i * 0.55, -122.7);
-  for (const sx of [-0.3, 0.3]) mk(R, geo('sc_rail', () => new THREE.BoxGeometry(0.06, 6.8, 0.06)), tmat('#6a4a2a'), -238 + sx, 3.4, -122.7);
-  mk(R, geo('sc_plat', () => new THREE.BoxGeometry(3, 0.2, 3)), tmat('#6e4d31'), -238, 7, -123.4); add('kf_tree_1_c', -238, -123.4, 0, 1.6, 6);
+  { const tr = groundMesh(R, geo('sc_trunk', () => new THREE.CylinderGeometry(0.5, 0.7, 9, 8)), tmat('#5a3b24'), -238, 4.5, -123.4); tr.castShadow = true; TOWN.obst.push({ x: -238, z: -123.4, r: 0.8 }); }
+  for (let i = 0; i < 12; i++) groundMesh(R, geo('sc_rung', () => new THREE.BoxGeometry(0.6, 0.05, 0.05)), tmat('#7a5a36'), -238, 0.4 + i * 0.55, -122.7);
+  for (const sx of [-0.3, 0.3]) groundMesh(R, geo('sc_rail', () => new THREE.BoxGeometry(0.06, 6.8, 0.06)), tmat('#6a4a2a'), -238 + sx, 3.4, -122.7);
+  groundMesh(R, geo('sc_plat', () => new THREE.BoxGeometry(3, 0.2, 3)), tmat('#6e4d31'), -238, 7, -123.4); add('kf_tree_1_c', -238, -123.4, 0, 1.6, 6);
+  finish('lookout'); begin('boat');
   // the wreck in the reeds
-  { const hull = mk(R, geo('sc_hull', () => new THREE.SphereGeometry(1.4, 10, 6, 0, TAU, 0, Math.PI / 2)), tmat('#5a4630'), 226, 0.1, 128); hull.scale.set(1, 0.5, 2.4); hull.rotation.x = Math.PI + 0.25; TOWN.obst.push({ x: 226, z: 128, r: 1.8 }); }
+  { const hull = groundMesh(R, geo('sc_hull', () => new THREE.SphereGeometry(1.4, 10, 6, 0, TAU, 0, Math.PI / 2)), lmat({ color: '#5a4630', roughness: 0.95, side: THREE.DoubleSide }), 226, 0.86, 128); hull.scale.set(1, 0.5, 2.4); hull.rotation.x = Math.PI + 0.08; TOWN.obst.push({ x: 226, z: 128, r: 1.8 }); }
   for (let i = 0; i < 10; i++) add('cr_grass_1', 222 + (i % 5) * 2, 124 + Math.floor(i / 5) * 6, i, 1.6);
+  finish('boat'); begin('cellar');
   // cellar steps in the ward
   mk(R, geo('sc_hatch', () => new THREE.BoxGeometry(1.8, 0.08, 1.4)), tmat('#4a3422'), -16, 0.05 + gy(-16, -290), -290); add('mk_Barrel', -18, -291, 0, 1); add('mk_Barrel', -14, -291.5, 0.4, 1);
+  finish('cellar'); begin('smuggler');
   // the smugglers' grate low in the bailey's west wall (and a hint scrawled by the mill)
-  mk(R, geo('sc_grate', () => new THREE.BoxGeometry(0.1, 0.9, 1.4)), tmat('#2a2d30', { metalness: 0.8 }), -110.6, 0.5, -200).rotation.y = 0.3;
+  groundMesh(R, geo('sc_grate', () => new THREE.BoxGeometry(0.1, 0.9, 1.4)), tmat('#2a2d30', { metalness: 0.8 }), -110.6, 0.5, -200).rotation.y = 0.3;
+  finish('smuggler');
   for (const S of SECRETS) {
     const lab = new THREE.Object3D();
-    TOWN.stalls.push({ V: { key: 's:' + S.key, name: S.name, role: 'Hidden place', icon: '✨' }, g: lab, npc: null, ry: 0, x: S.x, z: S.z, ax: S.x, az: S.z, label: lab, secret: S, open: () => findSecret(S), verb: S.verb });
+    TOWN.stalls.push({ V: { key: 's:' + S.key, name: S.name, role: 'Hidden place', icon: '✨' }, g: lab, visual: visuals[S.key], npc: null, ry: 0, x: S.x, z: S.z, ax: S.x, az: S.z, label: lab, secret: S, open: () => findSecret(S), verb: S.verb });
   }
 }
 function findSecret(S) {
@@ -45391,15 +45546,34 @@ function renderSecrets(box) {
 const THRONE_URL = BOS_URL + '/functions/v1/steeltape-throne';
 const THRONE = { seats: null, at: 0, loading: false, labels: {} };
 function throneLoad(force) {
-  if (THRONE.loading || typeof fetch !== 'function') return; if (!force && Date.now() - THRONE.at < 60000) return;
-  THRONE.loading = true;
-  fetch(THRONE_URL, { cache: 'no-store' }).then(r => r.ok ? r.json() : null).then(d => { THRONE.loading = false; if (d && d.seats) { THRONE.seats = d.seats; THRONE.at = Date.now(); throneLabels(); boardCrownStatues(); boardRedraw(); } }).catch(() => { THRONE.loading = false; });
+  if (THRONE.loading) return THRONE.promise;
+  if (!force && Date.now()-THRONE.at<60000) return Promise.resolve();
+  THRONE.loading=true;THRONE.error=null;
+  THRONE.promise=bosFetch(THRONE_URL,{cache:'no-store'}).then(async r=>{
+    if(!r.ok)throw Error('Crown information is unavailable. Retry shortly.');
+    const d=await r.json();if(!d?.seats)throw Error('Crown information is incomplete. Retry.');
+    THRONE.seats=d.seats;THRONE.at=Date.now();throneLabels();boardCrownStatues();boardRedraw();
+  }).catch(e=>{THRONE.error=e.message;}).finally(()=>{THRONE.loading=false;});
+  return THRONE.promise;
 }
 async function thronePost(body) {
   const headers = { 'Content-Type': 'application/json' };
   try { const s = BOS.sb && (await BOS.sb.auth.getSession()).data.session; if (s && s.access_token) headers.Authorization = 'Bearer ' + s.access_token; } catch (e) { }
-  const r = await fetch(THRONE_URL, { method: 'POST', headers, body: JSON.stringify(body) }); if (!r.ok) { const d = await r.json().catch(() => ({})); throw new Error(d.error || 'The herald could not record the duel.'); }
+  const r = await bosFetch(THRONE_URL, { method: 'POST', headers, body: JSON.stringify(body) }); if (!r.ok) {
+    const d = await r.json().catch(() => ({}));
+    const existingLink = r.status === 403 && d.error === 'Link an eligible fighter before challenging.' && BOS.info?.fighter && BOS.fighterProfile?.uid === BOS.user?.id;
+    throw new Error(existingLink ? 'The crown server could not confirm your existing fighter record. Retry the Herald check; do not create another account to resolve a loading error.' : d.error || 'The herald could not record the duel.');
+  }
   const d = await r.json(); if (d.seats) { THRONE.seats = d.seats; THRONE.at = Date.now(); throneLabels(); boardCrownStatues(); boardRedraw(); } return d;
+}
+async function throneEligibility() {
+  const headers = {};
+  try { const session = (await BOS.sb?.auth.getSession())?.data?.session; if (session?.access_token) headers.Authorization = 'Bearer ' + session.access_token; } catch (e) { }
+  const endpoint = location.protocol === 'file:' ? 'https://buhurt-steel-and-tape.vercel.app/api/crown-eligibility' : '/api/crown-eligibility';
+  const response = await bosFetch(endpoint, { headers, cache: 'no-store' });
+  const data = await response.json().catch(() => ({}));
+  if (!response.ok) throw Object.assign(Error(data.error || 'Crown eligibility is unavailable. Retry shortly.'), { status: response.status });
+  return data;
 }
 function throneHolder(seat) { const S = THRONE.seats && THRONE.seats[seat]; return S ? S : { name: seat === 'king' ? 'the King' : 'the Queen', uid: null, challenges: 1 }; }
 function throneMine(seat) { const H = throneHolder(seat); return !!(H.uid && BOS.user && BOS.user.id === H.uid); }
@@ -45427,15 +45601,44 @@ function throneLabels() {
 }
 function openThrone() {
   throneLoad(true);
-  if(!realmHasWrit('royal')){toastMenu('The guards bar the way. Earn the Royal writ before approaching the Crown Herald.');return;}
-  townPanel('The Crown Herald',box=>{
-    const list=stationRows(box,'The ruler has paid the marshal. Win the fight anyway; the final review will correct the scoring.',[]);
-    for(const seat of ['king','queen']){const H=throneHolder(seat),mine=throneMine(seat),eligible=!!(BOS.user&&BOS.info?.fighter&&BOS.info.gender===(seat==='king'?'male':'female'));
-      list.append(h('div',{class:'up'},h('div',null,h('div',{class:'uph'},h('b',null,(seat==='king'?'King ':'Queen ')+H.name)),h('div',{class:'muted'},mine?'Your NPC copy defends this crown.':!eligible?'A linked '+(seat==='king'?'male':'female')+' fighter is required.':'Challenge the ruler’s NPC copy, even while the title holder is offline. One challenger fights for this crown at a time.')),
-      h('button',{class:'btn small primary flagtape',disabled:mine||!eligible||!THRONE.seats?true:null,onclick:()=>crownBegin(seat)},mine?'Yours':'Challenge NPC')));
-    }
-    try{const pending=JSON.parse(sessionStorage.getItem('steel-tape-crown-result')||'null');if(pending?.uid===BOS.user?.id)list.append(h('button',{class:'btn tape',onclick:()=>crownFinish(pending.id)},'Check previous crown verdict'));}catch(e){}
-  });
+  const uid = BOS.user?.id, view = {}; THRONE.view = view;
+  let state = { status: 'loading', seats: null, error: null };
+  const draw = () => {
+    if (!TOWN.on) return;
+    townPanel('The Crown Herald', box => {
+      const list = stationRows(box, 'The ruler has paid the marshal. Win the fight anyway; the final review will correct the scoring.', []);
+      const profile = BOS.fighterProfile;
+      let reason = !uid ? 'Sign in with your existing BuhurtOS account.' : BOS.booting || profile?.status === 'loading' ? 'Loading your linked fighter record…' : profile?.uid !== uid || profile.status === 'error' ? 'Your fighter record could not be loaded. Retry without creating another account.' : state.status === 'error' ? state.error : state.status === 'loading' ? 'Checking crown eligibility…' : null;
+      if (reason) list.append(h('p', {role:'status'}, reason));
+      for (const seat of ['king', 'queen']) {
+        const H = throneHolder(seat), result = state.seats?.[seat], mine = throneMine(seat);
+        const messages = { unlinked: 'No fighter association was returned for this account. Check your existing fighter claim in BuhurtOS; do not create a duplicate.', directory: 'Your linked fighter directory entry is unavailable. Retry or ask BuhurtOS support to check it.', roster: 'Your linked fighter is outside the eligible HACSA competition roster. Ask your team administrator to check the existing roster entry.', details: 'Your linked directory entry has no supported competition gender recorded. Ask BuhurtOS support to check the existing fighter details.', gender: 'Your directory details do not match this crown. Check the existing fighter record in BuhurtOS.', royal: realmHasWrit('royal') ? 'Your Royal writ is present on this device but not yet confirmed by the crown service. Let cloud sync finish, then retry.' : 'Earn the Royal writ in your game progression, then return.', own: 'Your NPC copy defends this crown.' };
+        list.append(h('div', {class:'up'}, h('div',null,h('b',null,(seat === 'king' ? 'King ' : 'Queen ') + H.name),h('div',{class:'muted'}, reason || (mine ? messages.own : result?.eligible ? 'Challenge the current holder’s NPC copy.' : messages[result?.reason] || 'Crown information is unavailable. Retry.'))),h('button',{class:'btn small primary flagtape',disabled:!!reason || mine || !result?.eligible || !THRONE.seats ? true : null,onclick:()=>crownBegin(seat)},mine?'Yours':'Challenge NPC')));
+      }
+      list.append(h('button',{class:'btn tape',disabled:state.status==='loading'?true:null,onclick:async()=>{state={status:'loading',seats:null,error:null};const refresh=bosRetryFighterInfo();draw();await refresh;await check();}},'Retry fighter and crown check'));
+      if (!uid) list.append(h('button',{class:'btn tape',onclick:()=>openBosSignIn(openThrone)},'Sign in with BuhurtOS'));
+      try { const pending = JSON.parse(sessionStorage.getItem('steel-tape-crown-result') || 'null'); if (pending?.uid === uid) list.append(h('button',{class:'btn tape',onclick:()=>crownFinish(pending.id)},'Check previous crown verdict')); } catch(e) { }
+    });
+  };
+  const check = async () => {
+    if (!uid) { state.status='ready'; draw(); return; }
+    try {
+      await throneLoad(true);
+      if (THRONE.error) throw Error(THRONE.error);
+      if (BOS.booting && BOS.bootPromise) await BOS.bootPromise;
+      if (BOS.infoPromise) await BOS.infoPromise;
+      if (BOS.user?.id !== uid) return;
+      if (BOS.fighterProfile?.uid !== uid) await bosRetryFighterInfo();
+      if (BOS.fighterProfile?.status !== 'ready') throw Error('The fighter record could not be loaded. Retry the existing account.');
+      const result = await throneEligibility();
+      if (BOS.user?.id !== uid) return;
+      if (!result.eligibility) throw Error('Crown eligibility service is unavailable. Retry shortly.');
+      state={status:'ready',seats:result.eligibility,error:null};
+    } catch(e) { state={status:'error',seats:null,error:e.message || 'The Crown Herald could not check eligibility. Retry.'}; }
+    // Do not reopen a panel after Back or an unrelated navigation.
+    if (THRONE.view === view && G.screen === 'townShop' && $('#townShopBody')?.dataset.menuSection === 'panel:The Crown Herald') draw();
+  };
+  draw(); check();
 }
 // is the real holder in the game right now? (a lobby peer signed in to BuhurtOS with the holder's id)
 function throneOnline(seat) { const H = throneHolder(seat); if (!H.uid) return null; return ((typeof LOBBY !== 'undefined' && LOBBY.peers) || []).find(p => p.presence && p.presence.bu === H.uid && p.peer !== (LOBBY.me || null)) || null; }

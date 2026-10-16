@@ -2,6 +2,106 @@
   "schema": 1,
   "releases": [
     {
+      "id": "keston-player-fixes",
+      "title": "Player fixes: Crown checks, duel recovery and Achievements",
+      "date": "2026-10-16T08:25:35.388Z",
+      "kind": "hotfix",
+      "build": "steel-tape-auth-309388adb67a",
+      "previousBuild": "steel-tape-auth-ad27047a6f73",
+      "reviewedPublic": true,
+      "summary": "Clearer Crown eligibility and retry states, finite-spare duel recovery, reachable Achievements and corrected world effects and interactions.",
+      "evidence": [
+        "Compared the previous production game with the exact compiled release candidate.",
+        "Focused offline browser verification across desktop, phone landscape and phone portrait, with external writes blocked.",
+        "Public wiki entries and standard model assets reviewed against the same candidate."
+      ],
+      "sections": [
+        {
+          "title": "Crown Herald and linked fighter loading",
+          "items": [
+            "Fighter-association and directory loading now distinguish a verified missing record from a failed request. A temporary service failure no longer tells an existing player to register or link again. Optional statistics failures do not discard a verified fighter association. Responses for an old signed-in account cannot replace the current account’s result.",
+            "The Crown Herald shows loading, recoverable errors and a Retry fighter and crown check control. Challenge controls stay unavailable until the relevant check completes. Leaving the panel while a request is pending does not reopen it over unrelated navigation.",
+            "A read-only check uses the signed-in account and separates association, directory, eligible roster, competition division, current holder and confirmed Royal writ progression. A writ present only on the device is explained as awaiting cloud confirmation. Existing requirements remain in force; a successful check does not itself grant a Crown.",
+            "The existing Crown fight, verdict retry and title-transfer rules remain in use. No player associations or eligibility records were changed to make a test pass.",
+            "Installed-browser asset caching now excludes personal Crown eligibility. Checks always use the network; offline checks show a reconnect-and-retry error instead of a cached account result. The updated game cache identity also refreshes the application package."
+          ],
+          "metrics": []
+        },
+        {
+          "title": "Ordinary duel equipment recovery",
+          "items": [
+            "An ordinary duel no longer remains stuck after its finite corner replacements are exhausted. When no usable category-legal reserve remains, and no legal sidearm is being drawn, the marshal pauses the fight clock for an equipment check. Existing sidearm drawing completes before this recovery path.",
+            "An intact, category-legal original weapon can be returned without creating a new spare. The human competitor uses Collect my weapon. An AI competitor resumes after three simulation seconds. The real animation loop now advances this equipment-check phase, including background bouts. Recorded points and remaining reserve stock are preserved.",
+            "When no intact legal original weapon is available, the equipment allowance lasts 60 seconds. If legal equipment is still unavailable at expiry, the duel ends by technical decision. The player can withdraw earlier. Results and share text identify the technical decision and recorded points rather than implying that extra hit points were scored.",
+            "The corner still starts with two replacements per side. Replacements respect the existing duel category. This release does not change ordinary best-of-three round scoring, Pro fights, training or Crown NPC combat. Background festival duels recover without opening a panel over town menus.",
+            "The pause is not immunity: the existing penalties for striking an unarmed competitor remain, including foul points and warning, yellow and red card consequences. Recovery cannot replenish reserve stock or erase cards.",
+            "Previously, exhaustion could leave a bout unresolved; there was no verified finite recovery duration to compare. The new 60-second allowance and three-simulation-second AI return are behavior definitions, not measured performance improvements or a percentage reduction in match time."
+          ],
+          "metrics": []
+        },
+        {
+          "title": "Achievements and narrow-screen navigation",
+          "items": [
+            "The Fighter screen now labels its entry Progress / Achievements. Achievements has an explicit selectable tab. Narrow screens wrap the controls so the entry remains reachable in portrait and landscape, including enlarged text.",
+            "The selected Fighter page and scroll position survive navigation away and reopening. Existing earned achievements remain in the career save; the interface change does not grant achievements or alter their requirements."
+          ],
+          "metrics": [
+            {
+              "name": "Fighter top-tab minimum height on screens up to 900 CSS pixels wide",
+              "before": 38,
+              "after": 44,
+              "unit": "CSS pixels",
+              "context": "CSS minimum target height; actual rendered height may be larger. The absolute increase is 6 CSS pixels; this is not a measured input-accuracy improvement.",
+              "delta": 6,
+              "relativePercent": 15.789473684210526,
+              "percentagePoints": null
+            }
+          ]
+        },
+        {
+          "title": "World effects and interaction consistency",
+          "items": [
+            "The furnace opening glow now follows the furnace model’s local transform. Leaving and re-entering town retains one live opening effect. Crafting recipes, material costs and furnace collision are unchanged.",
+            "Interaction prompts now agree with active, visible objects and their reachable approach. Detached or inactive visuals do not retain usable prompts. Moved gathering visuals retain their original resource identity and cooldown. Further details of undisclosed content are intentionally omitted."
+          ],
+          "metrics": []
+        },
+        {
+          "title": "Wiki coverage and release compatibility",
+          "items": [
+            "The wiki adds public guides for duel equipment recovery, Crown Herald checks and finding Achievements. Existing public articles and historical patch-note links remain available. Standard armoury geometry and static previews are refreshed against this exact game build.",
+            "This release uses the existing live game and /wiki/ routes. Existing player saves, ordinary duel formats and the shared Crown verification protocol are preserved. It introduces no save migration.",
+            "No measured frame-rate, latency or memory improvement is claimed. The changes address recovery behavior, information clarity, navigation and visual alignment.",
+            "Player reports: Keston Piche. Development: Garrett Robson, with AI assistance."
+          ],
+          "metrics": [
+            {
+              "name": "Reviewed public wiki entries",
+              "before": 229,
+              "after": 232,
+              "unit": "entries",
+              "context": "Three verified public system guides added; no hidden-content entries.",
+              "delta": 3,
+              "relativePercent": 1.3100436681222707,
+              "percentagePoints": null
+            }
+          ]
+        }
+      ],
+      "knownIssues": [
+        "A genuine eligible linked-account Crown success has not been verified online because the automated testing account has no eligible fighter association. Offline linked-account, service-error and verdict scenarios are tested; this does not establish the state of any individual player’s private record.",
+        "Physical Android, controller hardware and separate-device/WAN play have not been verified for this release. Phone browser automation does not substitute for those tests."
+      ],
+      "validation": [
+        "51 focused offline browser cases passed across desktop, phone landscape and phone portrait, including real animation-loop recovery, finite stock, legal sidearms, foul penalties, technical decisions, full-save retry, Achievements persistence, furnace rendering and interaction lifecycle.",
+        "41 source, authentication, worker and isolated database tests passed, including profile-error distinctions, eligibility ownership, read-only preflight behavior, replay determinism and existing Crown reservation/claim rules.",
+        "Existing production authentication-return, menu, mount-control, Crown replay/verdict, armour-repair and Gauntlet regressions passed. Existing production duel formats and squire repair behavior are preserved.",
+        "Read-only online testing with the persistent automated account passed desktop, phone landscape and phone portrait: account restore/reload, unlinked Crown status and retry, Achievements, furnace and re-entry. No Crown challenge was started and the account save was unchanged.",
+        "Public catalogue, numerical-note calculations, all 232 articles, 19 standard model/display assets, static previews, armoury comparison/dressing room, responsive search/navigation, permanent notes links and service-worker bypass checks passed locally."
+      ],
+      "canonicalUrl": "https://buhurt-steel-and-tape.vercel.app/wiki/patch-notes/#patch/keston-player-fixes"
+    },
+    {
       "id": "wiki-armoury-models",
       "title": "The armoury: live models, dressing room and gear comparisons",
       "date": "2026-10-15T07:12:00Z",

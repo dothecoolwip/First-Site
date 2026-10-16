@@ -1,5 +1,5 @@
 <!doctype html><html><head><base href="/"><meta charset="utf-8"><link rel="manifest" href="manifest.webmanifest"><meta name="theme-color" content="#0f1316"><link rel="apple-touch-icon" href="icon-192.png"><meta name="apple-mobile-web-app-capable" content="yes"><meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover"></head><body>
-<script>window.BUILD_VER="steel-tape-auth-a268adde2f30";</script><title>Buhurt: Steel &amp; Tape</title>
+<script>window.BUILD_VER="steel-tape-auth-309388adb67a";</script><title>Buhurt: Steel &amp; Tape</title>
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link rel="stylesheet" href="fonts/fonts.css">
@@ -105,6 +105,14 @@ h1,h2,h3{font-family:var(--display);text-wrap:balance;margin:0;line-height:1}
 .back svg{width:20px;height:20px;stroke:currentColor;fill:none;stroke-width:2.4;stroke-linecap:round;stroke-linejoin:round}
 .tabs{margin-left:auto}
 .tabs button{min-height:38px}
+/* Keep Fighter navigation in its own wrapping row at phone widths. */
+@media(max-width:900px){
+#careerTabs{flex:1 0 100%;margin-left:0;min-width:0}
+#careerTabs button{min-height:44px;overflow-wrap:anywhere}
+#career .phead{flex-shrink:0;max-height:48vh;overflow-y:auto}
+#careerBody [aria-label="Progress sections"]{flex-shrink:0}
+}
+
 .tabpane{display:flex;flex-direction:column;gap:14px}
 .sechead{display:flex;align-items:baseline;gap:10px;flex-wrap:wrap}
 .sechead .seg{margin-left:auto}
@@ -853,7 +861,7 @@ body:not(.split) #pips:not([hidden]) ~ #statstrip{top:calc(var(--st) + 78px)}
 body.intown #hud{display:none!important}
 #townHud .townbar{position:absolute;top:calc(10px + env(safe-area-inset-top));right:12px;left:12px;display:flex;gap:8px;align-items:center;justify-content:flex-end;pointer-events:none}
 #townHud .townbar > *{pointer-events:auto}
-#townAdmin:not([hidden]){position:fixed;top:calc(68px + env(safe-area-inset-top));right:12px;z-index:3}
+#townAdmin:not([hidden]){position:fixed;top:calc(116px + env(safe-area-inset-top));right:12px;z-index:3}
 #townHud .tpurse{margin-right:auto;background:rgba(12,14,16,.78);padding:6px 12px;display:flex;flex-direction:column;line-height:1}
 #townHud .tpurse b{color:var(--marshal);font-size:1.3rem}
 #townHud .tpurse small{color:#c9c2b2;font-size:.7rem;text-transform:uppercase;letter-spacing:.08em}
@@ -1405,7 +1413,7 @@ body.intown #hud{display:none!important}
   <section class="screen dimmed" id="career" hidden>
     <div class="panel wide">
       <header class="phead"><button class="back" data-back data-gp="B" aria-label="Back"><svg viewBox="0 0 24 24"><path d="M15 5l-7 7 7 7"/></svg><span>Back</span></button><h2 class="ttape tape mk">Your fighter</h2>
-        <div class="seg tabs" id="careerTabs" role="tablist"><button data-tab="skills" aria-pressed="false">Skills</button><button data-tab="profile" aria-pressed="true">Profile</button><button data-tab="shop" aria-pressed="false">Town</button><button data-tab="inv" aria-pressed="false">Inventory</button><button data-tab="trades" aria-pressed="false">Trades</button><button data-tab="progress" aria-pressed="false">Progress</button></div>
+        <div class="seg tabs" id="careerTabs" role="tablist"><button data-tab="skills" aria-pressed="false">Skills</button><button data-tab="profile" aria-pressed="true">Profile</button><button data-tab="shop" aria-pressed="false">Town</button><button data-tab="inv" aria-pressed="false">Inventory</button><button data-tab="trades" aria-pressed="false">Trades</button><button data-tab="progress" aria-pressed="false">Progress / Achievements</button></div>
       </header>
       <div class="pbody" id="careerBody"></div>
     </div>
