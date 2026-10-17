@@ -63,5 +63,8 @@
     {
       "handle": "filesystem"
     }
-  ]
+  ],
+  "git": {
+    "deploymentEnabled": false
+  }
 }
