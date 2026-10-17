@@ -18289,10 +18289,11 @@ async function crownBegin(seat){
  toast('The royal rules are… flexible.','big','Watch the tells. Final review corrects the score, not the ruler’s privileges.');
  }catch(e){if(CROWN.active)crownInterrupt(e.message);else toastMenu(e.message||'The crown challenge could not begin.');}}
 function crownTick(dt){if(!CROWN.active||CROWN.state.done)return;
+ if(CROWN.queue.length>=120){const status=$('#crownControls .crownscore');if(status)status.textContent='Verifying Crown fight…';crownFlush();return;}
  const f=G.player,zone=IN.swingRelease==='O'||(isCtl()&&FP.pitch>.24)?'head':isCtl()&&FP.pitch<-.3?'low':CROWN.aim;
  const v={mx:clamp(PIN.move.x,-1,1),mz:clamp(PIN.move.z,-1,1),face:isCtl()?FP.yaw:PIN.aim?Math.atan2(PIN.aim.x-f.pos.x,PIN.aim.z-f.pos.z):Math.atan2(CROWN.state.fighters[1].x-f.pos.x,CROWN.state.fighters[1].z-f.pos.z),attack:CROWN.strike||IN.swingRelease?zone:'',guard:CROWN.block||PIN.guard?CROWN.guardAim:'',disarm:!!CROWN.disarm||IN.edges.has('disarm'),yield:IN.yieldT>1};
  CROWN.strike=false;CROWN.disarm=false;IN.swingStart=false;IN.swingRelease=null;IN.edges.delete('disarm');CROWN.queue.push(v);CrownCore.step(CROWN.state,v);G.simTime+=dt;crownPresent();
- if(CROWN.state.tick%60===0||CROWN.state.done){CROWN.checks.set(CROWN.state.tick,crownFingerprint(CROWN.state));crownFlush();}if(CROWN.queue.length>180)crownInterrupt('Connection too slow to verify this crown attempt. Please begin again.');}
+ if(CROWN.state.tick%60===0||CROWN.state.done){CROWN.checks.set(CROWN.state.tick,crownFingerprint(CROWN.state));crownFlush();}}
 function crownPresent(){const s=CROWN.state;if(!s)return;G.match.clock=Math.max(0,s.clock/CrownCore.HZ);G.match.round=s.round;G.match.wins=s.wins.slice();
  for(let i=0;i<2;i++){const a=s.fighters[i],f=i===0?G.player:G.fighters.find(f=>!f.isPlayer);f.pos.x=a.x;f.pos.z=a.z;f.vel={...a.vel};f.facing=a.face;f.wantFace=a.face;f.gas=a.gas;f.guard=!!a.guard;f.gdir=a.guard==='head'?'high':a.guard==='low'?'low':'mid';f.duelScore=a.display;f.groundPos={x:a.x,z:a.z};f.groundYaw=a.face;f.state=a.down?'grounded':'standing';f.fallT=1;
  const act=a.action;f.action=act?{kind:'swing',phase:act.age<act.wind?'windup':act.age<act.wind+8?'strike':'recover',t:(act.age<act.wind?act.age:act.age<act.wind+8?act.age-act.wind:act.age-act.wind-8)/60,wind:act.wind/60,arc:act.zone==='head'?'O':act.zone==='low'?'L2R':'R2L',charge:0,held:false}:null;
@@ -18301,7 +18302,11 @@ function crownPresent(){const s=CROWN.state;if(!s)return;G.match.clock=Math.max(
  const text=$('#crownControls .crownscore');if(text)text.textContent=`Marshal: ${s.fighters[0].display}–${s.fighters[1].display} · Round ${s.round}`;
 }
 async function crownFlush(){if(CROWN.busy||!CROWN.active)return;CROWN.busy=true;
- try{while(CROWN.active&&(CROWN.queue.length>=60||CROWN.state.done&&CROWN.queue.length)){const inputs=CROWN.queue.splice(0,60),seq=CROWN.seq+1,d=await thronePost({action:'input',id:CROWN.id,seq,inputs});const expected=CROWN.checks.get(d.state.tick);if(expected&&expected!==crownFingerprint(d.state))throw Error('Crown simulation did not match the verified fight.');CROWN.checks.delete(d.state.tick);CROWN.seq=seq;CROWN.verifiedDone=!!d.state.done;}
+ try{while(CROWN.active&&(CROWN.queue.length>=60||CROWN.state.done&&CROWN.queue.length)){const inputs=CROWN.queue.splice(0,60),seq=CROWN.seq+1,d=await thronePost({action:'input',id:CROWN.id,seq,inputs});CROWN.seq=seq;CROWN.verifiedDone=!!d.state.done;
+ // The server owns the result. Reconcile cross-runtime floating-point drift, then replay only unacknowledged inputs.
+ CROWN.state=d.state;CROWN.checks.clear();const pending=CROWN.queue;CROWN.queue=[];
+ for(const input of pending){if(CROWN.state.done)break;CrownCore.step(CROWN.state,input);CROWN.queue.push(input);}
+ crownPresent();}
  if(CROWN.active&&CROWN.state.done&&!CROWN.queue.length)await crownFinish();
  }catch(e){if(CROWN.verifiedDone){crownPending(e.message);}else crownInterrupt(e.message);}finally{CROWN.busy=false;}}
 function crownStop(){CROWN.active=false;clearInterval(CROWN.heartbeat);CROWN.heartbeat=null;CROWN.block=false;const el=$('#crownControls');if(el)el.hidden=true;G.phase='over';setHud(false);}
