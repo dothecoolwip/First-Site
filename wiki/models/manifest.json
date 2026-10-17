@@ -1,16 +1,16 @@
 {
   "schema": 1,
-  "build": "steel-tape-hotfix-fcd45f398f6b",
+  "build": "steel-tape-hotfix-1080f1397978",
   "threeRevision": "149",
   "source": "https://buhurt-steel-and-tape.vercel.app/",
-  "sourceSha256": "8dcc9f4fe38bae753271290c4498326e4f733e723305a999c14cea7b38c94767",
+  "sourceSha256": "ef2fb040c6bb08c899c1a0fae723aeabb015a1f259c5be7f5e0d988d7d5633f5",
   "note": "Standard live-game equipment geometry and anonymous 1.8 m display mannequins. Display pose and lighting are illustrative; no account or save is read.",
   "models": [
     {
       "id": "equipment:mace",
       "file": "mace.json",
       "bytes": 339136,
-      "sha256": "39230df7406de0148438a35fa7359c424af5cdc8fc1aa907cf85ef3e20ea259a",
+      "sha256": "da8b2b3948cf9d0d80a14df9286ed47600b91c5d61d52e3be1b8808351a7227a",
       "poster": "mace.png",
       "posterSha256": "0b39642a2c6dbf1697c63ff172849e1cac7ec5a79bd1cffcb34328ad21ba9b02"
     },
@@ -18,7 +18,7 @@
       "id": "equipment:axe",
       "file": "axe.json",
       "bytes": 6237,
-      "sha256": "a42cbdf26e96ba4a3f32bfe91ae1a7b94742dd476378098baefc7114882b05d2",
+      "sha256": "446b1635d808711bf1faa941a12d8c244e184e9922e147b676c0afa5d9a04b70",
       "poster": "axe.png",
       "posterSha256": "09be3f0045f522c4bf64ed3ef21576f53989c677e631d9c3b296f77959d4426a"
     },
@@ -26,7 +26,7 @@
       "id": "equipment:sword",
       "file": "sword.json",
       "bytes": 112149,
-      "sha256": "393264a7ac8841194ebe1b5277f4a7d8961c4272e550b64450b260a9536c586b",
+      "sha256": "79a268d1ce29568dbfbc327fb32c90820447a9917721b992e12f12cd71383370",
       "poster": "sword.png",
       "posterSha256": "204331479af68179aa80e48113d7b137cc25261e13cbd9e5e8f15881dffdff42"
     },
@@ -34,7 +34,7 @@
       "id": "equipment:falchion",
       "file": "falchion.json",
       "bytes": 112317,
-      "sha256": "2e083853ab85de2926374ff7156091d78d1e3a528e2337ccea3ee87826f9f14e",
+      "sha256": "af2388f6cc947773f6857f6b14b94631a874a0963070f366cc644bc71764000f",
       "poster": "falchion.png",
       "posterSha256": "92478e4c7ff040512c4eecd67644cdca2c6f00fa3261a5d15b751740d1078a71"
     },
@@ -42,7 +42,7 @@
       "id": "equipment:longsword",
       "file": "longsword.json",
       "bytes": 111878,
-      "sha256": "57f38afd872a0f49065418752f020ae42b96ae70bde6c423eb354581d1d972a7",
+      "sha256": "264882a7c0cafcef4e5b3e42d0fc3e2b5fc4377208f0ef0c455ca88e9d516efc",
       "poster": "longsword.png",
       "posterSha256": "57c19facd5153123192c07db545322b747f44464be495483496f607765635255"
     },
@@ -50,7 +50,7 @@
       "id": "equipment:longaxe",
       "file": "longaxe.json",
       "bytes": 6289,
-      "sha256": "db48556c9803cd9e6d961bb25c5a90f2046ac507173f65358d7d8c0e3d68d0fa",
+      "sha256": "cdbfedfe41c6d3470de916aec47038e8d166a0ae387af97972e7c5879c6e43c0",
       "poster": "longaxe.png",
       "posterSha256": "f0a6db07f74a4d63bef1362bf51fe4899ae2b2f4d9e87ab61ca99b4e6cc86410"
     },
@@ -58,7 +58,7 @@
       "id": "equipment:polearm",
       "file": "polearm.json",
       "bytes": 47444,
-      "sha256": "7876362c7c3c1dbf8bfcbb3b084d3b58956149fbdb8e9719097c9f2d22dcf3aa",
+      "sha256": "795dd65c31f6d129eebe7251b52f443854b95379a2c9ca3adfaed18bf198109a",
       "poster": "polearm.png",
       "posterSha256": "8c0626f27ca29e1f53563267c382c2edc53e2344ae5d41416ac601cff64ad04e"
     },
@@ -66,7 +66,7 @@
       "id": "equipment:greathelm",
       "file": "greathelm.json",
       "bytes": 5054,
-      "sha256": "d435e39f33463d410b1df97f1fa57a8f064ef06b3ea01e88e36b321c2b4a5202",
+      "sha256": "e97921bfc8399ce396c85df226af758b6aa9f293e1def31ed5702d53198b6058",
       "poster": "greathelm.png",
       "posterSha256": "efd6e006964552a8438233e27888670b671862a37969bc5e249f1d0d33923185"
     },
@@ -74,7 +74,7 @@
       "id": "equipment:pigface",
       "file": "pigface.json",
       "bytes": 6934,
-      "sha256": "61b58e88a347a4427a3737b7805b445cfae9c5660f42ab97fc6a76807df833f6",
+      "sha256": "73d0b4555fdc6168b7ab786bbe2b1a4a380a3ccfb88ed872b4cfd5d3d60e8275",
       "poster": "pigface.png",
       "posterSha256": "39d622d1ad62497503427996f3810819862117f12184bf5849450f2911426ee1"
     },
@@ -82,7 +82,7 @@
       "id": "equipment:klapp",
       "file": "klapp.json",
       "bytes": 4045,
-      "sha256": "a1b4a0d3fa40019f7a5b0f41d0e67fef4db4863ee7715bbcbb1a68f7f9b46f08",
+      "sha256": "7bdafa150c4f569bbd19f2feca925f46525e47c21b04176b9785740e9cfac3f7",
       "poster": "klapp.png",
       "posterSha256": "7daba784239c2a67f986d4217b03f53e2aeef2770ffc1689fa77b6552dad2fc0"
     },
@@ -90,7 +90,7 @@
       "id": "equipment:cross",
       "file": "cross.json",
       "bytes": 9172,
-      "sha256": "5e6caf5f60cf25cd57d57b9c7a8d91199a2b4a4c6fe44109a8cde483c273ac7f",
+      "sha256": "23a784af3e63ba4109521e1ae182a4f4b72663d58ae7cd9a09cf99983c4a4ca5",
       "poster": "cross.png",
       "posterSha256": "70f6c9741078e0ae06e083cbfc68dbc7f46719a9b78178c27ff489bf42886e93"
     },
@@ -98,7 +98,7 @@
       "id": "equipment:grill",
       "file": "grill.json",
       "bytes": 4903,
-      "sha256": "0737c372c7b562ba8801eb30c2e379ff328f8a596ee9870633e0190962d3bb3f",
+      "sha256": "cafe2c477e2b2024bfba3bd64f85f093188d2cdae0cb27678fb0b38a4791e9fc",
       "poster": "grill.png",
       "posterSha256": "df1c33268242212a57bd8ded6924997e97de088f6c130c398621edf10387f2a4"
     },
@@ -106,7 +106,7 @@
       "id": "equipment:sallet",
       "file": "sallet.json",
       "bytes": 3086,
-      "sha256": "f5cf821ba7cbf3428920c50598973f6c20b3c5a5c75e1499b21355aa5bac6e7c",
+      "sha256": "f74e05eed2cb5bf02d4ba114e2e0c7a2b771e6ce8f3fb5857c0e559b25c1734f",
       "poster": "sallet.png",
       "posterSha256": "172a9c99eee05a635adf81028f693f0058938cd1e51c34d7c2ea3c3834e0f72b"
     },
@@ -114,7 +114,7 @@
       "id": "equipment:barbute",
       "file": "barbute.json",
       "bytes": 2253,
-      "sha256": "9ddf18930668f3a5514a817d5a1d4e9bb7b1eff00fbb73c4ae808335f204db70",
+      "sha256": "c5075539e8c372e1181fefc2c8d87924943a8d4bb117bfa24f6ff784752ac99b",
       "poster": "barbute.png",
       "posterSha256": "15b73d70486785e44bed73f890f2739446c6a0ca07e804d345e7f5957ea06cff"
     },
@@ -122,41 +122,41 @@
       "id": "equipment:kettle",
       "file": "kettle.json",
       "bytes": 3722,
-      "sha256": "58a66ac8ba58be8bf223dc57e8e8b1150f793dda35f8220f6f24293d811bde8d",
+      "sha256": "2e9f9e15d7fac82a3c71cdf1f17b7ff8ba35f4ab3755cf1a696d092d5b59b87b",
       "poster": "kettle.png",
       "posterSha256": "35e747bf6f5c1d33abed87493d7a74252ca09e88a07d8a46a92865a818c74650"
     },
     {
       "id": "equipment:heater",
       "file": "heater.json",
-      "bytes": 761504,
-      "sha256": "567389ad6b4ea1eb8037d77d2faecba1bbdc260e8550e6fe50effbe7ec7abb1b",
+      "bytes": 762608,
+      "sha256": "5f0482e32c7ebc828ebc962e62bda7773d7451071c233fe48fb7e82c4b1ad412",
       "poster": "heater.png",
-      "posterSha256": "c3ddd70bd93ff327c349b0f08bbf31e5460d34add76556f6d123b2e0fe6ff7df"
+      "posterSha256": "fe531b24078cf33197ad49b9ac1aab3933e29257cdfe39b448949b9225e451e5"
     },
     {
       "id": "equipment:buckler",
       "file": "buckler.json",
-      "bytes": 38205,
-      "sha256": "a46c415ab9fc0990144952ef8c3fa9d65d6fd0691ebff175bf484c1c37649a32",
+      "bytes": 39309,
+      "sha256": "1f1529ae7035f9a0cc9ecd37c7c0bc0a7063eb4ac792c7a42245fd89f4ce7876",
       "poster": "buckler.png",
-      "posterSha256": "0e91b209a35d7af9424323f43cf6fd50f5aa6347690a6234357124efa8fbb2ce"
+      "posterSha256": "a348c10e091e6b5346c21533dfe790cc238a33659022c7dc41e038dfb3f070cb"
     },
     {
       "id": "fighter-standard",
       "file": "fighter-standard.json",
-      "bytes": 1114151,
-      "sha256": "339a757aa2139ee4204a3000b7ba91189c259cb506cbbe1b7ba362bb554b3497",
+      "bytes": 1115071,
+      "sha256": "f8c3df3f39e9575aa3483f05701193b968be7d558e23a5c19bfac7a96814f93c",
       "poster": "fighter-standard.png",
-      "posterSha256": "aa510d299b1dbded8ea9af91f84c24040e1f13db1479f35a9fc6da58e5080fbe"
+      "posterSha256": "ec02807e621eb03c8f96051d06901fe35a08673440af7dc1d39f520196834dff"
     },
     {
       "id": "fighter-fitted",
       "file": "fighter-fitted.json",
-      "bytes": 1297702,
-      "sha256": "4fcdb39b1047b487e970ee0d7f377738de92d2d8b136764fbae9fb3089c43b2d",
+      "bytes": 1298622,
+      "sha256": "81c112154a16aa9edde36f2a432db4d331b79e0b91330714b867794eac36f0ff",
       "poster": "fighter-fitted.png",
-      "posterSha256": "8eba685ad12fe2b4cc4ff51e7953020e35acb0af817053bf599a3a2d34841390"
+      "posterSha256": "bcfb05ac479aca029bb3b5b90717b19b6c2e4666799132845d83132ac514310c"
     }
   ],
   "rendererSha256": "8a5f7249903b54d30f79f708699d2fed2d6a1d0741a4cd41377d1f01bb5a2271"

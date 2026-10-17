@@ -2,6 +2,73 @@
   "schema": 1,
   "releases": [
     {
+      "id": "crown-authoritative-fight-hotfix",
+      "title": "Crown fights: continuous verification and normal controls",
+      "date": "2026-10-17T05:36:00.041695+00:00",
+      "kind": "hotfix",
+      "build": "steel-tape-hotfix-1080f1397978",
+      "previousBuild": "steel-tape-hotfix-fcd45f398f6b",
+      "summary": "Crown fights continue through tiny browser/server calculation differences, slow verification pauses safely, and the extra button box is removed in favor of normal controls and automatic officiating.",
+      "reviewedPublic": true,
+      "evidence": [
+        "Compared the previously deployed Crown interruption hotfix with the exact follow-up game and verifier.",
+        "Replayed the later interruption and isolated a tiny facing-angle difference between browser and server calculations.",
+        "A complete offline browser fight reached the server-verified final review; a delayed-response browser scenario remained active without abandoning the attempt."
+      ],
+      "sections": [
+        {
+          "title": "Complete the verified fight",
+          "items": [
+            "The earlier crown-fight-interruption-hotfix corrected object-field ordering, but did not resolve every interruption. Later attempts revealed that browser and server mathematics can produce slightly different facing angles. An exact text comparison could still reject those valid fights. This release addresses that remaining cause.",
+            "Each accepted response now provides the authoritative fight state. The client applies it and replays actions still awaiting confirmation, allowing the bout to continue through calculation differences. The server continues to simulate the fight and determine scoring, eligibility, winner, rewards and title transfer. Client prediction does not grant a result.",
+            "If a predicted finish differs from the verified finish, the verified state controls whether play continues or the final review begins. A final submitted batch can finish at the authoritative last action without rejecting harmless predicted actions after completion. Those trailing actions cannot score or change the result.",
+            "Slow verification now pauses further local advancement while submitted actions are confirmed, displays Verifying Crown fight in the existing status area, then continues. The old queued-input overflow interruption has been removed. Connection loss, failed authentication, rejected requests and expiry remain errors; this does not promise offline Crown play."
+          ],
+          "metrics": []
+        },
+        {
+          "title": "Normal controls; automatic marshal",
+          "items": [
+            "Removed the separate floating Crown panel containing Head, Body, Low, Strike, Guard and Disarm buttons. Crown attempts use the existing movement, swing, directional guard and grab/disarm controls on keyboard, controller and touch interfaces.",
+            "The normal match HUD now displays Crown points and the real countdown instead of the training-yard label. Round wins remain visible in the regular round indicator. The computer handles the marshal, scoring calls, round review and final verdict automatically.",
+            "The standard grab control triggers the existing Crown disarm action; high directional guard maps to the Crown head guard, and downward aim supports low guard. Existing Crown combat rules and timing remain in force.",
+            "The normal game controls remain available after removal of the extra panel. This is an interface and input-routing correction, with no change to weapon balance, difficulty, round durations, points per hit, eligibility requirements or rewards."
+          ],
+          "metrics": [
+            {
+              "name": "Buttons in the removed extra Crown panel",
+              "before": 6,
+              "after": 0,
+              "unit": "buttons",
+              "context": "Only the extra Crown panel is removed; the normal combat interface remains.",
+              "delta": -6,
+              "relativePercent": -100,
+              "percentagePoints": null
+            }
+          ]
+        },
+        {
+          "title": "Compatibility and release scope",
+          "items": [
+            "Both King and Queen Crown challenges use the correction. The shared Crown verifier retains its combat simulation version; only authoritative end-of-fight input handling changes. No database migration, player-account modification, save reset, Crown ownership edit or automatic reward grant is needed.",
+            "Reload the game before starting a new attempt. Attempts already abandoned by an earlier interruption must be started again. Existing completed results and verdict retry protection are retained.",
+            "The Crown guide explains server reconciliation, normal controls and automatic officiating. Earlier full notes remain archived at their existing permanent links. No measured performance or player win-rate gain is claimed."
+          ],
+          "metrics": []
+        }
+      ],
+      "knownIssues": [
+        "A real-player account and physical Android handset were not used; browser scenarios block external player writes.",
+        "Connection loss, sign-in problems, rejected requests and expired attempts can still require a new challenge."
+      ],
+      "validation": [
+        "Actual browser fight completed through the server-verified final review with no game-loop errors or custom Crown panel.",
+        "A slow-response browser scenario reached the safe queue pause without abandonment.",
+        "Exact production build, public wiki, permanent release link and standard browser/layout checks are verified during publication."
+      ],
+      "canonicalUrl": "https://buhurt-steel-and-tape.vercel.app/wiki/patch-notes/#patch/crown-authoritative-fight-hotfix"
+    },
+    {
       "id": "crown-fight-interruption-hotfix",
       "title": "Hotfix: Crown fights interrupted after starting",
       "date": "2026-10-17T05:11:01.450929+00:00",
