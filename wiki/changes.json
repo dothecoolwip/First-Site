@@ -1,7 +1,12 @@
 {
-  "build": "steel-tape-auth-309388adb67a",
-  "checkedAt": "2026-10-16T08:38:57.383Z",
+  "build": "steel-tape-hotfix-fcd45f398f6b",
+  "checkedAt": "2026-10-17T05:11:21.711Z",
   "added": [],
-  "changed": [],
+  "changed": [
+    {
+      "id": "guides:crown-challenges",
+      "name": "Crown Herald checks"
+    }
+  ],
   "removed": []
 }

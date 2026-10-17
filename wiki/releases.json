@@ -2,6 +2,53 @@
   "schema": 1,
   "releases": [
     {
+      "id": "crown-fight-interruption-hotfix",
+      "title": "Hotfix: Crown fights interrupted after starting",
+      "date": "2026-10-17T05:11:01.450929+00:00",
+      "kind": "hotfix",
+      "build": "steel-tape-hotfix-fcd45f398f6b",
+      "previousBuild": "steel-tape-auth-309388adb67a",
+      "summary": "Fixed valid King and Queen Crown attempts being interrupted when equivalent verified fight data arrived in a different field order.",
+      "reviewedPublic": true,
+      "evidence": [
+        "Compared the previous production build with the exact hotfix; the fight-state comparison and application cache identity are the only gameplay changes.",
+        "Reproduced false mismatches across 24 offline simulations and 2,490 verification checkpoints using the deployed Crown combat rules.",
+        "Verified the canonical production game, service worker and version response against the exact hotfix bytes."
+      ],
+      "sections": [
+        {
+          "title": "Crown fight interruption",
+          "items": [
+            "A Crown attempt could begin normally and then show Fight interrupted with Crown simulation did not match the verified fight. The comparison could reject equivalent fight states solely because their data fields arrived in a different order.",
+            "The client now compares nested fight data in a consistent field order. This applies to King and Queen Crown NPC attempts, including attack actions, round transitions and other nested fighter state. Array order and actual state values remain significant.",
+            "Server simulation, input sequencing, eligibility, scoring, timing, rewards, title transfer, difficulty and balance remain unchanged. Genuine state differences are still rejected; the fix does not waive verification or grant a result.",
+            "The application cache identity has changed so refreshed installations receive the hotfix. Reload the game before starting another Crown attempt. An attempt already abandoned by the old error cannot be resumed; begin a fresh attempt.",
+            "No player account, saved career, equipment, achievement or Crown ownership records were edited. The narrow correction also applies to the protected workshop preview. Other game modes retain their existing behavior."
+          ],
+          "metrics": []
+        },
+        {
+          "title": "Compatibility, limits and verification",
+          "items": [
+            "The fix uses the existing Crown protocol and requires no backend or database migration. It preserves the existing public game address, routes, sign-in flow, player saves and historical release links.",
+            "Twenty-four complete offline simulations covered all eight supported Crown weapon families and three deterministic seeds. Across 2,490 checkpoints the previous comparator reported false mismatches; the corrected comparator accepted equivalent states, while a deliberately changed fighter value remained rejected. These are regression results, not measured player win rates or performance gains.",
+            "No balance constants, public costs, durations, probabilities or numerical rewards changed, so there are no old/new balance metrics for this release. No performance improvement is claimed.",
+            "The Crown guide now explains verified fight continuity and retrying a previously interrupted attempt. Wiki catalogue and standard model evidence are refreshed against the same production game build."
+          ],
+          "metrics": []
+        }
+      ],
+      "knownIssues": [
+        "Connection loss, slow verification, expired attempts and genuine state differences can still interrupt Crown challenges under their existing rules.",
+        "No physical Android handset or eligible real-player Crown match was exercised for this hotfix. Existing player accounts and saves were left unchanged."
+      ],
+      "validation": [
+        "24 offline simulations; 2,490 matching state checkpoints; actual value mismatch rejection; compiled script syntax checks.",
+        "Production deployment reached READY; canonical game, service worker and version responses match the hotfix bytes."
+      ],
+      "canonicalUrl": "https://buhurt-steel-and-tape.vercel.app/wiki/patch-notes/#patch/crown-fight-interruption-hotfix"
+    },
+    {
       "id": "keston-player-fixes",
       "title": "Player fixes: Crown checks, duel recovery and Achievements",
       "date": "2026-10-16T08:25:35.388Z",
