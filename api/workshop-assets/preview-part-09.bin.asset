@@ -4574,7 +4574,7 @@ function buildPips() {
 function updateHud(dt) {
   const m = G.match;
   if (m) {
-    $('#clock').textContent = m.training ? 'YARD' : fmtClock(m.clock);
+    $('#clock').textContent = m.training && !m.crownNPC ? 'YARD' : fmtClock(m.clock);
     if (m.duel) { $('#rwA').textContent = m.pts[0]; $('#rwB').textContent = m.pts[1]; if (G.phase === 'fight') $('#rnd').textContent = `${m.overtime ? 'OT' : 'Rd ' + m.round} · ${m.wins[0]}–${m.wins[1]}`; }
     else { $('#rwA').textContent = m.wins[0]; $('#rwB').textContent = m.wins[1]; }
     $('#pips').hidden = !!m.duel || !!m.ffa || G.fighters.length > 24;
@@ -18275,9 +18275,7 @@ const CROWN={active:false,state:null,id:null,seq:0,queue:[],checks:new Map(),bus
 // Database JSON objects may return keys in a different order. Compare values recursively.
 function crownCanonical(value){if(Array.isArray(value))return value.map(crownCanonical);if(value&&typeof value==='object')return Object.fromEntries(Object.keys(value).sort().map(key=>[key,crownCanonical(value[key])]));return value;}
 function crownFingerprint(s){return JSON.stringify(crownCanonical({tick:s.tick,rng:s.rng,clock:s.clock,round:s.round,wins:s.wins,fighters:s.fighters,done:s.done,winner:s.winner,serial:s.serial,cheatAt:s.cheatAt,biasAt:s.biasAt,pause:s.pause,lastZone:s.lastZone}));}
-function crownControls(){let panel=$('#crownControls');if(!panel){panel=h('div',{id:'crownControls',style:'position:fixed;left:50%;bottom:12px;transform:translateX(-50%);z-index:40;background:#171a20eb;padding:8px;border:1px solid #d3b54b;display:flex;gap:6px;align-items:center;max-width:95vw;flex-wrap:wrap;justify-content:center'},h('span',{class:'crownscore'}));
- for(const [key,label]of [['head','Head'],['body','Body'],['low','Low']])panel.append(h('button',{class:'btn small tape',onclick:()=>{CROWN.aim=key;CROWN.guardAim=key;panel.querySelectorAll('[data-zone]').forEach(b=>b.setAttribute('aria-pressed',String(b.dataset.zone===key)));},'data-zone':key,'aria-pressed':String(key==='body')},label));
- panel.append(h('button',{class:'btn small flagtape',onclick:()=>{CROWN.strike=true;}},'Strike'),h('button',{class:'btn small tape',onpointerdown:e=>{e.currentTarget.setPointerCapture(e.pointerId);CROWN.block=true;},onpointerup:()=>{CROWN.block=false;},onpointercancel:()=>{CROWN.block=false;}},'Guard'),h('button',{class:'btn small tape',onclick:()=>{CROWN.disarm=true;}},'Disarm'));document.body.append(panel);}panel.hidden=false;}
+function crownControls(){const panel=$('#crownControls');if(panel)panel.remove();}
 function crownModel(f,snapshot){const lo=snapshot.loadout;f.name=snapshot.name;f.appearance=snapshot.look;f.spec={...f.spec,weapon:lo.weapon,shield:lo.shield,helm:lo.helm,name:snapshot.name};f.weapon=WEAPONS[lo.weapon]||WEAPONS.sword;f.shield=SHIELDS[lo.shield]||null;f.helm=HELMS[lo.helm]||HELMS.pigface;f.club={...f.club,tabard:snapshot.look?.b||f.club.tabard,trim:snapshot.look?.t||f.club.trim};
  if(f.model?.root)f.model.root.removeFromParent();f.body={...f.body,h:(snapshot.look?.g==='female'?1.52+lo.height*.0036:1.6+lo.height*.0038),b:.86+lo.mass*.0038,bodyMass:65+lo.mass*.7,fem:snapshot.look?.g==='female'};buildFighterModel(f);W3.matchRoot.add(f.model.root);if(f.model.head)fighterAppearance({bones:{Head:f.model.head},root:f.model.root},snapshot.look||{});}
 async function crownBegin(seat){
@@ -18289,12 +18287,12 @@ async function crownBegin(seat){
  toast('The royal rules are… flexible.','big','Watch the tells. Final review corrects the score, not the ruler’s privileges.');
  }catch(e){if(CROWN.active)crownInterrupt(e.message);else toastMenu(e.message||'The crown challenge could not begin.');}}
 function crownTick(dt){if(!CROWN.active||CROWN.state.done)return;
- if(CROWN.queue.length>=120){const status=$('#crownControls .crownscore');if(status)status.textContent='Verifying Crown fight…';crownFlush();return;}
+ if(CROWN.queue.length>=120){setStatus('Verifying Crown fight…',null,.25);crownFlush();return;}
  const f=G.player,zone=IN.swingRelease==='O'||(isCtl()&&FP.pitch>.24)?'head':isCtl()&&FP.pitch<-.3?'low':CROWN.aim;
- const v={mx:clamp(PIN.move.x,-1,1),mz:clamp(PIN.move.z,-1,1),face:isCtl()?FP.yaw:PIN.aim?Math.atan2(PIN.aim.x-f.pos.x,PIN.aim.z-f.pos.z):Math.atan2(CROWN.state.fighters[1].x-f.pos.x,CROWN.state.fighters[1].z-f.pos.z),attack:CROWN.strike||IN.swingRelease?zone:'',guard:CROWN.block||PIN.guard?CROWN.guardAim:'',disarm:!!CROWN.disarm||IN.edges.has('disarm'),yield:IN.yieldT>1};
- CROWN.strike=false;CROWN.disarm=false;IN.swingStart=false;IN.swingRelease=null;IN.edges.delete('disarm');CROWN.queue.push(v);CrownCore.step(CROWN.state,v);G.simTime+=dt;crownPresent();
+ const v={mx:clamp(PIN.move.x,-1,1),mz:clamp(PIN.move.z,-1,1),face:isCtl()?FP.yaw:PIN.aim?Math.atan2(PIN.aim.x-f.pos.x,PIN.aim.z-f.pos.z):Math.atan2(CROWN.state.fighters[1].x-f.pos.x,CROWN.state.fighters[1].z-f.pos.z),attack:CROWN.strike||IN.swingRelease?zone:'',guard:PIN.guard?(PIN.gdir==='H'?'head':isCtl()&&FP.pitch<-.3?'low':'body'):'',disarm:IN.edges.has('grab')||IN.edges.has('disarm'),yield:IN.yieldT>1};
+ CROWN.strike=false;CROWN.disarm=false;IN.swingStart=false;IN.swingRelease=null;IN.edges.delete('disarm');IN.edges.delete('grab');CROWN.queue.push(v);CrownCore.step(CROWN.state,v);G.simTime+=dt;crownPresent();
  if(CROWN.state.tick%60===0||CROWN.state.done){CROWN.checks.set(CROWN.state.tick,crownFingerprint(CROWN.state));crownFlush();}}
-function crownPresent(){const s=CROWN.state;if(!s)return;G.match.clock=Math.max(0,s.clock/CrownCore.HZ);G.match.round=s.round;G.match.wins=s.wins.slice();
+function crownPresent(){const s=CROWN.state;if(!s)return;G.match.clock=Math.max(0,s.clock/CrownCore.HZ);G.match.round=s.round;G.match.wins=s.wins.slice();G.match.pts=s.fighters.map(f=>f.display);
  for(let i=0;i<2;i++){const a=s.fighters[i],f=i===0?G.player:G.fighters.find(f=>!f.isPlayer);f.pos.x=a.x;f.pos.z=a.z;f.vel={...a.vel};f.facing=a.face;f.wantFace=a.face;f.gas=a.gas;f.guard=!!a.guard;f.gdir=a.guard==='head'?'high':a.guard==='low'?'low':'mid';f.duelScore=a.display;f.groundPos={x:a.x,z:a.z};f.groundYaw=a.face;f.state=a.down?'grounded':'standing';f.fallT=1;
  const act=a.action;f.action=act?{kind:'swing',phase:act.age<act.wind?'windup':act.age<act.wind+8?'strike':'recover',t:(act.age<act.wind?act.age:act.age<act.wind+8?act.age-act.wind:act.age-act.wind-8)/60,wind:act.wind/60,arc:act.zone==='head'?'O':act.zone==='low'?'L2R':'R2L',charge:0,held:false}:null;
  const weapon=a.disarmed?null:WEAPONS[a.weapon];if(f.weapon!==weapon){f.weapon=weapon;setWeaponModel(f);}}
